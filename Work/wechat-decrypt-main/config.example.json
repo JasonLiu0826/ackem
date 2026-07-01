@@ -1,0 +1,11 @@
+{
+    "db_dir": "D:\\xwechat_files\\your_wxid\\db_storage",
+    "keys_file": "all_keys.json",
+    "decrypted_dir": "decrypted",
+    "wechat_process": "Weixin.exe",
+    "wxwork_db_dir": "",
+    "wxwork_keys_file": "wxwork_keys.json",
+    "wxwork_decrypted_dir": "wxwork_decrypted",
+    "wxwork_export_dir": "wxwork_export",
+    "wxwork_process": "WXWork.exe"
+}

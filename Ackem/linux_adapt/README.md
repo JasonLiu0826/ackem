@@ -1,4 +1,4 @@
-# 💫 Ackem
+# 💫 Ackem -Linux
 
 ![Version](https://img.shields.io/badge/Version-1.0.0-orange?style=for-the-badge)
 ![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)

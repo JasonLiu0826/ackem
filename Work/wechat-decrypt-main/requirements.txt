@@ -1,0 +1,8 @@
+pycryptodome>=3.19,<4
+zstandard>=0.22,<1
+mcp>=1.0,<2
+# pilk: SILK_V3 解码 (语音转 MP3 需要); 还需要 ffmpeg 在 PATH 中
+pilk>=0.2
+# pyinstaller: 只在打包成 exe 时需要 (开发/CLI 不需要)
+pyinstaller>=6.0
+# 可选：进度条 (pip install tqdm)

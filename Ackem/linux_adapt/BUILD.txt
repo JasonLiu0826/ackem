@@ -1,0 +1,12 @@
+Ackem v1.0.0 — Windows 发行构建
+
+1. 安装 Node.js 22 LTS（仅构建时需要；最终用户无需 Node）
+2. npm ci
+3. npm run prepare:embedding-models
+4. powershell -ExecutionPolicy Bypass -File scripts/generate-icons.ps1
+5. npm run dist:green   → dist/release/Ackem-1.0.0-win-x64/ 与 .zip
+
+用户：
+- 解压 Ackem-1.0.0-win-x64.zip 一次
+- 双击 Ackem.exe 或「启动 Ackem.bat」
+- 首次约 10–30 秒；数据在 .\data\

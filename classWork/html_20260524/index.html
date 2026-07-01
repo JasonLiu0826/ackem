@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>团购卡片</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft Yahei", sans-serif;
+        }
+        body {
+            background-color: #fff;
+            padding: 50px;
+        }
+
+
+        .group-card {
+            width: 450px;
+            margin: 0 auto;
+            border: 1px solid #e5e5e5;
+            padding: 12px;
+            position: relative; 
+            overflow: hidden; 
+        }
+
+
+        .corner-tag {
+            position: absolute;
+            top: 15px;
+            left: -35px;
+            width: 100px;
+            height: auto;
+            transform: rotate(-45deg); 
+            z-index: 10;
+            border: none;
+        }
+
+  
+        .card-img {
+            width: 100%;
+            display: block;
+        }
+
+
+        .product-desc {
+            font-size: 18px;
+            color: #222;
+            line-height: 1.6;
+            margin: 18px 0;
+        }
+
+
+        .price-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+
+        .price-box {
+            display: flex;
+            align-items: baseline;
+        }
+        .current-price {
+            font-size: 34px;
+            color: #ff4444;
+            font-weight: bold;
+        }
+        .original-price {
+            font-size: 16px;
+            color: #999;
+            margin-left: 10px;
+        }
+
+
+        .go-btn {
+            width: 100px;
+            height: 35px;
+            border: none;
+            background: url("images/see.jpg") no-repeat center/cover;
+            cursor: pointer;
+        }
+        .buy-count {
+            color: #cc0000;
+            font-size: 14px;
+            margin-top: 6px;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <div class="group-card">
+
+        <img src="images/top_tu.gif" alt="今日新单" class="corner-tag">
+        
+
+        <img src="images/adv.jpg" alt="哈根达斯团购" class="card-img">
+        
+
+        <p class="product-desc">【12店通用】领航冰品哈根达斯：冰淇淋双球，口味任选2种，节假通用</p>
+        
+
+        <div class="price-area">
+            <div class="price-box">
+                <span class="current-price">¥20.8</span>
+                <span class="original-price">原价¥38</span>
+            </div>
+            <div class="btn-wrapper">
+
+                <button class="go-btn"></button>
+                <p class="buy-count">32人已购买</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
