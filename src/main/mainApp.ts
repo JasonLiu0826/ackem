@@ -155,7 +155,7 @@ function startProactiveTimer(): void {
   startDesktopCompanionProactiveTimer(() => mainWindow)
 }
 
-function runMainApplication(): void {
+export function runMainApplication(): void {
   const isDev = process.env.NODE_ENV === 'development'
   if (isDev) {
     process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true'
