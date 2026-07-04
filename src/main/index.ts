@@ -2,8 +2,10 @@ import { basename } from 'node:path'
 import { app } from 'electron'
 import { openStartupSplash } from './startupSplash.js'
 
+const execBase = basename(process.execPath).toLowerCase()
 const isUpdater =
-  basename(process.execPath).toLowerCase() === 'ackemupdater.exe' ||
+  execBase === 'ackemupdater.exe' ||
+  execBase === 'ackemupdater' ||
   process.argv.some((a) => a.startsWith('--ackem-updater='))
 
 if (isUpdater) {

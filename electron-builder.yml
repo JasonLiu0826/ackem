@@ -1,4 +1,4 @@
-# Ackem Windows 发行配置（W3）
+# Ackem 发行配置（Windows + macOS）
 # 隐私：绝不打包 data/ · .env · 用户 settings（见 docs/distribution-windows.md）
 
 appId: com.ackem.desktop
@@ -29,13 +29,7 @@ files:
   - "!**/src/**"
   - "!**/*.map"
 
-extraFiles:
-  - from: scripts/uninstall.bat
-    to: Uninstall Ackem.bat
-
 extraResources:
-  - from: scripts/uninstall.bat
-    to: uninstall.bat
   # 语音服务（含内置 gpt-sovits-runtime/、models/gpt-sovits/ 角色语音包；见 voice-service/models/gpt-sovits/BUNDLED.md）
   - from: voice-service
     to: voice-service
@@ -74,7 +68,7 @@ win:
     - target: dir
       arch:
         - x64
-  artifactName: ${productName}-${version}-${arch}.${ext}
+  artifactName: ${productName}-${version}-win-${arch}.${ext}
 
 nsis:
   oneClick: false
@@ -83,3 +77,33 @@ nsis:
   shortcutName: Ackem
   artifactName: ${productName}-${version}-Setup-${arch}.exe
   deleteAppDataOnUninstall: false
+
+mac:
+  icon: build/icon.icns
+  category: public.app-category.productivity
+  hardenedRuntime: false
+  identity: null
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  target:
+    - target: dmg
+      arch:
+        - arm64
+        - x64
+  artifactName: ${productName}-${version}-mac-${arch}.${ext}
+  extraFiles: []
+
+dmg:
+  title: "${productName} ${version}"
+  iconSize: 100
+  contents:
+    - x: 180
+      y: 170
+    - x: 480
+      y: 170
+      type: link
+      path: /Applications
+  window:
+    width: 660
+    height: 400
+  artifactName: ${productName}-${version}-mac-${arch}.${ext}

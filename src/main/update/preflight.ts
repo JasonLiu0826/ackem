@@ -42,3 +42,15 @@ export function spawnLauncherProcess(installDir: string, jobPath: string): void 
   })
   child.unref()
 }
+
+export function runUpdatePreflight(): { ok: boolean; reason?: string; installDir: string } {
+  const platform = process.platform
+  if (platform !== 'win32') {
+    return { ok: false, reason: `unsupported_platform:${platform}`, installDir: app.getAppPath() }
+  }
+  const installDir = join(app.getAppPath(), '..')
+  if (!existsSync(installDir)) {
+    return { ok: false, reason: 'install_dir_missing', installDir }
+  }
+  return { ok: true, installDir }
+}
