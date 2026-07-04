@@ -29,7 +29,13 @@ files:
   - "!**/src/**"
   - "!**/*.map"
 
+extraFiles:
+  - from: scripts/uninstall.bat
+    to: Uninstall Ackem.bat
+
 extraResources:
+  - from: scripts/uninstall.bat
+    to: uninstall.bat
   # 语音服务（含内置 gpt-sovits-runtime/、models/gpt-sovits/ 角色语音包；见 voice-service/models/gpt-sovits/BUNDLED.md）
   - from: voice-service
     to: voice-service
