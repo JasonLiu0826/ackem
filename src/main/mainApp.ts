@@ -156,9 +156,12 @@ function startProactiveTimer(): void {
 }
 
 export function runMainApplication(): void {
-  process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true'
-  registerBundledNativeDllPaths()
+  const isDev = process.env.NODE_ENV === 'development'
+  if (isDev) {
+    process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true'
+  }
 
+  registerBundledNativeDllPaths()
   app.on('second-instance', () => {
     focusOrCreateMainWindow()
   })
