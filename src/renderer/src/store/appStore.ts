@@ -1,5 +1,5 @@
-import { create } from 'zustand'
-import type { AppSettings } from '../ackem'
+﻿import { create } from 'zustand'
+import type { AppSettings } from '../Ackem'
 import type { DispatchTriggerStatus } from '../../../shared/dispatchTrigger'
 import type { CompanionAvatarState as AvatarState } from '../../../shared/companionSkin'
 import type { SearchCardPayload } from '../../../shared/searchCard'
@@ -13,8 +13,9 @@ export type Tab =
   | 'diary'
   | 'gamemode'
   | 'extensions'
+  | 'agent'
   | 'settings'
-  /** 由设置/记忆子入口进入，不在主导航展示 */
+  /** 鐢辫缃?璁板繂瀛愬叆鍙ｈ繘鍏ワ紝涓嶅湪涓诲鑸睍绀?*/
   | 'trace'
   | 'import'
 
@@ -40,9 +41,18 @@ export type ChatPlanCreateAskRow = {
   emotionLabel: string
   status: 'pending' | 'accepted' | 'rejected'
 }
-export type ChatRow = ChatMessageRow | ChatSearchRow | ChatMemoryAuditRow | ChatSystemRow | ChatPlanCreateAskRow
+export type ChatImageRow = {
+  kind: 'image'
+  prompt: string
+  imagePath?: string
+  imageUrl?: string
+  revisedPrompt?: string
+  loading?: boolean
+  error?: string
+}
+export type ChatRow = ChatMessageRow | ChatSearchRow | ChatMemoryAuditRow | ChatSystemRow | ChatPlanCreateAskRow | ChatImageRow
 
-/** 兼容旧版聊天记录（无 kind 字段） */
+/** 鍏煎鏃х増鑱婂ぉ璁板綍锛堟棤 kind 瀛楁锛?*/
 export function normalizeChatRow(raw: unknown): ChatRow | null {
   if (!raw || typeof raw !== 'object') return null
   const o = raw as Record<string, unknown>
@@ -75,12 +85,12 @@ export function normalizeChatRow(raw: unknown): ChatRow | null {
           ? o.copyText
           : sources.length > 0
             ? sources.map((s, i) => `${i + 1}. ${s.title}\n${s.url}`).join('\n\n')
-            : '（无摘录正文）'
+            : '锛堟棤鎽樺綍姝ｆ枃锛?
 
     const copyText =
       typeof o.copyText === 'string'
         ? o.copyText
-        : cardBody + (sources.length ? `\n\n参考来源：\n${sources.map((s, i) => `${i + 1}. ${s.title} ${s.url}`).join('\n')}` : '')
+        : cardBody + (sources.length ? `\n\n鍙傝€冩潵婧愶細\n${sources.map((s, i) => `${i + 1}. ${s.title} ${s.url}`).join('\n')}` : '')
 
     return {
       kind: 'search',
@@ -112,6 +122,17 @@ export function normalizeChatRow(raw: unknown): ChatRow | null {
       status
     }
   }
+  if (o.kind === 'image' && typeof o.prompt === 'string') {
+    return {
+      kind: 'image',
+      prompt: o.prompt,
+      imagePath: typeof o.imagePath === 'string' ? o.imagePath : undefined,
+      imageUrl: typeof o.imageUrl === 'string' ? o.imageUrl : undefined,
+      revisedPrompt: typeof o.revisedPrompt === 'string' ? o.revisedPrompt : undefined,
+      loading: false,
+      error: typeof o.error === 'string' ? o.error : undefined
+    }
+  }
   if ((o.role === 'user' || o.role === 'assistant') && typeof o.content === 'string') {
     return { kind: 'message', role: o.role, content: o.content }
   }
@@ -122,7 +143,7 @@ type WebSearchHitLike = { title: string; url: string; snippet?: string }
 
 type State = {
   tab: Tab
-  /** 游戏陪伴：当前选中的 gameId，null 表示游戏列表 */
+  /** 娓告垙闄即锛氬綋鍓嶉€変腑鐨?gameId锛宯ull 琛ㄧず娓告垙鍒楄〃 */
   selectedGameId: string | null
   settings: AppSettings | null
   toast: Toast | null
@@ -131,19 +152,19 @@ type State = {
   chatTurnCount: number
   deleteAttempted: boolean
   personalityAwakening: string | null
-  /** 递增后让 ChatPage 重新聚焦输入框（归档取消、切回对话等） */
+  /** 閫掑鍚庤 ChatPage 閲嶆柊鑱氱劍杈撳叆妗嗭紙褰掓。鍙栨秷銆佸垏鍥炲璇濈瓑锛?*/
   chatFocusToken: number
-  /** 左侧导航栏伴侣形象状态（由 ChatPage 同步） */
+  /** 宸︿晶瀵艰埅鏍忎即渚ｅ舰璞＄姸鎬侊紙鐢?ChatPage 鍚屾锛?*/
   companionAvatarState: AvatarState
-  /** listening 态下是否正在键入（加强光球动效） */
+  /** listening 鎬佷笅鏄惁姝ｅ湪閿叆锛堝姞寮哄厜鐞冨姩鏁堬級 */
   companionAvatarTyping: boolean
-  /** 当前轮次已触发的扩展（右侧情绪面板底部展示） */
+  /** 褰撳墠杞宸茶Е鍙戠殑鎵╁睍锛堝彸渚ф儏缁潰鏉垮簳閮ㄥ睍绀猴級 */
   dispatchTriggerStatus: DispatchTriggerStatus | null
-  /** 主聊天 / 剧院 / 桌宠共用的流式进行中状态 */
+  /** 涓昏亰澶?/ 鍓ч櫌 / 妗屽疇鍏辩敤鐨勬祦寮忚繘琛屼腑鐘舵€?*/
   chatBusy: boolean
-  /** 电脑助手后台任务进行中（不阻塞输入） */
+  /** 鐢佃剳鍔╂墜鍚庡彴浠诲姟杩涜涓紙涓嶉樆濉炶緭鍏ワ級 */
   agentBusy: boolean
-  /** 打开设置页时定位到指定分区（消费后清空） */
+  /** 鎵撳紑璁剧疆椤垫椂瀹氫綅鍒版寚瀹氬垎鍖猴紙娑堣垂鍚庢竻绌猴級 */
   settingsDeepLink: SettingsDeepLink | null
   setTab: (t: Tab) => void
   openSettingsAt: (section: SettingsSectionId, anchorId?: string) => void

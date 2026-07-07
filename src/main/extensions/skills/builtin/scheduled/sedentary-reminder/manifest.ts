@@ -1,12 +1,12 @@
-import type { SkillManifest } from '../../../types'
+﻿import type { SkillManifest } from '../../../types'
 import type { DispatchConfig } from '../../../../protocols'
 
 const PROD_INTERVAL_MS = 15 * 60 * 1000
 const DEV_INTERVAL_MS = 2 * 60 * 1000
 
-/** 生产 15min；开发 2min；测试/覆盖可用 ACKEM_SEDENTARY_INTERVAL_MS */
+/** 鐢熶骇 15min锛涘紑鍙?2min锛涙祴璇?瑕嗙洊鍙敤 Ackem_SEDENTARY_INTERVAL_MS */
 export function getSedentaryIntervalMs(): number {
-  const override = process.env.ACKEM_SEDENTARY_INTERVAL_MS
+  const override = process.env.Ackem_SEDENTARY_INTERVAL_MS
   if (override != null && override !== '') {
     const n = Number(override)
     if (Number.isFinite(n) && n > 0) return n
@@ -25,20 +25,20 @@ const SEDENTARY_DISPATCH: DispatchConfig = {
       ruleType: 'interval_ms'
     }
   },
-  habits: ['用户长时间坐着使用电脑', '用户连续工作未起身活动'],
-  scenarios: ['办公/学习久坐', '需要轻量健康提醒而非强制打断'],
-  summary: '定时轻提醒起身活动、伸展或喝水（伴侣语气，非医疗建议）。',
-  keywords: ['久坐', '起来', '休息', '伸展'],
+  habits: ['鐢ㄦ埛闀挎椂闂村潗鐫€浣跨敤鐢佃剳', '鐢ㄦ埛杩炵画宸ヤ綔鏈捣韬椿鍔?],
+  scenarios: ['鍔炲叕/瀛︿範涔呭潗', '闇€瑕佽交閲忓仴搴锋彁閱掕€岄潪寮哄埗鎵撴柇'],
+  summary: '瀹氭椂杞绘彁閱掕捣韬椿鍔ㄣ€佷几灞曟垨鍠濇按锛堜即渚ｈ姘旓紝闈炲尰鐤楀缓璁級銆?,
+  keywords: ['涔呭潗', '璧锋潵', '浼戞伅', '浼稿睍'],
   personality_hint: 'gentle_care'
 }
 
 export const SEDENTARY_REMINDER_MANIFEST: SkillManifest = {
-  id: 'ackem/sedentary-reminder@0.0.1',
-  name: '久坐提醒',
+  id: 'Ackem/sedentary-reminder@0.0.1',
+  name: '涔呭潗鎻愰啋',
   version: '0.0.1',
   category: 'skill',
   skillType: 'proactive',
-  description: '每 15 分钟检查；伴侣语气轻提醒起身活动',
+  description: '姣?15 鍒嗛挓妫€鏌ワ紱浼翠荆璇皵杞绘彁閱掕捣韬椿鍔?,
   author: 'JasonLiu0826',
   license: 'AGPL-3.0',
   main: 'skill.ts',

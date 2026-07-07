@@ -1,4 +1,4 @@
-import type { UpdateChannel } from '../../shared/updateTypes'
+﻿import type { UpdateChannel } from '../../shared/updateTypes'
 
 export const UPDATE_USER_AGENT = 'Ackem-Desktop-Updater/1.0'
 
@@ -11,9 +11,9 @@ export const GITHUB = {
 
 export const GITEE = {
   owner: 'jason_2005',
-  repo: 'ackem',
-  apiLatest: 'https://gitee.com/api/v5/repos/jason_2005/ackem/releases/latest',
-  releasePage: 'https://gitee.com/jason_2005/ackem/releases'
+  repo: 'Ackem',
+  apiLatest: 'https://gitee.com/api/v5/repos/jason_2005/Ackem/releases/latest',
+  releasePage: 'https://gitee.com/jason_2005/Ackem/releases'
 } as const
 
 export function zipAssetName(version: string): string {

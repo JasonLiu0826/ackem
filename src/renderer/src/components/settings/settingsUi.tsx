@@ -253,6 +253,7 @@ export type SettingsSectionId =
   | 'settings-models'
   | 'settings-desktop-agent'
   | 'settings-openforu'
+  | 'settings-agnes'
   | 'settings-voice'
   | 'settings-data'
   | 'settings-safety'
@@ -297,6 +298,7 @@ export const SETTINGS_NAV_GROUPS: NavGroup[] = [
       { id: 'settings-models', labelKey: 'settings.modelAndApi' },
       { id: 'settings-desktop-agent', labelKey: 'settings.desktopAgent' },
       { id: 'settings-openforu', labelKey: 'settings.openforuPlan', experimental: true },
+      { id: 'settings-agnes', labelKey: 'settings.agnesImage' },
       { id: 'settings-voice', labelKey: 'settings.voice' },
       { id: 'settings-data', labelKey: 'settings.dataAndMemory' }
     ]

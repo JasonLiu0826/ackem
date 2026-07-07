@@ -1,16 +1,16 @@
-/**
- * FIX-033 — extensions 下 stub.ts 占位文件约定（非运行时）
+﻿/**
+ * FIX-033 鈥?extensions 涓?stub.ts 鍗犱綅鏂囦欢绾﹀畾锛堥潪杩愯鏃讹級
  *
- * 详见同目录 STUB_FILES.md
+ * 璇﹁鍚岀洰褰?STUB_FILES.md
  */
 
-/** 每个 stub.ts 首行必须包含此 marker，供 stubFiles.test.ts 校验 */
-export const EXTENSION_STUB_MARKER = '@ackem-extension-stub-not-runtime'
+/** 姣忎釜 stub.ts 棣栬蹇呴』鍖呭惈姝?marker锛屼緵 stubFiles.test.ts 鏍￠獙 */
+export const EXTENSION_STUB_MARKER = '@Ackem-extension-stub-not-runtime'
 
-/** stub 文件总数（plugins + skills catalog 占位，共 35 个） */
+/** stub 鏂囦欢鎬绘暟锛坧lugins + skills catalog 鍗犱綅锛屽叡 35 涓級 */
 export const EXTENSION_STUB_FILE_COUNT = 35
 
-/** 运行时注册表 — 禁止 import ./stub */
+/** 杩愯鏃舵敞鍐岃〃 鈥?绂佹 import ./stub */
 export const EXTENSION_RUNTIME_ENTRY_BASENAMES = [
   'register.ts',
   'skill.ts',

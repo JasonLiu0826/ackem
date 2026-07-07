@@ -1,9 +1,9 @@
-/** Ackem 结构化记忆 JSON 导入（主进程 / 渲染进程共享） */
+﻿/** Ackem 缁撴瀯鍖栬蹇?JSON 瀵煎叆锛堜富杩涚▼ / 娓叉煋杩涚▼鍏变韩锛?*/
 
-export const MEMORY_JSON_BUNDLE_SCHEMA = 'ackem.memory.bundle' as const
+export const MEMORY_JSON_BUNDLE_SCHEMA = 'Ackem.memory.bundle' as const
 export const MEMORY_JSON_BUNDLE_VERSION = 1 as const
 
-/** 单条事实（导入文件内） */
+/** 鍗曟潯浜嬪疄锛堝鍏ユ枃浠跺唴锛?*/
 export type MemoryJsonFactInput = {
   domain?: string
   subcategory?: string
@@ -32,7 +32,7 @@ export type MemoryJsonAnchorInput = {
   summary?: string
 }
 
-/** 推荐 bundle 格式 */
+/** 鎺ㄨ崘 bundle 鏍煎紡 */
 export type MemoryJsonBundle = {
   schema?: typeof MEMORY_JSON_BUNDLE_SCHEMA | string
   version?: number
@@ -43,7 +43,7 @@ export type MemoryJsonBundle = {
   anchors?: MemoryJsonAnchorInput[]
 }
 
-/** facts.v2.json 片段 */
+/** facts.v2.json 鐗囨 */
 export type MemoryJsonFactsFile = {
   version?: string
   facts?: Array<
@@ -63,39 +63,39 @@ export type MemoryJsonParseStats = {
   warnings: string[]
 }
 
-/** 最小可用示例（可复制到 .json 文件） */
+/** 鏈€灏忓彲鐢ㄧず渚嬶紙鍙鍒跺埌 .json 鏂囦欢锛?*/
 export const MEMORY_JSON_IMPORT_EXAMPLE: MemoryJsonBundle = {
   schema: MEMORY_JSON_BUNDLE_SCHEMA,
   version: MEMORY_JSON_BUNDLE_VERSION,
-  source: '手工整理',
+  source: '鎵嬪伐鏁寸悊',
   facts: [
     {
       subcategory: 'HEALTH',
-      subject: '用户作息',
-      summary: '通常凌晨一点后才睡',
-      triggers: ['熬夜', '睡觉'],
+      subject: '鐢ㄦ埛浣滄伅',
+      summary: '閫氬父鍑屾櫒涓€鐐瑰悗鎵嶇潯',
+      triggers: ['鐔', '鐫¤'],
     },
     {
       subcategory: 'TASTES',
-      subject: '饮品偏好',
-      summary: '喜欢冰美式，不加糖',
+      subject: '楗搧鍋忓ソ',
+      summary: '鍠滄鍐扮編寮忥紝涓嶅姞绯?,
     },
   ],
   episodes: [
     {
-      summary: '2024 年夏天一起去过海边',
+      summary: '2024 骞村澶╀竴璧峰幓杩囨捣杈?,
       emotionalIntensity: 0.7,
       dominantEmotion: 'happy',
-      keywords: ['旅行', '海边'],
+      keywords: ['鏃呰', '娴疯竟'],
       timeRange: '2024-08',
     },
   ],
   anchors: [
     {
       type: 'birthday',
-      label: '用户生日',
+      label: '鐢ㄦ埛鐢熸棩',
       monthDay: '3-15',
-      summary: '阳历生日，记得送祝福',
+      summary: '闃冲巻鐢熸棩锛岃寰楅€佺绂?,
     },
   ],
 }

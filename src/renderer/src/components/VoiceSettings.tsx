@@ -1,9 +1,9 @@
-/**
- * Voice settings — ASR/TTS pipeline (Settings → 语音).
+﻿/**
+ * Voice settings 鈥?ASR/TTS pipeline (Settings 鈫?璇煶).
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { VoiceEnvReport } from '../ackem'
+import type { VoiceEnvReport } from '../Ackem'
 import {
   SettingsActionItem,
   SettingsActionStack,
@@ -37,7 +37,7 @@ type HealthInfo = {
 function StepRow(props: { ok: boolean; label: string; hint?: string }): JSX.Element {
   return (
     <div className="voice-env-step">
-      <SettingsStatusBadge tone={props.ok ? 'ok' : 'warn'}>{props.ok ? '✓' : '!'}</SettingsStatusBadge>
+      <SettingsStatusBadge tone={props.ok ? 'ok' : 'warn'}>{props.ok ? '鉁? : '!'}</SettingsStatusBadge>
       <div>
         <p className="voice-env-step__label">{props.label}</p>
         {props.hint ? <p className="voice-env-step__hint">{props.hint}</p> : null}
@@ -65,9 +65,9 @@ export function VoiceSettings(): JSX.Element {
   const refreshEnv = useCallback(async (): Promise<void> => {
     setChecking(true)
     try {
-      const report = await window.ackem.voice?.checkEnvironment?.()
+      const report = await window.Ackem.voice?.checkEnvironment?.()
       setEnv(report ?? null)
-      const h = await window.ackem.voice?.health?.()
+      const h = await window.Ackem.voice?.health?.()
       setHealth(h ?? null)
     } catch {
       setEnv(null)
@@ -91,14 +91,14 @@ export function VoiceSettings(): JSX.Element {
     void syncVoiceSettingsToMain(settings)
     void refreshEnv()
     const timer = setInterval(() => {
-      void window.ackem.voice?.health?.().then(setHealth).catch(() => setHealth(null))
+      void window.Ackem.voice?.health?.().then(setHealth).catch(() => setHealth(null))
     }, 60_000)
     return () => clearInterval(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
-    const unsub = window.ackem.voice?.onInstallLog?.((p) => {
+    const unsub = window.Ackem.voice?.onInstallLog?.((p) => {
       setInstallLog((prev) => [...prev.slice(-80), p.line])
       requestAnimationFrame(scrollInstallLog)
     })
@@ -115,9 +115,9 @@ export function VoiceSettings(): JSX.Element {
     setInstallError(null)
     setInstallLog([])
     try {
-      const result = await window.ackem.voice?.installEnvironment?.()
+      const result = await window.Ackem.voice?.installEnvironment?.()
       if (!result?.ok) {
-        setInstallError(result?.error ?? '准备失败，请重试')
+        setInstallError(result?.error ?? '鍑嗗澶辫触锛岃閲嶈瘯')
       }
       await refreshEnv()
     } catch (e) {
@@ -133,44 +133,44 @@ export function VoiceSettings(): JSX.Element {
   return (
     <>
       <SettingsBlock
-        title="语音环境"
-        hint="Ackem 可自动配置，无需手动安装 Python 或运行命令行"
+        title="璇煶鐜"
+        hint="Ackem 鍙嚜鍔ㄩ厤缃紝鏃犻渶鎵嬪姩瀹夎 Python 鎴栬繍琛屽懡浠よ"
         badge={
           envReady ? (
-            <SettingsStatusBadge tone="ok">已就绪</SettingsStatusBadge>
+            <SettingsStatusBadge tone="ok">宸插氨缁?/SettingsStatusBadge>
           ) : (
-            <SettingsStatusBadge tone="warn">待准备</SettingsStatusBadge>
+            <SettingsStatusBadge tone="warn">寰呭噯澶?/SettingsStatusBadge>
           )
         }
       >
-        <p className="settings-note">{env?.summary ?? '正在检测语音环境…'}</p>
+        <p className="settings-note">{env?.summary ?? '姝ｅ湪妫€娴嬭闊崇幆澧冣€?}</p>
         {env?.detail ? <p className="settings-field-footnote">{env.detail}</p> : null}
 
         {env ? (
           <div className="voice-env-steps">
             <StepRow
               ok={env.python.ok}
-              label="Python 运行环境"
-              hint={env.python.message + (env.python.version ? ` · ${env.python.version}` : '')}
+              label="Python 杩愯鐜"
+              hint={env.python.message + (env.python.version ? ` 路 ${env.python.version}` : '')}
             />
             <StepRow
               ok={env.dependenciesOk}
-              label="语音识别 / 合成依赖"
+              label="璇煶璇嗗埆 / 鍚堟垚渚濊禆"
               hint={
                 env.dependenciesOk
-                  ? 'faster-whisper、pyttsx3（离线 TTS）等已安装'
+                  ? 'faster-whisper銆乸yttsx3锛堢绾?TTS锛夌瓑宸插畨瑁?
                   : env.missingDependencies.length
-                    ? `缺少: ${env.missingDependencies.join(', ')}`
-                    : '尚未安装'
+                    ? `缂哄皯: ${env.missingDependencies.join(', ')}`
+                    : '灏氭湭瀹夎'
               }
             />
             <StepRow
               ok={env.serviceRunning || serviceOk}
-              label="语音服务"
+              label="璇煶鏈嶅姟"
               hint={
                 serviceOk
-                  ? `${health?.tts_engine ?? 'TTS'} · 服务运行中`
-                  : '服务未运行'
+                  ? `${health?.tts_engine ?? 'TTS'} 路 鏈嶅姟杩愯涓璥
+                  : '鏈嶅姟鏈繍琛?
               }
             />
           </div>
@@ -184,11 +184,11 @@ export function VoiceSettings(): JSX.Element {
               disabled={installing || checking}
               onClick={() => void runInstall()}
             >
-              {installing ? '正在准备…（首次约 3–15 分钟）' : '一键准备语音环境'}
+              {installing ? '姝ｅ湪鍑嗗鈥︼紙棣栨绾?3鈥?5 鍒嗛挓锛? : '涓€閿噯澶囪闊崇幆澧?}
             </button>
             <p className="settings-field-footnote">
-              会自动下载内置 Python（约 300MB，仅 Windows 首次）并安装语音依赖，完成后自动启动服务。
-              发行版 exe 若已内置 python-embedded，则跳过下载。
+              浼氳嚜鍔ㄤ笅杞藉唴缃?Python锛堢害 300MB锛屼粎 Windows 棣栨锛夊苟瀹夎璇煶渚濊禆锛屽畬鎴愬悗鑷姩鍚姩鏈嶅姟銆?
+              鍙戣鐗?exe 鑻ュ凡鍐呯疆 python-embedded锛屽垯璺宠繃涓嬭浇銆?
             </p>
           </div>
         ) : null}
@@ -207,32 +207,32 @@ export function VoiceSettings(): JSX.Element {
 
         <SettingsActionStack>
           <SettingsActionItem
-            title="重新检测环境"
-            hint="检查 Python、依赖与服务状态"
+            title="閲嶆柊妫€娴嬬幆澧?
+            hint="妫€鏌?Python銆佷緷璧栦笌鏈嶅姟鐘舵€?
             busy={checking}
-            busyLabel="检测中…"
-            actionLabel="检测"
+            busyLabel="妫€娴嬩腑鈥?
+            actionLabel="妫€娴?
             onAction={() => void refreshEnv()}
           />
           <SettingsActionItem
-            title="启动 / 重启语音服务"
-            hint="依赖已安装但服务异常时使用"
+            title="鍚姩 / 閲嶅惎璇煶鏈嶅姟"
+            hint="渚濊禆宸插畨瑁呬絾鏈嶅姟寮傚父鏃朵娇鐢?
             busy={false}
-            actionLabel="重启"
+            actionLabel="閲嶅惎"
             onAction={() => {
-              void window.ackem.voice?.restartService?.().then(() => refreshEnv())
+              void window.Ackem.voice?.restartService?.().then(() => refreshEnv())
             }}
           />
         </SettingsActionStack>
       </SettingsBlock>
 
-      <SettingsBlock title="功能开关">
+      <SettingsBlock title="鍔熻兘寮€鍏?>
         <SettingsToggleRow
-          title="启用语音功能"
+          title="鍚敤璇煶鍔熻兘"
           hint={
             envReady
-              ? '开启后可在剧院模式使用麦克风对话'
-              : '建议先点击上方「一键准备语音环境」'
+              ? '寮€鍚悗鍙湪鍓ч櫌妯″紡浣跨敤楹﹀厠椋庡璇?
+              : '寤鸿鍏堢偣鍑讳笂鏂广€屼竴閿噯澶囪闊崇幆澧冦€?
           }
           checked={settings.enabled}
           onChange={(checked) => {
@@ -243,19 +243,19 @@ export function VoiceSettings(): JSX.Element {
           }}
         />
         <SettingsToggleRow
-          title="TTS 自动播报回复"
+          title="TTS 鑷姩鎾姤鍥炲"
           hint={
             TTS_BROADCAST_ENABLED
-              ? 'LLM 文字回复完成后，按情绪标签合成语音'
-              : '灰度中，暂不可用（后续版本开放）'
+              ? 'LLM 鏂囧瓧鍥炲瀹屾垚鍚庯紝鎸夋儏缁爣绛惧悎鎴愯闊?
+              : '鐏板害涓紝鏆備笉鍙敤锛堝悗缁増鏈紑鏀撅級'
           }
           checked={TTS_BROADCAST_ENABLED ? settings.ttsEnabled : false}
           disabled={!TTS_BROADCAST_ENABLED}
           onChange={(checked) => update({ ttsEnabled: checked })}
         />
         <SettingsToggleRow
-          title="记住剧院麦克风状态"
-          hint="下次进入剧院时恢复上次开/关"
+          title="璁颁綇鍓ч櫌楹﹀厠椋庣姸鎬?
+          hint="涓嬫杩涘叆鍓ч櫌鏃舵仮澶嶄笂娆″紑/鍏?
           checked={settings.rememberMicState}
           disabled={!settings.enabled}
           onChange={(checked) => update({ rememberMicState: checked })}
@@ -264,22 +264,22 @@ export function VoiceSettings(): JSX.Element {
 
       {settings.enabled ? (
         <>
-          <SettingsBlock title="语音识别">
-            <SettingsField label="ASR 模型">
+          <SettingsBlock title="璇煶璇嗗埆">
+            <SettingsField label="ASR 妯″瀷">
               <select
                 value={settings.asrModel}
                 onChange={(e) => update({ asrModel: e.target.value as 'base' | 'small' })}
                 className="field-input w-full"
               >
-                <option value="base">base — 快（约 1–3s）</option>
-                <option value="small">small — 准（约 2–5s）</option>
+                <option value="base">base 鈥?蹇紙绾?1鈥?s锛?/option>
+                <option value="small">small 鈥?鍑嗭紙绾?2鈥?s锛?/option>
               </select>
             </SettingsField>
           </SettingsBlock>
 
           <SettingsBlock
-            title="TTS 播报"
-            hint={TTS_BROADCAST_ENABLED ? undefined : '灰度中 · 接口已预留，后续开放'}
+            title="TTS 鎾姤"
+            hint={TTS_BROADCAST_ENABLED ? undefined : '鐏板害涓?路 鎺ュ彛宸查鐣欙紝鍚庣画寮€鏀?}
           >
             <div
               className={
@@ -287,7 +287,7 @@ export function VoiceSettings(): JSX.Element {
               }
               aria-disabled={!TTS_BROADCAST_ENABLED}
             >
-            <SettingsField label="TTS 引擎">
+            <SettingsField label="TTS 寮曟搸">
               <select
                 value={settings.ttsEngine}
                 onChange={(e) =>
@@ -295,24 +295,24 @@ export function VoiceSettings(): JSX.Element {
                 }
                 className="field-input w-full"
               >
-                <option value="auto">自动（优先神经网络，失败降级本机）</option>
-                <option value="piper">Piper 离线（可导入音色包，推荐）</option>
+                <option value="auto">鑷姩锛堜紭鍏堢缁忕綉缁滐紝澶辫触闄嶇骇鏈満锛?/option>
+                <option value="piper">Piper 绂荤嚎锛堝彲瀵煎叆闊宠壊鍖咃紝鎺ㄨ崘锛?/option>
                 {GPT_SOVITS_VOICE_ENABLED ? (
-                  <option value="gpt-sovits">GPT-SoVITS 语音包（角色声线，需 GPU）</option>
+                  <option value="gpt-sovits">GPT-SoVITS 璇煶鍖咃紙瑙掕壊澹扮嚎锛岄渶 GPU锛?/option>
                 ) : null}
-                <option value="edge-tts">edge-tts 在线（音质最好，需联网）</option>
-                <option value="local-sapi">本机系统语音（机械感强）</option>
-                <option value="cosyvoice">CosyVoice（需 GPU）</option>
+                <option value="edge-tts">edge-tts 鍦ㄧ嚎锛堥煶璐ㄦ渶濂斤紝闇€鑱旂綉锛?/option>
+                <option value="local-sapi">鏈満绯荤粺璇煶锛堟満姊版劅寮猴級</option>
+                <option value="cosyvoice">CosyVoice锛堥渶 GPU锛?/option>
               </select>
                 <p className="settings-field-footnote">
-                  想自己导入音色：选 Piper，把 `.onnx` + `.onnx.json` 放进用户目录
-                  `voice-models/piper/`（见下方说明），重启语音服务即可。在线推荐 edge-tts 晓晓。
-                  GPT-SoVITS 内置角色声线接口已预留，后续版本开放。
+                  鎯宠嚜宸卞鍏ラ煶鑹诧細閫?Piper锛屾妸 `.onnx` + `.onnx.json` 鏀捐繘鐢ㄦ埛鐩綍
+                  `voice-models/piper/`锛堣涓嬫柟璇存槑锛夛紝閲嶅惎璇煶鏈嶅姟鍗冲彲銆傚湪绾挎帹鑽?edge-tts 鏅撴檽銆?
+                  GPT-SoVITS 鍐呯疆瑙掕壊澹扮嚎鎺ュ彛宸查鐣欙紝鍚庣画鐗堟湰寮€鏀俱€?
                 </p>
             </SettingsField>
 
             {GPT_SOVITS_VOICE_ENABLED && settings.ttsEngine === 'gpt-sovits' && (
-              <SettingsField label="GPT-SoVITS 语音包">
+              <SettingsField label="GPT-SoVITS 璇煶鍖?>
                 <select
                   value={settings.ttsGptSovitsModel}
                   onChange={(e) => update({ ttsGptSovitsModel: e.target.value })}
@@ -320,25 +320,25 @@ export function VoiceSettings(): JSX.Element {
                   disabled={gptSovitsVoices.length === 0}
                 >
                   {gptSovitsVoices.length === 0 ? (
-                    <option value="">未检测到语音包</option>
+                    <option value="">鏈娴嬪埌璇煶鍖?/option>
                   ) : (
                     gptSovitsVoices.map((v) => (
                       <option key={v.id} value={v.id}>
                         {v.label || v.id}
-                        {v.language ? ` · ${v.language}` : ''}
+                        {v.language ? ` 路 ${v.language}` : ''}
                       </option>
                     ))
                   )}
                 </select>
                 <p className="settings-field-footnote">
-                  Ackem 内置 Ackem 女声语音包，开箱即用（无需训练、无需单独下载）。
-                  首次说话约 30–60 秒加载模型，需 NVIDIA GPU。也可改用 Piper / edge-tts。
+                  Ackem 鍐呯疆 Ackem 濂冲０璇煶鍖咃紝寮€绠卞嵆鐢紙鏃犻渶璁粌銆佹棤闇€鍗曠嫭涓嬭浇锛夈€?
+                  棣栨璇磋瘽绾?30鈥?0 绉掑姞杞芥ā鍨嬶紝闇€ NVIDIA GPU銆備篃鍙敼鐢?Piper / edge-tts銆?
                 </p>
               </SettingsField>
             )}
 
             {settings.ttsEngine === 'piper' && (
-              <SettingsField label="离线音色包">
+              <SettingsField label="绂荤嚎闊宠壊鍖?>
                 <select
                   value={settings.ttsPiperModel}
                   onChange={(e) => update({ ttsPiperModel: e.target.value })}
@@ -346,27 +346,27 @@ export function VoiceSettings(): JSX.Element {
                   disabled={piperVoices.length === 0}
                 >
                   {piperVoices.length === 0 ? (
-                    <option value="">未检测到音色包</option>
+                    <option value="">鏈娴嬪埌闊宠壊鍖?/option>
                   ) : (
                     piperVoices.map((v) => (
                       <option key={v.id} value={v.id}>
                         {v.label || v.id}
-                        {v.language ? ` · ${v.language}` : ''}
+                        {v.language ? ` 路 ${v.language}` : ''}
                       </option>
                     ))
                   )}
                 </select>
                 <p className="settings-field-footnote">
-                  导入路径（二选一）：<br />
-                  1. %APPDATA%\Ackem\voice-models\piper\你的音色名\<br />
-                  2. 开发版 Ackem\voice-service\models\piper\<br />
-                  每个文件夹放一对同名 `.onnx` 与 `.onnx.json`。详见该目录下 README.md。
+                  瀵煎叆璺緞锛堜簩閫変竴锛夛細<br />
+                  1. %APPDATA%\Ackem\voice-models\piper\浣犵殑闊宠壊鍚峔<br />
+                  2. 寮€鍙戠増 Ackem\voice-service\models\piper\<br />
+                  姣忎釜鏂囦欢澶规斁涓€瀵瑰悓鍚?`.onnx` 涓?`.onnx.json`銆傝瑙佽鐩綍涓?README.md銆?
                 </p>
               </SettingsField>
             )}
 
             {(settings.ttsEngine === 'auto' || settings.ttsEngine === 'edge-tts') && (
-              <SettingsField label="在线音色">
+              <SettingsField label="鍦ㄧ嚎闊宠壊">
                 <select
                   value={settings.ttsVoice}
                   onChange={(e) =>
@@ -374,15 +374,15 @@ export function VoiceSettings(): JSX.Element {
                   }
                   className="field-input w-full"
                 >
-                  <option value="xiaoxiao">晓晓（女声，推荐）</option>
-                  <option value="xiaoyi">晓伊（女声）</option>
-                  <option value="yunxi">云希（男声）</option>
-                  <option value="yunjian">云健（男声）</option>
+                  <option value="xiaoxiao">鏅撴檽锛堝コ澹帮紝鎺ㄨ崘锛?/option>
+                  <option value="xiaoyi">鏅撲紛锛堝コ澹帮級</option>
+                  <option value="yunxi">浜戝笇锛堢敺澹帮級</option>
+                  <option value="yunjian">浜戝仴锛堢敺澹帮級</option>
                 </select>
               </SettingsField>
             )}
 
-            <SettingsField label={`TTS 音量 · ${settings.ttsVolume}%`}>
+            <SettingsField label={`TTS 闊抽噺 路 ${settings.ttsVolume}%`}>
               <input
                 type="range"
                 min={0}
@@ -394,7 +394,7 @@ export function VoiceSettings(): JSX.Element {
               />
             </SettingsField>
 
-            <SettingsField label={`打断阈值 · ${settings.interruptThreshold} ms`}>
+            <SettingsField label={`鎵撴柇闃堝€?路 ${settings.interruptThreshold} ms`}>
               <input
                 type="range"
                 min={100}
@@ -405,19 +405,19 @@ export function VoiceSettings(): JSX.Element {
                 className="settings-range"
                 disabled={!TTS_BROADCAST_ENABLED}
               />
-              <p className="settings-field-footnote">TTS 播放中，用户持续说话超过此时间则打断播报</p>
+              <p className="settings-field-footnote">TTS 鎾斁涓紝鐢ㄦ埛鎸佺画璇磋瘽瓒呰繃姝ゆ椂闂村垯鎵撴柇鎾姤</p>
             </SettingsField>
             </div>
           </SettingsBlock>
 
-          <SettingsBlock title="交互模式" hint="VAD 半双工为默认；嘈杂环境可切换 PTT">
+          <SettingsBlock title="浜や簰妯″紡" hint="VAD 鍗婂弻宸ヤ负榛樿锛涘槇鏉傜幆澧冨彲鍒囨崲 PTT">
             <SettingsOptionCards
               name="voiceMode"
               value={settings.voiceMode}
               onChange={(v) => update({ voiceMode: v })}
               options={[
-                { value: 'vad', label: 'VAD 半双工', hint: '自动检测说话与静默' },
-                { value: 'ptt', label: 'PTT 按住说话', hint: '按住麦克风键说话，松开识别' }
+                { value: 'vad', label: 'VAD 鍗婂弻宸?, hint: '鑷姩妫€娴嬭璇濅笌闈欓粯' },
+                { value: 'ptt', label: 'PTT 鎸変綇璇磋瘽', hint: '鎸変綇楹﹀厠椋庨敭璇磋瘽锛屾澗寮€璇嗗埆' }
               ]}
             />
 
@@ -426,13 +426,13 @@ export function VoiceSettings(): JSX.Element {
               value={settings.inputChannel}
               onChange={(v) => update({ inputChannel: v })}
               options={[
-                { value: 'dual', label: '双通道', hint: '语音 + 文字；识别结果可编辑后发送' },
-                { value: 'voice-only', label: '仅语音', hint: '隐藏文字输入，识别后直接发送' },
-                { value: 'text-only', label: '仅文字', hint: '关闭麦克风，传统打字' }
+                { value: 'dual', label: '鍙岄€氶亾', hint: '璇煶 + 鏂囧瓧锛涜瘑鍒粨鏋滃彲缂栬緫鍚庡彂閫? },
+                { value: 'voice-only', label: '浠呰闊?, hint: '闅愯棌鏂囧瓧杈撳叆锛岃瘑鍒悗鐩存帴鍙戦€? },
+                { value: 'text-only', label: '浠呮枃瀛?, hint: '鍏抽棴楹﹀厠椋庯紝浼犵粺鎵撳瓧' }
               ]}
             />
 
-            <SettingsField label={`静默阈值 · ${settings.silenceThreshold} ms`}>
+            <SettingsField label={`闈欓粯闃堝€?路 ${settings.silenceThreshold} ms`}>
               <input
                 type="range"
                 min={500}
@@ -442,14 +442,14 @@ export function VoiceSettings(): JSX.Element {
                 onChange={(e) => update({ silenceThreshold: Number(e.target.value) })}
                 className="settings-range"
               />
-              <p className="settings-field-footnote">判定「说完一句话」的静默时长（中文建议 800–1200ms）</p>
+              <p className="settings-field-footnote">鍒ゅ畾銆岃瀹屼竴鍙ヨ瘽銆嶇殑闈欓粯鏃堕暱锛堜腑鏂囧缓璁?800鈥?200ms锛?/p>
             </SettingsField>
           </SettingsBlock>
         </>
       ) : (
         <p className="settings-note settings-note--inset">
-          开启语音后，在剧院模式可使用<strong>麦克风输入</strong>（语音识别后发送）。
-          TTS 语音播报灰度中，Ackem 暂不以语音回复。首次使用点「一键准备语音环境」即可。
+          寮€鍚闊冲悗锛屽湪鍓ч櫌妯″紡鍙娇鐢?strong>楹﹀厠椋庤緭鍏?/strong>锛堣闊宠瘑鍒悗鍙戦€侊級銆?
+          TTS 璇煶鎾姤鐏板害涓紝Ackem 鏆備笉浠ヨ闊冲洖澶嶃€傞娆′娇鐢ㄧ偣銆屼竴閿噯澶囪闊崇幆澧冦€嶅嵆鍙€?
         </p>
       )}
     </>

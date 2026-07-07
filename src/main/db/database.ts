@@ -1,5 +1,5 @@
-// [database] — 嵌入式 SQLite 网关（单例 per dataRoot）
-// 路径：{dataRoot}/ackem.db（与 layout / settings 的 dataRoot 一致，非固定 /data）
+﻿// [database] 鈥?宓屽叆寮?SQLite 缃戝叧锛堝崟渚?per dataRoot锛?
+// 璺緞锛歿dataRoot}/Ackem.db锛堜笌 layout / settings 鐨?dataRoot 涓€鑷达紝闈炲浐瀹?/data锛?
 
 import Database from 'better-sqlite3'
 import { mkdirSync, rmSync } from 'node:fs'
@@ -20,10 +20,10 @@ import { importLegacyDataIfNeeded } from './importLegacy'
 const pools = new Map<string, Database.Database>()
 const legacyImported = new Set<string>()
 
-/** Vitest 批量测试时仅走 JSON，避免 Windows 上 WAL 锁文件；database.test.ts 会设 ACKEM_SQLITE_IN_TEST=1 */
+/** Vitest 鎵归噺娴嬭瘯鏃朵粎璧?JSON锛岄伩鍏?Windows 涓?WAL 閿佹枃浠讹紱database.test.ts 浼氳 Ackem_SQLITE_IN_TEST=1 */
 function sqliteEnabled(): boolean {
-  if (process.env.ACKEM_DISABLE_SQLITE === '1') return false
-  if (process.env.VITEST === 'true' && process.env.ACKEM_SQLITE_IN_TEST !== '1') return false
+  if (process.env.Ackem_DISABLE_SQLITE === '1') return false
+  if (process.env.VITEST === 'true' && process.env.Ackem_SQLITE_IN_TEST !== '1') return false
   return true
 }
 
@@ -86,7 +86,7 @@ function runMigrations(db: Database.Database): void {
   }
 }
 
-/** 打开或复用 dataRoot 下的 ackem.db；失败时返回 null（调用方回退 JSON） */
+/** 鎵撳紑鎴栧鐢?dataRoot 涓嬬殑 Ackem.db锛涘け璐ユ椂杩斿洖 null锛堣皟鐢ㄦ柟鍥為€€ JSON锛?*/
 export function getDatabase(dataRoot: string): Database.Database | null {
   if (!sqliteEnabled()) return null
   const cached = pools.get(dataRoot)
@@ -141,7 +141,7 @@ export function withTransaction<T>(dataRoot: string, fn: (db: Database.Database)
   return run()
 }
 
-/** 归档 / memory:clearAll：清空结构化表，保留 schema_meta 与 FTS 壳 */
+/** 褰掓。 / memory:clearAll锛氭竻绌虹粨鏋勫寲琛紝淇濈暀 schema_meta 涓?FTS 澹?*/
 export function clearStructuredData(dataRoot: string): void {
   const db = getDatabase(dataRoot)
   if (!db) return

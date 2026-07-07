@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { t } from '../lib/i18n'
-import type { AppSettings } from '../ackem'
+import type { AppSettings } from '../Ackem'
 import type { CompanionSkinBinding } from '../../../shared/companionSkin'
 import { CompanionAvatar } from './CompanionAvatar'
 
@@ -8,15 +8,15 @@ export function CompanionSkinSection(props: {
   form: AppSettings
   setForm: (f: AppSettings) => void
   pushToast: (t: string) => void
-  /** 嵌入设置分组时去掉外层卡片 */
+  /** 宓屽叆璁剧疆鍒嗙粍鏃跺幓鎺夊灞傚崱鐗?*/
   embedded?: boolean
 }): JSX.Element {
   const [skins, setSkins] = useState<CompanionSkinBinding[]>([])
 
   useEffect(() => {
-    void window.ackem.companionSkinList().then(setSkins)
-    window.ackem.onCompanionSkinChanged(() => {
-      void window.ackem.companionSkinList().then(setSkins)
+    void window.Ackem.companionSkinList().then(setSkins)
+    window.Ackem.onCompanionSkinChanged(() => {
+      void window.Ackem.companionSkinList().then(setSkins)
     })
   }, [])
 
@@ -26,9 +26,9 @@ export function CompanionSkinSection(props: {
     <>
       {!props.embedded ? (
         <>
-          <h2 className="text-sm font-semibold text-ink">伴侣形象</h2>
+          <h2 className="text-sm font-semibold text-ink">浼翠荆褰㈣薄</h2>
           <p className="mt-2 text-xs text-ink-muted">
-            左下角光球/皮肤位（主面板与桌宠窗同步）。Live2D 插件当前为几何光球预览，非 Cubism 模型。
+            宸︿笅瑙掑厜鐞?鐨偆浣嶏紙涓婚潰鏉夸笌妗屽疇绐楀悓姝ワ級銆侺ive2D 鎻掍欢褰撳墠涓哄嚑浣曞厜鐞冮瑙堬紝闈?Cubism 妯″瀷銆?
           </p>
         </>
       ) : null}
@@ -43,19 +43,19 @@ export function CompanionSkinSection(props: {
                 checked={(s.pluginId || '') === activeId}
                 onChange={async () => {
                   const id = s.pluginId || null
-                  const r = await window.ackem.companionSkinSetActive(id)
+                  const r = await window.Ackem.companionSkinSetActive(id)
                   if (r.ok) {
                     props.setForm({ ...props.form, activeCompanionSkinPluginId: id ?? undefined })
-                    props.pushToast(id ? `已切换：${s.pluginName}` : '已恢复默认形象')
+                    props.pushToast(id ? `宸插垏鎹細${s.pluginName}` : '宸叉仮澶嶉粯璁ゅ舰璞?)
                   }
                 }}
               />
               <span className="text-ink">{s.pluginName}</span>
               {s.implementationStatus === 'preview' && (
-                <span className="exp-muted text-[10px]">（几何预览 · W8 Cubism）</span>
+                <span className="exp-muted text-[10px]">锛堝嚑浣曢瑙?路 W8 Cubism锛?/span>
               )}
               {s.implementationStatus === 'stub' && (
-                <span className="exp-muted text-[10px]">（Stub 预览）</span>
+                <span className="exp-muted text-[10px]">锛圫tub 棰勮锛?/span>
               )}
             </label>
           ))}

@@ -1,4 +1,4 @@
-// [memory-viz/useMemoryVizData] — 统一取数 Hook
+﻿// [memory-viz/useMemoryVizData] 鈥?缁熶竴鍙栨暟 Hook
 
 import { useState, useCallback, useEffect } from 'react'
 import type { MemoryFact, Triple, Episode, MemoryStats } from './types'
@@ -33,11 +33,11 @@ export function useMemoryVizData(): VizData {
     setLoading(true)
     try {
       const [f, t, a, e, s] = await Promise.all([
-        window.ackem.memoryList(),
-        window.ackem.kgList(),
-        window.ackem.associationList(),
-        window.ackem.episodeList(),
-        window.ackem.memoryStats()
+        window.Ackem.memoryList(),
+        window.Ackem.kgList(),
+        window.Ackem.associationList(),
+        window.Ackem.episodeList(),
+        window.Ackem.memoryStats()
       ])
       setFacts(f as MemoryFact[])
       setTriples(t as Triple[])
@@ -56,7 +56,7 @@ export function useMemoryVizData(): VizData {
   }, [load])
 
   useEffect(() => {
-    const off = window.ackem.onMemoryUpdated?.(() => {
+    const off = window.Ackem.onMemoryUpdated?.(() => {
       void load()
     })
     return () => off?.()

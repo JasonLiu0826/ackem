@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto'
+﻿import { randomUUID } from 'node:crypto'
 import type {
   OpenForUPermissionId,
   PermissionRequestPayload
@@ -41,7 +41,7 @@ export function resolvePermissionRequest(requestId: string, decision: Permission
 }
 
 export function shouldAutoApprovePermissions(): boolean {
-  return process.env.ACKEM_AUTO_APPROVE_PERMISSIONS === '1'
+  return process.env.Ackem_AUTO_APPROVE_PERMISSIONS === '1'
 }
 
 export async function requestUserPermissionApproval(

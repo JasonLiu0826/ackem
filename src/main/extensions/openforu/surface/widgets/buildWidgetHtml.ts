@@ -1,4 +1,4 @@
-/** 宿主 Widget Surface HTML（IR 客户端脚本） */
+﻿/** 瀹夸富 Widget Surface HTML锛圛R 瀹㈡埛绔剼鏈級 */
 
 import type { OpenForUWidgetId } from '../../../../../shared/openforuWidgets'
 import { widgetActionManifest } from '../../../../../shared/openforuWidgets'
@@ -13,10 +13,10 @@ function escapeHtml(text: string): string {
 
 const IR_BOOT = `
 (function () {
-  var api = window.ackem && window.ackem.surface;
+  var api = window.Ackem && window.Ackem.surface;
   if (!api) {
     var el = document.getElementById('status');
-    if (el) el.textContent = '（surface IR 未加载）';
+    if (el) el.textContent = '锛坰urface IR 鏈姞杞斤級';
     return;
   }
   function render(state) {
@@ -81,45 +81,45 @@ export function buildWidgetHtml(
   switch (widgetId) {
     case 'timer.pomodoro':
       body = `
-    <span class="badge">OpenForU · timer.pomodoro</span>
+    <span class="badge">OpenForU 路 timer.pomodoro</span>
     <h1>${safeTitle}</h1>
     <div class="timer" id="timer">${String(config.focusMinutes ?? 25).padStart(2, '0')}:00</div>
-    <div class="phase" id="phase">就绪</div>
+    <div class="phase" id="phase">灏辩华</div>
     <div class="actions">${actionButtons(widgetId, actions)}</div>
-    <p id="status">点击开始专注</p>`
+    <p id="status">鐐瑰嚮寮€濮嬩笓娉?/p>`
       break
     case 'timer.countdown':
       body = `
-    <span class="badge">OpenForU · timer.countdown</span>
+    <span class="badge">OpenForU 路 timer.countdown</span>
     <h1>${safeTitle}</h1>
     <div class="timer" id="timer">${formatSec(Number(config.durationSec ?? 300))}</div>
-    <div class="phase" id="phase">${escapeHtml(String(config.label ?? '倒计时'))}</div>
+    <div class="phase" id="phase">${escapeHtml(String(config.label ?? '鍊掕鏃?))}</div>
     <div class="actions">${actionButtons(widgetId, actions)}</div>
-    <p id="status">就绪</p>`
+    <p id="status">灏辩华</p>`
       break
     case 'counter.simple':
       body = `
-    <span class="badge">OpenForU · counter.simple</span>
+    <span class="badge">OpenForU 路 counter.simple</span>
     <h1>${safeTitle}</h1>
     <div class="count" id="count">${String(config.initial ?? 0)}</div>
     <div class="actions">${actionButtons(widgetId, actions)}</div>
-    <p id="status">计数器</p>`
+    <p id="status">璁℃暟鍣?/p>`
       break
     case 'checklist.basic': {
-      const items = (config.items as string[] | undefined) ?? ['第一项']
+      const items = (config.items as string[] | undefined) ?? ['绗竴椤?]
       const list = items
         .map((item) => `<li>${escapeHtml(item)}</li>`)
         .join('')
       body = `
-    <span class="badge">OpenForU · checklist.basic</span>
+    <span class="badge">OpenForU 路 checklist.basic</span>
     <h1>${safeTitle}</h1>
     <ul>${list}</ul>
     <div class="actions">${actionButtons(widgetId, actions)}</div>
-    <p id="status">清单 ${items.length} 项</p>`
+    <p id="status">娓呭崟 ${items.length} 椤?/p>`
       break
     }
     default:
-      body = `<h1>${safeTitle}</h1><p id="status">未知 widget</p>`
+      body = `<h1>${safeTitle}</h1><p id="status">鏈煡 widget</p>`
   }
 
   return `<!DOCTYPE html>

@@ -1,13 +1,13 @@
-// [P-12] BGM 轻音乐 — 占位 manifest（未接入 coordinator.boot）
+﻿// [P-12] BGM 杞婚煶涔?鈥?鍗犱綅 manifest锛堟湭鎺ュ叆 coordinator.boot锛?
 import type { PluginManifest } from '../../../types'
 
 export const MANIFEST: PluginManifest = {
-  "id": "ackem/bgm-music@0.0.1",
-  "name": "BGM 轻音乐",
+  "id": "Ackem/bgm-music@0.0.1",
+  "name": "BGM 杞婚煶涔?,
   "version": "0.0.1",
   "category": "plugin",
   "pluginType": "tool",
-  "description": "[P-12] 背景音乐播放",
+  "description": "[P-12] 鑳屾櫙闊充箰鎾斁",
   "author": "JasonLiu0826",
   "license": "AGPL-3.0",
   "main": "stub.ts",
@@ -24,5 +24,5 @@ export const MANIFEST: PluginManifest = {
     "p-12"
   ]
 } as PluginManifest
-export const PLUGIN_ID = 'ackem/bgm-music@0.0.1'
+export const PLUGIN_ID = 'Ackem/bgm-music@0.0.1'
 export const SPEC_ID = 'P-12'

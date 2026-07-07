@@ -1,28 +1,28 @@
-import type { DesktopAgentAction } from '../../shared/desktopAgent'
+﻿import type { DesktopAgentAction } from '../../shared/desktopAgent'
 
 export const DESKTOP_AGENT_ACTION_LABELS: Record<DesktopAgentAction, string> = {
-  list_folder: '列出目录内容',
-  search_files: '搜索文件',
-  stat_file: '查看文件信息',
-  grep_text: '在目录中搜索文本',
-  read_text: '读取文本文件',
-  read_document: '读取文档',
-  read_image: '读取图片',
-  open_folder: '打开文件夹',
-  open_file: '打开文件',
-  open_app: '打开应用程序',
-  close_file: '关闭文件窗口',
-  close_app: '关闭应用程序',
-  copy_path: '复制',
-  move_path: '移动或重命名',
-  mkdir: '新建文件夹',
-  write_text: '写入文本文件',
-  delete_path: '删除',
-  download_file: '下载文件',
-  download_and_install: '下载并安装',
-  run_installer: '运行安装包',
-  import_to_ackem: '导入到 Ackem',
-  focus_app: '将应用带到前台'
+  list_folder: '鍒楀嚭鐩綍鍐呭',
+  search_files: '鎼滅储鏂囦欢',
+  stat_file: '鏌ョ湅鏂囦欢淇℃伅',
+  grep_text: '鍦ㄧ洰褰曚腑鎼滅储鏂囨湰',
+  read_text: '璇诲彇鏂囨湰鏂囦欢',
+  read_document: '璇诲彇鏂囨。',
+  read_image: '璇诲彇鍥剧墖',
+  open_folder: '鎵撳紑鏂囦欢澶?,
+  open_file: '鎵撳紑鏂囦欢',
+  open_app: '鎵撳紑搴旂敤绋嬪簭',
+  close_file: '鍏抽棴鏂囦欢绐楀彛',
+  close_app: '鍏抽棴搴旂敤绋嬪簭',
+  copy_path: '澶嶅埗',
+  move_path: '绉诲姩鎴栭噸鍛藉悕',
+  mkdir: '鏂板缓鏂囦欢澶?,
+  write_text: '鍐欏叆鏂囨湰鏂囦欢',
+  delete_path: '鍒犻櫎',
+  download_file: '涓嬭浇鏂囦欢',
+  download_and_install: '涓嬭浇骞跺畨瑁?,
+  run_installer: '杩愯瀹夎鍖?,
+  import_to_Ackem: '瀵煎叆鍒?Ackem',
+  focus_app: '灏嗗簲鐢ㄥ甫鍒板墠鍙?
 }
 
 export const CLOSE_ACTIONS = new Set<DesktopAgentAction>(['close_file', 'close_app'])

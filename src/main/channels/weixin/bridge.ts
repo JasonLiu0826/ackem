@@ -1,4 +1,4 @@
-import { loadChatHistoryFromDb } from '../../db/repos/chatHistory'
+﻿import { loadChatHistoryFromDb } from '../../db/repos/chatHistory'
 import { loadSettings } from '../../settings'
 import { formatBubbleForWeixin } from '../markdownForChannel'
 import { runCompanionTurn } from '../companionTurn'
@@ -70,7 +70,7 @@ async function handleInboundMessage(
         account,
         peerId,
         contextToken,
-        bubbles: [{ kind: 'text', body: '我暂时只能读懂文字消息哦～直接打字给我就好。', delayBeforeMs: 0 }],
+        bubbles: [{ kind: 'text', body: '鎴戞殏鏃跺彧鑳借鎳傛枃瀛楁秷鎭摝锝炵洿鎺ユ墦瀛楃粰鎴戝氨濂姐€?, delayBeforeMs: 0 }],
         dataRoot
       })
     return
@@ -107,19 +107,19 @@ async function handleInboundMessage(
   } catch (e) {
     if (e instanceof CompanionTurnError) {
       if (e.code === 'EMBEDDING_WARMING') {
-        rawReply = '记忆引擎还在预热，请稍等半分钟再试～'
+        rawReply = '璁板繂寮曟搸杩樺湪棰勭儹锛岃绋嶇瓑鍗婂垎閽熷啀璇曪綖'
       } else if (e.code === 'NO_API') {
-        rawReply = '我这边还没配置好对话模型，请在 Ackem 设置里填写 API 后再试。'
+        rawReply = '鎴戣繖杈硅繕娌￠厤缃ソ瀵硅瘽妯″瀷锛岃鍦?Ackem 璁剧疆閲屽～鍐?API 鍚庡啀璇曘€?
       } else {
-        rawReply = '没听清，你再说一次？'
+        rawReply = '娌″惉娓咃紝浣犲啀璇翠竴娆★紵'
       }
     } else {
       log.error('turn failed', e)
-      rawReply = '刚才有点卡，你再发一次好吗？'
+      rawReply = '鍒氭墠鏈夌偣鍗★紝浣犲啀鍙戜竴娆″ソ鍚楋紵'
     }
   }
 
-  if (!rawReply.trim()) rawReply = '…'
+  if (!rawReply.trim()) rawReply = '鈥?
 
   const bubbles = documentDelivery
     ? planWeixinDocumentDelivery({

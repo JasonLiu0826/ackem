@@ -1,4 +1,4 @@
-// [memory-viz/KgGraphView] — 知识图谱力导向图
+﻿// [memory-viz/KgGraphView] 鈥?鐭ヨ瘑鍥捐氨鍔涘鍚戝浘
 
 import { useRef, useEffect, useState, useCallback } from 'react'
 import { useMemoryVizData } from './useMemoryVizData'
@@ -45,7 +45,7 @@ export function KgGraphView(): JSX.Element {
   const handleNodeClick = useCallback(async (node: ForceNode) => {
     setSelectedEntity(node.label)
     try {
-      const hops = await window.ackem.kgOneHop(node.label)
+      const hops = await window.Ackem.kgOneHop(node.label)
       setOneHop(hops as Triple[])
       setSelectedTriple(null)
     } catch { setOneHop([]) }
@@ -116,7 +116,7 @@ export function KgGraphView(): JSX.Element {
   if (triples.length === 0) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center p-8">
-        <div className="text-4xl">🧠</div>
+        <div className="text-4xl">馃</div>
         <div className="text-sm text-ink-muted">
           {t('viz.noKgData').split('\n').map((line, i) => <span key={i}>{line}{i === 0 && <br />}</span>)}
         </div>

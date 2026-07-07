@@ -245,7 +245,7 @@ export async function runCompanionTurn(input: CompanionTurnInput): Promise<Compa
     sink.webContents,
     {
       messages,
-      settings: { ...settings, disableChatTools: true, asyncMultiMessageEnabled: false },
+      settings: { ...settings, disableChatTools: false, asyncMultiMessageEnabled: false },
       turnId,
       intensityMod: pre.intensityMod ?? 1,
       sessionId

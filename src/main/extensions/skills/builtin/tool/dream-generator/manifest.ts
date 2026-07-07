@@ -1,24 +1,24 @@
-import type { SkillManifest } from '../../../types'
+﻿import type { SkillManifest } from '../../../types'
 import type { DispatchConfig } from '../../../../protocols'
 
 const DISPATCH: DispatchConfig = {
   mode: 'dispatched',
   subtype: 'llm_function_call',
   time: { active_hours: '20:00-23:59', cooldown_minutes: 60 },
-  habits: ['用户要梦境、睡前故事、昨夜梦'],
-  scenarios: ['用记忆碎片拼短梦境叙事'],
-  summary: '用近期记忆与情绪标签生成短梦境故事（创意向）。',
-  keywords: ['梦境', '做梦', '昨夜梦', '睡前故事'],
+  habits: ['鐢ㄦ埛瑕佹ⅵ澧冦€佺潯鍓嶆晠浜嬨€佹槰澶滄ⅵ'],
+  scenarios: ['鐢ㄨ蹇嗙鐗囨嫾鐭ⅵ澧冨彊浜?],
+  summary: '鐢ㄨ繎鏈熻蹇嗕笌鎯呯华鏍囩鐢熸垚鐭ⅵ澧冩晠浜嬶紙鍒涙剰鍚戯級銆?,
+  keywords: ['姊﹀', '鍋氭ⅵ', '鏄ㄥ姊?, '鐫″墠鏁呬簨'],
   personality_hint: 'dreamy'
 }
 
 export const DREAM_GENERATOR_MANIFEST: SkillManifest = {
-  id: 'ackem/dream-generator@0.0.1',
-  name: '梦境生成器',
+  id: 'Ackem/dream-generator@0.0.1',
+  name: '姊﹀鐢熸垚鍣?,
   version: '0.0.1',
   category: 'skill',
   skillType: 'tool',
-  description: '用记忆碎片与情绪生成短梦境故事。',
+  description: '鐢ㄨ蹇嗙鐗囦笌鎯呯华鐢熸垚鐭ⅵ澧冩晠浜嬨€?,
   author: 'JasonLiu0826',
   license: 'AGPL-3.0',
   main: 'skill.ts',
@@ -29,11 +29,11 @@ export const DREAM_GENERATOR_MANIFEST: SkillManifest = {
   adultModeSafe: true,
   functionDef: {
     name: 'generate_dream',
-    description: '生成一段短梦境/睡前幻想故事。',
+    description: '鐢熸垚涓€娈电煭姊﹀/鐫″墠骞绘兂鏁呬簨銆?,
     parameters: {
       type: 'object',
       properties: {
-        mood: { type: 'string', description: '可选情绪基调' }
+        mood: { type: 'string', description: '鍙€夋儏缁熀璋? }
       },
       required: []
     }

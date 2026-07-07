@@ -1,19 +1,19 @@
-import type { PluginManifest } from '../../../types'
+﻿import type { PluginManifest } from '../../../types'
 
-export const LIVE2D_DESKTOP_PLUGIN_ID = 'ackem/live2d-desktop@0.0.1'
+export const LIVE2D_DESKTOP_PLUGIN_ID = 'Ackem/live2d-desktop@0.0.1'
 
-/** W8 前为几何光球 + 桌宠窗，非 Cubism Live2D 模型 */
+/** W8 鍓嶄负鍑犱綍鍏夌悆 + 妗屽疇绐楋紝闈?Cubism Live2D 妯″瀷 */
 export const LIVE2D_DESKTOP_IMPLEMENTATION_STATUS = 'preview' as const
 
 export const LIVE2D_DESKTOP_MANIFEST: PluginManifest = {
   id: LIVE2D_DESKTOP_PLUGIN_ID,
-  name: 'Live2D 桌宠（几何预览）',
+  name: 'Live2D 妗屽疇锛堝嚑浣曢瑙堬級',
   version: '0.0.1',
   category: 'plugin',
   pluginType: 'skin',
   implementationStatus: LIVE2D_DESKTOP_IMPLEMENTATION_STATUS,
   description:
-    '【Preview · W8 Cubism 待实装】当前为几何光球 + 独立桌宠窗预览，无 Live2D 骨骼/表情；Cubism 模型与情绪联动留 W8。',
+    '銆怭review 路 W8 Cubism 寰呭疄瑁呫€戝綋鍓嶄负鍑犱綍鍏夌悆 + 鐙珛妗屽疇绐楅瑙堬紝鏃?Live2D 楠ㄩ/琛ㄦ儏锛汣ubism 妯″瀷涓庢儏缁仈鍔ㄧ暀 W8銆?,
   author: 'JasonLiu0826',
   license: 'AGPL-3.0',
   main: 'bootstrap.ts',
@@ -25,9 +25,9 @@ export const LIVE2D_DESKTOP_MANIFEST: PluginManifest = {
     mode: 'manual',
     time: { manual_trigger: true },
     habits: [],
-    scenarios: ['用户打开桌宠窗 / 切换伴侣皮肤'],
-    summary: 'Preview：几何光球桌宠壳（非 Cubism Live2D 模型）',
-    keywords: ['桌宠', 'live2d', '皮肤']
+    scenarios: ['鐢ㄦ埛鎵撳紑妗屽疇绐?/ 鍒囨崲浼翠荆鐨偆'],
+    summary: 'Preview锛氬嚑浣曞厜鐞冩瀹犲３锛堥潪 Cubism Live2D 妯″瀷锛?,
+    keywords: ['妗屽疇', 'live2d', '鐨偆']
   },
   companionSkin: {
     renderer: 'react-builtin',

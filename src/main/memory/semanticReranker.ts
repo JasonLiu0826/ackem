@@ -1,24 +1,24 @@
-// [semanticReranker] — LLM 语义重排序
-// 职责：用 LLM 对 TF-IDF 粗排结果做精排，给真正的语义相关性打分
-// 对标 OpenAI/MemGPT embedding 搜索的语义理解能力，但用 LLM 而非 embedding 模型
-// 引用：../engine/types, ../engine/ackemParams, ./factStore
+﻿// [semanticReranker] 鈥?LLM 璇箟閲嶆帓搴?
+// 鑱岃矗锛氱敤 LLM 瀵?TF-IDF 绮楁帓缁撴灉鍋氱簿鎺掞紝缁欑湡姝ｇ殑璇箟鐩稿叧鎬ф墦鍒?
+// 瀵规爣 OpenAI/MemGPT embedding 鎼滅储鐨勮涔夌悊瑙ｈ兘鍔涳紝浣嗙敤 LLM 鑰岄潪 embedding 妯″瀷
+// 寮曠敤锛?./engine/types, ../engine/AckemParams, ./factStore
 
 import type { LlmClient, MemoryFact } from '../engine/types'
 
 const RERANK_TEMPERATURE = 0.0
 
-const SYSTEM_PROMPT = `你是一个记忆相关性裁判。用户说了一句话，系统检索到若干条候选记忆。你需要判断每条记忆与用户当前消息的语义相关性。
+const SYSTEM_PROMPT = `浣犳槸涓€涓蹇嗙浉鍏虫€ц鍒ゃ€傜敤鎴疯浜嗕竴鍙ヨ瘽锛岀郴缁熸绱㈠埌鑻ュ共鏉″€欓€夎蹇嗐€備綘闇€瑕佸垽鏂瘡鏉¤蹇嗕笌鐢ㄦ埛褰撳墠娑堟伅鐨勮涔夌浉鍏虫€с€?
 
-评分标准：
-- 10：直接相关（用户正在谈论这个确切的主题）
-- 7-9：高度相关（用户话题与记忆深层关联）
-- 4-6：部分相关（某些关键词或主题重叠）
-- 1-3：弱相关（勉强有联系）
-- 0：完全无关
+璇勫垎鏍囧噯锛?
+- 10锛氱洿鎺ョ浉鍏筹紙鐢ㄦ埛姝ｅ湪璋堣杩欎釜纭垏鐨勪富棰橈級
+- 7-9锛氶珮搴︾浉鍏筹紙鐢ㄦ埛璇濋涓庤蹇嗘繁灞傚叧鑱旓級
+- 4-6锛氶儴鍒嗙浉鍏筹紙鏌愪簺鍏抽敭璇嶆垨涓婚閲嶅彔锛?
+- 1-3锛氬急鐩稿叧锛堝媺寮烘湁鑱旂郴锛?
+- 0锛氬畬鍏ㄦ棤鍏?
 
-仅输出 JSON 数组，每条包含 factId 和 score：
-[{"id":"事实ID","score":8},{"id":"事实ID","score":3},...]
-按 score 从高到低排序。`
+浠呰緭鍑?JSON 鏁扮粍锛屾瘡鏉″寘鍚?factId 鍜?score锛?
+[{"id":"浜嬪疄ID","score":8},{"id":"浜嬪疄ID","score":3},...]
+鎸?score 浠庨珮鍒颁綆鎺掑簭銆俙
 
 export class SemanticReranker {
   async rerank(
@@ -30,7 +30,7 @@ export class SemanticReranker {
     if (candidates.length <= 1) return candidates
 
     const items = candidates.slice(0, 20).map(f =>
-      `ID:${f.id} | [${f.subcategory}] ${f.subject}：${f.summary.slice(0, 100)}`
+      `ID:${f.id} | [${f.subcategory}] ${f.subject}锛?{f.summary.slice(0, 100)}`
     ).join('\n')
 
     let raw: string
@@ -39,7 +39,7 @@ export class SemanticReranker {
         temperature: RERANK_TEMPERATURE,
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: `用户消息：${query}\n\n候选记忆：\n${items}` }
+          { role: 'user', content: `鐢ㄦ埛娑堟伅锛?{query}\n\n鍊欓€夎蹇嗭細\n${items}` }
         ]
       })
     } catch {

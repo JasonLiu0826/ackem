@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
@@ -104,11 +104,11 @@
       <div class="orb" aria-hidden="true"></div>
       <h1>Ackem</h1>
       <div class="progress-wrap">
-        <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="正在启动">
+        <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="姝ｅ湪鍚姩">
           <span id="bar"></span>
         </div>
         <p class="status">
-          <span id="status">正在启动…</span>
+          <span id="status">姝ｅ湪鍚姩鈥?/span>
           <span class="pct" id="pct">0%</span>
         </p>
       </div>
@@ -118,7 +118,7 @@
         var lang = (navigator.language || '').toLowerCase()
         var statusEl = document.getElementById('status')
         if (statusEl) {
-          statusEl.textContent = lang.startsWith('en') ? 'Starting…' : '正在启动…'
+          statusEl.textContent = lang.startsWith('en') ? 'Starting鈥? : '姝ｅ湪鍚姩鈥?
         }
 
         function easeOut(t) {
@@ -147,3 +147,5 @@
     </script>
   </body>
 </html>
+
+

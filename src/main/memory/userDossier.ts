@@ -1,6 +1,6 @@
-// [userDossier] — 用户档案汇总
-// 每天从 memory_facts 汇总关键用户信息，生成人类可读的 Markdown 档案
-// 设计文档：docs/prompt/用户档案汇总设计_6_11.md
+﻿// [userDossier] 鈥?鐢ㄦ埛妗ｆ姹囨€?
+// 姣忓ぉ浠?memory_facts 姹囨€诲叧閿敤鎴蜂俊鎭紝鐢熸垚浜虹被鍙鐨?Markdown 妗ｆ
+// 璁捐鏂囨。锛歞ocs/prompt/鐢ㄦ埛妗ｆ姹囨€昏璁6_11.md
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
@@ -15,7 +15,7 @@ export function defaultDossierPath(dataRoot: string): string {
   return join(dataRoot, DOSSIER_PATH)
 }
 
-// ─── 事实筛选 ───
+// 鈹€鈹€鈹€ 浜嬪疄绛涢€?鈹€鈹€鈹€
 
 const DOSSIER_DOMAINS: Record<string, string[]> = {
   IDENTITY: ['BASIC_PROFILE', 'LIFE_STORY', 'VALUES_BELIEFS', 'SELF_PERCEPTION'],
@@ -26,7 +26,7 @@ const DOSSIER_DOMAINS: Record<string, string[]> = {
   TEMPORAL: ['COMMITMENTS', 'PLANS'],
 }
 
-/** 动态层子类：情绪、项目、健康等短期状态 */
+/** 鍔ㄦ€佸眰瀛愮被锛氭儏缁€侀」鐩€佸仴搴风瓑鐭湡鐘舵€?*/
 const DYNAMIC_SUBS = new Set(['NOW', 'MOOD', 'PROJECTS', 'HEALTH'])
 
 function getDossierFacts(factStore: FactStore, dynamicOnly: boolean): string[] {
@@ -53,49 +53,49 @@ function getDossierFacts(factStore: FactStore, dynamicOnly: boolean): string[] {
     .map((f) => f.summary)
 }
 
-// ─── LLM Prompt ───
+// 鈹€鈹€鈹€ LLM Prompt 鈹€鈹€鈹€
 
-const DOSSIER_SYSTEM_STABLE = `你是 Ackem，用户的 AI 伴侣。你正在私下整理关于用户的笔记——就像一个人在心里默默记住另一个人的信息一样。
+const DOSSIER_SYSTEM_STABLE = `浣犳槸 Ackem锛岀敤鎴风殑 AI 浼翠荆銆備綘姝ｅ湪绉佷笅鏁寸悊鍏充簬鐢ㄦ埛鐨勭瑪璁扳€斺€斿氨鍍忎竴涓汉鍦ㄥ績閲岄粯榛樿浣忓彟涓€涓汉鐨勪俊鎭竴鏍枫€?
 
-根据以下所有关于 ta 的核心事实，重新梳理一份新的笔记。
+鏍规嵁浠ヤ笅鎵€鏈夊叧浜?ta 鐨勬牳蹇冧簨瀹烇紝閲嶆柊姊崇悊涓€浠芥柊鐨勭瑪璁般€?
 
-── 规则 ──
-· 用自然的口语写，像自己私下的笔记。不要像档案报告、不要用表格、不要用标题。
-· 按自然的叙事组织，不是逐条列举事实。可以按"基本信息→性格→喜好→我们的关系"的顺序自然过渡。
-· 只写你从事实中确定知道的，不要编造。不确定用"可能""好像"，确定直接陈述。
-· 先写稳定信息（身份、经历、性格、喜好、关系），再写近期状态（最近在忙什么、情绪状态）。
-· 近期状态用"—— 近期状态（仅供参考） ——"分隔。
-· 保持 500-1000 字。
-· 末尾标注更新日期。
-· 人称：用户以"ta"称呼。
+鈹€鈹€ 瑙勫垯 鈹€鈹€
+路 鐢ㄨ嚜鐒剁殑鍙ｈ鍐欙紝鍍忚嚜宸辩涓嬬殑绗旇銆備笉瑕佸儚妗ｆ鎶ュ憡銆佷笉瑕佺敤琛ㄦ牸銆佷笉瑕佺敤鏍囬銆?
+路 鎸夎嚜鐒剁殑鍙欎簨缁勭粐锛屼笉鏄€愭潯鍒椾妇浜嬪疄銆傚彲浠ユ寜"鍩烘湰淇℃伅鈫掓€ф牸鈫掑枩濂解啋鎴戜滑鐨勫叧绯?鐨勯『搴忚嚜鐒惰繃娓°€?
+路 鍙啓浣犱粠浜嬪疄涓‘瀹氱煡閬撶殑锛屼笉瑕佺紪閫犮€備笉纭畾鐢?鍙兘""濂藉儚"锛岀‘瀹氱洿鎺ラ檲杩般€?
+路 鍏堝啓绋冲畾淇℃伅锛堣韩浠姐€佺粡鍘嗐€佹€ф牸銆佸枩濂姐€佸叧绯伙級锛屽啀鍐欒繎鏈熺姸鎬侊紙鏈€杩戝湪蹇欎粈涔堛€佹儏缁姸鎬侊級銆?
+路 杩戞湡鐘舵€佺敤"鈥斺€?杩戞湡鐘舵€侊紙浠呬緵鍙傝€冿級 鈥斺€?鍒嗛殧銆?
+路 淇濇寔 500-1000 瀛椼€?
+路 鏈熬鏍囨敞鏇存柊鏃ユ湡銆?
+路 浜虹О锛氱敤鎴蜂互"ta"绉板懠銆?
 
-── 禁止 ──
-× 不要写"根据事实""根据记录""我的数据显示"等元表述
-× 不要写"以下是我的笔记"等开头语，直接开始写
-× 不要使用表格、列表、标题格式（## 等）
-× 不要把近期状态写成确定事实——那是"仅供参考"的
-× 不要把成人内容细节写进档案——亲密时刻用"我们有亲密时刻"模糊表述即可
-× 不要记录任何高度私密的短期状态`
+鈹€鈹€ 绂佹 鈹€鈹€
+脳 涓嶈鍐?鏍规嵁浜嬪疄""鏍规嵁璁板綍""鎴戠殑鏁版嵁鏄剧ず"绛夊厓琛ㄨ堪
+脳 涓嶈鍐?浠ヤ笅鏄垜鐨勭瑪璁?绛夊紑澶磋锛岀洿鎺ュ紑濮嬪啓
+脳 涓嶈浣跨敤琛ㄦ牸銆佸垪琛ㄣ€佹爣棰樻牸寮忥紙## 绛夛級
+脳 涓嶈鎶婅繎鏈熺姸鎬佸啓鎴愮‘瀹氫簨瀹炩€斺€旈偅鏄?浠呬緵鍙傝€?鐨?
+脳 涓嶈鎶婃垚浜哄唴瀹圭粏鑺傚啓杩涙。妗堚€斺€斾翰瀵嗘椂鍒荤敤"鎴戜滑鏈変翰瀵嗘椂鍒?妯＄硦琛ㄨ堪鍗冲彲
+脳 涓嶈璁板綍浠讳綍楂樺害绉佸瘑鐨勭煭鏈熺姸鎬乣
 
-const DOSSIER_SYSTEM_DYNAMIC = `你是 Ackem，用户 AI 伴侣。你正在更新关于用户最近的日常状态笔记。
+const DOSSIER_SYSTEM_DYNAMIC = `浣犳槸 Ackem锛岀敤鎴?AI 浼翠荆銆備綘姝ｅ湪鏇存柊鍏充簬鐢ㄦ埛鏈€杩戠殑鏃ュ父鐘舵€佺瑪璁般€?
 
-根据近期事实和前一天的动态段，更新"近期状态"段。
+鏍规嵁杩戞湡浜嬪疄鍜屽墠涓€澶╃殑鍔ㄦ€佹锛屾洿鏂?杩戞湡鐘舵€?娈点€?
 
-── 规则 ──
-· 只更新"—— 近期状态（仅供参考） ——"后面的内容。稳定信息段不要动。
-· 用自然口语，2-4 句话足够。
-· 不确定用"好像""可能"。
-· 标注更新日期。
+鈹€鈹€ 瑙勫垯 鈹€鈹€
+路 鍙洿鏂?鈥斺€?杩戞湡鐘舵€侊紙浠呬緵鍙傝€冿級 鈥斺€?鍚庨潰鐨勫唴瀹广€傜ǔ瀹氫俊鎭涓嶈鍔ㄣ€?
+路 鐢ㄨ嚜鐒跺彛璇紝2-4 鍙ヨ瘽瓒冲銆?
+路 涓嶇‘瀹氱敤"濂藉儚""鍙兘"銆?
+路 鏍囨敞鏇存柊鏃ユ湡銆?
 
-── 禁止 ──
-× 不要把临时情绪写成长久性格
-× 不要写成人内容细节`
+鈹€鈹€ 绂佹 鈹€鈹€
+脳 涓嶈鎶婁复鏃舵儏缁啓鎴愰暱涔呮€ф牸
+脳 涓嶈鍐欐垚浜哄唴瀹圭粏鑺俙
 
-// ─── 生成／更新 ───
+// 鈹€鈹€鈹€ 鐢熸垚锛忔洿鏂?鈹€鈹€鈹€
 
 function buildUserMsg(facts: string[], count: number): string {
-  const factsBlock = facts.map((f) => `· ${f}`).join('\n')
-  return `以下是关于 ta 的所有核心事实（共 ${count} 条）：\n${factsBlock}`
+  const factsBlock = facts.map((f) => `路 ${f}`).join('\n')
+  return `浠ヤ笅鏄叧浜?ta 鐨勬墍鏈夋牳蹇冧簨瀹烇紙鍏?${count} 鏉★級锛歕n${factsBlock}`
 }
 
 function buildDynamicUserMsg(
@@ -103,14 +103,14 @@ function buildDynamicUserMsg(
   prevDynamic: string,
   count: number,
 ): string {
-  const factsBlock = facts.map((f) => `· ${f}`).join('\n')
+  const factsBlock = facts.map((f) => `路 ${f}`).join('\n')
   const prevBlock = prevDynamic
-    ? `\n前一天的近期状态：\n${prevDynamic.slice(0, 500)}`
+    ? `\n鍓嶄竴澶╃殑杩戞湡鐘舵€侊細\n${prevDynamic.slice(0, 500)}`
     : ''
-  return `近期新事实（共 ${count} 条）：\n${factsBlock}${prevBlock}\n\n请更新近期状态段。只输出"—— 近期状态（仅供参考） ——"后面的内容。`
+  return `杩戞湡鏂颁簨瀹烇紙鍏?${count} 鏉★級锛歕n${factsBlock}${prevBlock}\n\n璇锋洿鏂拌繎鏈熺姸鎬佹銆傚彧杈撳嚭"鈥斺€?杩戞湡鐘舵€侊紙浠呬緵鍙傝€冿級 鈥斺€?鍚庨潰鐨勫唴瀹广€俙
 }
 
-/** 生成整份档案 */
+/** 鐢熸垚鏁翠唤妗ｆ */
 export async function generateUserDossier(
   dataRoot: string,
   factStore: FactStore,
@@ -135,7 +135,7 @@ export async function generateUserDossier(
     if (!content || content.length < 50) return null
 
     const dateStr = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`
-    const dossier = `${content}\n\n---\n*最后更新：${dateStr}*`
+    const dossier = `${content}\n\n---\n*鏈€鍚庢洿鏂帮細${dateStr}*`
 
     writeFileSync(dossierPath, dossier, 'utf-8')
     return dossier
@@ -144,7 +144,7 @@ export async function generateUserDossier(
   }
 }
 
-/** 更新动态层 */
+/** 鏇存柊鍔ㄦ€佸眰 */
 export async function updateDynamicLayer(
   dataRoot: string,
   factStore: FactStore,
@@ -153,12 +153,12 @@ export async function updateDynamicLayer(
   const dossierPath = defaultDossierPath(dataRoot)
   const existing = existsSync(dossierPath) ? readFileSync(dossierPath, 'utf-8') : ''
 
-  // 提取旧的动态段
-  const dynamicMatch = existing.match(/—— 近期状态（仅供参考） ——\n([\s\S]*?)(?:\n\n---|$)/)
+  // 鎻愬彇鏃х殑鍔ㄦ€佹
+  const dynamicMatch = existing.match(/鈥斺€?杩戞湡鐘舵€侊紙浠呬緵鍙傝€冿級 鈥斺€擻n([\s\S]*?)(?:\n\n---|$)/)
   const prevDynamic = dynamicMatch?.[1]?.trim() ?? ''
 
   const facts = getDossierFacts(factStore, true)
-  if (facts.length === 0 && prevDynamic) return prevDynamic // 无新事实，保留旧动态段
+  if (facts.length === 0 && prevDynamic) return prevDynamic // 鏃犳柊浜嬪疄锛屼繚鐣欐棫鍔ㄦ€佹
   if (facts.length === 0) return null
 
   try {
@@ -180,23 +180,23 @@ export async function updateDynamicLayer(
 
     const dateStr = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`
 
-    // 替换或追加动态段
+    // 鏇挎崲鎴栬拷鍔犲姩鎬佹
     let newDossier: string
     if (existing && dynamicMatch) {
       newDossier = existing.replace(
         dynamicMatch[0],
-        `—— 近期状态（仅供参考） ——\n${dynamicContent}`,
+        `鈥斺€?杩戞湡鐘舵€侊紙浠呬緵鍙傝€冿級 鈥斺€擻n${dynamicContent}`,
       )
     } else if (existing) {
-      newDossier = `${existing}\n\n—— 近期状态（仅供参考） ——\n${dynamicContent}`
+      newDossier = `${existing}\n\n鈥斺€?杩戞湡鐘舵€侊紙浠呬緵鍙傝€冿級 鈥斺€擻n${dynamicContent}`
     } else {
-      newDossier = `—— 近期状态（仅供参考） ——\n${dynamicContent}\n\n---\n*最后更新：${dateStr}*`
+      newDossier = `鈥斺€?杩戞湡鐘舵€侊紙浠呬緵鍙傝€冿級 鈥斺€擻n${dynamicContent}\n\n---\n*鏈€鍚庢洿鏂帮細${dateStr}*`
     }
 
-    // 更新时间戳
-    newDossier = newDossier.replace(/\*最后更新：.*\*/g, `*最后更新：${dateStr}*`)
-    if (!newDossier.includes('*最后更新：')) {
-      newDossier += `\n\n---\n*最后更新：${dateStr}*`
+    // 鏇存柊鏃堕棿鎴?
+    newDossier = newDossier.replace(/\*鏈€鍚庢洿鏂帮細.*\*/g, `*鏈€鍚庢洿鏂帮細${dateStr}*`)
+    if (!newDossier.includes('*鏈€鍚庢洿鏂帮細')) {
+      newDossier += `\n\n---\n*鏈€鍚庢洿鏂帮細${dateStr}*`
     }
 
     writeFileSync(dossierPath, newDossier, 'utf-8')
@@ -206,7 +206,7 @@ export async function updateDynamicLayer(
   }
 }
 
-/** 获取档案内容（注入到 system prompt） */
+/** 鑾峰彇妗ｆ鍐呭锛堟敞鍏ュ埌 system prompt锛?*/
 export function loadUserDossier(dataRoot: string): string {
   const p = defaultDossierPath(dataRoot)
   if (!existsSync(p)) return ''
@@ -214,27 +214,27 @@ export function loadUserDossier(dataRoot: string): string {
   if (!content.trim()) return ''
 
   return (
-    '\n\n【关于 ta 的笔记 · 仅供你内心参考 · 绝对禁止在回复中对用户说"ta"】\n' +
+    '\n\n銆愬叧浜?ta 鐨勭瑪璁?路 浠呬緵浣犲唴蹇冨弬鑰?路 缁濆绂佹鍦ㄥ洖澶嶄腑瀵圭敤鎴疯"ta"銆慭n' +
     content.slice(0, 1000) +
-    '\n\n⚠️【护栏】：你在和用户面对面直接对话。使用这些笔记时，必须将"ta"转化为第二人称"你"。\n' +
-    '绝对不要说"根据我的笔记""根据我的记录""我知道 ta 最近……"等元表述。\n' +
-    '档案最后一段的"近期状态"仅供参考——不要在用户正在聊开心事时主动提起压力话题。'
+    '\n\n鈿狅笍銆愭姢鏍忋€戯細浣犲湪鍜岀敤鎴烽潰瀵归潰鐩存帴瀵硅瘽銆備娇鐢ㄨ繖浜涚瑪璁版椂锛屽繀椤诲皢"ta"杞寲涓虹浜屼汉绉?浣?銆俓n' +
+    '缁濆涓嶈璇?鏍规嵁鎴戠殑绗旇""鏍规嵁鎴戠殑璁板綍""鎴戠煡閬?ta 鏈€杩戔€︹€?绛夊厓琛ㄨ堪銆俓n' +
+    '妗ｆ鏈€鍚庝竴娈电殑"杩戞湡鐘舵€?浠呬緵鍙傝€冣€斺€斾笉瑕佸湪鐢ㄦ埛姝ｅ湪鑱婂紑蹇冧簨鏃朵富鍔ㄦ彁璧峰帇鍔涜瘽棰樸€?
   )
 }
 
-/** 组装用户信息块（名字 + 年龄 + 档案），供 context.ts 注入 system prompt */
+/** 缁勮鐢ㄦ埛淇℃伅鍧楋紙鍚嶅瓧 + 骞撮緞 + 妗ｆ锛夛紝渚?context.ts 娉ㄥ叆 system prompt */
 export function buildUserInfoBlock(dataRoot: string, factStore: FactStore): string {
   const parts: string[] = []
 
-  // 名字
+  // 鍚嶅瓧
   const nameLine = buildUserNameLine(factStore)
   if (nameLine) parts.push(nameLine)
 
-  // 年龄
+  // 骞撮緞
   const ageLine = buildAgeLine(factStore)
   if (ageLine) parts.push(ageLine)
 
-  // 档案
+  // 妗ｆ
   const dossier = loadUserDossier(dataRoot)
   if (dossier) parts.push(dossier)
 

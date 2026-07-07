@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+﻿import { useEffect, useState, useCallback } from 'react'
 import { formatConfidencePercent } from '../../../shared/confidence'
 import { useAppStore } from '../store/appStore'
 import { ConfirmDialog } from './ConfirmDialog'
@@ -40,7 +40,7 @@ export function MemoryTimeline(): JSX.Element {
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const list = await window.ackem.memoryList() as MemoryFact[]
+      const list = await window.Ackem.memoryList() as MemoryFact[]
       setFacts(list)
     } catch { /* ignore */ }
     finally { setLoading(false) }
@@ -49,7 +49,7 @@ export function MemoryTimeline(): JSX.Element {
   useEffect(() => { void load() }, [load])
 
   useEffect(() => {
-    const off = window.ackem.onMemoryUpdated?.(() => {
+    const off = window.Ackem.onMemoryUpdated?.(() => {
       void load()
     })
     return () => off?.()
@@ -61,14 +61,14 @@ export function MemoryTimeline(): JSX.Element {
 
   const confirmRetire = async () => {
     if (!retireTarget) return
-    await window.ackem.memoryRetire(retireTarget.id)
+    await window.Ackem.memoryRetire(retireTarget.id)
     setRetireTarget(null)
     await load()
   }
 
   const handleUpdate = async (id: string) => {
     if (!editSummary.trim()) return
-    await window.ackem.memoryUpdate(id, { summary: editSummary })
+    await window.Ackem.memoryUpdate(id, { summary: editSummary })
     setEditId(null)
     await load()
   }
@@ -79,10 +79,10 @@ export function MemoryTimeline(): JSX.Element {
 
   const confirmArchive = async () => {
     setShowArchiveDialog(false)
-    await window.ackem.memoryClearAll()
+    await window.Ackem.memoryClearAll()
     useAppStore.getState().resetChat()
-    await window.ackem.saveChatHistory([])
-    await window.ackem.appReload()
+    await window.Ackem.saveChatHistory([])
+    await window.Ackem.appReload()
   }
 
   const cancelArchive = () => {
@@ -173,22 +173,22 @@ export function MemoryTimeline(): JSX.Element {
                     <div className="flex shrink-0 flex-col items-end gap-1.5">
                       <div className="flex items-center gap-1 text-[10px] text-ink-muted">
                         <span title={t('viz.weight')}>W{f.weight}</span>
-                        <span>·</span>
+                        <span>路</span>
                         <span title={t('viz.confidence')}>{formatConfidencePercent(f.confidence)}</span>
                       </div>
                       <div className="flex gap-1">
                         <button
                           type="button"
-                          onClick={async () => { await window.ackem.memoryFeedback(f.id, 'thumbs_up'); await load() }}
+                          onClick={async () => { await window.Ackem.memoryFeedback(f.id, 'thumbs_up'); await load() }}
                           title={t('timeline.useful')}
                           className="memory-action-btn memory-action-btn--success px-2 py-0.5"
-                        >👍</button>
+                        >馃憤</button>
                         <button
                           type="button"
-                          onClick={async () => { await window.ackem.memoryFeedback(f.id, 'thumbs_down'); await load() }}
+                          onClick={async () => { await window.Ackem.memoryFeedback(f.id, 'thumbs_down'); await load() }}
                           title={t('timeline.wrong')}
                           className="memory-action-btn memory-action-btn--warn px-2 py-0.5"
-                        >👎</button>
+                        >馃憥</button>
                         <button
                           type="button"
                           onClick={() => { setEditId(f.id); setEditSummary(f.summary) }}
@@ -210,7 +210,7 @@ export function MemoryTimeline(): JSX.Element {
       </div>
     </div>
 
-      {/* 单条记忆归档确认 */}
+      {/* 鍗曟潯璁板繂褰掓。纭 */}
       <ConfirmDialog
         open={retireTarget !== null}
         title={t('timeline.archiveTitle')}
@@ -222,11 +222,11 @@ export function MemoryTimeline(): JSX.Element {
       >
         <p>
           {t('timeline.archiveDesc')}
-          <span className="text-ink font-medium">「{retireTarget?.summary.slice(0, 80)}{(retireTarget?.summary.length ?? 0) > 80 ? '…' : ''}」</span>
+          <span className="text-ink font-medium">銆寋retireTarget?.summary.slice(0, 80)}{(retireTarget?.summary.length ?? 0) > 80 ? '鈥? : ''}銆?/span>
         </p>
       </ConfirmDialog>
 
-      {/* 清空全部确认 */}
+      {/* 娓呯┖鍏ㄩ儴纭 */}
       <ConfirmDialog
         open={showArchiveDialog}
         title={t('timeline.clearAllTitle')}

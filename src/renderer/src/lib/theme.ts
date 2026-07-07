@@ -1,6 +1,6 @@
-export type ThemeMode = 'light' | 'dark'
+﻿export type ThemeMode = 'light' | 'dark'
 
-const STORAGE_KEY = 'ackem-ui-theme'
+const STORAGE_KEY = 'Ackem-ui-theme'
 
 export function getStoredTheme(): ThemeMode | null {
   try {
@@ -31,8 +31,8 @@ export function applyTheme(mode: ThemeMode, options?: { broadcast?: boolean }): 
     /* ignore */
   }
   if (options?.broadcast === false) return
-  if (typeof window !== 'undefined' && window.ackem?.ui?.setTheme) {
-    void window.ackem.ui.setTheme(mode)
+  if (typeof window !== 'undefined' && window.Ackem?.ui?.setTheme) {
+    void window.Ackem.ui.setTheme(mode)
   }
 }
 
@@ -42,15 +42,15 @@ export function toggleTheme(current: ThemeMode): ThemeMode {
   return next
 }
 
-/** 主进程为权威来源，同步桌宠与主面板（localStorage 不跨 pet.html / index.html 共享） */
+/** 涓昏繘绋嬩负鏉冨▉鏉ユ簮锛屽悓姝ユ瀹犱笌涓婚潰鏉匡紙localStorage 涓嶈法 pet.html / index.html 鍏变韩锛?*/
 export function initThemeSync(): void {
-  if (typeof window === 'undefined' || !window.ackem?.ui?.onThemeChanged) return
+  if (typeof window === 'undefined' || !window.Ackem?.ui?.onThemeChanged) return
 
-  window.ackem.ui.onThemeChanged((mode) => {
+  window.Ackem.ui.onThemeChanged((mode) => {
     applyTheme(mode, { broadcast: false })
   })
 
-  void window.ackem.ui.getTheme().then((mode) => {
+  void window.Ackem.ui.getTheme().then((mode) => {
     applyTheme(mode, { broadcast: false })
   })
 }

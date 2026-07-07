@@ -1,7 +1,7 @@
-// [episodeExtractor] — 情节摘要提取器
-// 引用：../engine/types, ../engine/ackemParams, ../llmClient, ../prompt/memory-episode
+﻿// [episodeExtractor] 鈥?鎯呰妭鎽樿鎻愬彇鍣?
+// 寮曠敤锛?./engine/types, ../engine/AckemParams, ../llmClient, ../prompt/memory-episode
 
-import { EPISODE_EXTRACT_MSG_TRUNC, EPISODE_SUMMARY_MAX_CHARS } from '../engine/ackemParams'
+import { EPISODE_EXTRACT_MSG_TRUNC, EPISODE_SUMMARY_MAX_CHARS } from '../engine/AckemParams'
 import type { LlmClient } from '../engine/types'
 import { EPISODE_SYSTEM_PROMPT, EPISODE_TEMPERATURE } from '../prompt/memory-episode'
 
@@ -17,7 +17,7 @@ export class EpisodeExtractor {
     keywords: string[]
   } | null> {
     const dialogueText = exchanges
-      .map((ex, i) => `[第${turnRange.start + i}轮]\n用户：${ex.user.slice(0, EPISODE_EXTRACT_MSG_TRUNC)}\n伴侣：${ex.assistant.slice(0, EPISODE_EXTRACT_MSG_TRUNC)}`)
+      .map((ex, i) => `[绗?{turnRange.start + i}杞甝\n鐢ㄦ埛锛?{ex.user.slice(0, EPISODE_EXTRACT_MSG_TRUNC)}\n浼翠荆锛?{ex.assistant.slice(0, EPISODE_EXTRACT_MSG_TRUNC)}`)
       .join('\n\n')
 
     let raw: string
@@ -26,7 +26,7 @@ export class EpisodeExtractor {
         temperature: EPISODE_TEMPERATURE,
         messages: [
           { role: 'system', content: EPISODE_SYSTEM_PROMPT },
-          { role: 'user', content: `对话片段：\n${dialogueText}` }
+          { role: 'user', content: `瀵硅瘽鐗囨锛歕n${dialogueText}` }
         ]
       })
     } catch {
@@ -71,7 +71,7 @@ function parseEpisodeResult(raw: string): {
     emotionalIntensity: typeof parsed.emotionalIntensity === 'number'
       ? Math.max(0, Math.min(1, parsed.emotionalIntensity))
       : 0.5,
-    dominantEmotion: parsed.dominantEmotion ?? '中性',
+    dominantEmotion: parsed.dominantEmotion ?? '涓€?,
     keywords: Array.isArray(parsed.keywords)
       ? parsed.keywords.map(String).slice(0, 5)
       : []

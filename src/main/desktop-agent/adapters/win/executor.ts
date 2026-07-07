@@ -1,4 +1,4 @@
-import { spawn } from 'node:child_process'
+﻿import { spawn } from 'node:child_process'
 import {
   copyFileSync,
   existsSync,
@@ -27,32 +27,32 @@ export type ExecuteResult = {
 
 function statLine(path: string): string {
   const st = statSync(path)
-  const kind = st.isDirectory() ? '目录' : '文件'
-  return `${kind} · ${st.size} 字节 · 修改于 ${st.mtime.toISOString()}`
+  const kind = st.isDirectory() ? '鐩綍' : '鏂囦欢'
+  return `${kind} 路 ${st.size} 瀛楄妭 路 淇敼浜?${st.mtime.toISOString()}`
 }
 
 function listFolder(path: string): ExecuteResult {
   if (!existsSync(path)) {
-    return { ok: false, content: '路径不存在', summary: `目录不存在：${path}` }
+    return { ok: false, content: '璺緞涓嶅瓨鍦?, summary: `鐩綍涓嶅瓨鍦細${path}` }
   }
   const entries = readdirSync(path, { withFileTypes: true })
     .slice(0, LIST_LIMIT)
     .map((e) => `${e.isDirectory() ? '[DIR]' : '[FILE]'} ${e.name}`)
-  const suffix = entries.length >= LIST_LIMIT ? `\n…（仅显示前 ${LIST_LIMIT} 项）` : ''
+  const suffix = entries.length >= LIST_LIMIT ? `\n鈥︼紙浠呮樉绀哄墠 ${LIST_LIMIT} 椤癸級` : ''
   return {
     ok: true,
     content: entries.join('\n') + suffix,
-    summary: `已列出 ${basename(path)}（${entries.length} 项）`
+    summary: `宸插垪鍑?${basename(path)}锛?{entries.length} 椤癸級`
   }
 }
 
 function readTextFile(path: string, maxBytes = TEXT_READ_LIMIT): ExecuteResult {
   if (!existsSync(path)) {
-    return { ok: false, content: '文件不存在', summary: `读取失败：${path}` }
+    return { ok: false, content: '鏂囦欢涓嶅瓨鍦?, summary: `璇诲彇澶辫触锛?{path}` }
   }
   const st = statSync(path)
   if (st.isDirectory()) {
-    return { ok: false, content: '路径是目录', summary: '无法以文本读取目录' }
+    return { ok: false, content: '璺緞鏄洰褰?, summary: '鏃犳硶浠ユ枃鏈鍙栫洰褰? }
   }
   const buf = readFileSync(path)
   const slice = buf.subarray(0, maxBytes)
@@ -60,14 +60,14 @@ function readTextFile(path: string, maxBytes = TEXT_READ_LIMIT): ExecuteResult {
   const text = slice.toString('utf-8')
   return {
     ok: true,
-    content: text + (truncated ? `\n…（仅显示前 ${maxBytes} 字节）` : ''),
-    summary: `已读取 ${basename(path)}${truncated ? '（截断）' : ''}`
+    content: text + (truncated ? `\n鈥︼紙浠呮樉绀哄墠 ${maxBytes} 瀛楄妭锛塦 : ''),
+    summary: `宸茶鍙?${basename(path)}${truncated ? '锛堟埅鏂級' : ''}`
   }
 }
 
 function searchFiles(root: string, query: string): ExecuteResult {
   if (!existsSync(root)) {
-    return { ok: false, content: '路径不存在', summary: '搜索失败' }
+    return { ok: false, content: '璺緞涓嶅瓨鍦?, summary: '鎼滅储澶辫触' }
   }
   const q = query.toLowerCase()
   const hits: string[] = []
@@ -89,8 +89,8 @@ function searchFiles(root: string, query: string): ExecuteResult {
   walk(root, 0)
   return {
     ok: true,
-    content: hits.length ? hits.join('\n') : '（未找到匹配文件）',
-    summary: `搜索「${query}」找到 ${hits.length} 项`
+    content: hits.length ? hits.join('\n') : '锛堟湭鎵惧埌鍖归厤鏂囦欢锛?,
+    summary: `鎼滅储銆?{query}銆嶆壘鍒?${hits.length} 椤筦
   }
 }
 
@@ -130,17 +130,17 @@ function grepText(root: string, query: string): ExecuteResult {
   }
   return {
     ok: true,
-    content: hits.length ? hits.join('\n') : '（未找到包含该文本的文件）',
-    summary: `grep「${query}」${hits.length} 个文件`
+    content: hits.length ? hits.join('\n') : '锛堟湭鎵惧埌鍖呭惈璇ユ枃鏈殑鏂囦欢锛?,
+    summary: `grep銆?{query}銆?{hits.length} 涓枃浠禶
   }
 }
 
 async function shellOpen(path: string): Promise<ExecuteResult> {
   const err = await shell.openPath(path)
   if (err) {
-    return { ok: false, content: err, summary: `打开失败：${path}` }
+    return { ok: false, content: err, summary: `鎵撳紑澶辫触锛?{path}` }
   }
-  return { ok: true, content: `已打开 ${path}`, summary: `已打开 ${basename(path)}` }
+  return { ok: true, content: `宸叉墦寮€ ${path}`, summary: `宸叉墦寮€ ${basename(path)}` }
 }
 
 function runPowerShell(script: string): Promise<{ ok: boolean; output: string }> {
@@ -168,7 +168,7 @@ function runPowerShell(script: string): Promise<{ ok: boolean; output: string }>
 
 async function closeAppTarget(target: string): Promise<ExecuteResult> {
   if (isBlockedCloseTarget(target)) {
-    return { ok: false, content: '系统关键进程不可关闭', summary: '关闭被拒绝' }
+    return { ok: false, content: '绯荤粺鍏抽敭杩涚▼涓嶅彲鍏抽棴', summary: '鍏抽棴琚嫆缁? }
   }
   const name = target.replace(/\.exe$/i, '')
   const ps = `$p = Get-Process -Name '${name.replace(/'/g, "''")}' -ErrorAction SilentlyContinue; if (-not $p) { exit 2 }; $p | ForEach-Object { $_.CloseMainWindow() | Out-Null }; exit 0`
@@ -176,40 +176,40 @@ async function closeAppTarget(target: string): Promise<ExecuteResult> {
   if (!r.ok) {
     return {
       ok: false,
-      content: r.output || '未找到可关闭的窗口',
-      summary: `未能关闭 ${target}`
+      content: r.output || '鏈壘鍒板彲鍏抽棴鐨勭獥鍙?,
+      summary: `鏈兘鍏抽棴 ${target}`
     }
   }
-  return { ok: true, content: `已请求关闭 ${target}`, summary: `已关闭 ${target}` }
+  return { ok: true, content: `宸茶姹傚叧闂?${target}`, summary: `宸插叧闂?${target}` }
 }
 
 async function openAppTarget(target: string): Promise<ExecuteResult> {
   const ps = `Start-Process '${target.replace(/'/g, "''")}'`
   const r = await runPowerShell(ps)
   if (!r.ok) {
-    return { ok: false, content: r.output || '启动失败', summary: `未能打开 ${target}` }
+    return { ok: false, content: r.output || '鍚姩澶辫触', summary: `鏈兘鎵撳紑 ${target}` }
   }
-  return { ok: true, content: `已启动 ${target}`, summary: `已打开 ${target}` }
+  return { ok: true, content: `宸插惎鍔?${target}`, summary: `宸叉墦寮€ ${target}` }
 }
 
 async function downloadHttps(url: string, destPath: string): Promise<ExecuteResult> {
   if (!url.startsWith('https://')) {
-    return { ok: false, content: '仅支持 HTTPS 下载', summary: '下载被拒绝' }
+    return { ok: false, content: '浠呮敮鎸?HTTPS 涓嬭浇', summary: '涓嬭浇琚嫆缁? }
   }
   mkdirSync(dirname(destPath), { recursive: true })
   const res = await fetch(url)
   if (!res.ok) {
-    return { ok: false, content: `HTTP ${res.status}`, summary: '下载失败' }
+    return { ok: false, content: `HTTP ${res.status}`, summary: '涓嬭浇澶辫触' }
   }
   const buf = Buffer.from(await res.arrayBuffer())
   if (buf.length > 200 * 1024 * 1024) {
-    return { ok: false, content: '文件超过 200MB 上限', summary: '下载被拒绝' }
+    return { ok: false, content: '鏂囦欢瓒呰繃 200MB 涓婇檺', summary: '涓嬭浇琚嫆缁? }
   }
   writeFileSync(destPath, buf)
   return {
     ok: true,
-    content: `已下载到 ${destPath}（${buf.length} 字节）`,
-    summary: `已下载 ${basename(destPath)}`
+    content: `宸蹭笅杞藉埌 ${destPath}锛?{buf.length} 瀛楄妭锛塦,
+    summary: `宸蹭笅杞?${basename(destPath)}`
   }
 }
 
@@ -234,9 +234,9 @@ export async function executeDesktopAgentAction(
       return listFolder(path)
     case 'stat_file':
       if (!existsSync(path)) {
-        return { ok: false, content: '路径不存在', summary: `stat 失败：${path}` }
+        return { ok: false, content: '璺緞涓嶅瓨鍦?, summary: `stat 澶辫触锛?{path}` }
       }
-      return { ok: true, content: statLine(path), summary: `已查看 ${basename(path)} 信息` }
+      return { ok: true, content: statLine(path), summary: `宸叉煡鐪?${basename(path)} 淇℃伅` }
     case 'read_text':
       return readTextFile(path)
     case 'read_document': {
@@ -247,15 +247,15 @@ export async function executeDesktopAgentAction(
       return {
         ok: false,
         content:
-          'V1 暂不支持解析该文档格式全文；若为纯文本可改用 read_text，或先将文件导入 Ackem。',
-        summary: `文档格式 ${ext || '未知'} 暂未解析`
+          'V1 鏆備笉鏀寔瑙ｆ瀽璇ユ枃妗ｆ牸寮忓叏鏂囷紱鑻ヤ负绾枃鏈彲鏀圭敤 read_text锛屾垨鍏堝皢鏂囦欢瀵煎叆 Ackem銆?,
+        summary: `鏂囨。鏍煎紡 ${ext || '鏈煡'} 鏆傛湭瑙ｆ瀽`
       }
     }
     case 'read_image':
       return {
         ok: true,
-        content: existsSync(path) ? statLine(path) : '文件不存在',
-        summary: existsSync(path) ? `已定位图片 ${basename(path)}（OCR/Vision 后续版本）` : '图片不存在'
+        content: existsSync(path) ? statLine(path) : '鏂囦欢涓嶅瓨鍦?,
+        summary: existsSync(path) ? `宸插畾浣嶅浘鐗?${basename(path)}锛圤CR/Vision 鍚庣画鐗堟湰锛塦 : '鍥剧墖涓嶅瓨鍦?
       }
     case 'search_files':
       return searchFiles(path || ctx.cwd, query || basename(path))
@@ -275,23 +275,23 @@ export async function executeDesktopAgentAction(
     case 'copy_path':
       mkdirSync(dirname(pathTo), { recursive: true })
       copyFileSync(path, pathTo)
-      return { ok: true, content: `已复制到 ${pathTo}`, summary: `已复制 ${basename(path)}` }
+      return { ok: true, content: `宸插鍒跺埌 ${pathTo}`, summary: `宸插鍒?${basename(path)}` }
     case 'move_path':
       mkdirSync(dirname(pathTo), { recursive: true })
       renameSync(path, pathTo)
-      return { ok: true, content: `已移动到 ${pathTo}`, summary: `已移动 ${basename(path)}` }
+      return { ok: true, content: `宸茬Щ鍔ㄥ埌 ${pathTo}`, summary: `宸茬Щ鍔?${basename(path)}` }
     case 'mkdir':
       mkdirSync(path, { recursive: true })
-      return { ok: true, content: `已创建 ${path}`, summary: `已创建目录 ${basename(path)}` }
+      return { ok: true, content: `宸插垱寤?${path}`, summary: `宸插垱寤虹洰褰?${basename(path)}` }
     case 'write_text': {
       const content = typeof args.options?.content === 'string' ? args.options.content : ''
       mkdirSync(dirname(path), { recursive: true })
       writeFileSync(path, content, 'utf-8')
-      return { ok: true, content: `已写入 ${path}`, summary: `已写入 ${basename(path)}` }
+      return { ok: true, content: `宸插啓鍏?${path}`, summary: `宸插啓鍏?${basename(path)}` }
     }
     case 'delete_path': {
       await shell.trashItem(path)
-      return { ok: true, content: `已移入回收站：${path}`, summary: `已删除 ${basename(path)}` }
+      return { ok: true, content: `宸茬Щ鍏ュ洖鏀剁珯锛?{path}`, summary: `宸插垹闄?${basename(path)}` }
     }
     case 'download_file': {
       const dest = path || join(defaultDownloadDir(ctx.downloadDir), basename(new URL(url).pathname) || 'download.bin')
@@ -311,21 +311,21 @@ export async function executeDesktopAgentAction(
       return {
         ok: run.ok,
         content: `${dl.content}\n${run.content}`,
-        summary: `已下载并开始安装 ${fileName}`
+        summary: `宸蹭笅杞藉苟寮€濮嬪畨瑁?${fileName}`
       }
     }
-    case 'import_to_ackem': {
+    case 'import_to_Ackem': {
       const importsDir = join(ctx.dataRoot, 'imports')
       mkdirSync(importsDir, { recursive: true })
       const dest = join(importsDir, basename(path))
       copyFileSync(path, dest)
       return {
         ok: true,
-        content: `已复制到 ${dest}`,
-        summary: `已导入 ${basename(path)} 到 Ackem`
+        content: `宸插鍒跺埌 ${dest}`,
+        summary: `宸插鍏?${basename(path)} 鍒?Ackem`
       }
     }
     default:
-      return { ok: false, content: `未知 action: ${action}`, summary: '执行失败' }
+      return { ok: false, content: `鏈煡 action: ${action}`, summary: '鎵ц澶辫触' }
   }
 }

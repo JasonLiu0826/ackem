@@ -1,4 +1,4 @@
-import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs'
+﻿import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -14,7 +14,7 @@ export type SandboxProbeUpluginToolResult = SandboxProbeResult & {
 }
 
 /**
- * JE-1f：Agent Repair / Deploy 前探测 uplugin Worker（staticScan + esbuild + beforeUserMessage probe）
+ * JE-1f锛欰gent Repair / Deploy 鍓嶆帰娴?uplugin Worker锛坰taticScan + esbuild + beforeUserMessage probe锛?
  */
 export async function runSandboxProbeUpluginTool(
   bundle: UpluginArtifactBundle,
@@ -25,14 +25,14 @@ export async function runSandboxProbeUpluginTool(
     return {
       ok: true,
       skipped: true,
-      skipReason: 'template-only uplugin（无 main.ts，跳过 Worker 探测）',
+      skipReason: 'template-only uplugin锛堟棤 main.ts锛岃烦杩?Worker 鎺㈡祴锛?,
       errors: [],
       logs: [],
       durationMs: 0
     }
   }
 
-  const tmpDir = mkdtempSync(join(tmpdir(), 'ackem-sandbox-probe-'))
+  const tmpDir = mkdtempSync(join(tmpdir(), 'Ackem-sandbox-probe-'))
   const pluginDir = join(tmpDir, bundle.dirName || 'probe')
   mkdirSync(pluginDir, { recursive: true })
   writeFileSync(join(pluginDir, 'main.ts'), mainTs.endsWith('\n') ? mainTs : `${mainTs}\n`)

@@ -1,4 +1,4 @@
-import type { PlanDispatchDraft, PlanSummary } from './planSession'
+﻿import type { PlanDispatchDraft, PlanSummary } from './planSession'
 import {
   mergeDispatchDraftFromStructured,
   parsePlanStructuredBlock,
@@ -11,11 +11,11 @@ export type { PlanDispatchDraft, PlanSummary } from './planSession'
 export type PlanStageId = 'understand' | 'design' | 'generate' | 'validate' | 'deploy'
 
 export const PLAN_STAGES: { id: PlanStageId; label: string }[] = [
-  { id: 'understand', label: '理解需求' },
-  { id: 'design', label: '设计方案' },
-  { id: 'generate', label: '生成代码' },
-  { id: 'validate', label: '校验' },
-  { id: 'deploy', label: '部署' }
+  { id: 'understand', label: '鐞嗚В闇€姹? },
+  { id: 'design', label: '璁捐鏂规' },
+  { id: 'generate', label: '鐢熸垚浠ｇ爜' },
+  { id: 'validate', label: '鏍￠獙' },
+  { id: 'deploy', label: '閮ㄧ讲' }
 ]
 
 export type PlanChoiceOption = {
@@ -28,24 +28,24 @@ export type PlanChoiceOption = {
 type PlanMsgLike = { role: string; content: string }
 
 const DISPATCH_DIMS = [
-  { key: 'habits' as const, labels: ['habits', '习惯', '触发习惯', '用户习惯'] },
-  { key: 'scenarios' as const, labels: ['scenarios', '场景', '适用场景'] },
-  { key: 'summary' as const, labels: ['summary', '摘要', '功能摘要'] },
-  { key: 'keywords' as const, labels: ['keywords', '关键词', '触发词'] },
-  { key: 'mode' as const, labels: ['mode', '调度模式', 'dispatch.mode'] },
-  { key: 'artifactType' as const, labels: ['类型', 'artifact', '产物类型'] }
+  { key: 'habits' as const, labels: ['habits', '涔犳儻', '瑙﹀彂涔犳儻', '鐢ㄦ埛涔犳儻'] },
+  { key: 'scenarios' as const, labels: ['scenarios', '鍦烘櫙', '閫傜敤鍦烘櫙'] },
+  { key: 'summary' as const, labels: ['summary', '鎽樿', '鍔熻兘鎽樿'] },
+  { key: 'keywords' as const, labels: ['keywords', '鍏抽敭璇?, '瑙﹀彂璇?] },
+  { key: 'mode' as const, labels: ['mode', '璋冨害妯″紡', 'dispatch.mode'] },
+  { key: 'artifactType' as const, labels: ['绫诲瀷', 'artifact', '浜х墿绫诲瀷'] }
 ]
 
 function splitListValue(raw: string): string[] {
   return raw
-    .split(/[·,，、;；|│]/)
+    .split(/[路,锛屻€?锛泑鈹俔/)
     .map((s) => s.trim())
     .filter(Boolean)
 }
 
 function pickField(text: string, labels: string[]): string | undefined {
   for (const label of labels) {
-    const re = new RegExp(`${label}\\s*[=:：|｜]\\s*([^\\n]+)`, 'i')
+    const re = new RegExp(`${label}\\s*[=:锛殀锝淽\\s*([^\\n]+)`, 'i')
     const m = text.match(re)
     if (m?.[1]?.trim()) return m[1].trim()
   }
@@ -56,23 +56,23 @@ function applyDispatchField(draft: PlanDispatchDraft, keyRaw: string, valRaw: st
   const key = keyRaw.trim().toLowerCase()
   const val = valRaw.trim()
   if (!val) return
-  if (key === '类型' || key === 'artifact' || key === 'artifacttype') draft.artifactType = val
-  else if (key === 'mode' || key === '调度模式') draft.mode = val
-  else if (key === 'summary' || key === '摘要' || key === '功能摘要') draft.summary = val
-  else if (key === 'habits' || key === '习惯') draft.habits = splitListValue(val)
-  else if (key === 'scenarios' || key === '场景') draft.scenarios = splitListValue(val)
-  else if (key === 'keywords' || key === '关键词') draft.keywords = splitListValue(val)
-  else if (key === 'permissions' || key === '权限') draft.permissions = splitListValue(val)
+  if (key === '绫诲瀷' || key === 'artifact' || key === 'artifacttype') draft.artifactType = val
+  else if (key === 'mode' || key === '璋冨害妯″紡') draft.mode = val
+  else if (key === 'summary' || key === '鎽樿' || key === '鍔熻兘鎽樿') draft.summary = val
+  else if (key === 'habits' || key === '涔犳儻') draft.habits = splitListValue(val)
+  else if (key === 'scenarios' || key === '鍦烘櫙') draft.scenarios = splitListValue(val)
+  else if (key === 'keywords' || key === '鍏抽敭璇?) draft.keywords = splitListValue(val)
+  else if (key === 'permissions' || key === '鏉冮檺') draft.permissions = splitListValue(val)
 }
 
 function mergeFromConfirmedLine(draft: PlanDispatchDraft, line: string): void {
-  for (const part of line.split(/[·|│]/)) {
-    const m = part.trim().match(/^([\w.]+)\s*[=:：]\s*(.+)$/)
+  for (const part of line.split(/[路|鈹俔/)) {
+    const m = part.trim().match(/^([\w.]+)\s*[=:锛歖\s*(.+)$/)
     if (m) applyDispatchField(draft, m[1], m[2])
   }
 }
 
-/** 从 Agent 文本合并 dispatch draft（累积，不覆盖已有非空字段除非新值更长） */
+/** 浠?Agent 鏂囨湰鍚堝苟 dispatch draft锛堢疮绉紝涓嶈鐩栧凡鏈夐潪绌哄瓧娈甸櫎闈炴柊鍊兼洿闀匡級 */
 export function mergeDispatchDraft(
   prev: PlanDispatchDraft,
   assistantContent: string,
@@ -95,14 +95,14 @@ export function mergeDispatchDraft(
     }
   }
 
-  const perm = pickField(text, ['权限', 'permissions'])
+  const perm = pickField(text, ['鏉冮檺', 'permissions'])
   if (perm) next.permissions = splitListValue(perm)
 
   next.updatedAt = new Date().toISOString()
   return next
 }
 
-/** 从整段对话重建 dispatch draft（结构化 JSON 优先，regex fallback） */
+/** 浠庢暣娈靛璇濋噸寤?dispatch draft锛堢粨鏋勫寲 JSON 浼樺厛锛宺egex fallback锛?*/
 export function rebuildDispatchDraftFromMessages(
   messages: PlanMsgLike[]
 ): PlanDispatchDraft {
@@ -128,19 +128,19 @@ export function isDispatchDraftComplete(draft: PlanDispatchDraft): boolean {
   )
 }
 
-/** 将 `A. foo / B. bar` 同行选项拆成多行，便于解析 */
+/** 灏?`A. foo / B. bar` 鍚岃閫夐」鎷嗘垚澶氳锛屼究浜庤В鏋?*/
 function expandInlinePlanChoices(text: string): string {
   return text.replace(
-    /(?:^|\n)\s*([A-D])[.)．、]\s*([^/\n]+?)\s*\/\s*([A-D])[.)．、]\s*([^\n]+)/g,
+    /(?:^|\n)\s*([A-D])[.)锛庛€乚\s*([^/\n]+?)\s*\/\s*([A-D])[.)锛庛€乚\s*([^\n]+)/g,
     '\n$1. $2\n$3. $4'
   )
 }
 
-/** 解析 📋 方案摘要 块（0 轮或收敛场景） */
+/** 瑙ｆ瀽 馃搵 鏂规鎽樿 鍧楋紙0 杞垨鏀舵暃鍦烘櫙锛?*/
 export function parsePlanSummaryBlock(content: string): PlanSummary | null {
-  if (!/📋\s*方案摘要/.test(content)) return null
+  if (!/馃搵\s*鏂规鎽樿/.test(content)) return null
   const blockMatch = content.match(
-    /📋\s*方案摘要([\s\S]*?)(?=\n\n(?:\*{0,2}[A-D][.)．、:\s]|🅰|[A-D][.)．、]\s|没问题|有需要)|$)/i
+    /馃搵\s*鏂规鎽樿([\s\S]*?)(?=\n\n(?:\*{0,2}[A-D][.)锛庛€?\s]|馃叞|[A-D][.)锛庛€乚\s|娌￠棶棰榺鏈夐渶瑕?|$)/i
   )
   const block = blockMatch?.[1] ?? content
   const rawLines = block
@@ -150,34 +150,34 @@ export function parsePlanSummaryBlock(content: string): PlanSummary | null {
 
   const summary: PlanSummary = { rawLines }
   for (const line of rawLines) {
-    const row = line.match(/^\|?\s*([^|｜:]+?)\s*[|｜]\s*(.+?)\s*\|?\s*$/)
+    const row = line.match(/^\|?\s*([^|锝?]+?)\s*[|锝淽\s*(.+?)\s*\|?\s*$/)
     if (!row) {
-      const kv = line.match(/^([^:：]+)[：:]\s*(.+)$/)
+      const kv = line.match(/^([^:锛歖+)[锛?]\s*(.+)$/)
       if (kv) {
         const key = kv[1].trim()
         const val = kv[2].trim()
-        if (/类型|产物/.test(key)) summary.artifactType = val
-        else if (/触发|模式/.test(key)) summary.trigger = val
-        else if (/输出|提醒|行为/.test(key)) summary.output = val
-        else if (/权限/.test(key)) summary.permissions = val
-        else if (/额外|附加/.test(key)) summary.extras = val
+        if (/绫诲瀷|浜х墿/.test(key)) summary.artifactType = val
+        else if (/瑙﹀彂|妯″紡/.test(key)) summary.trigger = val
+        else if (/杈撳嚭|鎻愰啋|琛屼负/.test(key)) summary.output = val
+        else if (/鏉冮檺/.test(key)) summary.permissions = val
+        else if (/棰濆|闄勫姞/.test(key)) summary.extras = val
       }
       continue
     }
     const key = row[1].trim()
     const val = row[2].trim()
-    if (/类型|产物/.test(key)) summary.artifactType = val
-    else if (/触发|模式/.test(key)) summary.trigger = val
-    else if (/输出|提醒|行为/.test(key)) summary.output = val
-    else if (/权限/.test(key)) summary.permissions = val
-    else if (/额外|附加/.test(key)) summary.extras = val
+    if (/绫诲瀷|浜х墿/.test(key)) summary.artifactType = val
+    else if (/瑙﹀彂|妯″紡/.test(key)) summary.trigger = val
+    else if (/杈撳嚭|鎻愰啋|琛屼负/.test(key)) summary.output = val
+    else if (/鏉冮檺/.test(key)) summary.permissions = val
+    else if (/棰濆|闄勫姞/.test(key)) summary.extras = val
   }
 
   if (!summary.artifactType && !summary.trigger && rawLines.length < 2) return null
   return summary
 }
 
-/** 将方案摘要转为 Markdown 表格（供 Plan 工作区 md 渲染） */
+/** 灏嗘柟妗堟憳瑕佽浆涓?Markdown 琛ㄦ牸锛堜緵 Plan 宸ヤ綔鍖?md 娓叉煋锛?*/
 export function planSummaryToMarkdown(summary: PlanSummary): string {
   const pipeLines = summary.rawLines.filter((line) => /^\|/.test(line.trim()))
   if (pipeLines.length > 0) {
@@ -185,11 +185,11 @@ export function planSummaryToMarkdown(summary: PlanSummary): string {
   }
 
   const rows: string[] = []
-  if (summary.artifactType?.trim()) rows.push(`| 类型 | ${summary.artifactType.trim()} |`)
-  if (summary.trigger?.trim()) rows.push(`| 触发 | ${summary.trigger.trim()} |`)
-  if (summary.output?.trim()) rows.push(`| 输出 | ${summary.output.trim()} |`)
-  if (summary.permissions?.trim()) rows.push(`| 权限 | ${summary.permissions.trim()} |`)
-  if (summary.extras?.trim()) rows.push(`| 额外 | ${summary.extras.trim()} |`)
+  if (summary.artifactType?.trim()) rows.push(`| 绫诲瀷 | ${summary.artifactType.trim()} |`)
+  if (summary.trigger?.trim()) rows.push(`| 瑙﹀彂 | ${summary.trigger.trim()} |`)
+  if (summary.output?.trim()) rows.push(`| 杈撳嚭 | ${summary.output.trim()} |`)
+  if (summary.permissions?.trim()) rows.push(`| 鏉冮檺 | ${summary.permissions.trim()} |`)
+  if (summary.extras?.trim()) rows.push(`| 棰濆 | ${summary.extras.trim()} |`)
   return rows.join('\n')
 }
 
@@ -211,27 +211,27 @@ export function isPlanSummaryReady(summary: PlanSummary | null | undefined): boo
   return Boolean(summary?.artifactType?.trim() || summary?.trigger?.trim())
 }
 
-/** 是否为「按方案开始 / 确认方案」类选项（显示方案确认卡操作） */
+/** 鏄惁涓恒€屾寜鏂规寮€濮?/ 纭鏂规銆嶇被閫夐」锛堟樉绀烘柟妗堢‘璁ゅ崱鎿嶄綔锛?*/
 export function isPlanConfirmChoice(option: PlanChoiceOption): boolean {
   if (option.key === 'A') {
-    return /按这个方案|开始吧|确认方案|好的开始|按方案/i.test(option.title + option.body)
+    return /鎸夎繖涓柟妗坾寮€濮嬪惂|纭鏂规|濂界殑寮€濮媩鎸夋柟妗?i.test(option.title + option.body)
   }
   return false
 }
 
-/** 当前选项里是否包含「按方案开始」类确认项 */
+/** 褰撳墠閫夐」閲屾槸鍚﹀寘鍚€屾寜鏂规寮€濮嬨€嶇被纭椤?*/
 export function hasPlanConfirmChoices(options: PlanChoiceOption[]): boolean {
   return options.some(isPlanConfirmChoice)
 }
 
-/** Plan 工作区开场白（用户已发言后不再展示） */
+/** Plan 宸ヤ綔鍖哄紑鍦虹櫧锛堢敤鎴峰凡鍙戣█鍚庝笉鍐嶅睍绀猴級 */
 export function isPlanIntroMessage(content: string): boolean {
   const t = content.trim()
   if (!t || t.length > 280) return false
-  return /我是 Ackem Agent/i.test(t) && /请描述你想创建的/.test(t) && parsePlanChoices(t).length < 2
+  return /鎴戞槸 Ackem Agent/i.test(t) && /璇锋弿杩颁綘鎯冲垱寤虹殑/.test(t) && parsePlanChoices(t).length < 2
 }
 
-/** 从 Agent 回复中移除已在独立 UI 区展示的块，避免 Plan 对话区重复占位 */
+/** 浠?Agent 鍥炲涓Щ闄ゅ凡鍦ㄧ嫭绔?UI 鍖哄睍绀虹殑鍧楋紝閬垮厤 Plan 瀵硅瘽鍖洪噸澶嶅崰浣?*/
 export function stripPlanAssistantForDisplay(
   content: string,
   opts?: {
@@ -245,19 +245,19 @@ export function stripPlanAssistantForDisplay(
   if (opts?.hideSummaryBlock) {
     text = text
       .replace(
-        /📋\s*方案摘要[\s\S]*?(?=\n\n(?:\*{0,2}[A-D][.)．、:\s]|🅰|[A-D][.)．、]\s|没问题|有需要)|$)/i,
+        /馃搵\s*鏂规鎽樿[\s\S]*?(?=\n\n(?:\*{0,2}[A-D][.)锛庛€?\s]|馃叞|[A-D][.)锛庛€乚\s|娌￠棶棰榺鏈夐渶瑕?|$)/i,
         ''
       )
       .trim()
   }
 
   if (opts?.hideConfirmedLine) {
-    text = text.replace(/(?:^|\n)已确认[：:][^\n]*(?=\n|$)/g, '\n').trim()
+    text = text.replace(/(?:^|\n)宸茬‘璁锛?][^\n]*(?=\n|$)/g, '\n').trim()
   }
 
   if (opts?.hideChoices && parsePlanChoices(text).length >= 2) {
     const headerRe =
-      /(?:^|\n)(?:🅰|🅱|🅲|🅳|\*{0,2}([A-D])[.)．、:\s]*\*{0,2})\s*[^\n]+/g
+      /(?:^|\n)(?:馃叞|馃叡|馃叢|馃叧|\*{0,2}([A-D])[.)锛庛€?\s]*\*{0,2})\s*[^\n]+/g
     let firstIdx = -1
     let count = 0
     let hm: RegExpExecArray | null
@@ -281,7 +281,7 @@ function stripMarkdownInline(text: string): string {
     .trim()
 }
 
-/** 选项标题行：A. / **A.** / 🅰 等 */
+/** 閫夐」鏍囬琛岋細A. / **A.** / 馃叞 绛?*/
 function parseChoiceHeaderKey(match: RegExpExecArray): PlanChoiceOption['key'] | null {
   const keyRaw = match[1] ?? match[0].replace(/[^\w]/g, '').slice(-1)
   const key = keyRaw.toUpperCase()
@@ -290,12 +290,12 @@ function parseChoiceHeaderKey(match: RegExpExecArray): PlanChoiceOption['key'] |
 
 function trimChoiceBody(raw: string): string {
   let body = raw.trim()
-  body = body.replace(/(?:^|\n)\s*已确认[：:][^\n]*/g, '').trim()
+  body = body.replace(/(?:^|\n)\s*宸茬‘璁锛?][^\n]*/g, '').trim()
   const embedded = body.search(
-    /\n\s*(?:🅰|🅱|🅲|🅳|\*{0,2}[A-D][.)．、:\s]*\*{0,2})\s/u
+    /\n\s*(?:馃叞|馃叡|馃叢|馃叧|\*{0,2}[A-D][.)锛庛€?\s]*\*{0,2})\s/u
   )
   if (embedded >= 0) body = body.slice(0, embedded).trim()
-  body = body.replace(/\s+\*{0,2}[A-D][.)．、:\s]*\*{0,2}\s*[^\n]+$/u, '').trim()
+  body = body.replace(/\s+\*{0,2}[A-D][.)锛庛€?\s]*\*{0,2}\s*[^\n]+$/u, '').trim()
   return stripMarkdownInline(body)
 }
 
@@ -304,7 +304,7 @@ export function parsePlanChoices(content: string): PlanChoiceOption[] {
   if (!text) return []
 
   const headerRe =
-    /(?:^|\n)(?:🅰|🅱|🅲|🅳|\*{0,2}([A-D])[.)．、:\s]*\*{0,2})\s*([^\n]+)/g
+    /(?:^|\n)(?:馃叞|馃叡|馃叢|馃叧|\*{0,2}([A-D])[.)锛庛€?\s]*\*{0,2})\s*([^\n]+)/g
   const headers: {
     key: PlanChoiceOption['key']
     title: string
@@ -327,12 +327,12 @@ export function parsePlanChoices(content: string): PlanChoiceOption[] {
     return headers.slice(0, 4).map((h, i) => {
       const nextIndex = headers[i + 1]?.index ?? text.length
       let body = trimChoiceBody(text.slice(h.lineEnd, nextIndex))
-      if (body.length > 160) body = `${body.slice(0, 157)}…`
+      if (body.length > 160) body = `${body.slice(0, 157)}鈥
       return {
         key: h.key,
         title: h.title,
         body,
-        isCustom: /自己写|自定义|我来写|我想改/i.test(h.title)
+        isCustom: /鑷繁鍐檤鑷畾涔墊鎴戞潵鍐檤鎴戞兂鏀?i.test(h.title)
       }
     })
   }
@@ -341,7 +341,7 @@ export function parsePlanChoices(content: string): PlanChoiceOption[] {
 }
 
 export function parsePlanConfirmedLine(content: string): string | null {
-  const m = content.match(/已确认[：:]\s*(.+?)(?:\n|$)/)
+  const m = content.match(/宸茬‘璁锛?]\s*(.+?)(?:\n|$)/)
   return m?.[1]?.trim() || null
 }
 
@@ -362,13 +362,13 @@ export function inferPlanStage(
   const lastAssistant = [...messages].reverse().find((m) => m.role === 'assistant')?.content ?? ''
   const userTurns = countPlanUserTurns(messages)
 
-  if (/部署完成|已部署|注册成功/.test(lastAssistant)) return 'deploy'
-  if (/校验通过|validateDispatch|校验失败/.test(lastAssistant)) return 'validate'
-  if (/开始写代码|生成代码|正在生成|manifest\.json/.test(lastAssistant)) return 'generate'
+  if (/閮ㄧ讲瀹屾垚|宸查儴缃瞸娉ㄥ唽鎴愬姛/.test(lastAssistant)) return 'deploy'
+  if (/鏍￠獙閫氳繃|validateDispatch|鏍￠獙澶辫触/.test(lastAssistant)) return 'validate'
+  if (/寮€濮嬪啓浠ｇ爜|鐢熸垚浠ｇ爜|姝ｅ湪鐢熸垚|manifest\.json/.test(lastAssistant)) return 'generate'
   if (
     findLatestPlanSummary(messages) ||
     isDispatchDraftComplete(opts?.dispatchDraft ?? {}) ||
-    /方案摘要|调度配置|dispatch|habits|scenarios|触发方式|适用场景/.test(lastAssistant)
+    /鏂规鎽樿|璋冨害閰嶇疆|dispatch|habits|scenarios|瑙﹀彂鏂瑰紡|閫傜敤鍦烘櫙/.test(lastAssistant)
   ) {
     return 'design'
   }
@@ -384,12 +384,12 @@ export function formatChoiceReply(option: PlanChoiceOption, customText?: string)
   const title = stripMarkdownInline(option.title)
   const body = option.body ? stripMarkdownInline(option.body) : ''
   if (option.isCustom && customText?.trim()) {
-    return `我选择 ${option.key}（自定义）：${customText.trim()}`
+    return `鎴戦€夋嫨 ${option.key}锛堣嚜瀹氫箟锛夛細${customText.trim()}`
   }
   if (body) {
-    return `我选择 ${option.key}：${title} — ${body}`
+    return `鎴戦€夋嫨 ${option.key}锛?{title} 鈥?${body}`
   }
-  return `我选择 ${option.key}：${title}`
+  return `鎴戦€夋嫨 ${option.key}锛?{title}`
 }
 
 export const DISPATCH_DRAFT_FIELDS: {
@@ -397,26 +397,26 @@ export const DISPATCH_DRAFT_FIELDS: {
   label: string
   list?: boolean
 }[] = [
-  { key: 'artifactType', label: '产物类型' },
-  { key: 'mode', label: '调度 mode' },
-  { key: 'summary', label: '功能摘要 summary' },
-  { key: 'habits', label: '触发习惯 habits', list: true },
-  { key: 'scenarios', label: '适用场景 scenarios', list: true },
-  { key: 'keywords', label: '关键词 keywords', list: true },
-  { key: 'permissions', label: '权限 permissions', list: true }
+  { key: 'artifactType', label: '浜х墿绫诲瀷' },
+  { key: 'mode', label: '璋冨害 mode' },
+  { key: 'summary', label: '鍔熻兘鎽樿 summary' },
+  { key: 'habits', label: '瑙﹀彂涔犳儻 habits', list: true },
+  { key: 'scenarios', label: '閫傜敤鍦烘櫙 scenarios', list: true },
+  { key: 'keywords', label: '鍏抽敭璇?keywords', list: true },
+  { key: 'permissions', label: '鏉冮檺 permissions', list: true }
 ]
 
-/** Plan 取消部署后插入对话的系统说明（assistant） */
+/** Plan 鍙栨秷閮ㄧ讲鍚庢彃鍏ュ璇濈殑绯荤粺璇存槑锛坅ssistant锛?*/
 export const PLAN_DEPLOY_CANCELLED_ASSISTANT_MSG =
-  '⏹ **部署已取消**。生成/部署管线已停止。你可以继续描述修改想法，或在输入框发送 **重新部署** 按当前已确认方案再试。'
+  '鈴?**閮ㄧ讲宸插彇娑?*銆傜敓鎴?閮ㄧ讲绠＄嚎宸插仠姝€備綘鍙互缁х画鎻忚堪淇敼鎯虫硶锛屾垨鍦ㄨ緭鍏ユ鍙戦€?**閲嶆柊閮ㄧ讲** 鎸夊綋鍓嶅凡纭鏂规鍐嶈瘯銆?
 
 export const PLAN_REDEPLOY_STARTED_ASSISTANT_MSG =
-  '⏳ **重新部署** 已按当前已确认方案启动生成与部署…'
+  '鈴?**閲嶆柊閮ㄧ讲** 宸叉寜褰撳墠宸茬‘璁ゆ柟妗堝惎鍔ㄧ敓鎴愪笌閮ㄧ讲鈥?
 
-/** 输入框发送「重新部署」等短指令时走 redeploy，不走 Plan Agent */
+/** 杈撳叆妗嗗彂閫併€岄噸鏂伴儴缃层€嶇瓑鐭寚浠ゆ椂璧?redeploy锛屼笉璧?Plan Agent */
 export function isPlanRedeployIntent(text: string): boolean {
-  const t = text.trim().replace(/[【】]/g, '')
-  return /^(重新部署|继续部署|再次部署|重试部署)$/u.test(t)
+  const t = text.trim().replace(/[銆愩€慮/g, '')
+  return /^(閲嶆柊閮ㄧ讲|缁х画閮ㄧ讲|鍐嶆閮ㄧ讲|閲嶈瘯閮ㄧ讲)$/u.test(t)
 }
 
 export function isPlanPostCancelComposerHint(input: {

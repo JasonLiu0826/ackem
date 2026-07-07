@@ -1,11 +1,11 @@
-# Ackem 发行配置（Windows + macOS）
-# 隐私：绝不打包 data/ · .env · 用户 settings（见 docs/distribution-windows.md）
+﻿# Ackem Windows 鍙戣閰嶇疆锛圵3锛?
+# 闅愮锛氱粷涓嶆墦鍖?data/ 路 .env 路 鐢ㄦ埛 settings锛堣 docs/distribution-windows.md锛?
 
 appId: com.ackem.desktop
 productName: Ackem
-copyright: Copyright © 2026 Ackem contributors
+copyright: Copyright 漏 2026 Ackem contributors
 
-# 版本与 package.json 对齐（发行 v1.0.0）
+# 鐗堟湰涓?package.json 瀵归綈锛堝彂琛?v1.0.0锛?
 extraMetadata:
   version: 1.0.0
 
@@ -15,10 +15,10 @@ directories:
 
 asar: true
 
-# 发行包体积大（含 embedding + 语音），用 store 避免 7z 高压缩占满内存
+# 鍙戣鍖呬綋绉ぇ锛堝惈 embedding + 璇煶锛夛紝鐢?store 閬垮厤 7z 楂樺帇缂╁崰婊″唴瀛?
 compression: store
 
-# 仅程序与生产依赖；data/ 在 .gitignore 且不在此清单
+# 浠呯▼搴忎笌鐢熶骇渚濊禆锛沝ata/ 鍦?.gitignore 涓斾笉鍦ㄦ娓呭崟
 files:
   - out/**/*
   - package.json
@@ -36,7 +36,7 @@ extraFiles:
 extraResources:
   - from: scripts/uninstall.bat
     to: uninstall.bat
-  # 语音服务（含内置 gpt-sovits-runtime/、models/gpt-sovits/ 角色语音包；见 voice-service/models/gpt-sovits/BUNDLED.md）
+  # 璇煶鏈嶅姟锛堝惈鍐呯疆 gpt-sovits-runtime/銆乵odels/gpt-sovits/ 瑙掕壊璇煶鍖咃紱瑙?voice-service/models/gpt-sovits/BUNDLED.md锛?
   - from: voice-service
     to: voice-service
     filter:
@@ -44,23 +44,23 @@ extraResources:
       - "!**/__pycache__/**"
       - "!**/*.pyc"
       - "!**/*.zip"
-  # 模型 zip 必须落在 {exe}/resources/models/，与 modelManager 一致
+  # 妯″瀷 zip 蹇呴』钀藉湪 {exe}/resources/models/锛屼笌 modelManager 涓€鑷?
   - from: resources/models
     to: models
     filter:
       - "**/*"
-  # 图标等静态资源（不含 models，避免重复嵌套 resources/resources/）
+  # 鍥炬爣绛夐潤鎬佽祫婧愶紙涓嶅惈 models锛岄伩鍏嶉噸澶嶅祵濂?resources/resources/锛?
   - from: resources
     to: resources
     filter:
       - "**/*"
       - "!models/**"
-  # 微信 curated 贴纸 manifest（PNG 可按 preset 后续补全）
+  # 寰俊 curated 璐寸焊 manifest锛圥NG 鍙寜 preset 鍚庣画琛ュ叏锛?
   - from: assets/weixin-stickers
     to: assets/weixin-stickers
     filter:
       - "**/*"
-  # 开发者扩展接口协议（绿色版 docs/developer/）
+  # 寮€鍙戣€呮墿灞曟帴鍙ｅ崗璁紙缁胯壊鐗?docs/developer/锛?
   - from: docs/developer
     to: docs/developer
     filter:
@@ -68,13 +68,13 @@ extraResources:
 
 win:
   icon: build/icon.ico
-  # 跳过 winCodeSign/rcedit（无管理员 symlink 权限时会打包失败）；图标由 scripts/patch-exe-icon.mjs 写入
+  # 璺宠繃 winCodeSign/rcedit锛堟棤绠＄悊鍛?symlink 鏉冮檺鏃朵細鎵撳寘澶辫触锛夛紱鍥炬爣鐢?scripts/patch-exe-icon.mjs 鍐欏叆
   signAndEditExecutable: false
   target:
     - target: dir
       arch:
         - x64
-  artifactName: ${productName}-${version}-win-${arch}.${ext}
+  artifactName: ${productName}-${version}-${arch}.${ext}
 
 nsis:
   oneClick: false
@@ -83,33 +83,3 @@ nsis:
   shortcutName: Ackem
   artifactName: ${productName}-${version}-Setup-${arch}.exe
   deleteAppDataOnUninstall: false
-
-mac:
-  icon: build/icon.icns
-  category: public.app-category.productivity
-  hardenedRuntime: false
-  identity: null
-  entitlements: build/entitlements.mac.plist
-  entitlementsInherit: build/entitlements.mac.plist
-  target:
-    - target: dmg
-      arch:
-        - arm64
-        - x64
-  artifactName: ${productName}-${version}-mac-${arch}.${ext}
-  extraFiles: []
-
-dmg:
-  title: "${productName} ${version}"
-  iconSize: 100
-  contents:
-    - x: 180
-      y: 170
-    - x: 480
-      y: 170
-      type: link
-      path: /Applications
-  window:
-    width: 660
-    height: 400
-  artifactName: ${productName}-${version}-mac-${arch}.${ext}

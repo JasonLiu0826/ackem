@@ -1,0 +1,775 @@
+import { contextBridge, ipcRenderer, webUtils } from 'electron'
+import type { AppSettings, PresetGender } from '../shared/types'
+import type { UserTaskFrame } from '../shared/taskFrame'
+import type { WavePlan } from '../shared/wavePlan'
+import type { AgentEvent } from '../shared/openforuAgentTypes'
+import type { PermissionRequestPayload } from '../shared/openforuPermissions'
+import type { DesktopAgentConfirmRequest } from '../shared/desktopAgent'
+
+export type BuildContextResult = {
+  messages: unknown[]
+  skipLlm?: boolean
+  redlineReply?: string
+  turnId?: string
+  tracePreview?: unknown
+  enterPlanMode?: boolean
+  planTopic?: string
+  dispatchPending?: {
+    extensionId: string
+    extensionName: string
+    askMessage: string
+  }
+  planCreatePending?: {
+    askMessage: string
+    planTopic?: string
+    emotionLabel?: string
+  }
+  knowledgeTopic?: string
+  suggestedSearchQuery?: string
+  forcedWebSearchQuery?: string
+  /** L0.5 计划书主题（Markdown 纸面卡） */
+  planDocumentTopic?: string
+  /** L0 用户任务框（交付形态 / 合并搜索策略） */
+  userTaskFrame?: UserTaskFrame
+  /** P0-1：Create/invoke 未路由，禁止扩展类假承诺 */
+  dispatchBypassed?: boolean
+  /** 本轮已触发的扩展（auto_invoke 或用户确认启用） */
+  dispatchTriggered?: {
+    extensionId: string
+    extensionName: string
+    kind: 'skill' | 'plugin' | 'gamemode'
+  }
+  useWaveChat?: boolean
+  wavePlan?: WavePlan
+  waveContext?: Record<string, unknown>
+  sessionId?: string
+  desktopAgentCapability?: import('../shared/desktopAgentCapabilities').DesktopAgentCapabilityMatch
+}
+
+const GAME_MINECRAFT = 'minecraft'
+
+const openforuNotifyListeners = new Set<(payload: { text: string }) => void>()
+let openforuNotifyBridgeReady = false
+
+const openforuAgentEventListeners = new Set<(payload: AgentEvent) => void>()
+let openforuAgentEventBridgeReady = false
+
+const openforuPermissionListeners = new Set<(payload: PermissionRequestPayload) => void>()
+let openforuPermissionBridgeReady = false
+
+const desktopAgentConfirmListeners = new Set<(payload: DesktopAgentConfirmRequest) => void>()
+let desktopAgentConfirmBridgeReady = false
+
+function ensureDesktopAgentConfirmBridge(): void {
+  if (desktopAgentConfirmBridgeReady) return
+  desktopAgentConfirmBridgeReady = true
+  ipcRenderer.on('desktop-agent:confirm:request', (_e, payload: DesktopAgentConfirmRequest) => {
+    for (const fn of desktopAgentConfirmListeners) fn(payload)
+  })
+}
+
+function ensureOpenforuPermissionBridge(): void {
+  if (openforuPermissionBridgeReady) return
+  openforuPermissionBridgeReady = true
+  ipcRenderer.on('openforu:permissions:request', (_e, payload: PermissionRequestPayload) => {
+    for (const fn of openforuPermissionListeners) fn(payload)
+  })
+}
+
+function ensureOpenforuNotifyBridge(): void {
+  if (openforuNotifyBridgeReady) return
+  openforuNotifyBridgeReady = true
+  ipcRenderer.on('openforu:notify', (_e, payload: { text: string }) => {
+    for (const fn of openforuNotifyListeners) fn(payload)
+  })
+}
+
+async function gamemodeInvoke<T = unknown>(
+  method: string,
+  params?: Record<string, unknown>
+): Promise<T> {
+  const result = await ipcRenderer.invoke('ext:gamemode:invoke', {
+    gameId: GAME_MINECRAFT,
+    method,
+    params
+  }) as { ok: boolean; data?: T; error?: string }
+  if (!result.ok) {
+    throw new Error(result.error ?? `gamemode invoke failed: ${method}`)
+  }
+  return result.data as T
+}
+
+const gamemodeMinecraft = {
+  react: (event: { type: string; raw: string; timestamp: string; payload?: Record<string, unknown> }) =>
+    gamemodeInvoke('react', { event }),
+  parseLog: (line: string) => gamemodeInvoke<{ type: string; raw: string; timestamp: string; payload?: Record<string, unknown> } | null>('parseLog', { line }),
+  getWsStatus: () => gamemodeInvoke<{ running: boolean; wsPort: number; wsClients: number; logPath?: string }>('getWsStatus'),
+  syncEngineState: () => gamemodeInvoke<{ ok: boolean }>('syncEngineState'),
+  botStart: (cfg: { host: string; port?: number; username: string; password?: string }) =>
+    gamemodeInvoke<{ ok: boolean }>('botStart', cfg as unknown as Record<string, unknown>),
+  botStop: () => gamemodeInvoke<{ ok: boolean }>('botStop'),
+  botStatus: () => gamemodeInvoke<{ connected: boolean; username?: string; health?: number; hunger?: number; position?: { x: number; y: number; z: number }; dimension?: string; wsConnected?: boolean }>('botStatus'),
+  botDebug: () => gamemodeInvoke<Record<string, unknown> | null>('botDebug'),
+  logStart: (logPath: string) => gamemodeInvoke<{ ok: boolean; path: string }>('logStart', { logPath }),
+  logStop: () => gamemodeInvoke<{ ok: boolean }>('logStop'),
+  logStatus: () => gamemodeInvoke<{ active: boolean }>('logStatus')
+}
+
+contextBridge.exposeInMainWorld('britney', {
+  getSettings: (): Promise<AppSettings> => ipcRenderer.invoke('settings:get'),
+  getAppVersion: (): Promise<string> => ipcRenderer.invoke('update:getAppVersion'),
+  checkUpdate: (): Promise<import('../shared/updateTypes').UpdateCheckResult> =>
+    ipcRenderer.invoke('update:check'),
+  startUpdate: (
+    req: import('../shared/updateTypes').UpdateStartRequest & {
+      channel: import('../shared/updateTypes').UpdateChannel
+    }
+  ): Promise<{ ok: true; jobPath: string } | { ok: false; reason: string }> =>
+    ipcRenderer.invoke('update:start', req),
+  openUpdateRelease: (url: string): Promise<void> => ipcRenderer.invoke('update:openRelease', url),
+  getUpdateChannelPreference: (): Promise<import('../shared/updateTypes').UpdateChannel> =>
+    ipcRenderer.invoke('update:getChannelPreference'),
+  setUpdateChannelPreference: (
+    channel: import('../shared/updateTypes').UpdateChannel
+  ): Promise<import('../shared/updateTypes').UpdateChannel> =>
+    ipcRenderer.invoke('update:setChannelPreference', channel),
+  getCanon: (): Promise<{ name: string; birthDate: string; creator: { name: string; github: string; role: string; bio: string } }> =>
+    ipcRenderer.invoke('canon:get'),
+  getCreatorMemory: (): Promise<{
+    version: string
+    documentVersion: string
+    entryCount: number
+    decayPolicy: string
+    seededAt: string | null
+    entries: Array<{
+      id: string
+      category: string
+      title: string
+      content: string
+      narrativeAt: string
+    }>
+  }> => ipcRenderer.invoke('canon:creator-memory:get'),
+  setSettings: (patch: Partial<AppSettings>): Promise<AppSettings> =>
+    ipcRenderer.invoke('settings:set', patch),
+  getDataRoot: (): Promise<{ path: string; relativePath: string; mode: string; databasePath: string }> =>
+    ipcRenderer.invoke('data:getRoot'),
+  ensureLayout: (): Promise<{ path: string }> => ipcRenderer.invoke('data:ensureLayout'),
+  openDataFolder: (): Promise<void> => ipcRenderer.invoke('shell:openData'),
+  selectFiles: (): Promise<{ paths: string[] }> => ipcRenderer.invoke('dialog:selectFiles'),
+  getPathForFile: (file: File) => webUtils.getPathForFile(file),
+  importFiles: (paths: string[]): Promise<{ copied: string[]; errors: string[] }> =>
+    ipcRenderer.invoke('import:files', paths),
+  promoteImport: (rel: string) => ipcRenderer.invoke('import:promote', rel),
+  importParseDocuments: (args: {
+    relPaths: string[]
+    consentAck: boolean
+    consentVersion: number
+  }) => ipcRenderer.invoke('import:parseDocuments', args),
+  importGetJob: (jobId: string) => ipcRenderer.invoke('import:getJob', jobId),
+  importCommitJob: (args: { jobId: string; disabledDraftIds?: string[] }) =>
+    ipcRenderer.invoke('import:commitJob', args),
+  rebuildIndex: (): Promise<{ chunks: number; builtAt: string }> =>
+    ipcRenderer.invoke('index:rebuild'),
+  search: (q: string, limit?: number) => ipcRenderer.invoke('index:search', q, limit),
+  buildContext: (args: {
+    userText: string
+    explicitRel?: string
+    recentMessages: { role: 'user' | 'assistant'; content: string }[]
+    sessionId?: string
+    turnIndex?: number
+    systemHint?: string
+    dispatchRespond?: { accepted: boolean; extensionId: string; remember?: boolean }
+    desktopAgentChatMode?: boolean
+  }): Promise<BuildContextResult> => ipcRenderer.invoke('context:build', args),
+  readRel: (rel: string, maxBytes?: number) => ipcRenderer.invoke('fs:readRel', rel, maxBytes),
+  writeAllowed: (rel: string, content: string, mode: 'append' | 'overwrite') =>
+    ipcRenderer.invoke('fs:writeAllowed', rel, content, mode),
+  startChat: (payload: {
+    messages: unknown[]
+    settings: AppSettings
+    turnId?: string
+    knowledgeTopic?: string
+    suggestedSearchQuery?: string
+    forcedWebSearchQuery?: string
+    planDocumentTopic?: string
+    userTaskFrame?: UserTaskFrame
+    useWaveChat?: boolean
+    wavePlan?: WavePlan
+    waveContext?: Record<string, unknown>
+    sessionId?: string
+    desktopAgentChatMode?: boolean
+  }) => ipcRenderer.invoke('chat:start', payload),
+  desktopAgent: {
+    sessionMode: {
+      get: (sessionId?: string) =>
+        ipcRenderer.invoke('desktop-agent:sessionMode:get', sessionId) as Promise<{
+          enabled: boolean
+          settingsReady: boolean
+        }>,
+      set: (sessionId: string, enabled: boolean) =>
+        ipcRenderer.invoke('desktop-agent:sessionMode:set', { sessionId, enabled }) as Promise<{
+          ok: boolean
+          enabled?: boolean
+          error?: string
+        }>
+    },
+    opening: () =>
+      ipcRenderer.invoke('desktop-agent:opening') as Promise<
+        { ok: true; text: string } | { ok: false; error: string }
+      >,
+    confirm: {
+      onRequest: (fn: (payload: DesktopAgentConfirmRequest) => void) => {
+        ensureDesktopAgentConfirmBridge()
+        desktopAgentConfirmListeners.add(fn)
+        return () => {
+          desktopAgentConfirmListeners.delete(fn)
+        }
+      },
+      allow: (requestId: string) =>
+        ipcRenderer.invoke('desktop-agent:confirm:allow', { requestId }),
+      allowSession: (requestId: string) =>
+        ipcRenderer.invoke('desktop-agent:confirm:allowSession', { requestId }),
+      allowTaskDeletes: (requestId: string, taskPlanId: string) =>
+        ipcRenderer.invoke('desktop-agent:confirm:allowTaskDeletes', { requestId, taskPlanId }),
+      deny: (requestId: string) =>
+        ipcRenderer.invoke('desktop-agent:confirm:deny', { requestId })
+    },
+    auditRecent: (limit?: number) => ipcRenderer.invoke('desktop-agent:audit:recent', limit)
+  },
+  machineMap: {
+    status: () =>
+      ipcRenderer.invoke('machine-map:status') as Promise<
+        import('../shared/machineMap').MachineMapStatus
+      >,
+    reindex: () => ipcRenderer.invoke('machine-map:reindex') as Promise<{ ok: boolean }>,
+    onProgress: (
+      fn: (payload: import('../shared/machineMap').MachineMapProgressPayload | null) => void
+    ) => {
+      ipcRenderer.removeAllListeners('machine-map:progress')
+      ipcRenderer.on('machine-map:progress', (_e, payload) => fn(payload))
+    }
+  },
+  getState: () => ipcRenderer.invoke('state:get'),
+  resetState: () => ipcRenderer.invoke('state:reset'),
+  traceLatest: (n?: number) => ipcRenderer.invoke('trace:latest', n),
+  memoryList: () => ipcRenderer.invoke('memory:list'),
+  memoryAuditReport: (opts?: {
+    mode?: 'curated_audit' | 'self_report' | 'stats_only' | 'full_dump'
+    includeAvoid?: boolean
+    page?: number
+  }) => ipcRenderer.invoke('memory:auditReport', opts),
+  memoryUpdate: (id: string, patch: { summary?: string; weight?: number; confidence?: number; triggers?: string[] }) =>
+    ipcRenderer.invoke('memory:update', id, patch),
+  memoryRetire: (id: string) => ipcRenderer.invoke('memory:retire', id),
+  memoryClearAll: () => ipcRenderer.invoke('memory:clearAll'),
+  memoryFeedback: (id: string, action: 'thumbs_up' | 'thumbs_down') =>
+    ipcRenderer.invoke('memory:feedback', id, action),
+  appReload: () => ipcRenderer.invoke('app:reload'),
+  uninstallInfo: (): Promise<{
+    mode: 'dev' | 'portable' | 'installed'
+    installDir: string
+    dataRoot: string
+    batPath: string | null
+    nsisUninstaller: string | null
+  }> => ipcRenderer.invoke('app:uninstallInfo'),
+  uninstallBritney: (opts?: { deleteData?: boolean; removeApp?: boolean }): Promise<{ ok: boolean }> =>
+    ipcRenderer.invoke('app:uninstall', opts ?? {}),
+  embeddingStatus: () => ipcRenderer.invoke('embedding:status'),
+  embeddingReadiness: () => ipcRenderer.invoke('embedding:readiness'),
+  onEmbeddingReadinessChanged: (fn: (snap: {
+    phase: string
+    progress: number
+    providerReady: boolean
+    factEmbeddingsReady: boolean
+    preLlmWarmReady: boolean
+    error?: string
+  }) => void) => {
+    const handler = (_e: unknown, snap: Parameters<typeof fn>[0]) => fn(snap)
+    ipcRenderer.on('embedding:readiness-changed', handler)
+    return () => {
+      ipcRenderer.removeListener('embedding:readiness-changed', handler)
+    }
+  },
+  embeddingSwitch: (modelId: string) => ipcRenderer.invoke('embedding:switch', modelId),
+  embeddingDownload: (modelId: string) => ipcRenderer.invoke('embedding:download', modelId),
+  embeddingDownloadCancel: (modelId: string) => ipcRenderer.invoke('embedding:downloadCancel', modelId),
+  policyDecisionLogRecent: (limit?: number) => ipcRenderer.invoke('policy:decisionLogRecent', limit),
+  onEmbeddingDownloadProgress: (fn: (p: { modelId: string; bytes: number; total: number; speed: number }) => void) => {
+    ipcRenderer.removeAllListeners('embedding:downloadProgress')
+    ipcRenderer.on('embedding:downloadProgress', (_e, p) => fn(p))
+  },
+  personalityList: (gender?: PresetGender) => ipcRenderer.invoke('personality:list', gender),
+  personalitySet: (id: string) => ipcRenderer.invoke('personality:set', id),
+  profileEstimateScan: (relPaths: string[]) => ipcRenderer.invoke('profile:estimateScan', relPaths),
+  profileGet: () => ipcRenderer.invoke('profile:get'),
+  profileInferFromFiles: (args: { relPaths: string[]; consentAck: boolean; consentVersion: number }) =>
+    ipcRenderer.invoke('profile:inferFromFiles', args),
+  profileApplyCompanionSuggestion: () => ipcRenderer.invoke('profile:applyCompanionSuggestion'),
+  memoryConsolidate: () => ipcRenderer.invoke('memory:consolidate'),
+  associationList: () => ipcRenderer.invoke('association:list'),
+  anchorList: () => ipcRenderer.invoke('anchor:list'),
+  memoryStats: () => ipcRenderer.invoke('memory:stats'),
+  onMemoryUpdated: (fn: (payload: { sessionId: string; turnIndex: number; newFactCount: number }) => void) => {
+    const handler = (_e: unknown, payload: Parameters<typeof fn>[0]) => fn(payload)
+    ipcRenderer.on('memory:updated', handler)
+    return () => {
+      ipcRenderer.removeListener('memory:updated', handler)
+    }
+  },
+  kgList: () => ipcRenderer.invoke('kg:list'),
+  kgOneHop: (entity: string) => ipcRenderer.invoke('kg:oneHop', entity),
+  episodeList: () => ipcRenderer.invoke('episode:list'),
+  desireList: () => ipcRenderer.invoke('desire:list'),
+  desireDismiss: (desireId: string) => ipcRenderer.invoke('desire:dismiss', desireId),
+  desireClearActive: () => ipcRenderer.invoke('desire:clearActive'),
+  mirrorCheck: () => ipcRenderer.invoke('mirror:check'),
+  mirrorFindings: () => ipcRenderer.invoke('mirror:findings'),
+  diaryGenerate: (opts?: { date?: string; force?: boolean }) => ipcRenderer.invoke('diary:generate', opts),
+  diaryList: () => ipcRenderer.invoke('diary:list'),
+  diaryRead: (date: string) => ipcRenderer.invoke('diary:read', date),
+  thoughtGenerate: () => ipcRenderer.invoke('thought:generate'),
+  ext: {
+    gamemode: {
+      list: () => ipcRenderer.invoke('ext:gamemode:list'),
+      activate: (gameId: string, config: unknown) => ipcRenderer.invoke('ext:gamemode:activate', gameId, config),
+      deactivate: () => ipcRenderer.invoke('ext:gamemode:deactivate'),
+      status: () => ipcRenderer.invoke('ext:gamemode:status'),
+      invoke: (gameId: string, method: string, params?: Record<string, unknown>) =>
+        ipcRenderer.invoke('ext:gamemode:invoke', { gameId, method, params }),
+      minecraft: gamemodeMinecraft,
+      onEvent: (gameId: string, fn: (payload: { gameId: string; event: unknown; reaction: unknown }) => void) => {
+        ipcRenderer.removeAllListeners('ext:gamemode:event')
+        ipcRenderer.on('ext:gamemode:event', (_e, payload: { gameId?: string; event: unknown; reaction: unknown }) => {
+          if (!payload?.gameId || payload.gameId === gameId) fn(payload as { gameId: string; event: unknown; reaction: unknown })
+        })
+      }
+    },
+    plugins: {
+      list: (type?: string) => ipcRenderer.invoke('ext:plugins:list', type),
+      activate: (id: string) => ipcRenderer.invoke('ext:plugins:activate', id),
+      deactivate: (id: string) => ipcRenderer.invoke('ext:plugins:deactivate', id),
+    },
+    skills: {
+      list: () => ipcRenderer.invoke('ext:skills:list'),
+      activate: (id: string) => ipcRenderer.invoke('ext:skills:activate', id),
+      deactivate: (id: string) => ipcRenderer.invoke('ext:skills:deactivate', id)
+    }
+  },
+  openforu: {
+    workspaces: {
+      list: () => ipcRenderer.invoke('openforu:workspaces:list'),
+      open: () => ipcRenderer.invoke('openforu:workspaces:open'),
+      create: (name?: string) => ipcRenderer.invoke('openforu:workspaces:create', name ? { name } : undefined),
+      switch: (workspaceId: string) => ipcRenderer.invoke('openforu:workspaces:switch', workspaceId),
+      delete: (workspaceId: string) => ipcRenderer.invoke('openforu:workspaces:delete', workspaceId)
+    },
+    planStart: () => ipcRenderer.invoke('openforu:plan:start'),
+    planSend: (sessionId: string, text: string) =>
+      ipcRenderer.invoke('openforu:plan:send', { sessionId, text }),
+    planConfirm: (sessionId: string) => ipcRenderer.invoke('openforu:plan:confirm', sessionId),
+    planApproveWireframe: (sessionId: string) =>
+      ipcRenderer.invoke('openforu:plan:approveWireframe', sessionId),
+    planDeploy: (sessionId: string) => ipcRenderer.invoke('openforu:plan:deploy', sessionId),
+    planRedeploy: (sessionId: string, userText?: string) =>
+      ipcRenderer.invoke('openforu:plan:redeploy', { sessionId, userText }),
+    planRefineOpen: (
+      extensionId: string,
+      opts?: { instruction?: string; displayName?: string }
+    ) => ipcRenderer.invoke('openforu:plan:refineOpen', { extensionId, ...opts }),
+    onPlanSessionUpdated: (
+      fn: (payload: Record<string, unknown>) => void
+    ) => {
+      const handler = (_e: unknown, payload: Record<string, unknown>) => fn(payload)
+      ipcRenderer.on('openforu:plan:session-updated', handler)
+      return () => {
+        ipcRenderer.removeListener('openforu:plan:session-updated', handler)
+      }
+    },
+    planStatus: (sessionId: string) => ipcRenderer.invoke('openforu:plan:status', sessionId),
+    listArtifacts: () => ipcRenderer.invoke('openforu:listArtifacts'),
+    previewArtifact: (sessionId: string) =>
+      ipcRenderer.invoke('openforu:artifact:preview', sessionId),
+    readArtifact: (uskillId: string) => ipcRenderer.invoke('openforu:artifact:read', uskillId),
+    listExtensions: () => ipcRenderer.invoke('openforu:extensions:list'),
+    openSurfaceWindow: (extensionId: string) =>
+      ipcRenderer.invoke('openforu:surface:open', { extensionId }),
+    removeExtension: (kind: 'uskill' | 'uplugin', id: string) =>
+      ipcRenderer.invoke('openforu:extensions:remove', { kind, id }),
+    permissions: {
+      onRequest: (fn: (payload: PermissionRequestPayload) => void) => {
+        ensureOpenforuPermissionBridge()
+        openforuPermissionListeners.add(fn)
+        return () => {
+          openforuPermissionListeners.delete(fn)
+        }
+      },
+      approve: (requestId: string) =>
+        ipcRenderer.invoke('openforu:permissions:approve', { requestId }),
+      deny: (requestId: string) => ipcRenderer.invoke('openforu:permissions:deny', { requestId }),
+      approveAndActivate: (pluginId: string) =>
+        ipcRenderer.invoke('openforu:permissions:approveAndActivate', { pluginId })
+    },
+    onNotify: (fn: (payload: { text: string }) => void) => {
+      ensureOpenforuNotifyBridge()
+      openforuNotifyListeners.add(fn)
+      return () => {
+        openforuNotifyListeners.delete(fn)
+      }
+    },
+    agent: {
+      getStatus: (sessionId: string) => ipcRenderer.invoke('openforu:agent:status', sessionId),
+      cancel: (sessionId: string) => ipcRenderer.invoke('openforu:agent:cancel', sessionId),
+      onEvent: (fn: (payload: AgentEvent) => void) => {
+        if (!openforuAgentEventBridgeReady) {
+          openforuAgentEventBridgeReady = true
+          ipcRenderer.on('openforu:agent:event', (_e, payload: AgentEvent) => {
+            for (const listener of openforuAgentEventListeners) listener(payload)
+          })
+        }
+        openforuAgentEventListeners.add(fn)
+        return () => {
+          openforuAgentEventListeners.delete(fn)
+        }
+      }
+    },
+    refine: {
+      preview: (extensionId: string, instruction: string) =>
+        ipcRenderer.invoke('openforu:refine:preview', { extensionId, instruction }),
+      apply: (extensionId: string, instruction: string) =>
+        ipcRenderer.invoke('openforu:refine:apply', { extensionId, instruction }),
+      history: (extensionId: string) => ipcRenderer.invoke('openforu:refine:history', extensionId),
+      rollback: (
+        extensionId: string,
+        targetVersion: string,
+        kind?: 'uskill' | 'uplugin'
+      ) => ipcRenderer.invoke('openforu:refine:rollback', { extensionId, targetVersion, kind })
+    }
+  },
+  companionSkinActive: () => ipcRenderer.invoke('ext:companionSkin:active'),
+  companionSkinList: () => ipcRenderer.invoke('ext:companionSkin:list'),
+  companionSkinSetActive: (pluginId: string | null) =>
+    ipcRenderer.invoke('ext:companionSkin:setActive', pluginId),
+  onCompanionSkinChanged: (fn: () => void) => {
+    ipcRenderer.removeAllListeners('companionSkin:changed')
+    ipcRenderer.on('companionSkin:changed', () => fn())
+  },
+  /** @deprecated 使用 ext.gamemode.minecraft */
+  mcReact: gamemodeMinecraft.react,
+  /** @deprecated 使用 ext.gamemode.minecraft */
+  mcParseLog: gamemodeMinecraft.parseLog,
+  /** @deprecated 使用 ext.gamemode.minecraft */
+  mcStatus: gamemodeMinecraft.getWsStatus,
+  /** @deprecated 使用 ext.gamemode.minecraft */
+  mcSetEngineState: gamemodeMinecraft.syncEngineState,
+  /** @deprecated 使用 ext.gamemode.minecraft */
+  mcBotStart: gamemodeMinecraft.botStart,
+  /** @deprecated 使用 ext.gamemode.minecraft */
+  mcBotStop: gamemodeMinecraft.botStop,
+  /** @deprecated 使用 ext.gamemode.minecraft */
+  mcBotStatus: gamemodeMinecraft.botStatus,
+  /** @deprecated 使用 ext.gamemode.minecraft */
+  mcBotDebug: gamemodeMinecraft.botDebug,
+  /** @deprecated 使用 ext.gamemode.minecraft */
+  mcLogStart: gamemodeMinecraft.logStart,
+  /** @deprecated 使用 ext.gamemode.minecraft */
+  mcLogStop: gamemodeMinecraft.logStop,
+  /** @deprecated 使用 ext.gamemode.minecraft */
+  mcLogStatus: gamemodeMinecraft.logStatus,
+  sessionList: () => ipcRenderer.invoke('session:list'),
+  sessionCreate: (name: string) => ipcRenderer.invoke('session:create', name),
+  sessionSwitch: (sessionId: string) => ipcRenderer.invoke('session:switch', sessionId),
+  sessionDelete: (sessionId: string) => ipcRenderer.invoke('session:delete', sessionId),
+  archiveList: () => ipcRenderer.invoke('archive:list'),
+  archiveRead: (relPath: string) => ipcRenderer.invoke('archive:read', relPath),
+  archiveExport: () => ipcRenderer.invoke('memory:exportArchive'),
+  loadChatHistory: () => ipcRenderer.invoke('chat:loadHistory'),
+  saveChatHistory: (rows: unknown[]) => ipcRenderer.invoke('chat:saveHistory', rows),
+  i18n: {
+    t: (key: string, params?: Record<string, string | number>) => ipcRenderer.invoke('i18n:t', key, params),
+    getLocale: () => ipcRenderer.invoke('i18n:getLocale') as Promise<string>,
+    setLocale: (locale: string) => ipcRenderer.invoke('i18n:setLocale', locale),
+    getAllResources: () => ipcRenderer.invoke('i18n:getAllResources') as Promise<{ zh: Record<string, string>; en: Record<string, string>; locale: string }>,
+  },
+  companionTimeContext: () => ipcRenderer.invoke('companion:timeContext'),
+  companionPresence: () => ipcRenderer.invoke('companion:presence'),
+  companionTouch: () => ipcRenderer.invoke('companion:touch'),
+  companionStatusText: () => ipcRenderer.invoke('companion:statusText'),
+  companionGetConfig: () => ipcRenderer.invoke('companion:getConfig'),
+  companionSetConfig: (patch: unknown) => ipcRenderer.invoke('companion:setConfig', patch),
+  onCompanionProactive: (fn: (payload: { message: string; timeContext: unknown }) => void) => {
+    ipcRenderer.removeAllListeners('companion:proactive')
+    ipcRenderer.on('companion:proactive', (_e, payload) => fn(payload))
+  },
+  onDiaryAutoGenerated: (fn: (payload: { date: string; type: string }) => void) => {
+    ipcRenderer.removeAllListeners('diary:autoGenerated')
+    ipcRenderer.on('diary:autoGenerated', (_e, payload) => fn(payload))
+  },
+  mediaStatus: (): Promise<{ title: string; artist: string; album: string; isPlaying: boolean; formatted: string }> =>
+    ipcRenderer.invoke('ext:media:status'),
+  onChatChunk: (fn: (s: string) => void) => {
+    ipcRenderer.removeAllListeners('chat:chunk')
+    ipcRenderer.on('chat:chunk', (_e, s: string) => fn(s))
+  },
+  onChatStreamStart: (fn: () => void) => {
+    ipcRenderer.removeAllListeners('chat:stream-start')
+    ipcRenderer.on('chat:stream-start', () => fn())
+  },
+  onChatWaveStart: (fn: (payload: { waveIndex: number; waveCount: number; newBubble: boolean }) => void) => {
+    ipcRenderer.removeAllListeners('chat:wave-start')
+    ipcRenderer.on('chat:wave-start', (_e, payload) => fn(payload))
+  },
+  onChatWaveEnd: (fn: (payload: { waveIndex: number; text: string; partial?: boolean }) => void) => {
+    ipcRenderer.removeAllListeners('chat:wave-end')
+    ipcRenderer.on('chat:wave-end', (_e, payload) => fn(payload))
+  },
+  probeLocalChat: (patch?: Partial<AppSettings>) =>
+    ipcRenderer.invoke('settings:probeLocalChat', patch) as Promise<{
+      ok: boolean
+      latencyMs?: number
+      model?: string
+      error?: string
+    }>,
+  onChatReplace: (fn: (text: string) => void) => {
+    ipcRenderer.removeAllListeners('chat:replace')
+    ipcRenderer.on('chat:replace', (_e, text: string) => fn(text))
+  },
+  onChatStatus: (fn: (text: string) => void) => {
+    ipcRenderer.removeAllListeners('chat:status')
+    ipcRenderer.on('chat:status', (_e, text: string) => fn(text))
+  },
+  onInvestigationProgress: (
+    fn: (payload: import('../shared/investigation').InvestigationProgressPayload | null) => void
+  ) => {
+    ipcRenderer.removeAllListeners('investigation:progress')
+    ipcRenderer.on('investigation:progress', (_e, payload) => fn(payload))
+  },
+  onTaskPlanProgress: (
+    fn: (payload: import('../shared/desktopAgentTaskPlan').TaskPlanProgressPayload | null) => void
+  ) => {
+    ipcRenderer.removeAllListeners('taskplan:progress')
+    ipcRenderer.on('taskplan:progress', (_e, payload) => fn(payload))
+  },
+  onDesktopAgentAgentBusy: (fn: (payload: { sessionId: string; busy: boolean }) => void) => {
+    ipcRenderer.removeAllListeners('desktop-agent:agent-busy')
+    ipcRenderer.on('desktop-agent:agent-busy', (_e, payload) => fn(payload))
+  },
+  onDesktopAgentJobState: (
+    fn: (payload: import('../shared/desktopAgentDock').DesktopAgentJobStatePayload) => void
+  ) => {
+    ipcRenderer.removeAllListeners('desktop-agent:job-state')
+    ipcRenderer.on('desktop-agent:job-state', (_e, payload) => fn(payload))
+  },
+  onDesktopAgentJobStatus: (fn: (payload: { sessionId: string; label: string }) => void) => {
+    ipcRenderer.removeAllListeners('desktop-agent:job-status')
+    ipcRenderer.on('desktop-agent:job-status', (_e, payload) => fn(payload))
+  },
+  onDesktopAgentTaskDelivery: (
+    fn: (payload: import('../shared/desktopAgentDock').DesktopAgentTaskDeliveryPayload) => void
+  ) => {
+    ipcRenderer.removeAllListeners('desktop-agent:task-delivery')
+    ipcRenderer.on('desktop-agent:task-delivery', (_e, payload) => fn(payload))
+  },
+  onDesktopAgentTaskDeliveryQueued: (
+    fn: (payload: import('../shared/desktopAgentDock').DesktopAgentTaskDeliveryPayload) => void
+  ) => {
+    ipcRenderer.removeAllListeners('desktop-agent:task-delivery-queued')
+    ipcRenderer.on('desktop-agent:task-delivery-queued', (_e, payload) => fn(payload))
+  },
+  onExtensionTrigger: (
+    fn: (payload: {
+      extensionId: string
+      extensionName: string
+      kind: 'skill' | 'plugin' | 'gamemode'
+    }) => void
+  ) => {
+    ipcRenderer.removeAllListeners('chat:extensionTrigger')
+    ipcRenderer.on('chat:extensionTrigger', (_e, payload) => fn(payload))
+  },
+  onChatSearchCard: (fn: (payload: import('../shared/searchCard').SearchCardPayload) => void) => {
+    ipcRenderer.removeAllListeners('chat:searchCard')
+    ipcRenderer.on('chat:searchCard', (_e, payload) => fn(payload))
+  },
+  onChatMemoryAudit: (fn: (payload: import('../shared/memoryAudit').MemoryAuditCardPayload) => void) => {
+    ipcRenderer.removeAllListeners('chat:memoryAudit')
+    ipcRenderer.on('chat:memoryAudit', (_e, payload) => fn(payload))
+  },
+  onChatDone: (
+    fn: (meta?: { memoryWrites?: string[]; assistantText?: string; turnId?: string }) => void
+  ) => {
+    ipcRenderer.removeAllListeners('chat:done')
+    ipcRenderer.on('chat:done', (_e, meta) => fn(meta))
+  },
+  onChatError: (fn: (err: string) => void) => {
+    ipcRenderer.removeAllListeners('chat:error')
+    ipcRenderer.on('chat:error', (_e, err: string) => fn(err))
+  },
+  onDispatchProactive: (fn: (payload: { extensionId: string; message: string }) => void) => {
+    ipcRenderer.removeAllListeners('dispatch:proactive')
+    ipcRenderer.on('dispatch:proactive', (_e, payload) => fn(payload))
+  },
+  /** @deprecated 使用 ext.gamemode.onEvent('minecraft', ...) */
+  onMcEvent: (fn: (payload: { event: unknown; reaction: unknown }) => void) => {
+    ipcRenderer.removeAllListeners('mc:event')
+    ipcRenderer.on('mc:event', (_e, payload) => fn(payload))
+    ipcRenderer.removeAllListeners('ext:gamemode:event')
+    ipcRenderer.on('ext:gamemode:event', (_e, payload: { gameId?: string; event: unknown; reaction: unknown }) => {
+      if (payload?.gameId === GAME_MINECRAFT) fn({ event: payload.event, reaction: payload.reaction })
+    })
+  },
+  onMcBotDebug: (fn: (snapshot: Record<string, unknown>) => void) => {
+    ipcRenderer.removeAllListeners('mc:botDebug')
+    ipcRenderer.on('mc:botDebug', (_e, snapshot) => fn(snapshot))
+  },
+  onWindowFocused: (fn: () => void) => {
+    ipcRenderer.removeAllListeners('window-focused')
+    ipcRenderer.on('window-focused', () => fn())
+  },
+  weixinGetStatus: (): Promise<{
+    connected: boolean
+    enabled: boolean
+    polling: boolean
+    proactiveEnabled: boolean
+    accountId?: string
+    userId?: string
+    lastError?: string | null
+    tokenExpired: boolean
+    embeddingReady?: boolean
+  }> => ipcRenderer.invoke('weixin:getStatus'),
+  weixinStartLogin: (): Promise<{ qrcode: string; qrcodeImgContent: string; qrcodeScanUrl?: string }> =>
+    ipcRenderer.invoke('weixin:startLogin'),
+  weixinPollLogin: (args: { qrcode: string; verifyCode?: string; baseUrl?: string }) =>
+    ipcRenderer.invoke('weixin:pollLogin', args) as Promise<{
+      ok: boolean
+      status: string
+      needVerifyCode?: boolean
+      error?: string
+    }>,
+  weixinSubmitVerifyCode: (args: { qrcode: string; verifyCode: string }) =>
+    ipcRenderer.invoke('weixin:submitVerifyCode', args) as Promise<{
+      ok: boolean
+      status: string
+      needVerifyCode?: boolean
+      error?: string
+    }>,
+  weixinDisconnect: (): Promise<{ ok: boolean }> => ipcRenderer.invoke('weixin:disconnect'),
+  weixinSetEnabled: (enabled: boolean) => ipcRenderer.invoke('weixin:setEnabled', enabled),
+  weixinSetProactiveEnabled: (enabled: boolean) =>
+    ipcRenderer.invoke('weixin:setProactiveEnabled', enabled),
+  weixinRestart: () => ipcRenderer.invoke('weixin:restart'),
+  onWeixinStatusChanged: (
+    fn: (status: {
+      connected: boolean
+      enabled: boolean
+      polling: boolean
+      proactiveEnabled: boolean
+      accountId?: string
+      userId?: string
+      lastError?: string | null
+      tokenExpired: boolean
+    }) => void
+  ) => {
+    ipcRenderer.removeAllListeners('weixin:status-changed')
+    ipcRenderer.on('weixin:status-changed', (_e, payload) => fn(payload))
+    return () => ipcRenderer.removeAllListeners('weixin:status-changed')
+  },
+  ui: {
+    getTheme: (): Promise<'light' | 'dark'> =>
+      ipcRenderer.invoke('ui:getTheme').then((r: { mode?: string }) =>
+        r?.mode === 'light' ? 'light' : 'dark'
+      ),
+    setTheme: (mode: 'light' | 'dark') => ipcRenderer.invoke('ui:setTheme', mode),
+    onThemeChanged: (fn: (mode: 'light' | 'dark') => void) => {
+      ipcRenderer.removeAllListeners('ui:themeChanged')
+      ipcRenderer.on('ui:themeChanged', (_e, payload: { mode?: string }) => {
+        fn(payload?.mode === 'light' ? 'light' : 'dark')
+      })
+    },
+    getLevel: () => ipcRenderer.invoke('ui:getLevel'),
+    showPet: () => ipcRenderer.invoke('ui:showPet'),
+    hidePet: () => ipcRenderer.invoke('ui:hidePet'),
+    expandToMain: (opts?: { tab?: string }) => ipcRenderer.invoke('ui:expandToMain', opts),
+    setAlwaysOnTop: (v: boolean) => ipcRenderer.invoke('ui:setAlwaysOnTop', v),
+    setLevel: (level: 0 | 1 | 2 | 3) => ipcRenderer.invoke('ui:setLevel', level),
+    onChatBubble: (fn: (payload: { text: string; role?: string; emotionLabel?: string }) => void) => {
+      ipcRenderer.removeAllListeners('ui:chatBubble')
+      ipcRenderer.on('ui:chatBubble', (_e, payload) => fn(payload))
+    },
+    onLevel: (fn: (payload: { level: number }) => void) => {
+      ipcRenderer.removeAllListeners('ui:level')
+      ipcRenderer.on('ui:level', (_e, payload) => fn(payload))
+    },
+    onExpand: (fn: (payload: { tab?: string }) => void) => {
+      ipcRenderer.removeAllListeners('ui:expand')
+      ipcRenderer.on('ui:expand', (_e, payload) => fn(payload))
+    },
+    onExtensionToast: (fn: (payload: { text: string; extensionId?: string }) => void) => {
+      ipcRenderer.removeAllListeners('ui:extensionToast')
+      ipcRenderer.on('ui:extensionToast', (_e, payload) => fn(payload))
+    }
+  },
+  voice: {
+    sendAudioChunk: (buffer: ArrayBuffer) => ipcRenderer.invoke('voice:audio-chunk', buffer),
+    cancelTts: () => ipcRenderer.invoke('voice:cancel-tts'),
+    setMode: (mode: string) => ipcRenderer.invoke('voice:set-mode', mode),
+    setInputChannel: (channel: string) => ipcRenderer.invoke('voice:set-input-channel', channel),
+    applySettings: (patch: Record<string, unknown>) =>
+      ipcRenderer.invoke('voice:apply-settings', patch),
+    restartService: () => ipcRenderer.invoke('voice:restart-service'),
+    setPttActive: (active: boolean) => ipcRenderer.invoke('voice:ptt-active', active),
+    checkEnvironment: () => ipcRenderer.invoke('voice:check-environment'),
+    installEnvironment: () => ipcRenderer.invoke('voice:install-environment'),
+    setTheaterSession: (active: boolean) => ipcRenderer.invoke('voice:set-theater-session', active),
+    health: () => ipcRenderer.invoke('voice:health'),
+    onTtsAudio: (fn: (audio: ArrayBuffer) => void) => {
+      ipcRenderer.removeAllListeners('voice:tts-audio')
+      ipcRenderer.on('voice:tts-audio', (_e, audio: ArrayBuffer | Uint8Array) => {
+        const ab =
+          audio instanceof ArrayBuffer
+            ? audio
+            : audio.buffer.slice(audio.byteOffset, audio.byteOffset + audio.byteLength)
+        fn(ab)
+      })
+      return () => ipcRenderer.removeAllListeners('voice:tts-audio')
+    },
+    onTtsSpeakText: (fn: (payload: { text: string }) => void) => {
+      ipcRenderer.removeAllListeners('voice:tts-speak-text')
+      ipcRenderer.on('voice:tts-speak-text', (_e, payload: { text: string }) => fn(payload))
+      return () => ipcRenderer.removeAllListeners('voice:tts-speak-text')
+    },
+    onTtsSpeakCancel: (fn: () => void) => {
+      ipcRenderer.removeAllListeners('voice:tts-speak-cancel')
+      ipcRenderer.on('voice:tts-speak-cancel', () => fn())
+      return () => ipcRenderer.removeAllListeners('voice:tts-speak-cancel')
+    },
+    onTranscript: (fn: (result: { text: string; confidence: number }) => void) => {
+      ipcRenderer.removeAllListeners('voice:transcript')
+      ipcRenderer.on('voice:transcript', (_e, result) => fn(result))
+      return () => ipcRenderer.removeAllListeners('voice:transcript')
+    },
+    onStateChange: (fn: (state: string) => void) => {
+      ipcRenderer.removeAllListeners('voice:state')
+      ipcRenderer.on('voice:state', (_e, state: string) => fn(state))
+      return () => ipcRenderer.removeAllListeners('voice:state')
+    },
+    onListening: (fn: (active: boolean) => void) => {
+      ipcRenderer.removeAllListeners('voice:listening')
+      ipcRenderer.on('voice:listening', (_e, active: boolean) => fn(active))
+      return () => ipcRenderer.removeAllListeners('voice:listening')
+    },
+    onThinking: (fn: (active: boolean) => void) => {
+      ipcRenderer.removeAllListeners('voice:thinking')
+      ipcRenderer.on('voice:thinking', (_e, active: boolean) => fn(active))
+      return () => ipcRenderer.removeAllListeners('voice:thinking')
+    },
+    onEngineStatus: (fn: (status: { engine: string; modelLoaded: boolean }) => void) => {
+      ipcRenderer.removeAllListeners('voice:engine-status')
+      ipcRenderer.on('voice:engine-status', (_e, status) => fn(status))
+      return () => ipcRenderer.removeAllListeners('voice:engine-status')
+    },
+    onInstallLog: (fn: (progress: { phase: string; line: string }) => void) => {
+      ipcRenderer.removeAllListeners('voice:install-log')
+      ipcRenderer.on('voice:install-log', (_e, progress) => fn(progress))
+      return () => ipcRenderer.removeAllListeners('voice:install-log')
+    }
+  }
+})

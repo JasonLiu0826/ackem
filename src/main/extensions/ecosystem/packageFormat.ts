@@ -1,8 +1,8 @@
-// [ecosystem/packageFormat] — .ackem-ext 包格式
+﻿// [ecosystem/packageFormat] 鈥?.Ackem-ext 鍖呮牸寮?
 
 import {
-  ACKEM_EXT_PACKAGE_FORMAT,
-  ACKEM_EXT_PACKAGE_FORMAT_VERSION
+  Ackem_EXT_PACKAGE_FORMAT,
+  Ackem_EXT_PACKAGE_FORMAT_VERSION
 } from './constants'
 import type { ExtensionManifestBase } from '../protocols'
 import type { AckemSignatureSidecar } from './signature'
@@ -12,7 +12,7 @@ import { validateExtensionManifest } from './manifestValidate'
 import { isCommunityExtensionId } from './extensionId'
 
 export interface AckemExtensionPackage {
-  format: typeof ACKEM_EXT_PACKAGE_FORMAT
+  format: typeof Ackem_EXT_PACKAGE_FORMAT
   formatVersion: string
   publisherId: string
   manifest: ExtensionManifestBase & Record<string, unknown>
@@ -27,10 +27,10 @@ export function buildAckemExtensionPackage(input: {
   privateKeyPem: string
 }): AckemExtensionPackage {
   if (!isCommunityExtensionId(input.manifest.id)) {
-    throw new Error('仅 community/ 扩展可打包为 .ackem-ext')
+    throw new Error('浠?community/ 鎵╁睍鍙墦鍖呬负 .Ackem-ext')
   }
   if (!input.files['manifest.json']) {
-    throw new Error('files 必须包含 manifest.json')
+    throw new Error('files 蹇呴』鍖呭惈 manifest.json')
   }
   const fileDigests = buildFileDigests(input.files)
   const signature = createSignatureSidecar({
@@ -40,8 +40,8 @@ export function buildAckemExtensionPackage(input: {
     privateKeyPem: input.privateKeyPem
   })
   return {
-    format: ACKEM_EXT_PACKAGE_FORMAT,
-    formatVersion: ACKEM_EXT_PACKAGE_FORMAT_VERSION,
+    format: Ackem_EXT_PACKAGE_FORMAT,
+    formatVersion: Ackem_EXT_PACKAGE_FORMAT_VERSION,
     publisherId: input.publisherId,
     manifest: input.manifest,
     files: input.files,
@@ -51,14 +51,14 @@ export function buildAckemExtensionPackage(input: {
 
 export function parseAckemExtensionPackage(raw: unknown): AckemExtensionPackage {
   if (!raw || typeof raw !== 'object') {
-    throw new Error('.ackem-ext 不是有效 JSON 对象')
+    throw new Error('.Ackem-ext 涓嶆槸鏈夋晥 JSON 瀵硅薄')
   }
   const pkg = raw as Partial<AckemExtensionPackage>
-  if (pkg.format !== ACKEM_EXT_PACKAGE_FORMAT) {
-    throw new Error(`format 必须为 ${ACKEM_EXT_PACKAGE_FORMAT}`)
+  if (pkg.format !== Ackem_EXT_PACKAGE_FORMAT) {
+    throw new Error(`format 蹇呴』涓?${Ackem_EXT_PACKAGE_FORMAT}`)
   }
   if (!pkg.formatVersion || !pkg.publisherId || !pkg.manifest || !pkg.files || !pkg.signature) {
-    throw new Error('.ackem-ext 缺少必填字段')
+    throw new Error('.Ackem-ext 缂哄皯蹇呭～瀛楁')
   }
   return pkg as AckemExtensionPackage
 }
@@ -69,18 +69,18 @@ export function verifyAckemExtensionPackage(
 ): { ok: true } | { ok: false; errors: string[] } {
   const errors: string[] = []
 
-  if (pkg.formatVersion !== ACKEM_EXT_PACKAGE_FORMAT_VERSION) {
-    errors.push(`不支持的 formatVersion: ${pkg.formatVersion}`)
+  if (pkg.formatVersion !== Ackem_EXT_PACKAGE_FORMAT_VERSION) {
+    errors.push(`涓嶆敮鎸佺殑 formatVersion: ${pkg.formatVersion}`)
   }
 
   const manifestCheck = validateExtensionManifest(pkg.manifest, { requireEngineApiVersion: true })
   errors.push(...manifestCheck.errors)
 
   if (pkg.publisherId !== pkg.signature.publisherId) {
-    errors.push('publisherId 与 signature.publisherId 不一致')
+    errors.push('publisherId 涓?signature.publisherId 涓嶄竴鑷?)
   }
   if (pkg.manifest.id !== pkg.signature.manifestId) {
-    errors.push('manifest.id 与 signature.manifestId 不一致')
+    errors.push('manifest.id 涓?signature.manifestId 涓嶄竴鑷?)
   }
 
   const digestCheck = verifyFileDigests(pkg.signature, pkg.files)
@@ -88,10 +88,10 @@ export function verifyAckemExtensionPackage(
 
   const publisher = resolvePublisherPublicKey(dataRoot, pkg.publisherId)
   if (!publisher) {
-    errors.push(`未信任的发布者: ${pkg.publisherId}`)
+    errors.push(`鏈俊浠荤殑鍙戝竷鑰? ${pkg.publisherId}`)
   } else {
     if (!publisherScopeAllowed(publisher, pkg.manifest.id)) {
-      errors.push(`发布者 ${pkg.publisherId} 无权签名 ${pkg.manifest.id}`)
+      errors.push(`鍙戝竷鑰?${pkg.publisherId} 鏃犳潈绛惧悕 ${pkg.manifest.id}`)
     }
     const sigCheck = verifySignatureSidecar(pkg.signature, publisher.publicKey)
     if (!sigCheck.ok) errors.push(sigCheck.error)

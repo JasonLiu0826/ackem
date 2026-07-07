@@ -1,4 +1,4 @@
-import type { DispatchCatalogEntry, DispatchConfig } from '../protocols'
+﻿import type { DispatchCatalogEntry, DispatchConfig } from '../protocols'
 import { isCoreExtension } from '../../../shared/coreExtensions'
 import {
   DESKTOP_AGENT_GRAYSCALE_BANNER_ZH,
@@ -8,41 +8,41 @@ import { isDesktopAgentSettingsReady, type DesktopAgentSettingsSlice } from '../
 
 const MIN_LEN = 4
 
-/** 用户在问「Ackem 能做什么 / 有什么功能」，而非请求具体能力或情感话题 */
+/** 鐢ㄦ埛鍦ㄩ棶銆孊ritney 鑳藉仛浠€涔?/ 鏈変粈涔堝姛鑳姐€嶏紝鑰岄潪璇锋眰鍏蜂綋鑳藉姏鎴栨儏鎰熻瘽棰?*/
 const LISTING_PATTERNS: RegExp[] = [
-  /(?:你|Ackem|这边|系统).{0,12}(?:会|能|可以|都).{0,8}(?:干|做|帮).{0,8}(?:什么|啥)/u,
-  /(?:你|Ackem).{0,8}(?:会|能|都).{0,6}(?:些什么|啥|什么)(?:功能|能力)?/u,
-  /(?:有|都有|都有哪些).{0,4}(?:什么|啥)(?:功能|能力|本事|特长)/u,
-  /(?:哪些|什么).{0,8}(?:扩展|插件|[Ss]kill|技能)/u,
-  /介绍.{0,10}(?:一下.{0,6})?(?:功能|能力|扩展)/u,
-  /能干(?:些什么|啥|什么)/u,
-  /(?:功能|能力|扩展).{0,6}((?:都)?有(?:哪些|什么|啥)|清单|列表)/u
+  /(?:浣爘Ackem|杩欒竟|绯荤粺).{0,12}(?:浼殀鑳絴鍙互|閮?.{0,8}(?:骞瞸鍋殀甯?.{0,8}(?:浠€涔坾鍟?/u,
+  /(?:浣爘Ackem).{0,8}(?:浼殀鑳絴閮?.{0,6}(?:浜涗粈涔坾鍟浠€涔?(?:鍔熻兘|鑳藉姏)?/u,
+  /(?:鏈墊閮芥湁|閮芥湁鍝簺).{0,4}(?:浠€涔坾鍟?(?:鍔熻兘|鑳藉姏|鏈簨|鐗归暱)/u,
+  /(?:鍝簺|浠€涔?.{0,8}(?:鎵╁睍|鎻掍欢|[Ss]kill|鎶€鑳?/u,
+  /浠嬬粛.{0,10}(?:涓€涓?{0,6})?(?:鍔熻兘|鑳藉姏|鎵╁睍)/u,
+  /鑳藉共(?:浜涗粈涔坾鍟浠€涔?/u,
+  /(?:鍔熻兘|鑳藉姏|鎵╁睍).{0,6}((?:閮??鏈??:鍝簺|浠€涔坾鍟?|娓呭崟|鍒楄〃)/u
 ]
 
-/** 情感/关系/假设类问句，勿当作能力清单 */
+/** 鎯呮劅/鍏崇郴/鍋囪绫婚棶鍙ワ紝鍕垮綋浣滆兘鍔涙竻鍗?*/
 const LISTING_EXCLUDE: RegExp[] = [
-  /(?:爱|喜欢|想我|生气|难过|伤心|离开|还会在|陪(?:我|你)|在吗|还在吗|是谁|叫什么)/u,
-  /(?:会不会|能不能).{0,12}(?:骗|伤|抛弃|不理)/u
+  /(?:鐖眧鍠滄|鎯虫垜|鐢熸皵|闅捐繃|浼ゅ績|绂诲紑|杩樹細鍦▅闄??:鎴憒浣?|鍦ㄥ悧|杩樺湪鍚梶鏄皝|鍙粈涔?/u,
+  /(?:浼氫笉浼殀鑳戒笉鑳?.{0,12}(?:楠梶浼鎶涘純|涓嶇悊)/u
 ]
 
 const MODE_LABEL: Record<DispatchConfig['mode'], string> = {
-  dispatched: '对话触发',
-  autonomous: '后台自动',
-  always_on: '常驻',
-  manual: '手动'
+  dispatched: '瀵硅瘽瑙﹀彂',
+  autonomous: '鍚庡彴鑷姩',
+  always_on: '甯搁┗',
+  manual: '鎵嬪姩'
 }
 
 const STATUS_LABEL: Record<DispatchCatalogEntry['status'], string> = {
-  active: '已启用',
-  installed: '已安装未启用',
-  planned: '规划中',
-  disabled: '已停用',
-  error: '异常'
+  active: '宸插惎鐢?,
+  installed: '宸插畨瑁呮湭鍚敤',
+  planned: '瑙勫垝涓?,
+  disabled: '宸插仠鐢?,
+  error: '寮傚父'
 }
 
 export type ExtensionCatalogListingOptions = {
   maxChars?: number
-  /** 电脑助手模式已开启时的详细能力小节 */
+  /** 鐢佃剳鍔╂墜妯″紡宸插紑鍚椂鐨勮缁嗚兘鍔涘皬鑺?*/
   desktopAgentSection?: string
   settings?: DesktopAgentSettingsSlice & { disableChatTools?: boolean }
 }
@@ -61,80 +61,80 @@ function isUsableNow(entry: DispatchCatalogEntry): boolean {
 function unusableReason(entry: DispatchCatalogEntry): string {
   switch (entry.status) {
     case 'disabled':
-      return '扩展中心已关闭，需重新启用'
+      return '鎵╁睍涓績宸插叧闂紝闇€閲嶆柊鍚敤'
     case 'planned':
-      return '规划中，尚未接入'
+      return '瑙勫垝涓紝灏氭湭鎺ュ叆'
     case 'error':
-      return '加载异常，请到扩展中心检查'
+      return '鍔犺浇寮傚父锛岃鍒版墿灞曚腑蹇冩鏌?
     case 'installed':
-      return '已安装但未启用'
+      return '宸插畨瑁呬絾鏈惎鐢?
     default:
-      return '当前不可用'
+      return '褰撳墠涓嶅彲鐢?
   }
 }
 
 function triggerHint(entry: DispatchCatalogEntry): string {
   const parts: string[] = []
   if (entry.dispatch.scenarios.length > 0) {
-    parts.push(`场景：${entry.dispatch.scenarios.slice(0, 3).join('；')}`)
+    parts.push(`鍦烘櫙锛?{entry.dispatch.scenarios.slice(0, 3).join('锛?)}`)
   }
   if (entry.dispatch.keywords.length > 0) {
-    parts.push(`可说：${entry.dispatch.keywords.slice(0, 4).join('、')}`)
+    parts.push(`鍙锛?{entry.dispatch.keywords.slice(0, 4).join('銆?)}`)
   }
   if (entry.dispatch.slash?.length) {
-    parts.push(`指令：${entry.dispatch.slash.slice(0, 3).join('、')}`)
+    parts.push(`鎸囦护锛?{entry.dispatch.slash.slice(0, 3).join('銆?)}`)
   }
   const mode = MODE_LABEL[entry.dispatch.mode] ?? entry.dispatch.mode
   if (entry.dispatch.mode === 'manual') {
-    parts.push('触发：需在扩展中心或指令手动启动')
+    parts.push('瑙﹀彂锛氶渶鍦ㄦ墿灞曚腑蹇冩垨鎸囦护鎵嬪姩鍚姩')
   } else if (entry.dispatch.mode === 'autonomous') {
-    parts.push('触发：后台自动，无需每轮对话')
+    parts.push('瑙﹀彂锛氬悗鍙拌嚜鍔紝鏃犻渶姣忚疆瀵硅瘽')
   } else {
-    parts.push(`触发：${mode}`)
+    parts.push(`瑙﹀彂锛?{mode}`)
   }
-  return parts.filter(Boolean).join('；')
+  return parts.filter(Boolean).join('锛?)
 }
 
 function formatUsableEntryLine(entry: DispatchCatalogEntry): string {
-  const core = isCoreExtension(entry.id) ? ' · 基础能力' : ''
+  const core = isCoreExtension(entry.id) ? ' 路 鍩虹鑳藉姏' : ''
   const summary = entry.dispatch.summary.trim()
-  return `- 【可用】${entry.name}（${entry.category}${core}）：${summary}。${triggerHint(entry)}`
+  return `- 銆愬彲鐢ㄣ€?{entry.name}锛?{entry.category}${core}锛夛細${summary}銆?{triggerHint(entry)}`
 }
 
 function formatUnavailableEntryLine(entry: DispatchCatalogEntry): string {
   const status = STATUS_LABEL[entry.status] ?? entry.status
   const summary = entry.dispatch.summary.trim()
-  return `- 【不可用】${entry.name}（${entry.category} · ${status}）：${summary}。原因：${unusableReason(entry)}`
+  return `- 銆愪笉鍙敤銆?{entry.name}锛?{entry.category} 路 ${status}锛夛細${summary}銆傚師鍥狅細${unusableReason(entry)}`
 }
 
-/** 平台级功能（非扩展库 catalog 条目）的可用性说明 */
+/** 骞冲彴绾у姛鑳斤紙闈炴墿灞曞簱 catalog 鏉＄洰锛夌殑鍙敤鎬ц鏄?*/
 export function buildPlatformFeaturesSection(
   settings?: DesktopAgentSettingsSlice & { disableChatTools?: boolean }
 ): string {
-  const lines = ['【平台功能 · 非扩展库】']
+  const lines = ['銆愬钩鍙板姛鑳?路 闈炴墿灞曞簱銆?]
 
   if (isDesktopAgentGrayscalePreview()) {
-    lines.push(`- 【暂未开放】电脑助手：${DESKTOP_AGENT_GRAYSCALE_BANNER_ZH}`)
+    lines.push(`- 銆愭殏鏈紑鏀俱€戠數鑴戝姪鎵嬶細${DESKTOP_AGENT_GRAYSCALE_BANNER_ZH}`)
   } else if (!isDesktopAgentSettingsReady(settings ?? {})) {
     lines.push(
-      '- 【未就绪】电脑助手：已在产品中开放，但用户尚未完成设置。需到 设置 → 模型与连接 → 电脑助手 启用并确认风险，再在聊天栏开启「电脑助手」模式。'
+      '- 銆愭湭灏辩华銆戠數鑴戝姪鎵嬶細宸插湪浜у搧涓紑鏀撅紝浣嗙敤鎴峰皻鏈畬鎴愯缃€傞渶鍒?璁剧疆 鈫?妯″瀷涓庤繛鎺?鈫?鐢佃剳鍔╂墜 鍚敤骞剁‘璁ら闄╋紝鍐嶅湪鑱婂ぉ鏍忓紑鍚€岀數鑴戝姪鎵嬨€嶆ā寮忋€?
     )
   } else {
     lines.push(
-      '- 【可用·需开启模式】电脑助手：设置已就绪；用户需在聊天栏点开「电脑助手」后，方可操作本机文件与应用（实验）。'
+      '- 銆愬彲鐢烽渶寮€鍚ā寮忋€戠數鑴戝姪鎵嬶細璁剧疆宸插氨缁紱鐢ㄦ埛闇€鍦ㄨ亰澶╂爮鐐瑰紑銆岀數鑴戝姪鎵嬨€嶅悗锛屾柟鍙搷浣滄湰鏈烘枃浠朵笌搴旂敤锛堝疄楠岋級銆?
     )
   }
 
   lines.push(
-    '- 【可用】对话陪伴 / 长期记忆 / 情绪感知 / 知识整理卡片：本体能力，无需扩展。',
-    '- 【可用】记忆导入：记忆页可导入 txt / md / json。',
-    '- 【可用】OpenForU Plan：用户可说「帮我做一个 XX Skill/插件」共创可部署扩展。'
+    '- 銆愬彲鐢ㄣ€戝璇濋櫔浼?/ 闀挎湡璁板繂 / 鎯呯华鎰熺煡 / 鐭ヨ瘑鏁寸悊鍗＄墖锛氭湰浣撹兘鍔涳紝鏃犻渶鎵╁睍銆?,
+    '- 銆愬彲鐢ㄣ€戣蹇嗗鍏ワ細璁板繂椤靛彲瀵煎叆 txt / md / json銆?,
+    '- 銆愬彲鐢ㄣ€慜penForU Plan锛氱敤鎴峰彲璇淬€屽府鎴戝仛涓€涓?XX Skill/鎻掍欢銆嶅叡鍒涘彲閮ㄧ讲鎵╁睍銆?
   )
 
   return lines.join('\n')
 }
 
-/** 将扩展库 catalog 格式化为 LLM 上下文块（按可用/不可用分组，字符预算内截断） */
+/** 灏嗘墿灞曞簱 catalog 鏍煎紡鍖栦负 LLM 涓婁笅鏂囧潡锛堟寜鍙敤/涓嶅彲鐢ㄥ垎缁勶紝瀛楃棰勭畻鍐呮埅鏂級 */
 export function buildExtensionCatalogListingBlock(
   catalog: DispatchCatalogEntry[],
   options?: ExtensionCatalogListingOptions
@@ -144,12 +144,12 @@ export function buildExtensionCatalogListingBlock(
   const unavailable = catalog.filter((e) => !isUsableNow(e))
 
   const lines: string[] = [
-    '【扩展能力清单 · 本轮自动检索】',
-    '用户正在询问 Ackem 的能力/功能。你必须基于下列清单如实介绍，保持伴侣口吻。',
-    '硬性规则：',
-    '1) 仅「【可用】」项可以说「我能帮你…」并举例触发方式；「【不可用】」「【暂未开放】」只能说明存在或原因，禁止假称能执行。',
-    '2) 禁止编造未在清单中的扩展、Skill、插件或假称本轮已执行某操作。',
-    '3) 不要敷衍「功能多着呢」却不举例；至少概括本体能力 + 2~3 个【可用】扩展；若有【不可用】/【暂未开放】项可各提 1 个。',
+    '銆愭墿灞曡兘鍔涙竻鍗?路 鏈疆鑷姩妫€绱€?,
+    '鐢ㄦ埛姝ｅ湪璇㈤棶 Ackem 鐨勮兘鍔?鍔熻兘銆備綘蹇呴』鍩轰簬涓嬪垪娓呭崟濡傚疄浠嬬粛锛屼繚鎸佷即渚ｅ彛鍚汇€?,
+    '纭€ц鍒欙細',
+    '1) 浠呫€屻€愬彲鐢ㄣ€戙€嶉」鍙互璇淬€屾垜鑳藉府浣犫€︺€嶅苟涓句緥瑙﹀彂鏂瑰紡锛涖€屻€愪笉鍙敤銆戙€嶃€屻€愭殏鏈紑鏀俱€戙€嶅彧鑳借鏄庡瓨鍦ㄦ垨鍘熷洜锛岀姝㈠亣绉拌兘鎵ц銆?,
+    '2) 绂佹缂栭€犳湭鍦ㄦ竻鍗曚腑鐨勬墿灞曘€丼kill銆佹彃浠舵垨鍋囩О鏈疆宸叉墽琛屾煇鎿嶄綔銆?,
+    '3) 涓嶈鏁疯銆屽姛鑳藉鐫€鍛€嶅嵈涓嶄妇渚嬶紱鑷冲皯姒傛嫭鏈綋鑳藉姏 + 2~3 涓€愬彲鐢ㄣ€戞墿灞曪紱鑻ユ湁銆愪笉鍙敤銆?銆愭殏鏈紑鏀俱€戦」鍙悇鎻?1 涓€?,
     ''
   ]
 
@@ -160,29 +160,29 @@ export function buildExtensionCatalogListingBlock(
   }
 
   if (usable.length > 0) {
-    lines.push(`扩展库 · 当前可用（${usable.length}）：`)
+    lines.push(`鎵╁睍搴?路 褰撳墠鍙敤锛?{usable.length}锛夛細`)
     for (const entry of usable) lines.push(formatUsableEntryLine(entry))
     lines.push('')
   } else {
-    lines.push('扩展库 · 当前可用：暂无（可到扩展中心启用，或用 Plan 新建）。', '')
+    lines.push('鎵╁睍搴?路 褰撳墠鍙敤锛氭殏鏃狅紙鍙埌鎵╁睍涓績鍚敤锛屾垨鐢?Plan 鏂板缓锛夈€?, '')
   }
 
   if (unavailable.length > 0) {
-    lines.push(`扩展库 · 暂不可用（${unavailable.length}）：`)
+    lines.push(`鎵╁睍搴?路 鏆備笉鍙敤锛?{unavailable.length}锛夛細`)
     for (const entry of unavailable.slice(0, 14)) lines.push(formatUnavailableEntryLine(entry))
     if (unavailable.length > 14) {
-      lines.push(`- …另有 ${unavailable.length - 14} 项暂不可用，可到扩展中心查看`)
+      lines.push(`- 鈥﹀彟鏈?${unavailable.length - 14} 椤规殏涓嶅彲鐢紝鍙埌鎵╁睍涓績鏌ョ湅`)
     }
     lines.push('')
   }
 
   lines.push(
-    '回复建议：先一句话概括 Ackem 能做什么，再按平台功能 → 可用扩展 →（如有）暂不可用/未开放 分层说明；用户想新能力时引导 Plan。'
+    '鍥炲寤鸿锛氬厛涓€鍙ヨ瘽姒傛嫭 Ackem 鑳藉仛浠€涔堬紝鍐嶆寜骞冲彴鍔熻兘 鈫?鍙敤鎵╁睍 鈫掞紙濡傛湁锛夋殏涓嶅彲鐢?鏈紑鏀?鍒嗗眰璇存槑锛涚敤鎴锋兂鏂拌兘鍔涙椂寮曞 Plan銆?
   )
 
   let block = lines.join('\n')
   if (block.length > maxChars) {
-    block = `${block.slice(0, maxChars - 20).trimEnd()}\n…（清单已截断）`
+    block = `${block.slice(0, maxChars - 20).trimEnd()}\n鈥︼紙娓呭崟宸叉埅鏂級`
   }
   return block
 }

@@ -1,7 +1,7 @@
-// [temporalContextModulator] — 时间感知调制器
-// 职责：根据当前时间维度调制记忆检索排序权重
-// 模拟人类时间感知：昼夜节律、星期模式、季节共振、深夜加权、重逢策略、距离感知
-// 引用：./factStore, ../engine/types
+﻿// [temporalContextModulator] 鈥?鏃堕棿鎰熺煡璋冨埗鍣?
+// 鑱岃矗锛氭牴鎹綋鍓嶆椂闂寸淮搴﹁皟鍒惰蹇嗘绱㈡帓搴忔潈閲?
+// 妯℃嫙浜虹被鏃堕棿鎰熺煡锛氭樇澶滆妭寰嬨€佹槦鏈熸ā寮忋€佸鑺傚叡鎸€佹繁澶滃姞鏉冦€侀噸閫㈢瓥鐣ャ€佽窛绂绘劅鐭?
+// 寮曠敤锛?/factStore, ../engine/types
 
 import type { MemoryFact } from '../engine/types'
 
@@ -12,7 +12,7 @@ export interface TemporalContext {
   season: string          // 'winter'|'spring'|'summer'|'autumn'
   hour: number            // 0-23
   weekday: number         // 0(Sun)-6(Sat)
-  gapHours: number        // 距上次聊天间隔
+  gapHours: number        // 璺濅笂娆¤亰澶╅棿闅?
   localDate: string       // "2026-06-09"
 }
 
@@ -45,8 +45,8 @@ export function buildTemporalContext(args: {
 }
 
 /**
- * 计算时间感知加权系数。
- * 纯数学运算，零 I/O，零 Embedding，< 0.5ms。
+ * 璁＄畻鏃堕棿鎰熺煡鍔犳潈绯绘暟銆?
+ * 绾暟瀛﹁繍绠楋紝闆?I/O锛岄浂 Embedding锛? 0.5ms銆?
  */
 export function computeTemporalBoost(fact: MemoryFact, ctx: TemporalContext): number {
   const factDate = new Date(fact.createdAt)
@@ -56,7 +56,7 @@ export function computeTemporalBoost(fact: MemoryFact, ctx: TemporalContext): nu
   const daysSinceCreation = (Date.now() - factDate.getTime()) / 86400000
   let boost = 1.0
 
-  // T1: 昼夜节律 — 同时段记忆优先（±2小时）
+  // T1: 鏄煎鑺傚緥 鈥?鍚屾椂娈佃蹇嗕紭鍏堬紙卤2灏忔椂锛?
   if (Math.abs(factHour - ctx.hour) <= 2) {
     const todBoost: Record<string, number> = {
       morning: 1.2, forenoon: 1.1, afternoon: 1.0,
@@ -65,26 +65,26 @@ export function computeTemporalBoost(fact: MemoryFact, ctx: TemporalContext): nu
     boost *= (todBoost[ctx.timeOfDay] ?? 1.0)
   }
 
-  // T2: 星期类型匹配
+  // T2: 鏄熸湡绫诲瀷鍖归厤
   if (ctx.isWeekend && [0, 6].includes(factDay)) boost *= 1.2
   else if (!ctx.isWeekend && ![0, 6].includes(factDay)) boost *= 1.1
 
-  // T3: 季节感知 — 同季节记忆共振
+  // T3: 瀛ｈ妭鎰熺煡 鈥?鍚屽鑺傝蹇嗗叡鎸?
   if (monthToSeason(factMonth) === ctx.season) boost *= 1.2
   else boost *= 0.9
 
-  // T4: 深夜加权 — 凌晨1-5点是灵魂时刻
+  // T4: 娣卞鍔犳潈 鈥?鍑屾櫒1-5鐐规槸鐏甸瓊鏃跺埢
   if (ctx.timeOfDay === 'late_night') {
     if (factHour >= 1 && factHour <= 5) boost *= 1.4
     if (['VULNERABILITIES', 'MOOD'].includes(fact.subcategory)) boost *= 1.3
   }
 
-  // T5: 重逢感知 — 久别重逢优先高情绪关系记忆
+  // T5: 閲嶉€㈡劅鐭?鈥?涔呭埆閲嶉€紭鍏堥珮鎯呯华鍏崇郴璁板繂
   if (ctx.gapHours > 72 && ['OUR_BOND', 'VULNERABILITIES'].includes(fact.subcategory)) {
     boost *= 1.5
   }
 
-  // T6: 距离感知 — 对数尺度，人类对"昨天"的记忆极强
+  // T6: 璺濈鎰熺煡 鈥?瀵规暟灏哄害锛屼汉绫诲"鏄ㄥぉ"鐨勮蹇嗘瀬寮?
   if (daysSinceCreation < 1) boost *= 1.5
   else if (daysSinceCreation < 3) boost *= 1.3
   else if (daysSinceCreation < 7) boost *= 1.1
@@ -92,19 +92,19 @@ export function computeTemporalBoost(fact: MemoryFact, ctx: TemporalContext): nu
   return boost
 }
 
-// ═══════════════════════════════════════════════════════════
-// 周日情绪曲线 — 模拟人类一周的情绪周期
-// ═══════════════════════════════════════════════════════════
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+// 鍛ㄦ棩鎯呯华鏇茬嚎 鈥?妯℃嫙浜虹被涓€鍛ㄧ殑鎯呯华鍛ㄦ湡
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
 
 /**
- * 根据星期几和时段计算情绪偏移。
- * 人类一周的情绪模式：
- *   周五晚上最兴奋（周末马上到来）
- *   周日下午开始低落，周日晚达到谷底（周日忧郁）
- *   周一上午残留低落，缓慢回升到傍晚恢复基线
- *   周二到周四为正常基线
+ * 鏍规嵁鏄熸湡鍑犲拰鏃舵璁＄畻鎯呯华鍋忕Щ銆?
+ * 浜虹被涓€鍛ㄧ殑鎯呯华妯″紡锛?
+ *   鍛ㄤ簲鏅氫笂鏈€鍏村锛堝懆鏈┈涓婂埌鏉ワ級
+ *   鍛ㄦ棩涓嬪崍寮€濮嬩綆钀斤紝鍛ㄦ棩鏅氳揪鍒拌胺搴曪紙鍛ㄦ棩蹇ч儊锛?
+ *   鍛ㄤ竴涓婂崍娈嬬暀浣庤惤锛岀紦鎱㈠洖鍗囧埌鍌嶆櫄鎭㈠鍩虹嚎
+ *   鍛ㄤ簩鍒板懆鍥涗负姝ｅ父鍩虹嚎
  *
- * @returns { affDelta, secDelta } 情绪四维的微调偏移（-0.06 ~ +0.06）
+ * @returns { affDelta, secDelta } 鎯呯华鍥涚淮鐨勫井璋冨亸绉伙紙-0.06 ~ +0.06锛?
  */
 export function computeWeekdayMoodBias(now: Date): { affDelta: number; secDelta: number } {
   const weekday = now.getDay()  // 0=Sun, 1=Mon, ..., 6=Sat
@@ -114,47 +114,47 @@ export function computeWeekdayMoodBias(now: Date): { affDelta: number; secDelta:
   let secDelta = 0
 
   if (weekday === 5) {
-    // 周五：全天期待，晚上最兴奋
-    if (hour >= 18)      { affDelta = +0.06; secDelta = +0.02 }  // 周五晚·峰值
-    else if (hour >= 14) { affDelta = +0.04 }                     // 周五下午·兴奋爬升
-    else if (hour >= 10) { affDelta = +0.02 }                     // 周五上午·开始期待
+    // 鍛ㄤ簲锛氬叏澶╂湡寰咃紝鏅氫笂鏈€鍏村
+    if (hour >= 18)      { affDelta = +0.06; secDelta = +0.02 }  // 鍛ㄤ簲鏅毬峰嘲鍊?
+    else if (hour >= 14) { affDelta = +0.04 }                     // 鍛ㄤ簲涓嬪崍路鍏村鐖崌
+    else if (hour >= 10) { affDelta = +0.02 }                     // 鍛ㄤ簲涓婂崍路寮€濮嬫湡寰?
   } else if (weekday === 6) {
-    // 周六：享受周末
+    // 鍛ㄥ叚锛氫韩鍙楀懆鏈?
     affDelta = +0.03
   } else if (weekday === 0) {
-    // 周日：上午还行，下午开始低落，晚上谷底
-    if (hour >= 18)      { affDelta = -0.06; secDelta = -0.03 }  // 周日晚·谷底
-    else if (hour >= 14) { affDelta = -0.03 }                     // 周日下午·开始低落
-    else                 { affDelta = +0.01 }                     // 周日上午·残留周末感
+    // 鍛ㄦ棩锛氫笂鍗堣繕琛岋紝涓嬪崍寮€濮嬩綆钀斤紝鏅氫笂璋峰簳
+    if (hour >= 18)      { affDelta = -0.06; secDelta = -0.03 }  // 鍛ㄦ棩鏅毬疯胺搴?
+    else if (hour >= 14) { affDelta = -0.03 }                     // 鍛ㄦ棩涓嬪崍路寮€濮嬩綆钀?
+    else                 { affDelta = +0.01 }                     // 鍛ㄦ棩涓婂崍路娈嬬暀鍛ㄦ湯鎰?
   } else if (weekday === 1) {
-    // 周一：早晨残留低落，缓慢回升
-    if (hour < 12)       { affDelta = -0.06; secDelta = -0.02 }  // 周一上午·蓝调残留
-    else if (hour < 18)  { affDelta = -0.03 }                     // 周一下午·恢复中
-    // 周一傍晚 → 归零
+    // 鍛ㄤ竴锛氭棭鏅ㄦ畫鐣欎綆钀斤紝缂撴參鍥炲崌
+    if (hour < 12)       { affDelta = -0.06; secDelta = -0.02 }  // 鍛ㄤ竴涓婂崍路钃濊皟娈嬬暀
+    else if (hour < 18)  { affDelta = -0.03 }                     // 鍛ㄤ竴涓嬪崍路鎭㈠涓?
+    // 鍛ㄤ竴鍌嶆櫄 鈫?褰掗浂
   }
-  // 周二(2)、周三(3)、周四(4)：基线，无偏移
+  // 鍛ㄤ簩(2)銆佸懆涓?3)銆佸懆鍥?4)锛氬熀绾匡紝鏃犲亸绉?
 
   return { affDelta, secDelta }
 }
 
-/** 特殊日期的情绪偏移——覆盖周日曲线 */
+/** 鐗规畩鏃ユ湡鐨勬儏缁亸绉烩€斺€旇鐩栧懆鏃ユ洸绾?*/
 export function computeSpecialDateMoodBias(specialType: string): { affDelta: number; secDelta: number } {
   switch (specialType) {
-    case 'ackem_birthday':
-      return { affDelta: +3.0, secDelta: +1.5 }        // 她自己的生日——比谁都开心
+    case 'Ackem_birthday':
+      return { affDelta: +3.0, secDelta: +1.5 }        // 濂硅嚜宸辩殑鐢熸棩鈥斺€旀瘮璋侀兘寮€蹇?
     case 'birthday':
-      return { affDelta: +3.0, secDelta: +1.0 }        // 庆祝感，温暖
+      return { affDelta: +3.0, secDelta: +1.0 }        // 搴嗙鎰燂紝娓╂殩
     case 'first_met_anniversary':
     case 'relationship':
-      return { affDelta: +2.0, secDelta: +0.5 }        // 温暖怀旧，比生日含蓄
+      return { affDelta: +2.0, secDelta: +0.5 }        // 娓╂殩鎬€鏃э紝姣旂敓鏃ュ惈钃?
     case 'holiday_spring':
-      return { affDelta: +1.5, secDelta: +0.3 }        // 春节——喜庆
+      return { affDelta: +1.5, secDelta: +0.3 }        // 鏄ヨ妭鈥斺€斿枩搴?
     case 'holiday_valentine':
-      return { affDelta: +1.0, secDelta: -0.5 }        // 情人节——温馨带期待
+      return { affDelta: +1.0, secDelta: -0.5 }        // 鎯呬汉鑺傗€斺€旀俯棣ㄥ甫鏈熷緟
     case 'holiday':
-      return { affDelta: +0.5, secDelta: 0 }           // 一般节日——轻微
+      return { affDelta: +0.5, secDelta: 0 }           // 涓€鑸妭鏃モ€斺€旇交寰?
     case 'milestone':
-      return { affDelta: +1.0, secDelta: +0.2 }        // 里程碑——感慨
+      return { affDelta: +1.0, secDelta: +0.2 }        // 閲岀▼纰戔€斺€旀劅鎱?
     default:
       return { affDelta: 0, secDelta: 0 }
   }

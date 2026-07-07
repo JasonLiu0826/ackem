@@ -1,11 +1,11 @@
-import type { SkillManifest } from '../../types'
+﻿import type { SkillManifest } from '../../types'
 import type { DispatchConfig } from '../../../protocols'
 
 const PROD_DAILY_AT = '23:30'
 
-/** 生产 23:30；测试/开发可用 ACKEM_DIARY_DAILY_AT=HH:MM */
+/** 鐢熶骇 23:30锛涙祴璇?寮€鍙戝彲鐢?Ackem_DIARY_DAILY_AT=HH:MM */
 export function getDiaryDailyAt(): string {
-  const override = process.env.ACKEM_DIARY_DAILY_AT?.trim()
+  const override = process.env.Ackem_DIARY_DAILY_AT?.trim()
   if (override && /^\d{1,2}:\d{2}$/.test(override)) return override
   return PROD_DAILY_AT
 }
@@ -20,10 +20,10 @@ const DIARY_DISPATCH_BASE: Omit<DispatchConfig, 'time'> & {
   time: {
     active_hours: '00:00-23:59'
   },
-  habits: ['用户希望伴侣记录每日相处', '用户关闭应用前仍有对话未沉淀为日记'],
-  scenarios: ['每日晚间自动生成第一人称日记', '启动时补写退出日快照'],
-  summary: '每日定时（默认 23:30）生成第一人称日记；当日已有则跳过。',
-  keywords: ['日记', '今晚', '今天总结'],
+  habits: ['鐢ㄦ埛甯屾湜浼翠荆璁板綍姣忔棩鐩稿', '鐢ㄦ埛鍏抽棴搴旂敤鍓嶄粛鏈夊璇濇湭娌夋穩涓烘棩璁?],
+  scenarios: ['姣忔棩鏅氶棿鑷姩鐢熸垚绗竴浜虹О鏃ヨ', '鍚姩鏃惰ˉ鍐欓€€鍑烘棩蹇収'],
+  summary: '姣忔棩瀹氭椂锛堥粯璁?23:30锛夌敓鎴愮涓€浜虹О鏃ヨ锛涘綋鏃ュ凡鏈夊垯璺宠繃銆?,
+  keywords: ['鏃ヨ', '浠婃櫄', '浠婂ぉ鎬荤粨'],
   personality_hint: 'neutral'
 }
 
@@ -41,12 +41,12 @@ export function getDiaryDispatch(): DispatchConfig {
 }
 
 export const DIARY_AUTO_MANIFEST: SkillManifest = {
-  id: 'ackem/diary-auto@0.1.0',
-  name: '日记自动生成',
+  id: 'Ackem/diary-auto@0.1.0',
+  name: '鏃ヨ鑷姩鐢熸垚',
   version: '0.1.0',
   category: 'skill',
   skillType: 'proactive',
-  description: '每日定时生成第一人称日记（默认 23:30）；Ackem 基础能力，始终启用',
+  description: '姣忔棩瀹氭椂鐢熸垚绗竴浜虹О鏃ヨ锛堥粯璁?23:30锛夛紱Ackem 鍩虹鑳藉姏锛屽缁堝惎鐢?,
   author: 'JasonLiu0826',
   license: 'AGPL-3.0',
   main: 'skill.ts',

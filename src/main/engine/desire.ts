@@ -1,5 +1,5 @@
-// [desire] — P2-1 欲望栈
-// 5槽位，欲望产生→累积→表达或沉淀
+﻿// [desire] 鈥?P2-1 娆叉湜鏍?
+// 5妲戒綅锛屾鏈涗骇鐢熲啋绱Н鈫掕〃杈炬垨娌夋穩
 import { randomUUID } from 'node:crypto'
 import {
   DESIRE_DECAY_PER_TURN,
@@ -7,12 +7,12 @@ import {
   DESIRE_EXPRESSED_SETTLE_AFTER_TURNS,
   DESIRE_IDLE_SETTLE_TURNS,
   DESIRE_MAX_SLOTS
-} from './ackemParams'
+} from './AckemParams'
 import type { Desire, DesireStack, Event, L1State } from './types'
 
 const NEW_DESIRE_BASE_CHANCE = 0.08
 
-/** 根据事件类型和关系阶段决定产生欲望的概率和类别 */
+/** 鏍规嵁浜嬩欢绫诲瀷鍜屽叧绯婚樁娈靛喅瀹氫骇鐢熸鏈涚殑姒傜巼鍜岀被鍒?*/
 const DESIRE_TRIGGERS: Partial<Record<Event['type'], { chance: number; categories: Desire['category'][] }>> = {
   vulnerable: { chance: 0.20, categories: ['concern', 'share'] },
   question: { chance: 0.12, categories: ['curiosity', 'suggest'] },
@@ -24,37 +24,37 @@ const DESIRE_TRIGGERS: Partial<Record<Event['type'], { chance: number; categorie
   hurtful: { chance: 0.03, categories: ['concern'] }
 }
 
-/** 从对话中提取话题词（简单规则） */
+/** 浠庡璇濅腑鎻愬彇璇濋璇嶏紙绠€鍗曡鍒欙級 */
 function extractTopic(userMsg: string): string {
-  const clean = userMsg.replace(/[，。！？、的了我你是]/g, ' ').trim()
+  const clean = userMsg.replace(/[锛屻€傦紒锛熴€佺殑浜嗘垜浣犳槸]/g, ' ').trim()
   const words = clean.split(/\s+/).filter(w => w.length >= 2)
-  if (words.length === 0) return '近况'
+  if (words.length === 0) return '杩戝喌'
   return words.slice(0, 3).join('')
 }
 
-/** 规范化话题用于匹配（知识整理 / 欲望 topic） */
+/** 瑙勮寖鍖栬瘽棰樼敤浜庡尮閰嶏紙鐭ヨ瘑鏁寸悊 / 娆叉湜 topic锛?*/
 function normalizeTopicKey(s: string): string {
   return s
-    .replace(/[，。！？、\s]/g, '')
-    .replace(/^(搜一下|帮我搜|帮我查|查一下|介绍一下|介绍|讲讲|说说|了解|想了解)/u, '')
+    .replace(/[锛屻€傦紒锛熴€乗s]/g, '')
+    .replace(/^(鎼滀竴涓媩甯垜鎼渱甯垜鏌鏌ヤ竴涓媩浠嬬粛涓€涓媩浠嬬粛|璁茶|璇磋|浜嗚В|鎯充簡瑙?/u, '')
     .toLowerCase()
 }
 
-/** 知识整理主题是否与欲望 topic 相关 */
+/** 鐭ヨ瘑鏁寸悊涓婚鏄惁涓庢鏈?topic 鐩稿叧 */
 export function desireTopicMatchesKnowledge(
   desireTopic: string,
   knowledgeTopic: string,
-  /** Embedding 函数（可选，用于语义匹配） */
+  /** Embedding 鍑芥暟锛堝彲閫夛紝鐢ㄤ簬璇箟鍖归厤锛?*/
   embedText?: (text: string) => Promise<number[]>
 ): boolean | Promise<boolean> {
   const a = normalizeTopicKey(desireTopic)
   const b = normalizeTopicKey(knowledgeTopic)
   if (!a || !b || a.length < 2 || b.length < 2) return false
 
-  // 精确子串匹配（快速路径）
+  // 绮剧‘瀛愪覆鍖归厤锛堝揩閫熻矾寰勶級
   if (a.includes(b) || b.includes(a)) return true
 
-  // Embedding 语义匹配（慢速兜底）
+  // Embedding 璇箟鍖归厤锛堟參閫熷厹搴曪級
   if (embedText) {
     return (async () => {
       try {
@@ -71,7 +71,7 @@ export function desireTopicMatchesKnowledge(
   return false
 }
 
-/** 用户本轮已走知识整理时，沉淀相关欲望 */
+/** 鐢ㄦ埛鏈疆宸茶蛋鐭ヨ瘑鏁寸悊鏃讹紝娌夋穩鐩稿叧娆叉湜 */
 export function settleDesiresForKnowledgeTopic(
   stack: DesireStack,
   knowledgeTopic: string
@@ -86,23 +86,23 @@ export function settleDesiresForKnowledgeTopic(
   return { slots }
 }
 
-/** 根据欲望类别生成自然语言提示 */
+/** 鏍规嵁娆叉湜绫诲埆鐢熸垚鑷劧璇█鎻愮ず */
 function desireToHint(d: Desire): string {
   switch (d.category) {
     case 'concern':
-      return `有点担心ta的${d.topic}，想问问`
+      return `鏈夌偣鎷呭績ta鐨?{d.topic}锛屾兂闂棶`
     case 'curiosity':
-      return `对ta说的${d.topic}很好奇，想了解更多`
+      return `瀵箃a璇寸殑${d.topic}寰堝ソ濂囷紝鎯充簡瑙ｆ洿澶歚
     case 'share':
-      return `想和ta分享关于${d.topic}的事`
+      return `鎯冲拰ta鍒嗕韩鍏充簬${d.topic}鐨勪簨`
     case 'tease':
-      return `想在${d.topic}上小小捉弄ta一下`
+      return `鎯冲湪${d.topic}涓婂皬灏忔崏寮則a涓€涓媊
     case 'suggest':
-      return `有个关于${d.topic}的建议想告诉ta`
+      return `鏈変釜鍏充簬${d.topic}鐨勫缓璁兂鍛婅瘔ta`
   }
 }
 
-/** 生成新欲望 */
+/** 鐢熸垚鏂版鏈?*/
 function generateDesire(
   userMsg: string,
   event: Event,
@@ -162,17 +162,17 @@ export function updateDesireStack(
 ): { stack: DesireStack; hints: string[] } {
   const slots = [...stack.slots]
 
-  // 1. 衰减存量欲望的 urgency
+  // 1. 琛板噺瀛橀噺娆叉湜鐨?urgency
   for (let i = 0; i < DESIRE_MAX_SLOTS; i++) {
     const d = slots[i]
     if (!d || d.status === 'settled' || d.status === 'expressed') continue
     slots[i] = { ...d, urgency: Math.max(0, d.urgency - DESIRE_DECAY_PER_TURN) }
   }
 
-  // 2. 沉淀：urgency≤0、闲置过久、expressed 超时
+  // 2. 娌夋穩锛歶rgency鈮?銆侀棽缃繃涔呫€乪xpressed 瓒呮椂
   applySettleRules(slots, turnIndex)
 
-  // 3. 可能生成新欲望（仅写入空槽或已 settled 槽）
+  // 3. 鍙兘鐢熸垚鏂版鏈涳紙浠呭啓鍏ョ┖妲芥垨宸?settled 妲斤級
   const newDesire = generateDesire(userMsg, event, turnIndex, l1.stage)
   if (newDesire) {
     const emptyIdx = slots.findIndex(s => !s || s.status === 'settled')
@@ -193,7 +193,7 @@ export function updateDesireStack(
     }
   }
 
-  // 4. 收集需要表达的欲望（urgency ≥ threshold）
+  // 4. 鏀堕泦闇€瑕佽〃杈剧殑娆叉湜锛坲rgency 鈮?threshold锛?
   const hints: string[] = []
   for (let i = 0; i < DESIRE_MAX_SLOTS; i++) {
     const d = slots[i]
@@ -209,7 +209,7 @@ export function updateDesireStack(
     }
   }
 
-  // 5. 表达后若本轮已 expressed，下轮再由 applySettleRules 沉淀
+  // 5. 琛ㄨ揪鍚庤嫢鏈疆宸?expressed锛屼笅杞啀鐢?applySettleRules 娌夋穩
   applySettleRules(slots, turnIndex)
 
   return { stack: { slots }, hints }
@@ -219,14 +219,14 @@ export function defaultDesireStack(): DesireStack {
   return { slots: [null, null, null, null, null] }
 }
 
-/** 手动移除单条欲望（清空槽位） */
+/** 鎵嬪姩绉婚櫎鍗曟潯娆叉湜锛堟竻绌烘Ы浣嶏級 */
 export function dismissDesireFromStack(stack: DesireStack, desireId: string): DesireStack {
   const id = desireId.trim()
   if (!id) return stack
   return { slots: stack.slots.map(s => (s?.id === id ? null : s)) }
 }
 
-/** 手动清空当前所有 active 欲望 */
+/** 鎵嬪姩娓呯┖褰撳墠鎵€鏈?active 娆叉湜 */
 export function clearActiveDesires(stack: DesireStack): DesireStack {
   return { slots: stack.slots.map(s => (s?.status === 'active' ? null : s)) }
 }

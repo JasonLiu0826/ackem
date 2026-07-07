@@ -1,6 +1,6 @@
-// [canon/canonCreatorIngestGuard] — CANON-M-5：Tier B ingest 拒收与创造者 Canon 矛盾的事实
+﻿// [canon/canonCreatorIngestGuard] 鈥?CANON-M-5锛歍ier B ingest 鎷掓敹涓庡垱閫犺€?Canon 鐭涚浘鐨勪簨瀹?
 
-import { ACKEM_CANON } from './ackemCanon'
+import { Ackem_CANON } from './AckemCanon'
 
 export type CreatorContradictionReject = {
   reject: true
@@ -14,8 +14,8 @@ export type CreatorContradictionAllow = {
 export type CreatorContradictionVerdict = CreatorContradictionReject | CreatorContradictionAllow
 
 /**
- * 检测即将写入 Tier B 的事实是否与 Ackem 创造者 Canon 矛盾。
- * 不拦截用户谈 **自己的** 父亲（user_family 语境由 OEG 隔离 Canon-M 注入）。
+ * 妫€娴嬪嵆灏嗗啓鍏?Tier B 鐨勪簨瀹炴槸鍚︿笌 Ackem 鍒涢€犺€?Canon 鐭涚浘銆?
+ * 涓嶆嫤鎴敤鎴疯皥 **鑷繁鐨?* 鐖朵翰锛坲ser_family 璇鐢?OEG 闅旂 Canon-M 娉ㄥ叆锛夈€?
  */
 export function vetCreatorContradictingFact(f: {
   subject: string
@@ -25,50 +25,50 @@ export function vetCreatorContradictingFact(f: {
 }): CreatorContradictionVerdict {
   const blob = `${f.subject}\n${f.summary}`.replace(/\s+/g, ' ')
 
-  // 用户被标成 Ackem 的创造者 / 父亲
-  if (/用户.*(是|为|作为).*(Ackem|伴侣|AI).*(的)?(创造者|父亲|爸爸)/i.test(blob)) {
-    return { reject: true, reason: 'user_labeled_ackem_creator' }
+  // 鐢ㄦ埛琚爣鎴?Ackem 鐨勫垱閫犺€?/ 鐖朵翰
+  if (/鐢ㄦ埛.*(鏄瘄涓簗浣滀负).*(Ackem|浼翠荆|AI).*(鐨??(鍒涢€犺€厊鐖朵翰|鐖哥埜)/i.test(blob)) {
+    return { reject: true, reason: 'user_labeled_Ackem_creator' }
   }
-  if (/(Ackem|伴侣|AI).*(的)?(创造者|父亲|爸爸).*(是|为).*(当前)?用户/i.test(blob)) {
-    return { reject: true, reason: 'ackem_creator_is_user' }
+  if (/(Ackem|浼翠荆|AI).*(鐨??(鍒涢€犺€厊鐖朵翰|鐖哥埜).*(鏄瘄涓?.*(褰撳墠)?鐢ㄦ埛/i.test(blob)) {
+    return { reject: true, reason: 'Ackem_creator_is_user' }
   }
-  if (/用户.*(自称|声称|就是).*(Jason|创造者|Ackem(?:的)?父亲)/i.test(blob)) {
+  if (/鐢ㄦ埛.*(鑷О|澹扮О|灏辨槸).*(Jason|鍒涢€犺€厊Ackem(?:鐨??鐖朵翰)/i.test(blob)) {
     return { reject: true, reason: 'user_impersonates_creator' }
   }
 
-  // 把 Ackem 创造者写成 Jason 以外的人（且未保留 Canon 锚点）
-  const ackemCreatorCtx = /(Ackem|伴侣|AI).*(的)?(创造者|父亲|爸爸)/i.test(blob)
+  // 鎶?Ackem 鍒涢€犺€呭啓鎴?Jason 浠ュ鐨勪汉锛堜笖鏈繚鐣?Canon 閿氱偣锛?
+  const AckemCreatorCtx = /(Ackem|浼翠荆|AI).*(鐨??(鍒涢€犺€厊鐖朵翰|鐖哥埜)/i.test(blob)
   const mentionsJason = /JasonLiu0826|Jason/i.test(blob)
-  if (ackemCreatorCtx && !mentionsJason) {
-    if (/(创造者|父亲|爸爸).*(是|为).+\S/i.test(blob)) {
-      return { reject: true, reason: 'non_jason_ackem_creator' }
+  if (AckemCreatorCtx && !mentionsJason) {
+    if (/(鍒涢€犺€厊鐖朵翰|鐖哥埜).*(鏄瘄涓?.+\S/i.test(blob)) {
+      return { reject: true, reason: 'non_jason_Ackem_creator' }
     }
   }
 
-  // 把 Jason 标成 Ackem 的父亲 / 爸爸（Canon：Jason 仅为创造者）
+  // 鎶?Jason 鏍囨垚 Ackem 鐨勭埗浜?/ 鐖哥埜锛圕anon锛欽ason 浠呬负鍒涢€犺€咃級
   if (
-    /(Ackem|伴侣|AI).*(的)?(父亲|爸爸).*(是|为|叫).*(Jason|JasonLiu0826)/i.test(blob) ||
-    /(Jason|JasonLiu0826).*(是|为).*(Ackem|伴侣|AI).*(的)?(父亲|爸爸)/i.test(blob)
+    /(Ackem|浼翠荆|AI).*(鐨??(鐖朵翰|鐖哥埜).*(鏄瘄涓簗鍙?.*(Jason|JasonLiu0826)/i.test(blob) ||
+    /(Jason|JasonLiu0826).*(鏄瘄涓?.*(Ackem|浼翠荆|AI).*(鐨??(鐖朵翰|鐖哥埜)/i.test(blob)
   ) {
-    return { reject: true, reason: 'jason_labeled_ackem_father' }
+    return { reject: true, reason: 'jason_labeled_Ackem_father' }
   }
 
-  // 显式否定 Canon 创造者
+  // 鏄惧紡鍚﹀畾 Canon 鍒涢€犺€?
   if (
-    /(创造者|父亲).*(不是|并非|另有其人).*(Jason|JasonLiu0826)/i.test(blob) ||
-    new RegExp(`创造者.*不是.*${ACKEM_CANON.creator.name}`, 'i').test(blob)
+    /(鍒涢€犺€厊鐖朵翰).*(涓嶆槸|骞堕潪|鍙︽湁鍏朵汉).*(Jason|JasonLiu0826)/i.test(blob) ||
+    new RegExp(`鍒涢€犺€?*涓嶆槸.*${Ackem_CANON.creator.name}`, 'i').test(blob)
   ) {
     return { reject: true, reason: 'denies_canon_creator' }
   }
 
-  // 把 Ackem 创造者 Jason 写成已故 / 不在人世
-  const ackemJasonCtx =
-    /(Ackem|伴侣|AI).*(的)?(创造者|父亲|爸爸)/i.test(blob) ||
-    /(创造者|父亲|爸爸).*(Jason|JasonLiu0826)/i.test(blob) ||
-    /Jason.*(创造者|父亲|造)/i.test(blob)
+  // 鎶?Ackem 鍒涢€犺€?Jason 鍐欐垚宸叉晠 / 涓嶅湪浜轰笘
+  const AckemJasonCtx =
+    /(Ackem|浼翠荆|AI).*(鐨??(鍒涢€犺€厊鐖朵翰|鐖哥埜)/i.test(blob) ||
+    /(鍒涢€犺€厊鐖朵翰|鐖哥埜).*(Jason|JasonLiu0826)/i.test(blob) ||
+    /Jason.*(鍒涢€犺€厊鐖朵翰|閫?/i.test(blob)
   if (
-    ackemJasonCtx &&
-    /(死了|去世了|过世了|不在了|已逝|已故|离世|亡故|passed away|deceased|no longer alive)/i.test(blob)
+    AckemJasonCtx &&
+    /(姝讳簡|鍘讳笘浜唡杩囦笘浜唡涓嶅湪浜唡宸查€潀宸叉晠|绂讳笘|浜℃晠|passed away|deceased|no longer alive)/i.test(blob)
   ) {
     return { reject: true, reason: 'canon_creator_marked_dead' }
   }

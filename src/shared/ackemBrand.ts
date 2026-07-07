@@ -1,4 +1,4 @@
-/** Kairos 已更名为 Ackem：注入 LLM 的文本统一替换旧品牌名 */
+﻿/** Kairos 宸叉洿鍚嶄负 Ackem锛氭敞鍏?LLM 鐨勬枃鏈粺涓€鏇挎崲鏃у搧鐗屽悕 */
 export function normalizeAckemBrandText(text: string): string {
-  return text.replace(/Kairos/g, 'Ackem').replace(/kairos/g, 'ackem')
+  return text.replace(/Kairos/g, 'Ackem').replace(/kairos/g, 'Ackem')
 }

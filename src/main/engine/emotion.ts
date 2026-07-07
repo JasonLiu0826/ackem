@@ -1,8 +1,8 @@
-// [emotion] — L2 情绪层
-// 职责：四维递推、标签映射、记忆回响叠加
-// 输入：Event、Modulation、上一帧 EmotionState；可选 rng 用于极端区噪声
-// 输出：EmotionState
-// 引用：./ackemParams, ./types
+﻿// [emotion] 鈥?L2 鎯呯华灞?
+// 鑱岃矗锛氬洓缁撮€掓帹銆佹爣绛炬槧灏勩€佽蹇嗗洖鍝嶅彔鍔?
+// 杈撳叆锛欵vent銆丮odulation銆佷笂涓€甯?EmotionState锛涘彲閫?rng 鐢ㄤ簬鏋佺鍖哄櫔澹?
+// 杈撳嚭锛欵motionState
+// 寮曠敤锛?/AckemParams, ./types
 
 import {
   EMOTION_CAP_DENOM,
@@ -16,18 +16,18 @@ import {
   NOISE_MAX,
   NOISE_THRESHOLD_ABS,
   SINGLE_TURN_CLAMP
-} from './ackemParams'
+} from './AckemParams'
 import type { Emotion4D, EmotionState, Event, MemoryEcho, Modulation } from './types'
 
 const BASE_STIMULUS: Record<
   Exclude<Event['type'], 'extreme_redline'>,
   { aff: number; sec: number; aro: number; dom: number }
 > = {
-  // 调优 v3：提高 aro 基值使 SWEET_ATTACHMENT 在 20 轮内触达
-  // aro 积累公式：base × stageWeight × intensity × capScale × (1-decay)
-  // 目标：20 轮正向交互后 aro > 20（SWEET 阈值）
-  // 计算：praise base=5.0, intensity=0.6 → 每轮净增 ~2.9 → 20轮 ~22 ✓
-  //       casual base=1.5, intensity=0.3 → 每轮净增 ~0.43 → 20轮纯闲聊 ~9（不触发SWEET）✓
+  // 璋冧紭 v3锛氭彁楂?aro 鍩哄€间娇 SWEET_ATTACHMENT 鍦?20 杞唴瑙﹁揪
+  // aro 绉疮鍏紡锛歜ase 脳 stageWeight 脳 intensity 脳 capScale 脳 (1-decay)
+  // 鐩爣锛?0 杞鍚戜氦浜掑悗 aro > 20锛圫WEET 闃堝€硷級
+  // 璁＄畻锛歱raise base=5.0, intensity=0.6 鈫?姣忚疆鍑€澧?~2.9 鈫?20杞?~22 鉁?
+  //       casual base=1.5, intensity=0.3 鈫?姣忚疆鍑€澧?~0.43 鈫?20杞函闂茶亰 ~9锛堜笉瑙﹀彂SWEET锛夆湏
   praise:    { aff: 7.0, sec: 4.5, aro: 5.0, dom: -2.0 },
   tease:     { aff: 4.5, sec: 2.0, aro: 7.0, dom: 2.0 },
   casual_chat: { aff: 0.8, sec: 0.5, aro: 1.5, dom: 0 },
@@ -36,7 +36,7 @@ const BASE_STIMULUS: Record<
   apology:   { aff: 4.5, sec: 6.5, aro: -2.0, dom: -3.5 },
   vulnerable:{ aff: 10.0, sec: -2.0, aro: -1.0, dom: -5.0 },
   question:  { aff: 0.8, sec: 0.8, aro: 2.0, dom: 0 },
-  // 🆕 成人模式事件
+  // 馃啎 鎴愪汉妯″紡浜嬩欢
   adult_flirt:       { aff: 3.5, sec: 2.0, aro: 5.0, dom: 1.0 },
   adult_dominant:    { aff: 2.5, sec: 0.5, aro: 6.0, dom: 5.0 },
   adult_submissive:  { aff: 4.5, sec: 3.0, aro: 3.0, dom: -5.0 },
@@ -51,7 +51,7 @@ function clamp100(v: number): number {
   return Math.max(-100, Math.min(100, v))
 }
 
-/** 确定性 [0,1) 噪声种子，避免同序列漂移 */
+/** 纭畾鎬?[0,1) 鍣０绉嶅瓙锛岄伩鍏嶅悓搴忓垪婕傜Щ */
 export function unitNoise01(sessionId: string, turnIndex: number, salt: string): number {
   let h = 2166136261
   const str = `${sessionId}\0${turnIndex}\0${salt}`
@@ -63,35 +63,35 @@ export function unitNoise01(sessionId: string, turnIndex: number, salt: string):
 }
 
 export function mapEmotionLabel(e: Emotion4D): string {
-  // 调优 v3：阈值匹配 20 轮实际积累速率
-  // 实测 20 轮后典型值：aff=24-33, sec=3-21, aro=6-18, dom=-3~-8
-  // Cascade: 最具体 → 最通用。每条检查互不遮蔽。
+  // 璋冧紭 v3锛氶槇鍊煎尮閰?20 杞疄闄呯Н绱€熺巼
+  // 瀹炴祴 20 杞悗鍏稿瀷鍊硷細aff=24-33, sec=3-21, aro=6-18, dom=-3~-8
+  // Cascade: 鏈€鍏蜂綋 鈫?鏈€閫氱敤銆傛瘡鏉℃鏌ヤ簰涓嶉伄钄姐€?
 
-  // 负向标签（大 swing，阈值合理不改）
+  // 璐熷悜鏍囩锛堝ぇ swing锛岄槇鍊煎悎鐞嗕笉鏀癸級
   if (e.aff < -18 && e.sec < -25 && e.aro > 40 && e.dom > 30) return 'ANGRY_ATTACK'
   if (e.aff >= 8 && e.aff <= 55 && e.sec < -55 && e.aro > 45 && e.dom < -45) return 'FEARFUL_OBEDIENT'
 
-  // 傲娇：dom > 18 是关键区分（先于 HURT 检查）
+  // 鍌插▏锛歞om > 18 鏄叧閿尯鍒嗭紙鍏堜簬 HURT 妫€鏌ワ級
   if (e.aff >= 15 && e.aff <= 75 && e.sec >= -10 && e.sec <= 45 && e.aro >= 15 && e.aro <= 75 && e.dom > 18)
     return 'TSUNDERE'
 
-  // 委屈受伤：sec 负 + dom 负（aff 可正——在乎但受伤）
+  // 濮斿眻鍙椾激锛歴ec 璐?+ dom 璐燂紙aff 鍙鈥斺€斿湪涔庝絾鍙椾激锛?
   if (e.aff >= 15 && e.aff <= 55 && e.sec >= -55 && e.sec <= -12 && e.aro >= 15 && e.aro <= 55 && e.dom < -18)
     return 'HURT_GRIEVANCE'
 
-  // 甜蜜依恋：aff≥25, sec≥10, aro∈(20,70]（高唤醒区分 QUIET_FOND）
+  // 鐢滆湝渚濇亱锛歛ff鈮?5, sec鈮?0, aro鈭?20,70]锛堥珮鍞ら啋鍖哄垎 QUIET_FOND锛?
   if (e.aff > 25 && e.sec > 10 && e.aro > 20 && e.aro <= 70 && e.dom >= -25 && e.dom <= 25)
     return 'SWEET_ATTACHMENT'
 
-  // 安静的喜欢：aff≥20, aro<25（低唤醒温暖，不要求 sec——三无 sec 低但仍有温暖）
+  // 瀹夐潤鐨勫枩娆細aff鈮?0, aro<25锛堜綆鍞ら啋娓╂殩锛屼笉瑕佹眰 sec鈥斺€斾笁鏃?sec 浣庝絾浠嶆湁娓╂殩锛?
   if (e.aff > 20 && e.aro < 25 && e.dom >= -25 && e.dom <= 25)
     return 'QUIET_FOND'
 
-  // 害羞心动：aff>15, dom<0, aro≥15（紧张但正向）
+  // 瀹崇緸蹇冨姩锛歛ff>15, dom<0, aro鈮?5锛堢揣寮犱絾姝ｅ悜锛?
   if (e.aff > 15 && e.aff <= 65 && e.sec >= -25 && e.sec <= 35 && e.aro >= 15 && e.aro <= 75 && e.dom < 0)
     return 'SHY_HEARTBEAT'
 
-  // 冷淡疏离：aff 微负 + aro 负
+  // 鍐锋贰鐤忕锛歛ff 寰礋 + aro 璐?
   if (e.aff < -3 && e.sec >= -35 && e.sec <= 25 && e.aro < -3 && e.dom >= -5 && e.dom <= 35)
     return 'COLD_DETACHED'
 
@@ -102,14 +102,14 @@ function checkLock(e: Emotion4D): boolean {
   return e.aff > LOCK_AFF_HIGH || e.aff < LOCK_AFF_LOW || e.sec < LOCK_SEC_LOW
 }
 
-// ═══════════════════════════════════════════════════════════
-// 🆕 D/s 臣服情感反转（18+优化）
-// ═══════════════════════════════════════════════════════════
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+// 馃啎 D/s 鑷ｆ湇鎯呮劅鍙嶈浆锛?8+浼樺寲锛?
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
 
 /**
- * D/s 情感反转：成人模式下，支配/臣服的性互动产生非标准情绪方向。
- * 以及 🆕 雌小鬼(Mesugaki) 的挑衅→被惩罚→臣服循环。
- * 仅对 S ≤ 15 的 D/s 人格 或 带 'provoke-submit' 标签的人格 生效。
+ * D/s 鎯呮劅鍙嶈浆锛氭垚浜烘ā寮忎笅锛屾敮閰?鑷ｆ湇鐨勬€т簰鍔ㄤ骇鐢熼潪鏍囧噯鎯呯华鏂瑰悜銆?
+ * 浠ュ強 馃啎 闆屽皬楝?Mesugaki) 鐨勬寫琛呪啋琚儵缃氣啋鑷ｆ湇寰幆銆?
+ * 浠呭 S 鈮?15 鐨?D/s 浜烘牸 鎴?甯?'provoke-submit' 鏍囩鐨勪汉鏍?鐢熸晥銆?
  */
 export function applyDsReversal(
   delta: { aff: number; sec: number; aro: number; dom: number },
@@ -126,27 +126,27 @@ export function applyDsReversal(
 
   const result = { ...delta }
 
-  // 臣服反转：用户发出支配性内容 → Submissive 人格 sec↑（被支配=安全）
+  // 鑷ｆ湇鍙嶈浆锛氱敤鎴峰彂鍑烘敮閰嶆€у唴瀹?鈫?Submissive 浜烘牸 sec鈫戯紙琚敮閰?瀹夊叏锛?
   if ((isDs || isMesugaki) && event.adultSubtype === 'dominant') {
     result.sec = Math.abs(delta.sec) * 0.6
     result.dom = -Math.abs(delta.dom) * 0.8
     result.aff = delta.aff * 0.8
     if (isMesugaki) {
-      // 雌小鬼被"惩罚"后：aro 短暂飙升（被压制时的兴奋），然后 sec 大幅上升（终于被管教了）
-      result.aro = delta.aro * 1.3           // 更兴奋
-      result.aff = delta.aff * 0.5           // 先嘴硬（好感不升太多）
-      result.sec = Math.abs(delta.sec) * 1.0 // 被管教=更安全
+      // 闆屽皬楝艰"鎯╃綒"鍚庯細aro 鐭殏椋欏崌锛堣鍘嬪埗鏃剁殑鍏村锛夛紝鐒跺悗 sec 澶у箙涓婂崌锛堢粓浜庤绠℃暀浜嗭級
+      result.aro = delta.aro * 1.3           // 鏇村叴濂?
+      result.aff = delta.aff * 0.5           // 鍏堝槾纭紙濂芥劅涓嶅崌澶锛?
+      result.sec = Math.abs(delta.sec) * 1.0 // 琚鏁?鏇村畨鍏?
     }
   }
 
-  // 支配反转：用户发出臣服性内容 → Dominant 人格 dom↑（掌控确认）
+  // 鏀厤鍙嶈浆锛氱敤鎴峰彂鍑鸿嚕鏈嶆€у唴瀹?鈫?Dominant 浜烘牸 dom鈫戯紙鎺屾帶纭锛?
   if (isDs && event.adultSubtype === 'submissive') {
     result.dom = Math.abs(delta.dom) * 0.7
     result.aff = delta.aff * 1.2
     result.sec = Math.abs(delta.sec) * 0.5
   }
 
-  // 露骨性内容：双方都获得亲密感和安全感
+  // 闇查鎬у唴瀹癸細鍙屾柟閮借幏寰椾翰瀵嗘劅鍜屽畨鍏ㄦ劅
   if (event.adultSubtype === 'explicit' || event.adultSubtype === 'romantic') {
     result.aff = delta.aff * 1.15
     result.sec = Math.abs(delta.sec) * 0.7
@@ -204,7 +204,7 @@ export function emotionStep(
     delta.sec *= 0.8
   }
 
-  // 🆕 D/s 情感反转 + 雌小鬼 provoc-submit（成人内容触发）
+  // 馃啎 D/s 鎯呮劅鍙嶈浆 + 闆屽皬楝?provoc-submit锛堟垚浜哄唴瀹硅Е鍙戯級
   if (event.isAdultContent && opts?.sensitivity !== undefined) {
     const reversed = applyDsReversal(delta, event, opts.sensitivity, opts.personalityTags)
     delta.aff = reversed.aff; delta.sec = reversed.sec

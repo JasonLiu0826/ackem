@@ -1,4 +1,4 @@
-// [knowledge-presentation/knowledgeAnswer] — 纸面卡 + 伴侣短评（仅 LLM，不联网）
+﻿// [knowledge-presentation/knowledgeAnswer] 鈥?绾搁潰鍗?+ 浼翠荆鐭瘎锛堜粎 LLM锛屼笉鑱旂綉锛?
 
 import type { WebContents } from 'electron'
 import type { AppSettings } from '../../../../settings'
@@ -9,10 +9,10 @@ import { extractOrganizeTopicFromMessage } from './intent'
 import { pluginActivityLabel } from '../../../../chatStatusLabels'
 import { recencyPromptSuffix } from './presentation/recencyContext'
 import {
-  ACKEM_PRODUCT_IDENTITY_GUARD,
+  Ackem_PRODUCT_IDENTITY_GUARD,
   buildAckemCompareCardBlock,
   sanitizeAckemIdentityInMarkdown
-} from '../../../../paperCard/ackemProductIdentity'
+} from '../../../../paperCard/AckemProductIdentity'
 import {
   buildPaperCardCompanionUserTail,
   defaultPaperCardCompanionFallback,
@@ -60,28 +60,28 @@ function extractSystemFromMessages(
   return sys ? messageText(sys.content) : ''
 }
 
-const KNOWLEDGE_CARD_INSTRUCTIONS = `请撰写「知识整理正文」——一份可保存的认真答复，直接、完整地回答用户问题。
+const KNOWLEDGE_CARD_INSTRUCTIONS = `璇锋挵鍐欍€岀煡璇嗘暣鐞嗘鏂囥€嶁€斺€斾竴浠藉彲淇濆瓨鐨勮鐪熺瓟澶嶏紝鐩存帴銆佸畬鏁村湴鍥炵瓟鐢ㄦ埛闂銆?
 
-结构与篇幅（**硬性，缺一即失败**）：
-- 全文 **至少 500 字**（建议 500～1200 字）；分 **3～6 个小节**，每节必须有简短小标题（**标题** 或 ##）
-- 必须包含：概述、核心要点（≥4 条，可用列表）、版本/数据/时间线（如适用）、常见误区或补充、综合结论
-- **禁止**只写一句开场白、态度宣言或「我就给你讲讲」式铺垫后结束
-- 以模型可靠知识为主，**不确定处标明「可能因训练数据而滞后」**，勿编造具体网址或最新新闻日期
-- 追求准确、齐全、可读，少写空话
-- **不要**罗列参考链接（本产品不提供网页来源）
-- **禁止**推脱式追问；**禁止**在正文末尾写「想聊可以找我慢慢拆」等闲聊邀请（那是聊天气泡的事）`
+缁撴瀯涓庣瘒骞咃紙**纭€э紝缂轰竴鍗冲け璐?*锛夛細
+- 鍏ㄦ枃 **鑷冲皯 500 瀛?*锛堝缓璁?500锝?200 瀛楋級锛涘垎 **3锝? 涓皬鑺?*锛屾瘡鑺傚繀椤绘湁绠€鐭皬鏍囬锛?*鏍囬** 鎴?##锛?
+- 蹇呴』鍖呭惈锛氭杩般€佹牳蹇冭鐐癸紙鈮? 鏉★紝鍙敤鍒楄〃锛夈€佺増鏈?鏁版嵁/鏃堕棿绾匡紙濡傞€傜敤锛夈€佸父瑙佽鍖烘垨琛ュ厖銆佺患鍚堢粨璁?
+- **绂佹**鍙啓涓€鍙ュ紑鍦虹櫧銆佹€佸害瀹ｈ█鎴栥€屾垜灏辩粰浣犺璁层€嶅紡閾哄灚鍚庣粨鏉?
+- 浠ユā鍨嬪彲闈犵煡璇嗕负涓伙紝**涓嶇‘瀹氬鏍囨槑銆屽彲鑳藉洜璁粌鏁版嵁鑰屾粸鍚庛€?*锛屽嬁缂栭€犲叿浣撶綉鍧€鎴栨渶鏂版柊闂绘棩鏈?
+- 杩芥眰鍑嗙‘銆侀綈鍏ㄣ€佸彲璇伙紝灏戝啓绌鸿瘽
+- **涓嶈**缃楀垪鍙傝€冮摼鎺ワ紙鏈骇鍝佷笉鎻愪緵缃戦〉鏉ユ簮锛?
+- **绂佹**鎺ㄨ劚寮忚拷闂紱**绂佹**鍦ㄦ鏂囨湯灏惧啓銆屾兂鑱婂彲浠ユ壘鎴戞參鎱㈡媶銆嶇瓑闂茶亰閭€璇凤紙閭ｆ槸鑱婂ぉ姘旀场鐨勪簨锛塦
 
-const KNOWLEDGE_CARD_RETRY_INSTRUCTIONS = `【补写/重写】上一轮输出过短或缺少小节，请 **重新输出完整正文**（不要道歉、不要解释为何上次短）。
+const KNOWLEDGE_CARD_RETRY_INSTRUCTIONS = `銆愯ˉ鍐?閲嶅啓銆戜笂涓€杞緭鍑鸿繃鐭垨缂哄皯灏忚妭锛岃 **閲嶆柊杈撳嚭瀹屾暣姝ｆ枃**锛堜笉瑕侀亾姝夈€佷笉瑕佽В閲婁负浣曚笂娆＄煭锛夈€?
 
-硬性：≥500 字；≥3 个小节标题（**标题** 或 ##）；≥4 条要点；语气中性、信息密度高；禁止仅开场白。`
+纭€э細鈮?00 瀛楋紱鈮? 涓皬鑺傛爣棰橈紙**鏍囬** 鎴?##锛夛紱鈮? 鏉¤鐐癸紱璇皵涓€с€佷俊鎭瘑搴﹂珮锛涚姝粎寮€鍦虹櫧銆俙
 
-/** 纸面正文是否明显过短或缺少结构（用于触发补写） */
+/** 绾搁潰姝ｆ枃鏄惁鏄庢樉杩囩煭鎴栫己灏戠粨鏋勶紙鐢ㄤ簬瑙﹀彂琛ュ啓锛?*/
 export function isKnowledgeCardBodyInsufficient(body: string): boolean {
   const t = body.trim()
   const headings = (t.match(/^#{1,3}\s+/gm) ?? []).length
   const boldTitles = (t.match(/\*\*[^*\n]{2,40}\*\*/g) ?? []).length
-  const bullets = (t.match(/^[\s]*[-*•]\s+/gm) ?? []).length
-  const numbered = (t.match(/^[\s]*\d+[.)．、]\s+/gm) ?? []).length
+  const bullets = (t.match(/^[\s]*[-*鈥\s+/gm) ?? []).length
+  const numbered = (t.match(/^[\s]*\d+[.)锛庛€乚\s+/gm) ?? []).length
   const sectionMarkers = headings + boldTitles
   const listItems = bullets + numbered
 
@@ -96,8 +96,8 @@ function buildCardSystemPrompt(systemContext: string): string {
   const l3 = extractL3ExpressionContext(systemContext)
   const l3Directive = buildKnowledgeL3Directive(l3, 'card_body')
   return [
-    '【模块】知识整理 · 纸面正文写作（不是聊天，不要调用工具）',
-    '【优先级】信息完整与结构 > 任何伴侣口吻或 Tier A 人格指令（若冲突，以本条为准）',
+    '銆愭ā鍧椼€戠煡璇嗘暣鐞?路 绾搁潰姝ｆ枃鍐欎綔锛堜笉鏄亰澶╋紝涓嶈璋冪敤宸ュ叿锛?,
+    '銆愪紭鍏堢骇銆戜俊鎭畬鏁翠笌缁撴瀯 > 浠讳綍浼翠荆鍙ｅ惢鎴?Tier A 浜烘牸鎸囦护锛堣嫢鍐茬獊锛屼互鏈潯涓哄噯锛?,
     l3Directive
   ].join('\n\n')
 }
@@ -127,10 +127,10 @@ async function synthesizeKnowledgeCardBody(
   const l3 = extractL3ExpressionContext(systemContext)
   const cardTemp = l3 ? 0.5 : 0.42
   const cardSystem =
-    buildCardSystemPrompt(systemContext) + ACKEM_PRODUCT_IDENTITY_GUARD + buildAckemCompareCardBlock(userQuestion)
+    buildCardSystemPrompt(systemContext) + Ackem_PRODUCT_IDENTITY_GUARD + buildAckemCompareCardBlock(userQuestion)
 
   const taskUser = (instructions: string) =>
-    `【知识整理任务】主题：「${topic}」\n` +
+    `銆愮煡璇嗘暣鐞嗕换鍔°€戜富棰橈細銆?{topic}銆峔n` +
     `${recencyPromptSuffix()}\n\n` +
     instructions
 
@@ -146,8 +146,8 @@ async function synthesizeKnowledgeCardBody(
       {
         role: 'system',
         content:
-          '【模块】知识整理 · 纸面正文补写\n' +
-          '上一轮过短。请输出完整、中性的说明文，忽略伴侣聊天口吻与人格开场。'
+          '銆愭ā鍧椼€戠煡璇嗘暣鐞?路 绾搁潰姝ｆ枃琛ュ啓\n' +
+          '涓婁竴杞繃鐭€傝杈撳嚭瀹屾暣銆佷腑鎬х殑璇存槑鏂囷紝蹇界暐浼翠荆鑱婂ぉ鍙ｅ惢涓庝汉鏍煎紑鍦恒€?
       },
       { role: 'user', content: userQuestion },
       { role: 'user', content: taskUser(KNOWLEDGE_CARD_RETRY_INSTRUCTIONS) }
@@ -157,7 +157,7 @@ async function synthesizeKnowledgeCardBody(
     else if (retry && retry.length > (text?.length ?? 0)) text = retry
   }
 
-  return text || '（未能生成知识整理正文，请稍后重试。）'
+  return text || '锛堟湭鑳界敓鎴愮煡璇嗘暣鐞嗘鏂囷紝璇风◢鍚庨噸璇曘€傦級'
 }
 
 async function synthesizeKnowledgeCompanion(
@@ -169,33 +169,33 @@ async function synthesizeKnowledgeCompanion(
 ): Promise<string> {
   const l3 = extractL3ExpressionContext(systemContext)
   const l3Directive = buildKnowledgeL3Directive(l3, 'companion')
-  const excerpt = cardBody.length > 500 ? `${cardBody.slice(0, 500)}…` : cardBody
+  const excerpt = cardBody.length > 500 ? `${cardBody.slice(0, 500)}鈥 : cardBody
   const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
     {
       role: 'system',
       content:
         systemContext +
         PAPER_CARD_COMPANION_SYSTEM_SUFFIX +
-        '\n\n【当前任务】用户刚请你讲解/查询某话题，**完整知识整理已在纸面卡**。\n\n' +
+        '\n\n銆愬綋鍓嶄换鍔°€戠敤鎴峰垰璇蜂綘璁茶В/鏌ヨ鏌愯瘽棰橈紝**瀹屾暣鐭ヨ瘑鏁寸悊宸插湪绾搁潰鍗?*銆俓n\n' +
         l3Directive
     },
     { role: 'user', content: userQuestion },
     {
       role: 'user',
       content:
-        `【背景】你刚帮用户整理好「${topic}」（见上方纸面卡）。\n` +
-        `（勿复述、勿在气泡里补讲知识点）\n${excerpt}` +
-        buildPaperCardCompanionUserTail('知识整理', topic)
+        `銆愯儗鏅€戜綘鍒氬府鐢ㄦ埛鏁寸悊濂姐€?{topic}銆嶏紙瑙佷笂鏂圭焊闈㈠崱锛夈€俓n` +
+        `锛堝嬁澶嶈堪銆佸嬁鍦ㄦ皵娉￠噷琛ヨ鐭ヨ瘑鐐癸級\n${excerpt}` +
+        buildPaperCardCompanionUserTail('鐭ヨ瘑鏁寸悊', topic)
     }
   ]
   const text = await llmText(settings, messages, 400, 0.88)
   const trimmed = text.trim()
-  if (!trimmed) return defaultPaperCardCompanionFallback('知识整理')
+  if (!trimmed) return defaultPaperCardCompanionFallback('鐭ヨ瘑鏁寸悊')
   return finalizePaperCardCompanionReply(trimmed)
 }
 
 export function buildKnowledgeCardCopyText(displayTitle: string, cardBody: string): string {
-  return `【知识整理】${displayTitle}\n${'─'.repeat(32)}\n${cardBody.trim()}`
+  return `銆愮煡璇嗘暣鐞嗐€?{displayTitle}\n${'鈹€'.repeat(32)}\n${cardBody.trim()}`
 }
 
 export async function synthesizeKnowledgeAnswer(
@@ -260,10 +260,10 @@ export function resolveKnowledgeTopicLabel(
 
   const core = t.replace(/\s/g, '')
   const metaOnly =
-    /^(你)?(介绍介绍|介绍一下|介绍下)$/u.test(core) ||
-    /^(你)?(能|可以)?介绍一下[吗呢啊呀]?$/u.test(core) ||
-    core === '讲讲' ||
-    core === '说说'
+    /^(浣??(浠嬬粛浠嬬粛|浠嬬粛涓€涓媩浠嬬粛涓?$/u.test(core) ||
+    /^(浣??(鑳絴鍙互)?浠嬬粛涓€涓媅鍚楀憿鍟婂憖]?$/u.test(core) ||
+    core === '璁茶' ||
+    core === '璇磋'
 
   if (metaOnly) {
     const users = (recentMessages || [])
@@ -272,17 +272,17 @@ export function resolveKnowledgeTopicLabel(
       .filter(Boolean)
     const prev = users.length >= 2 ? users[users.length - 2] : users[0]
     if (prev && prev.length >= 4) return prev
-    return t || '知识整理'
+    return t || '鐭ヨ瘑鏁寸悊'
   }
 
-  const topicAfterKw = t.match(/(?:介绍一下|讲讲|说说|科普一下)(.+)/u)
+  const topicAfterKw = t.match(/(?:浠嬬粛涓€涓媩璁茶|璇磋|绉戞櫘涓€涓?(.+)/u)
   if (topicAfterKw && topicAfterKw[1].trim().length >= 2) {
     const hit = topicAfterKw[1].trim()
     if (!isPoorPaperCardTitle(hit)) return hit
   }
 
   if (!isPoorPaperCardTitle(t)) return t
-  return '知识整理'
+  return '鐭ヨ瘑鏁寸悊'
 }
 
 export async function runKnowledgeAnswerChain(

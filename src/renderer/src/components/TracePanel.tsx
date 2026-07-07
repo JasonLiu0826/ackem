@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+﻿import { useEffect, useState, useCallback } from 'react'
 import { t } from '../lib/i18n'
 
 type TraceEntry = {
@@ -13,13 +13,13 @@ type TraceEntry = {
 }
 
 const STAGE_ZH: Record<string, string> = {
-  STRANGER: '初识', FAMILIAR: '熟悉', INTIMATE: '亲密'
+  STRANGER: '鍒濊瘑', FAMILIAR: '鐔熸倝', INTIMATE: '浜插瘑'
 }
 
 const LABEL_ZH: Record<string, string> = {
-  SWEET_ATTACHMENT: '甜蜜', SHY_HEARTBEAT: '害羞', TSUNDERE: '傲娇',
-  HURT_GRIEVANCE: '委屈', ANGRY_ATTACK: '愤怒', COLD_DETACHED: '冷淡',
-  FEARFUL_OBEDIENT: '不安', QUIET_FOND: '安静喜欢', CALM_RATIONAL: '平静'
+  SWEET_ATTACHMENT: '鐢滆湝', SHY_HEARTBEAT: '瀹崇緸', TSUNDERE: '鍌插▏',
+  HURT_GRIEVANCE: '濮斿眻', ANGRY_ATTACK: '鎰ゆ€?, COLD_DETACHED: '鍐锋贰',
+  FEARFUL_OBEDIENT: '涓嶅畨', QUIET_FOND: '瀹夐潤鍠滄', CALM_RATIONAL: '骞抽潤'
 }
 
 function MiniBar({ val, max, color }: { val: number; max: number; color: string }) {
@@ -40,7 +40,7 @@ export function TracePanel(): JSX.Element {
   const refresh = useCallback(async () => {
     setLoading(true)
     try {
-      const raw = await window.ackem.traceLatest(limit) as TraceEntry[]
+      const raw = await window.Ackem.traceLatest(limit) as TraceEntry[]
       setTraces(raw)
     } catch (e) {
       console.error('trace:latest error', e)
@@ -67,8 +67,8 @@ export function TracePanel(): JSX.Element {
     <div className="h-full overflow-y-auto bg-surface">
       <header className="border-b border-surface-inset bg-surface-raised px-6 py-4 flex items-center justify-between">
         <div>
-          <h1 className="text-base font-semibold text-ink">引擎 Trace</h1>
-          <p className="mt-0.5 text-xs text-ink-muted">每轮 L0→L4 状态快照（内存 ring buffer，最多 100 条）</p>
+          <h1 className="text-base font-semibold text-ink">寮曟搸 Trace</h1>
+          <p className="mt-0.5 text-xs text-ink-muted">姣忚疆 L0鈫扡4 鐘舵€佸揩鐓э紙鍐呭瓨 ring buffer锛屾渶澶?100 鏉★級</p>
         </div>
         <div className="flex items-center gap-2">
           <select
@@ -76,24 +76,24 @@ export function TracePanel(): JSX.Element {
             onChange={(e) => setLimit(Number(e.target.value))}
             className="field-input rounded-lg px-2 py-1 text-xs"
           >
-            <option value={10}>最近 10 轮</option>
-            <option value={20}>最近 20 轮</option>
-            <option value={50}>最近 50 轮</option>
-            <option value={100}>全部</option>
+            <option value={10}>鏈€杩?10 杞?/option>
+            <option value={20}>鏈€杩?20 杞?/option>
+            <option value={50}>鏈€杩?50 杞?/option>
+            <option value={100}>鍏ㄩ儴</option>
           </select>
           <button
             onClick={() => void refresh()}
             disabled={loading}
             className="field-btn-secondary px-3 py-1 text-xs disabled:opacity-50"
           >
-            {loading ? '刷新中…' : '刷新'}
+            {loading ? '鍒锋柊涓€? : '鍒锋柊'}
           </button>
         </div>
       </header>
 
       <div className="mx-auto max-w-3xl px-6 py-4 space-y-2">
         {traces.length === 0 && !loading && (
-          <div className="text-center text-xs text-ink-muted py-12">暂无 trace 数据。开始对话后自动生成。</div>
+          <div className="text-center text-xs text-ink-muted py-12">鏆傛棤 trace 鏁版嵁銆傚紑濮嬪璇濆悗鑷姩鐢熸垚銆?/div>
         )}
 
         {traces.map((t) => (
@@ -101,7 +101,7 @@ export function TracePanel(): JSX.Element {
             key={t.turn}
             className="rounded-xl border border-surface-inset bg-surface-raised shadow-sm overflow-hidden"
           >
-            {/* Summary row — always visible */}
+            {/* Summary row 鈥?always visible */}
             <button
               type="button"
               onClick={() => toggleExpand(t.turn)}
@@ -123,7 +123,7 @@ export function TracePanel(): JSX.Element {
               </span>
               {t.l3.silent && (
                 <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 shrink-0">
-                  沉默
+                  娌夐粯
                 </span>
               )}
               <span className="text-[10px] text-ink-muted ml-auto shrink-0">
@@ -137,15 +137,15 @@ export function TracePanel(): JSX.Element {
                 {/* L0 */}
                 <div className="grid grid-cols-3 gap-2">
                   <div>
-                    <span className="text-ink-muted">L0 事件</span>
+                    <span className="text-ink-muted">L0 浜嬩欢</span>
                     <div className="text-ink font-medium">{t.l0.type}</div>
                   </div>
                   <div>
-                    <span className="text-ink-muted">强度</span>
+                    <span className="text-ink-muted">寮哄害</span>
                     <div className="text-ink">{t.l0.intensity.toFixed(2)}</div>
                   </div>
                   <div>
-                    <span className="text-ink-muted">真诚度</span>
+                    <span className="text-ink-muted">鐪熻瘹搴?/span>
                     <div className="text-ink">{t.l0.sincerity?.toFixed(2) ?? '-'}</div>
                   </div>
                 </div>
@@ -153,19 +153,19 @@ export function TracePanel(): JSX.Element {
                 {/* L1 */}
                 <div className="grid grid-cols-4 gap-2">
                   <div>
-                    <span className="text-ink-muted">信任</span>
+                    <span className="text-ink-muted">淇′换</span>
                     <div className="text-ink font-medium">{t.l1.trust.toFixed(1)}</div>
                   </div>
                   <div>
-                    <span className="text-ink-muted">裂痕</span>
+                    <span className="text-ink-muted">瑁傜棔</span>
                     <div className="text-ink">{t.l1.rifts}</div>
                   </div>
                   <div>
-                    <span className="text-ink-muted">阶段</span>
+                    <span className="text-ink-muted">闃舵</span>
                     <div className="text-ink">{STAGE_ZH[t.l1.stage] ?? t.l1.stage}</div>
                   </div>
                   <div>
-                    <span className="text-ink-muted">气氛</span>
+                    <span className="text-ink-muted">姘旀皼</span>
                     <div className="text-ink">{t.l1.atmosphere}</div>
                   </div>
                 </div>
@@ -173,22 +173,22 @@ export function TracePanel(): JSX.Element {
                 {/* L2 */}
                 <div className="grid grid-cols-4 gap-2">
                   <div>
-                    <span className="text-ink-muted">亲密 aff</span>
+                    <span className="text-ink-muted">浜插瘑 aff</span>
                     <div className="text-ink font-medium" style={{ color: affColor(t.l2.aff) }}>{t.l2.aff}</div>
                     <MiniBar val={t.l2.aff} max={100} color="#6366f1" />
                   </div>
                   <div>
-                    <span className="text-ink-muted">安全 sec</span>
+                    <span className="text-ink-muted">瀹夊叏 sec</span>
                     <div className="text-ink">{t.l2.sec}</div>
                     <MiniBar val={t.l2.sec} max={100} color="#22c55e" />
                   </div>
                   <div>
-                    <span className="text-ink-muted">唤醒 aro</span>
+                    <span className="text-ink-muted">鍞ら啋 aro</span>
                     <div className="text-ink">{t.l2.aro}</div>
                     <MiniBar val={t.l2.aro} max={100} color="#f59e0b" />
                   </div>
                   <div>
-                    <span className="text-ink-muted">支配 dom</span>
+                    <span className="text-ink-muted">鏀厤 dom</span>
                     <div className="text-ink">{t.l2.dom}</div>
                     <MiniBar val={t.l2.dom} max={100} color="#ec4899" />
                   </div>
@@ -196,12 +196,12 @@ export function TracePanel(): JSX.Element {
 
                 {/* L3 */}
                 <div className="flex gap-4 text-ink-muted">
-                  <span>L3: {t.l3.silent ? '沉默候选' : '发言'} | Tier B {t.l3.tierBChars} 字符</span>
-                  <span>L4: {t.l4.wrote ? '已写入记忆' : '未写入'}</span>
+                  <span>L3: {t.l3.silent ? '娌夐粯鍊欓€? : '鍙戣█'} | Tier B {t.l3.tierBChars} 瀛楃</span>
+                  <span>L4: {t.l4.wrote ? '宸插啓鍏ヨ蹇? : '鏈啓鍏?}</span>
                   {t.l5?.toolCalls?.length ? (
                     <span>L5: {t.l5.toolCalls.join(', ')}</span>
                   ) : (
-                    <span>L5: —</span>
+                    <span>L5: 鈥?/span>
                   )}
                 </div>
               </div>

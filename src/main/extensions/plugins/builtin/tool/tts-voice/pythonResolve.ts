@@ -1,4 +1,4 @@
-import { execFile, execFileSync, spawn, type SpawnOptions } from 'child_process'
+﻿import { execFile, execFileSync, spawn, type SpawnOptions } from 'child_process'
 import { existsSync } from 'fs'
 import { join } from 'path'
 import { getBundledPythonExe, getVoiceServiceScriptPath } from './voicePaths'
@@ -82,7 +82,7 @@ export function runPythonCapture(
 export function assertVoiceServiceScript(scriptPath?: string): void {
   const path = scriptPath ?? getVoiceServiceScriptPath()
   if (!existsSync(path)) {
-    throw new Error(`语音程序未找到: ${path}。请重新安装 Ackem 或联系支持。`)
+    throw new Error(`璇煶绋嬪簭鏈壘鍒? ${path}銆傝閲嶆柊瀹夎 Ackem 鎴栬仈绯绘敮鎸併€俙)
   }
 }
 

@@ -1,4 +1,4 @@
-// [taskFrame/formatInstructions] — 将 UserTaskFrame 转为各层可注入的 prompt 块
+﻿// [taskFrame/formatInstructions] 鈥?灏?UserTaskFrame 杞负鍚勫眰鍙敞鍏ョ殑 prompt 鍧?
 
 import {
   buildFormatHintFromDelivery,
@@ -6,7 +6,7 @@ import {
   type UserTaskFrame
 } from '../../shared/taskFrame'
 
-/** 注入 assembleMessages systemHint：结构化交付时 override「一句对白」约束 */
+/** 娉ㄥ叆 assembleMessages systemHint锛氱粨鏋勫寲浜や粯鏃?override銆屼竴鍙ュ鐧姐€嶇害鏉?*/
 export function buildTaskFrameSystemHint(frame: UserTaskFrame | undefined): string {
   if (!frame || !isStructuredDelivery(frame)) return ''
 
@@ -14,25 +14,25 @@ export function buildTaskFrameSystemHint(frame: UserTaskFrame | undefined): stri
     frame.formatHint ?? buildFormatHintFromDelivery(frame.delivery, frame.goal) ?? ''
 
   const lines = [
-    '【用户交付要求 · Task Frame】',
-    `- 目标：${frame.goal}`,
-    `- 形态：${frame.delivery}`,
+    '銆愮敤鎴蜂氦浠樿姹?路 Task Frame銆?,
+    `- 鐩爣锛?{frame.goal}`,
+    `- 褰㈡€侊細${frame.delivery}`,
     formatHint
   ]
 
   if (frame.subjects.length > 0) {
-    lines.push(`- 涉及对象：${frame.subjects.join('、')}`)
+    lines.push(`- 娑夊強瀵硅薄锛?{frame.subjects.join('銆?)}`)
   }
 
   lines.push(
-    '本轮须在纸面卡或主答复中满足上述形态；伴侣气泡可短，但不得否定或省略用户要求的结构（禁止说「没有表格」等）。',
-    '【诚实护栏 · 硬性】用户已要求表格/列表时：禁止仅用傲娇散文敷衍；禁止假称「已经列好了」却不输出 Markdown 结构；必须在正文交付真实表格/列表，或明确说明尚未生成。'
+    '鏈疆椤诲湪绾搁潰鍗℃垨涓荤瓟澶嶄腑婊¤冻涓婅堪褰㈡€侊紱浼翠荆姘旀场鍙煭锛屼絾涓嶅緱鍚﹀畾鎴栫渷鐣ョ敤鎴疯姹傜殑缁撴瀯锛堢姝㈣銆屾病鏈夎〃鏍笺€嶇瓑锛夈€?,
+    '銆愯瘹瀹炴姢鏍?路 纭€с€戠敤鎴峰凡瑕佹眰琛ㄦ牸/鍒楄〃鏃讹細绂佹浠呯敤鍌插▏鏁ｆ枃鏁疯锛涚姝㈠亣绉般€屽凡缁忓垪濂戒簡銆嶅嵈涓嶈緭鍑?Markdown 缁撴瀯锛涘繀椤诲湪姝ｆ枃浜や粯鐪熷疄琛ㄦ牸/鍒楄〃锛屾垨鏄庣‘璇存槑灏氭湭鐢熸垚銆?
   )
 
   return lines.filter(Boolean).join('\n')
 }
 
-/** 检索摘录正文 synthesis 追加指令 */
+/** 妫€绱㈡憳褰曟鏂?synthesis 杩藉姞鎸囦护 */
 export function buildCardBodyFormatBlock(frame: UserTaskFrame | undefined): string {
   if (!frame || frame.delivery === 'prose') return ''
 
@@ -41,48 +41,48 @@ export function buildCardBodyFormatBlock(frame: UserTaskFrame | undefined): stri
 
   if (frame.delivery === 'markdown_table') {
     return (
-      `\n\n【交付形态 · 硬性】${hint}\n` +
-      '- 正文**必须**以 Markdown 表格呈现（| 列 | 列 | 形式，含表头分隔行）\n' +
-      '- 至少 4 行数据（不含表头）；对比任务按用户对象组织列或行\n' +
-      '- 用户拿 Ackem（你）与其他产品对比时，Ackem 必须在表头/第一列，**禁止**用 DeepSeek/GPT/Claude 等模型名代替 Ackem\n' +
-      '- **禁止**用散文段落代替表格；可在表格前写 1～2 句概述\n' +
+      `\n\n銆愪氦浠樺舰鎬?路 纭€с€?{hint}\n` +
+      '- 姝ｆ枃**蹇呴』**浠?Markdown 琛ㄦ牸鍛堢幇锛坾 鍒?| 鍒?| 褰㈠紡锛屽惈琛ㄥご鍒嗛殧琛岋級\n' +
+      '- 鑷冲皯 4 琛屾暟鎹紙涓嶅惈琛ㄥご锛夛紱瀵规瘮浠诲姟鎸夌敤鎴峰璞＄粍缁囧垪鎴栬\n' +
+      '- 鐢ㄦ埛鎷?Ackem锛堜綘锛変笌鍏朵粬浜у搧瀵规瘮鏃讹紝Ackem 蹇呴』鍦ㄨ〃澶?绗竴鍒楋紝**绂佹**鐢?DeepSeek/GPT/Claude 绛夋ā鍨嬪悕浠ｆ浛 Ackem\n' +
+      '- **绂佹**鐢ㄦ暎鏂囨钀戒唬鏇胯〃鏍硷紱鍙湪琛ㄦ牸鍓嶅啓 1锝? 鍙ユ杩癨n' +
       (frame.subjects.length >= 2
-        ? `- 须覆盖这些对象：${frame.subjects.join('、')}\n`
+        ? `- 椤昏鐩栬繖浜涘璞★細${frame.subjects.join('銆?)}\n`
         : '')
     )
   }
 
   if (frame.delivery === 'bullet_list') {
     return (
-      `\n\n【交付形态 · 硬性】${hint}\n` +
-      '- 正文核心须为 Markdown 无序列表（每行以 - 开头）\n' +
-      '- 至少 4 条；禁止用长段落代替列表\n'
+      `\n\n銆愪氦浠樺舰鎬?路 纭€с€?{hint}\n` +
+      '- 姝ｆ枃鏍稿績椤讳负 Markdown 鏃犲簭鍒楄〃锛堟瘡琛屼互 - 寮€澶达級\n' +
+      '- 鑷冲皯 4 鏉★紱绂佹鐢ㄩ暱娈佃惤浠ｆ浛鍒楄〃\n'
     )
   }
 
   return ''
 }
 
-/** 伴侣短评 synthesis：结构化交付时的气泡策略 */
+/** 浼翠荆鐭瘎 synthesis锛氱粨鏋勫寲浜や粯鏃剁殑姘旀场绛栫暐 */
 export function buildCompanionReplyFormatBlock(frame: UserTaskFrame | undefined): string {
   if (!frame || frame.delivery === 'prose') return ''
 
   return (
-    '\n\n【气泡策略】用户要求的表格/列表已在纸面卡正文完成。\n' +
-    '- 你只需 **1 句话**（≤60 字）用第一人称收尾，像刚帮用户查完/写完\n' +
-    '- **禁止**说「没有表格/列表」；**禁止**复述表格内容；**禁止**评委式点评纸面卡质量\n'
+    '\n\n銆愭皵娉＄瓥鐣ャ€戠敤鎴疯姹傜殑琛ㄦ牸/鍒楄〃宸插湪绾搁潰鍗℃鏂囧畬鎴愩€俓n' +
+    '- 浣犲彧闇€ **1 鍙ヨ瘽**锛堚墹60 瀛楋級鐢ㄧ涓€浜虹О鏀跺熬锛屽儚鍒氬府鐢ㄦ埛鏌ュ畬/鍐欏畬\n' +
+    '- **绂佹**璇淬€屾病鏈夎〃鏍?鍒楄〃銆嶏紱**绂佹**澶嶈堪琛ㄦ牸鍐呭锛?*绂佹**璇勫寮忕偣璇勭焊闈㈠崱璐ㄩ噺\n'
   )
 }
 
-/** toolFollowUp 第二轮任务说明 */
+/** toolFollowUp 绗簩杞换鍔¤鏄?*/
 export function buildToolFollowUpFormatBlock(frame: UserTaskFrame | undefined): string {
   if (!frame || frame.delivery === 'prose') {
-    return '- 用清晰的中文条目写出要点（例如新特性、版本变化等）；'
+    return '- 鐢ㄦ竻鏅扮殑涓枃鏉＄洰鍐欏嚭瑕佺偣锛堜緥濡傛柊鐗规€с€佺増鏈彉鍖栫瓑锛夛紱'
   }
 
   if (frame.delivery === 'markdown_table') {
-    return '- 用 Markdown **表格**直接回答（含表头与多行），禁止散文敷衍；'
+    return '- 鐢?Markdown **琛ㄦ牸**鐩存帴鍥炵瓟锛堝惈琛ㄥご涓庡琛岋級锛岀姝㈡暎鏂囨暦琛嶏紱'
   }
 
-  return '- 用 Markdown **无序列表**分条回答，每条一行；'
+  return '- 鐢?Markdown **鏃犲簭鍒楄〃**鍒嗘潯鍥炵瓟锛屾瘡鏉′竴琛岋紱'
 }

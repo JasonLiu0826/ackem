@@ -1,4 +1,4 @@
-import { StrictMode, useEffect, useMemo, useRef, useState } from 'react'
+﻿import { StrictMode, useEffect, useMemo, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import type { UpdateJob, UpdateProgressEvent } from '../../../../shared/updateTypes'
 import '../assets/main.css'
@@ -6,7 +6,7 @@ import './updater.css'
 
 declare global {
   interface Window {
-    ackemUpdater: {
+    AckemUpdater: {
       readJob: () => Promise<UpdateJob>
       start: () => Promise<{ ok: boolean }>
       launchAckem: () => Promise<void>
@@ -25,7 +25,7 @@ function formatBytes(n: number): string {
 }
 
 function formatSpeed(bps: number): string {
-  if (bps <= 0) return '—'
+  if (bps <= 0) return '鈥?
   return `${formatBytes(bps)}/s`
 }
 
@@ -51,8 +51,8 @@ function App(): JSX.Element {
   }
 
   useEffect(() => {
-    void window.ackemUpdater.readJob().then(setJob)
-    const off = window.ackemUpdater.onProgress((ev) => {
+    void window.AckemUpdater.readJob().then(setJob)
+    const off = window.AckemUpdater.onProgress((ev) => {
       setPhase(ev.phase)
       if (ev.message) appendLog(ev.message)
       if (ev.percent != null) setPercent(ev.percent)
@@ -71,9 +71,9 @@ function App(): JSX.Element {
   useEffect(() => {
     if (!job || started.current) return
     started.current = true
-    appendLog(`Ackem updater ready — ${channelLabel(job.channel)}`)
-    appendLog(`Target: ${job.currentVersion} → ${job.targetVersion}`)
-    void window.ackemUpdater.start().catch((e: unknown) => {
+    appendLog(`Ackem updater ready 鈥?${channelLabel(job.channel)}`)
+    appendLog(`Target: ${job.currentVersion} 鈫?${job.targetVersion}`)
+    void window.AckemUpdater.start().catch((e: unknown) => {
       const msg = e instanceof Error ? e.message : String(e)
       setError(msg)
       setPhase('error')
@@ -103,7 +103,7 @@ function App(): JSX.Element {
   if (!job) {
     return (
       <div className="updater-shell">
-        <p className="updater-muted">Loading update job…</p>
+        <p className="updater-muted">Loading update job鈥?/p>
       </div>
     )
   }
@@ -113,8 +113,8 @@ function App(): JSX.Element {
       <header className="updater-head">
         <h1>Ackem Update</h1>
         <p>
-          {channelLabel(job.channel)} · {job.currentVersion} → {job.targetVersion}
-          {job.expectedSize > 0 ? ` · ~${formatBytes(job.expectedSize)}` : ''}
+          {channelLabel(job.channel)} 路 {job.currentVersion} 鈫?{job.targetVersion}
+          {job.expectedSize > 0 ? ` 路 ~${formatBytes(job.expectedSize)}` : ''}
         </p>
       </header>
 
@@ -123,7 +123,7 @@ function App(): JSX.Element {
           <span>{phaseLabel}</span>
           <span>
             {phase === 'download' && total > 0
-              ? `${formatBytes(downloaded)} / ${formatBytes(total)} · ${formatSpeed(speed)}`
+              ? `${formatBytes(downloaded)} / ${formatBytes(total)} 路 ${formatSpeed(speed)}`
               : `${Math.round(percent)}%`}
           </span>
         </div>
@@ -142,15 +142,15 @@ function App(): JSX.Element {
 
       {phase === 'done' && (
         <div className="updater-done">
-          <p>✓ Download complete</p>
-          <p>✓ Verification passed</p>
-          <p>✓ Program updated (your data/ folder was not modified)</p>
+          <p>鉁?Download complete</p>
+          <p>鉁?Verification passed</p>
+          <p>鉁?Program updated (your data/ folder was not modified)</p>
           <p className="updater-done-hint">You can restart Ackem now.</p>
           <div className="updater-actions">
-            <button type="button" className="updater-btn primary" onClick={() => void window.ackemUpdater.launchAckem()}>
+            <button type="button" className="updater-btn primary" onClick={() => void window.AckemUpdater.launchAckem()}>
               Launch Ackem
             </button>
-            <button type="button" className="updater-btn" onClick={() => void window.ackemUpdater.quit()}>
+            <button type="button" className="updater-btn" onClick={() => void window.AckemUpdater.quit()}>
               Later
             </button>
           </div>
@@ -161,10 +161,10 @@ function App(): JSX.Element {
         <div className="updater-error">
           <p>{error ?? 'Update failed'}</p>
           <div className="updater-actions">
-            <button type="button" className="updater-btn" onClick={() => void window.ackemUpdater.openRelease()}>
+            <button type="button" className="updater-btn" onClick={() => void window.AckemUpdater.openRelease()}>
               Open release page
             </button>
-            <button type="button" className="updater-btn" onClick={() => void window.ackemUpdater.quit()}>
+            <button type="button" className="updater-btn" onClick={() => void window.AckemUpdater.quit()}>
               Close
             </button>
           </div>

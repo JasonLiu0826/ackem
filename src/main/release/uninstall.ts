@@ -1,5 +1,5 @@
-/**
- * Ackem 卸载：桌面快捷方式、可选删除数据/程序；支持设置内触发或运行 Uninstall Ackem.bat
+﻿/**
+ * Ackem 鍗歌浇锛氭闈㈠揩鎹锋柟寮忋€佸彲閫夊垹闄ゆ暟鎹?绋嬪簭锛涙敮鎸佽缃唴瑙﹀彂鎴栬繍琛?Uninstall Ackem.bat
  */
 import { app, shell } from 'electron'
 import { existsSync } from 'node:fs'

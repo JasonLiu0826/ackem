@@ -1,4 +1,4 @@
-// [ecosystem/signature] — Ed25519 签名与文件摘要
+﻿// [ecosystem/signature] 鈥?Ed25519 绛惧悕涓庢枃浠舵憳瑕?
 
 import {
   createHash,
@@ -8,7 +8,7 @@ import {
   sign,
   verify
 } from 'node:crypto'
-import { ACKEM_EXT_PACKAGE_FORMAT_VERSION } from './constants'
+import { Ackem_EXT_PACKAGE_FORMAT_VERSION } from './constants'
 
 export type SignatureAlgorithm = 'ed25519'
 
@@ -104,13 +104,13 @@ export function createSignatureSidecar(input: {
   signedAt?: string
 }): AckemSignatureSidecar {
   const payload = buildSignaturePayload({
-    formatVersion: ACKEM_EXT_PACKAGE_FORMAT_VERSION,
+    formatVersion: Ackem_EXT_PACKAGE_FORMAT_VERSION,
     publisherId: input.publisherId,
     manifestId: input.manifestId,
     fileDigests: input.fileDigests
   })
   return {
-    formatVersion: ACKEM_EXT_PACKAGE_FORMAT_VERSION,
+    formatVersion: Ackem_EXT_PACKAGE_FORMAT_VERSION,
     publisherId: input.publisherId,
     algorithm: 'ed25519',
     signedAt: input.signedAt ?? new Date().toISOString(),
@@ -125,7 +125,7 @@ export function verifySignatureSidecar(
   publicKeyPem: string
 ): { ok: true } | { ok: false; error: string } {
   if (sidecar.algorithm !== 'ed25519') {
-    return { ok: false, error: `不支持的签名算法: ${sidecar.algorithm}` }
+    return { ok: false, error: `涓嶆敮鎸佺殑绛惧悕绠楁硶: ${sidecar.algorithm}` }
   }
   const payload = buildSignaturePayload({
     formatVersion: sidecar.formatVersion,
@@ -134,7 +134,7 @@ export function verifySignatureSidecar(
     fileDigests: sidecar.fileDigests
   })
   const valid = verifyPayload(payload, sidecar.signature, publicKeyPem)
-  if (!valid) return { ok: false, error: '签名验证失败' }
+  if (!valid) return { ok: false, error: '绛惧悕楠岃瘉澶辫触' }
   return { ok: true }
 }
 
@@ -144,17 +144,17 @@ export function verifyFileDigests(
 ): { ok: true } | { ok: false; error: string } {
   for (const [path, expected] of Object.entries(sidecar.fileDigests)) {
     if (!(path in files)) {
-      return { ok: false, error: `缺少签名覆盖的文件: ${path}` }
+      return { ok: false, error: `缂哄皯绛惧悕瑕嗙洊鐨勬枃浠? ${path}` }
     }
     const actual = sha256Digest(files[path]!)
     if (actual !== expected) {
-      return { ok: false, error: `文件摘要不匹配: ${path}` }
+      return { ok: false, error: `鏂囦欢鎽樿涓嶅尮閰? ${path}` }
     }
   }
   return { ok: true }
 }
 
-/** 测试 / 开发用：生成临时发布者密钥对 */
+/** 娴嬭瘯 / 寮€鍙戠敤锛氱敓鎴愪复鏃跺彂甯冭€呭瘑閽ュ */
 export function generatePublisherKeyPair(publisherId: string): PublisherKeyPair {
   const { publicKey, privateKey } = generateKeyPairSync('ed25519')
   return {

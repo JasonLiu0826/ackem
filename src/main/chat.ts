@@ -3,6 +3,7 @@ import type { AppSettings } from './settings'
 import { finalizeTurnAfterStream } from './postChatTurn'
 import { buildLlmHeaders, resolveChatCompletionsUrl, shouldSendTools } from './llmEndpoint'
 import { buildToolFollowUpRequestBody, buildToolResultsFallback } from './toolFollowUp'
+import { detectImageIntent } from './agnesImage'
 import { streamAnthropicMessages } from './anthropicMessages'
 import {
   lastUserMessageFromContext,
@@ -624,6 +625,16 @@ export async function streamChatCompletion(
         }
         assistantAcc = round1Text
         break
+      }
+
+      // 强制生图拦截：当用户意图是生图但模型未调用 agnes_image 时，自动补一次工具调用
+      if (sorted.length === 0 && userMsg && sendTools) {
+        const intent = detectImageIntent(userMsg)
+        if (intent) {
+          log.info('强制生图拦截：模型未调用工具，自动补调 agnes_image', { prompt: intent.prompt })
+          sorted = [[0, { name: 'agnes_image', arguments: JSON.stringify({ prompt: intent.prompt, size: '1024x1024' }) }]]
+          webContents.send('chat:status', '正在生成图片…')
+        }
       }
 
       const batch = await executeOpenAiToolBatch({

@@ -1,4 +1,4 @@
-import { loadSettings } from '../../../../../settings'
+﻿import { loadSettings } from '../../../../../settings'
 import { resolveDataRoot } from '../../../../../paths'
 import type { SkillHandler, SkillInvocation, SkillResult } from '../../../types'
 import { PROCEDURAL_MEMORY_MANIFEST } from './manifest'
@@ -9,7 +9,7 @@ function resolveDataRootForSkill(): string {
   try {
     return resolveDataRoot(loadSettings())
   } catch {
-    return process.env.ACKEM_TEST_DATA_ROOT ?? ''
+    return process.env.Ackem_TEST_DATA_ROOT ?? ''
   }
 }
 
@@ -34,8 +34,8 @@ async function execute(invocation: SkillInvocation): Promise<SkillResult> {
   const file = appendHabit(dataRoot, text)
   const established = isEstablishedHabit(dataRoot, text, 3)
   const output = established
-    ? `【程序性记忆】习惯已成立（≥3 次）：${text.slice(0, 100)}。伴侣可在合适时机自然提起，勿编造未记录习惯。`
-    : `【程序性记忆】已记下习惯：${text.slice(0, 100)}`
+    ? `銆愮▼搴忔€ц蹇嗐€戜範鎯凡鎴愮珛锛堚墺3 娆★級锛?{text.slice(0, 100)}銆備即渚ｅ彲鍦ㄥ悎閫傛椂鏈鸿嚜鐒舵彁璧凤紝鍕跨紪閫犳湭璁板綍涔犳儻銆俙
+    : `銆愮▼搴忔€ц蹇嗐€戝凡璁颁笅涔犳儻锛?{text.slice(0, 100)}`
 
   return {
     ok: true,

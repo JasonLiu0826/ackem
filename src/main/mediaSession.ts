@@ -1,4 +1,4 @@
-/** W7 SMTC：读取 Windows System Media Transport Controls 状态 */
+/** W7 SMTC锛氳鍙?Windows System Media Transport Controls 鐘舵€?*/
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 
@@ -70,7 +70,7 @@ export async function readMediaSession(): Promise<MediaSessionInfo> {
   }
 }
 
-/** 格式化为可读字符串 */
+/** 鏍煎紡鍖栦负鍙瀛楃涓?*/
 export function formatMediaSession(info: MediaSessionInfo): string {
   if (!info.title && !info.artist) return ''
   const parts = [info.artist, info.title].filter(Boolean)
@@ -84,7 +84,7 @@ export function getCachedMediaSession(): MediaSessionInfo {
   return { ...cached }
 }
 
-/** FIX-030：触发共娱等场景前强制刷新 SMTC 缓存 */
+/** FIX-030锛氳Е鍙戝叡濞辩瓑鍦烘櫙鍓嶅己鍒跺埛鏂?SMTC 缂撳瓨 */
 export async function refreshMediaSessionCache(): Promise<MediaSessionInfo> {
   const info = await readMediaSession()
   cached = info

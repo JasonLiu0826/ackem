@@ -1,10 +1,10 @@
-// [memoryBinding] — L4↔L1/L2 桥梁
-// 职责：情感上下文快照、effectiveTrust、L1 记忆增强
-// 输入：L1、L2、FactStore
-// 输出：EmotionalContext、MemoryAugmentedL1、effectiveTrust 标量
-// 引用：../engine/types, ../engine/ackemParams, ./factStore
+﻿// [memoryBinding] 鈥?L4鈫擫1/L2 妗ユ
+// 鑱岃矗锛氭儏鎰熶笂涓嬫枃蹇収銆乪ffectiveTrust銆丩1 璁板繂澧炲己
+// 杈撳叆锛歀1銆丩2銆丗actStore
+// 杈撳嚭锛欵motionalContext銆丮emoryAugmentedL1銆乪ffectiveTrust 鏍囬噺
+// 寮曠敤锛?./engine/types, ../engine/AckemParams, ./factStore
 
-import { EFFECTIVE_TRUST_L1_WEIGHT, EFFECTIVE_TRUST_MEM_WEIGHT } from '../engine/ackemParams'
+import { EFFECTIVE_TRUST_L1_WEIGHT, EFFECTIVE_TRUST_MEM_WEIGHT } from '../engine/AckemParams'
 import type { EmotionalContext, L1State, EmotionState } from '../engine/types'
 import type { FactStore } from './factStore'
 

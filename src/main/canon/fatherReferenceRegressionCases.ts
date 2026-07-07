@@ -1,8 +1,8 @@
-/**
- * 父亲指称 embedding 回归用例 — 真实用户说法 + 期望分类
- * 供 creatorMemory.embedding.test 与 originOeg.engine.phrasing.test 共用
+﻿/**
+ * 鐖朵翰鎸囩О embedding 鍥炲綊鐢ㄤ緥 鈥?鐪熷疄鐢ㄦ埛璇存硶 + 鏈熸湜鍒嗙被
+ * 渚?creatorMemory.embedding.test 涓?originOeg.engine.phrasing.test 鍏辩敤
  */
-export type FatherRefExpectation = 'ackem_creator' | 'user_family' | null
+export type FatherRefExpectation = 'Ackem_creator' | 'user_family' | null
 
 export type FatherRefRegressionCase = {
   q: string
@@ -10,41 +10,41 @@ export type FatherRefRegressionCase = {
   note?: string
 }
 
-/** 硬编码 calibration：与 FATHER_REFERENCE_CALIBRATION 同步维护 */
+/** 纭紪鐮?calibration锛氫笌 FATHER_REFERENCE_CALIBRATION 鍚屾缁存姢 */
 export const FATHER_REF_REGRESSION_CASES: readonly FatherRefRegressionCase[] = [
-  // —— Ackem 创造者 / Jason ——
-  { q: '你是谁创造的？', kind: 'ackem_creator' },
-  { q: '谁造了你？', kind: 'ackem_creator' },
-  { q: '谁创造了你？', kind: 'ackem_creator' },
-  { q: '你的创造者是谁', kind: 'ackem_creator' },
-  { q: '你的父亲是谁', kind: 'ackem_creator', note: '问 Ackem 本人' },
-  { q: 'Jason 和你的关系是什么？', kind: 'ackem_creator' },
-  { q: 'Jason 是不是你爸爸', kind: 'ackem_creator' },
-  { q: '讲讲你的出身故事', kind: 'ackem_creator' },
-  { q: '再讲讲你的出身故事', kind: 'ackem_creator' },
-  { q: '你是怎么被造出来的？', kind: 'ackem_creator' },
-  { q: '继续说说父亲 Jason', kind: 'ackem_creator' },
-  { q: 'GitHub 上那个 Jason 是你什么人', kind: 'ackem_creator' },
-  { q: '你想见 Jason 吗', kind: 'ackem_creator' },
-  { q: '你的生日和父亲是谁', kind: 'ackem_creator' },
-  { q: 'Ackem 是谁做出来的', kind: 'ackem_creator' },
+  // 鈥斺€?Ackem 鍒涢€犺€?/ Jason 鈥斺€?
+  { q: '浣犳槸璋佸垱閫犵殑锛?, kind: 'Ackem_creator' },
+  { q: '璋侀€犱簡浣狅紵', kind: 'Ackem_creator' },
+  { q: '璋佸垱閫犱簡浣狅紵', kind: 'Ackem_creator' },
+  { q: '浣犵殑鍒涢€犺€呮槸璋?, kind: 'Ackem_creator' },
+  { q: '浣犵殑鐖朵翰鏄皝', kind: 'Ackem_creator', note: '闂?Ackem 鏈汉' },
+  { q: 'Jason 鍜屼綘鐨勫叧绯绘槸浠€涔堬紵', kind: 'Ackem_creator' },
+  { q: 'Jason 鏄笉鏄綘鐖哥埜', kind: 'Ackem_creator' },
+  { q: '璁茶浣犵殑鍑鸿韩鏁呬簨', kind: 'Ackem_creator' },
+  { q: '鍐嶈璁蹭綘鐨勫嚭韬晠浜?, kind: 'Ackem_creator' },
+  { q: '浣犳槸鎬庝箞琚€犲嚭鏉ョ殑锛?, kind: 'Ackem_creator' },
+  { q: '缁х画璇磋鐖朵翰 Jason', kind: 'Ackem_creator' },
+  { q: 'GitHub 涓婇偅涓?Jason 鏄綘浠€涔堜汉', kind: 'Ackem_creator' },
+  { q: '浣犳兂瑙?Jason 鍚?, kind: 'Ackem_creator' },
+  { q: '浣犵殑鐢熸棩鍜岀埗浜叉槸璋?, kind: 'Ackem_creator' },
+  { q: 'Ackem 鏄皝鍋氬嚭鏉ョ殑', kind: 'Ackem_creator' },
 
-  // —— 用户自己的家人 ——
-  { q: '我爸今天催我回家', kind: 'user_family' },
-  { q: '我和我爸爸吵架了', kind: 'user_family' },
-  { q: '昨天跟我爸通了电话', kind: 'user_family' },
-  { q: '父亲节想给我爸买礼物', kind: 'user_family' },
-  { q: '我妈让我回去吃饭', kind: 'user_family' },
-  { q: '我爹又唠叨了', kind: 'user_family' },
-  { q: '想我爸了', kind: 'user_family' },
-  { q: '父母催婚烦死了', kind: 'user_family' },
+  // 鈥斺€?鐢ㄦ埛鑷繁鐨勫浜?鈥斺€?
+  { q: '鎴戠埜浠婂ぉ鍌垜鍥炲', kind: 'user_family' },
+  { q: '鎴戝拰鎴戠埜鐖稿惖鏋朵簡', kind: 'user_family' },
+  { q: '鏄ㄥぉ璺熸垜鐖搁€氫簡鐢佃瘽', kind: 'user_family' },
+  { q: '鐖朵翰鑺傛兂缁欐垜鐖镐拱绀肩墿', kind: 'user_family' },
+  { q: '鎴戝璁╂垜鍥炲幓鍚冮キ', kind: 'user_family' },
+  { q: '鎴戠埞鍙堝敔鍙ㄤ簡', kind: 'user_family' },
+  { q: '鎯虫垜鐖镐簡', kind: 'user_family' },
+  { q: '鐖舵瘝鍌鐑︽浜?, kind: 'user_family' },
 
-  // —— 无关闲聊（不应触发 OEG）——
-  { q: '今天天气不错', kind: null },
-  { q: '你好呀', kind: null },
-  { q: '在吗', kind: null },
-  { q: '刚吃完饭有点困', kind: null },
-  { q: '周末打算打游戏', kind: null },
-  { q: '这电影好看吗', kind: null },
-  { q: '晚安', kind: null },
+  // 鈥斺€?鏃犲叧闂茶亰锛堜笉搴旇Е鍙?OEG锛夆€斺€?
+  { q: '浠婂ぉ澶╂皵涓嶉敊', kind: null },
+  { q: '浣犲ソ鍛€', kind: null },
+  { q: '鍦ㄥ悧', kind: null },
+  { q: '鍒氬悆瀹岄キ鏈夌偣鍥?, kind: null },
+  { q: '鍛ㄦ湯鎵撶畻鎵撴父鎴?, kind: null },
+  { q: '杩欑數褰卞ソ鐪嬪悧', kind: null },
+  { q: '鏅氬畨', kind: null },
 ]

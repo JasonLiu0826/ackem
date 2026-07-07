@@ -1,50 +1,50 @@
-// [embedding/types] — Embedding 系统接口定义
-// 职责：EmbeddingProvider 接口、模型清单、状态类型
-// 引用：无（纯类型文件）
+﻿// [embedding/types] 鈥?Embedding 绯荤粺鎺ュ彛瀹氫箟
+// 鑱岃矗锛欵mbeddingProvider 鎺ュ彛銆佹ā鍨嬫竻鍗曘€佺姸鎬佺被鍨?
+// 寮曠敤锛氭棤锛堢函绫诲瀷鏂囦欢锛?
 
-/** 统一 embedding 提供者接口 — 所有实现（本地 ONNX / 远程 API）都遵守此接口 */
+/** 缁熶竴 embedding 鎻愪緵鑰呮帴鍙?鈥?鎵€鏈夊疄鐜帮紙鏈湴 ONNX / 杩滅▼ API锛夐兘閬靛畧姝ゆ帴鍙?*/
 export interface EmbeddingProvider {
-  /** 单条文本 → 向量 */
+  /** 鍗曟潯鏂囨湰 鈫?鍚戦噺 */
   embed(text: string): Promise<number[]>
-  /** 批量文本 → 向量数组（顺序与输入一致） */
+  /** 鎵归噺鏂囨湰 鈫?鍚戦噺鏁扮粍锛堥『搴忎笌杈撳叆涓€鑷达級 */
   embedBatch(texts: string[]): Promise<number[][]>
-  /** 向量维度 */
+  /** 鍚戦噺缁村害 */
   dimension(): number
-  /** 提供者标识，如 "local:bge-small-zh" | "remote:deepseek" */
+  /** 鎻愪緵鑰呮爣璇嗭紝濡?"local:bge-small-zh" | "remote:deepseek" */
   name(): string
-  /** 模型是否已加载就绪 */
+  /** 妯″瀷鏄惁宸插姞杞藉氨缁?*/
   ready(): boolean
-  /** 释放资源（onnxruntime session 等） */
+  /** 閲婃斁璧勬簮锛坥nnxruntime session 绛夛級 */
   dispose(): void
 }
 
-/** 已支持的本地模型 ID */
+/** 宸叉敮鎸佺殑鏈湴妯″瀷 ID */
 export type LocalModelId = 'bge-small-zh' | 'bge-small-en' | 'm3e-small' | 'bge-base-zh'
 
-/** 模型清单条目 */
+/** 妯″瀷娓呭崟鏉＄洰 */
 export interface ModelManifest {
   id: LocalModelId
-  /** 向量维度 */
+  /** 鍚戦噺缁村害 */
   dimension: number
-  /** 压缩包大小 MB */
+  /** 鍘嬬缉鍖呭ぇ灏?MB */
   compressedSizeMb: number
-  /** 解压后大小 MB */
+  /** 瑙ｅ帇鍚庡ぇ灏?MB */
   extractedSizeMb: number
-  /** bundled = 安装包内置, downloadable = 需下载 */
+  /** bundled = 瀹夎鍖呭唴缃? downloadable = 闇€涓嬭浇 */
   source: 'bundled' | 'downloadable'
-  /** 下载地址（GitHub Releases） */
+  /** 涓嬭浇鍦板潃锛圙itHub Releases锛?*/
   downloadUrl?: string
-  /** 国内镜像地址 */
+  /** 鍥藉唴闀滃儚鍦板潃 */
   mirrorUrl?: string
-  /** 中文效果评级描述 */
+  /** 涓枃鏁堟灉璇勭骇鎻忚堪 */
   qualityLabel: string
-  /** 单条推理延迟描述 */
+  /** 鍗曟潯鎺ㄧ悊寤惰繜鎻忚堪 */
   speedLabel: string
-  /** 推理内存占用描述 */
+  /** 鎺ㄧ悊鍐呭瓨鍗犵敤鎻忚堪 */
   memoryLabel: string
 }
 
-/** .model-state.json 持久化结构 */
+/** .model-state.json 鎸佷箙鍖栫粨鏋?*/
 export interface ModelState {
   activeModel: LocalModelId | 'none'
   version: string
@@ -53,30 +53,30 @@ export interface ModelState {
   provider: 'onnxruntime' | 'none'
 }
 
-/** 远程 embedding API 配置 */
+/** 杩滅▼ embedding API 閰嶇疆 */
 export interface RemoteEmbeddingConfig {
   url: string
   model: string
   apiKey?: string
 }
 
-/** provider 创建选项 */
+/** provider 鍒涘缓閫夐」 */
 export interface EmbeddingProviderOptions {
   dataRoot: string
-  /** 当前激活的本地模型 ID，'none' = 不加载本地模型 */
+  /** 褰撳墠婵€娲荤殑鏈湴妯″瀷 ID锛?none' = 涓嶅姞杞芥湰鍦版ā鍨?*/
   activeModel: LocalModelId | 'none'
-  /** 远程 API 配置（可选） */
+  /** 杩滅▼ API 閰嶇疆锛堝彲閫夛級 */
   remote?: RemoteEmbeddingConfig
 }
 
-/** 安装包预装的中英文 embedding 模型（FIX-012） */
+/** 瀹夎鍖呴瑁呯殑涓嫳鏂?embedding 妯″瀷锛團IX-012锛?*/
 export const BUNDLED_EMBEDDING_MODEL_IDS = ['bge-small-zh', 'bge-small-en'] as const satisfies readonly LocalModelId[]
 
 export function isBundledEmbeddingModel(id: LocalModelId): boolean {
   return (BUNDLED_EMBEDDING_MODEL_IDS as readonly LocalModelId[]).includes(id)
 }
 
-/** 所有模型的静态清单 */
+/** 鎵€鏈夋ā鍨嬬殑闈欐€佹竻鍗?*/
 export const MODEL_MANIFESTS: ModelManifest[] = [
   {
     id: 'bge-small-zh',
@@ -84,9 +84,9 @@ export const MODEL_MANIFESTS: ModelManifest[] = [
     compressedSizeMb: 35,
     extractedSizeMb: 90,
     source: 'bundled',
-    downloadUrl: 'https://github.com/nicepkg/ackem-models/releases/download/v1.0/bge-small-zh-v1.5.onnx.zip',
-    mirrorUrl: 'https://gitee.com/nicepkg/ackem-models/releases/download/v1.0/bge-small-zh-v1.5.onnx.zip',
-    qualityLabel: '中文效果 ★★★★',
+    downloadUrl: 'https://github.com/nicepkg/Ackem-models/releases/download/v1.0/bge-small-zh-v1.5.onnx.zip',
+    mirrorUrl: 'https://gitee.com/nicepkg/Ackem-models/releases/download/v1.0/bge-small-zh-v1.5.onnx.zip',
+    qualityLabel: '涓枃鏁堟灉 鈽呪槄鈽呪槄',
     speedLabel: '< 10ms',
     memoryLabel: '~150MB'
   },
@@ -96,9 +96,9 @@ export const MODEL_MANIFESTS: ModelManifest[] = [
     compressedSizeMb: 40,
     extractedSizeMb: 130,
     source: 'bundled',
-    downloadUrl: 'https://github.com/nicepkg/ackem-models/releases/download/v1.0/bge-small-en-v1.5.onnx.zip',
-    mirrorUrl: 'https://gitee.com/nicepkg/ackem-models/releases/download/v1.0/bge-small-en-v1.5.onnx.zip',
-    qualityLabel: 'English ★★★★',
+    downloadUrl: 'https://github.com/nicepkg/Ackem-models/releases/download/v1.0/bge-small-en-v1.5.onnx.zip',
+    mirrorUrl: 'https://gitee.com/nicepkg/Ackem-models/releases/download/v1.0/bge-small-en-v1.5.onnx.zip',
+    qualityLabel: 'English 鈽呪槄鈽呪槄',
     speedLabel: '< 10ms',
     memoryLabel: '~150MB'
   },
@@ -108,9 +108,9 @@ export const MODEL_MANIFESTS: ModelManifest[] = [
     compressedSizeMb: 35,
     extractedSizeMb: 90,
     source: 'downloadable',
-    downloadUrl: 'https://github.com/nicepkg/ackem-models/releases/download/v1.0/m3e-small.onnx.zip',
-    mirrorUrl: 'https://gitee.com/nicepkg/ackem-models/releases/download/v1.0/m3e-small.onnx.zip',
-    qualityLabel: '中文效果 ★★★★',
+    downloadUrl: 'https://github.com/nicepkg/Ackem-models/releases/download/v1.0/m3e-small.onnx.zip',
+    mirrorUrl: 'https://gitee.com/nicepkg/Ackem-models/releases/download/v1.0/m3e-small.onnx.zip',
+    qualityLabel: '涓枃鏁堟灉 鈽呪槄鈽呪槄',
     speedLabel: '< 10ms',
     memoryLabel: '~150MB'
   },
@@ -120,9 +120,9 @@ export const MODEL_MANIFESTS: ModelManifest[] = [
     compressedSizeMb: 150,
     extractedSizeMb: 400,
     source: 'downloadable',
-    downloadUrl: 'https://github.com/nicepkg/ackem-models/releases/download/v1.0/bge-base-zh-v1.5.onnx.zip',
-    mirrorUrl: 'https://gitee.com/nicepkg/ackem-models/releases/download/v1.0/bge-base-zh-v1.5.onnx.zip',
-    qualityLabel: '中文效果 ★★★★★（最好）',
+    downloadUrl: 'https://github.com/nicepkg/Ackem-models/releases/download/v1.0/bge-base-zh-v1.5.onnx.zip',
+    mirrorUrl: 'https://gitee.com/nicepkg/Ackem-models/releases/download/v1.0/bge-base-zh-v1.5.onnx.zip',
+    qualityLabel: '涓枃鏁堟灉 鈽呪槄鈽呪槄鈽咃紙鏈€濂斤級',
     speedLabel: '20-30ms',
     memoryLabel: '~500MB'
   }

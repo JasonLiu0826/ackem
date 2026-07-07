@@ -1,4 +1,4 @@
-// [ipc/data] — 设置、数据目录、导入、索引、文件系统、应用级通道
+﻿// [ipc/data] 鈥?璁剧疆銆佹暟鎹洰褰曘€佸鍏ャ€佺储寮曘€佹枃浠剁郴缁熴€佸簲鐢ㄧ骇閫氶亾
 
 import { dialog, ipcMain, shell, BrowserWindow } from 'electron'
 import { appendOrOverwriteAllowed, importExternalFiles, promoteImportToMemory, readRelFile } from '../fsops'
@@ -39,7 +39,7 @@ import {
   onReadinessChange,
 } from '../embedding/embeddingReadiness'
 import { createLogger } from '../logger'
-import { ACKEM_CANON } from '../canon/ackemCanon'
+import { Ackem_CANON } from '../canon/AckemCanon'
 import { loadCreatorMemoryStore } from '../canon/creatorMemory'
 import { embeddingSettingsChanged, onlyDesktopAgentSettingsChanged } from '../../shared/settingsChange'
 
@@ -79,9 +79,9 @@ onReadinessChange(() => broadcastEmbeddingReadiness())
 export function registerDataIpc(): void {
   ipcMain.handle('settings:get', () => loadSettings())
   ipcMain.handle('canon:get', () => ({
-    name: ACKEM_CANON.name,
-    birthDate: ACKEM_CANON.birthDate,
-    creator: { ...ACKEM_CANON.creator },
+    name: Ackem_CANON.name,
+    birthDate: Ackem_CANON.birthDate,
+    creator: { ...Ackem_CANON.creator },
   }))
   ipcMain.handle('canon:creator-memory:get', () => {
     const root = resolveDataRoot(loadSettings())
@@ -114,7 +114,7 @@ export function registerDataIpc(): void {
     return s
   })
 
-  // ═══ i18n ═══
+  // 鈺愨晲鈺?i18n 鈺愨晲鈺?
   ipcMain.handle('i18n:t', (_e, key: string, params?: Record<string, string | number>) => {
     return t(key, params)
   })
@@ -123,9 +123,9 @@ export function registerDataIpc(): void {
     initLocale(locale)
     const prev = loadSettings()
     const prevModel = prev.embeddingActiveModel ?? 'bge-small-zh'
-    // locale → 默认模型映射
+    // locale 鈫?榛樿妯″瀷鏄犲皠
     const localeDefault = locale === 'en' ? 'bge-small-en' : 'bge-small-zh'
-    // 仅当当前模型是对方语言的内置模型时才自动切换
+    // 浠呭綋褰撳墠妯″瀷鏄鏂硅瑷€鐨勫唴缃ā鍨嬫椂鎵嶈嚜鍔ㄥ垏鎹?
     const autoSwitchable = ['bge-small-zh', 'bge-small-en']
     const patch: Record<string, string> = { locale }
     if (autoSwitchable.includes(prevModel) && prevModel !== localeDefault) {
@@ -294,9 +294,9 @@ export function registerDataIpc(): void {
     }
   )
 
-  // ── Embedding 模型管理 ──
+  // 鈹€鈹€ Embedding 妯″瀷绠＄悊 鈹€鈹€
 
-  /** 获取 embedding 系统状态：当前 provider + 所有模型可用性 + 预热就绪 */
+  /** 鑾峰彇 embedding 绯荤粺鐘舵€侊細褰撳墠 provider + 鎵€鏈夋ā鍨嬪彲鐢ㄦ€?+ 棰勭儹灏辩华 */
   ipcMain.handle('embedding:status', () => {
     const root = currentDataRoot()
     const settings = loadSettings()
@@ -322,7 +322,7 @@ export function registerDataIpc(): void {
 
   ipcMain.handle('embedding:readiness', () => getEmbeddingReadiness())
 
-  /** 切换 embedding 模型 */
+  /** 鍒囨崲 embedding 妯″瀷 */
   ipcMain.handle('embedding:switch', async (_e, modelId: string) => {
     const root = currentDataRoot()
 
@@ -331,23 +331,23 @@ export function registerDataIpc(): void {
       const ok = switchEmbeddingModel(modelId as LocalModelId, root)
       if (!ok) {
         const hint = isBundledEmbeddingModel(modelId as LocalModelId)
-          ? '预装模型未找到，请确认安装包 resources/models 完整或运行 npm run prepare:embedding-models'
-          : `模型 ${modelId} 未就绪`
+          ? '棰勮妯″瀷鏈壘鍒帮紝璇风‘璁ゅ畨瑁呭寘 resources/models 瀹屾暣鎴栬繍琛?npm run prepare:embedding-models'
+          : `妯″瀷 ${modelId} 鏈氨缁猔
         return { ok: false, error: hint }
       }
     }
 
-    // 更新 settings
+    // 鏇存柊 settings
     saveSettings({ embeddingActiveModel: modelId as 'bge-small-zh' | 'bge-small-en' | 'm3e-small' | 'bge-base-zh' | 'none' })
 
-    // 作废旧 provider + 引擎缓存，下次对话自动重建
+    // 浣滃簾鏃?provider + 寮曟搸缂撳瓨锛屼笅娆″璇濊嚜鍔ㄩ噸寤?
     invalidateEmbeddingProvider(root)
     invalidateEngineCache(root)
 
     return { ok: true, modelId }
   })
 
-  /** 下载 embedding 模型（支持断点续传） */
+  /** 涓嬭浇 embedding 妯″瀷锛堟敮鎸佹柇鐐圭画浼狅級 */
   ipcMain.handle('embedding:download', async (event, modelId: string) => {
     const root = currentDataRoot()
     const result = await downloadModel(
@@ -356,7 +356,7 @@ export function registerDataIpc(): void {
       (progress) => event.sender.send('embedding:downloadProgress', { modelId, ...progress })
     )
     if (result.ok) {
-      // 下载成功后自动切换
+      // 涓嬭浇鎴愬姛鍚庤嚜鍔ㄥ垏鎹?
       saveSettings({ embeddingActiveModel: modelId as 'bge-small-zh' | 'bge-small-en' | 'm3e-small' | 'bge-base-zh' | 'none' })
       invalidateEmbeddingProvider(root)
       invalidateEngineCache(root)
@@ -364,13 +364,13 @@ export function registerDataIpc(): void {
     return result
   })
 
-  /** 取消正在进行的下载 */
+  /** 鍙栨秷姝ｅ湪杩涜鐨勪笅杞?*/
   ipcMain.handle('embedding:downloadCancel', (_e, modelId: string) => {
     cancelDownload(modelId)
     return { ok: true }
   })
 
-  /** FIX-020：近期 proactiveGate 决策日志（可观测 + 规则路由输入） */
+  /** FIX-020锛氳繎鏈?proactiveGate 鍐崇瓥鏃ュ織锛堝彲瑙傛祴 + 瑙勫垯璺敱杈撳叆锛?*/
   ipcMain.handle('policy:decisionLogRecent', (_e, limit = 20) => {
     const root = currentDataRoot()
     const logs = listRecentDecisionLogs(root, Number(limit) || 20)

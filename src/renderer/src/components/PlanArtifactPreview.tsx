@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+﻿import { useCallback, useEffect, useMemo, useState } from 'react'
 import { t } from '../lib/i18n'
 
 type ArtifactTab = 'manifest.json' | 'skill.json' | 'plugin.meta.json'
@@ -49,23 +49,23 @@ export function PlanArtifactPreview({
     setError(null)
     try {
       if (deployedExtensionId) {
-        const r = await window.ackem.openforu.readArtifact(deployedExtensionId)
+        const r = await window.Ackem.openforu.readArtifact(deployedExtensionId)
         if (r.ok && r.files) {
           setFiles(r.files as Partial<Record<ArtifactTab, string>>)
           setSource('deployed')
           setDirLabel(r.dirRel ?? deployedExtensionId)
         } else {
-          setError(r.error ?? '读取产物失败')
+          setError(r.error ?? '璇诲彇浜х墿澶辫触')
           setFiles(null)
         }
       } else {
-        const r = await window.ackem.openforu.previewArtifact(sessionId)
+        const r = await window.Ackem.openforu.previewArtifact(sessionId)
         if (r.ok && r.files) {
           setFiles(r.files as Partial<Record<ArtifactTab, string>>)
           setSource(r.source === 'staging' ? 'staging' : 'preview')
           setDirLabel(r.dirRel ?? r.extensionId ?? r.uskillId ?? '')
         } else {
-          setError(r.error ?? '暂无法预览（需先完善方案）')
+          setError(r.error ?? '鏆傛棤娉曢瑙堬紙闇€鍏堝畬鍠勬柟妗堬級')
           setFiles(null)
         }
       }
@@ -84,14 +84,14 @@ export function PlanArtifactPreview({
   const activeText = files?.[tab] ?? ''
   const emptyHint =
     artifactKind === 'uplugin'
-      ? '完善方案后可预览 manifest / plugin.meta.json'
-      : '完善方案后可预览 manifest / skill.json'
+      ? '瀹屽杽鏂规鍚庡彲棰勮 manifest / plugin.meta.json'
+      : '瀹屽杽鏂规鍚庡彲棰勮 manifest / skill.json'
 
   return (
     <div className="plan-artifact-preview rounded-lg border border-surface-inset/40 bg-surface-inset/10 p-2.5">
       <div className="mb-2 flex items-center justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-[11px] font-medium text-ink">产物预览</p>
+          <p className="text-[11px] font-medium text-ink">浜х墿棰勮</p>
           {dirLabel ? (
             <p className="truncate font-mono text-[9px] text-ink-muted">{dirLabel}</p>
           ) : null}
@@ -107,10 +107,10 @@ export function PlanArtifactPreview({
             }`}
           >
             {source === 'deployed'
-              ? '已部署'
+              ? '宸查儴缃?
               : source === 'staging'
                 ? 'staging'
-                : '预览'}
+                : '棰勮'}
           </span>
         ) : null}
       </div>

@@ -1,4 +1,4 @@
-// [S-16] 计划书 — Markdown 可执行计划纸面卡
+﻿// [S-16] 璁″垝涔?鈥?Markdown 鍙墽琛岃鍒掔焊闈㈠崱
 
 import type { SkillManifest } from '../../../types'
 import type { DispatchConfig } from '../../../../protocols'
@@ -8,22 +8,22 @@ const PLAN_DOCUMENT_DISPATCH: DispatchConfig = {
   subtype: 'llm_function_call',
   time: { active_hours: '00:00-23:59', cooldown_minutes: 0 },
   habits: [
-    '用户说「写计划书」「帮我规划」「做个计划」「排个计划」',
-    '用户要可保存、可执行的 Markdown 计划（非 OpenForU 扩展设计）'
+    '鐢ㄦ埛璇淬€屽啓璁″垝涔︺€嶃€屽府鎴戣鍒掋€嶃€屽仛涓鍒掋€嶃€屾帓涓鍒掋€?,
+    '鐢ㄦ埛瑕佸彲淇濆瓨銆佸彲鎵ц鐨?Markdown 璁″垝锛堥潪 OpenForU 鎵╁睍璁捐锛?
   ],
-  scenarios: ['旅行/学习/项目/生活安排等需要分步计划'],
-  summary: '生成 Markdown 计划书纸面卡 + 伴侣短评（不联网）。',
-  keywords: ['计划', '计划书', '规划', '安排', '行程'],
+  scenarios: ['鏃呰/瀛︿範/椤圭洰/鐢熸椿瀹夋帓绛夐渶瑕佸垎姝ヨ鍒?],
+  summary: '鐢熸垚 Markdown 璁″垝涔︾焊闈㈠崱 + 浼翠荆鐭瘎锛堜笉鑱旂綉锛夈€?,
+  keywords: ['璁″垝', '璁″垝涔?, '瑙勫垝', '瀹夋帓', '琛岀▼'],
   personality_hint: 'neutral'
 }
 
 export const PLAN_DOCUMENT_MANIFEST: SkillManifest = {
-  id: 'ackem/plan-document@1.0.0',
-  name: '计划书',
+  id: 'Ackem/plan-document@1.0.0',
+  name: '璁″垝涔?,
   version: '1.0.0',
   category: 'skill',
   skillType: 'tool',
-  description: '为用户撰写可保存的 Markdown 计划书（目标、分步任务、风险与下一步）。',
+  description: '涓虹敤鎴锋挵鍐欏彲淇濆瓨鐨?Markdown 璁″垝涔︼紙鐩爣銆佸垎姝ヤ换鍔°€侀闄╀笌涓嬩竴姝ワ級銆?,
   author: 'JasonLiu0826',
   license: 'AGPL-3.0',
   main: 'skill.ts',
@@ -35,13 +35,13 @@ export const PLAN_DOCUMENT_MANIFEST: SkillManifest = {
   functionDef: {
     name: 'generate_plan',
     description:
-      '撰写 Markdown 计划书纸面卡。用于用户明确要求计划/规划/安排（非 Skill 扩展设计、非纯联网搜索）。',
+      '鎾板啓 Markdown 璁″垝涔︾焊闈㈠崱銆傜敤浜庣敤鎴锋槑纭姹傝鍒?瑙勫垝/瀹夋帓锛堥潪 Skill 鎵╁睍璁捐銆侀潪绾仈缃戞悳绱級銆?,
     parameters: {
       type: 'object',
       properties: {
         topic: {
           type: 'string',
-          description: '计划主题，从用户原话提取'
+          description: '璁″垝涓婚锛屼粠鐢ㄦ埛鍘熻瘽鎻愬彇'
         }
       },
       required: ['topic']

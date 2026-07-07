@@ -1,15 +1,15 @@
-// [semanticSearch] — 轻量级语义搜索（非向量，关键词 Jaccard 模糊匹配）
-// 职责：从用户消息提取关键词，与事实 subject+summary 做字符集相似度
-// 对标 LangChain VectorStoreRetriever 的语义匹配，但不依赖 embedding 模型
-// 引用：../engine/ackemParams, ../engine/types
+﻿// [semanticSearch] 鈥?杞婚噺绾ц涔夋悳绱紙闈炲悜閲忥紝鍏抽敭璇?Jaccard 妯＄硦鍖归厤锛?
+// 鑱岃矗锛氫粠鐢ㄦ埛娑堟伅鎻愬彇鍏抽敭璇嶏紝涓庝簨瀹?subject+summary 鍋氬瓧绗﹂泦鐩镐技搴?
+// 瀵规爣 LangChain VectorStoreRetriever 鐨勮涔夊尮閰嶏紝浣嗕笉渚濊禆 embedding 妯″瀷
+// 寮曠敤锛?./engine/AckemParams, ../engine/types
 
-import { SEMANTIC_KEYWORD_WEIGHT_MULTIPLIER, SEMANTIC_MIN_KEYWORD_LENGTH, SEMANTIC_SEARCH_MIN_SIMILARITY, SEMANTIC_SEARCH_TOP_K } from '../engine/ackemParams'
+import { SEMANTIC_KEYWORD_WEIGHT_MULTIPLIER, SEMANTIC_MIN_KEYWORD_LENGTH, SEMANTIC_SEARCH_MIN_SIMILARITY, SEMANTIC_SEARCH_TOP_K } from '../engine/AckemParams'
 import type { MemoryFact } from '../engine/types'
 
 function extractKeywords(text: string): string[] {
   return text
     .toLowerCase()
-    .split(/[，。！？、；：""''（）【】《》\s,.!?;:()\[\]{}"']+/u)
+    .split(/[锛屻€傦紒锛熴€侊紱锛?"''锛堬級銆愩€戙€娿€媆s,.!?;:()\[\]{}"']+/u)
     .map(t => t.trim())
     .filter(t => t.length >= SEMANTIC_MIN_KEYWORD_LENGTH)
     .filter(t => !/^\d+$/.test(t))

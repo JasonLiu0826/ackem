@@ -1,12 +1,12 @@
-// [paperCard/ackemProductIdentity] — 纸面卡/检索：Ackem 产品身份，不暴露底层模型
+﻿// [paperCard/AckemProductIdentity] 鈥?绾搁潰鍗?妫€绱細Ackem 浜у搧韬唤锛屼笉鏆撮湶搴曞眰妯″瀷
 
-/** 用户是否在拿「你/Ackem」与其他产品对比或问自身能力 */
+/** 鐢ㄦ埛鏄惁鍦ㄦ嬁銆屼綘/Ackem銆嶄笌鍏朵粬浜у搧瀵规瘮鎴栭棶鑷韩鑳藉姏 */
 export function userRefersToAckemSelf(text: string): boolean {
   const t = text.trim()
   if (!t) return false
-  if (/你都有啥|你有什么功能|你是啥|你叫什么|Ackem/u.test(t)) return true
-  if (/对比|比较|区别|差别|vs/i.test(t) && /(?:你|您|Ackem|这边)/u.test(t)) return true
-  if (/(?:你|Ackem).{0,16}(?:和|与|跟|还是).{0,24}(?:Codex|Cursor|Claude|Copilot|ChatGPT)/iu.test(t)) {
+  if (/浣犻兘鏈夊暐|浣犳湁浠€涔堝姛鑳絴浣犳槸鍟浣犲彨浠€涔坾Ackem/u.test(t)) return true
+  if (/瀵规瘮|姣旇緝|鍖哄埆|宸埆|vs/i.test(t) && /(?:浣爘鎮▅Ackem|杩欒竟)/u.test(t)) return true
+  if (/(?:浣爘Ackem).{0,16}(?:鍜寍涓巪璺焲杩樻槸).{0,24}(?:Codex|Cursor|Claude|Copilot|ChatGPT)/iu.test(t)) {
     return true
   }
   return false
@@ -24,24 +24,24 @@ export function extractCompareTargetProducts(text: string): string[] {
   return [...found]
 }
 
-export const ACKEM_PRODUCT_IDENTITY_GUARD =
-  '\n\n【身份 · 硬性 · Ackem】\n' +
-  '- 你就是 **Ackem**（桌面 AI 伴侣应用），用「我 / Ackem」指代自己。\n' +
-  '- **禁止**自称或暗示自己是底层大模型/API 名称（DeepSeek、GPT、Claude、Gemini、Qwen、通义等）。\n' +
-  '- **不知道**用户设置里接的是哪家 API；不得把 API 提供商当成「你」。\n' +
-  '- 用户问「你」的功能、或拿「你」与其他工具对比时：写 **Ackem 产品能力**（长期记忆与人格情绪、知识整理/计划书/对比表、联网搜索、微信连发、扩展 Skill、游戏模式等），不是某个基座模型的参数榜单。\n' +
-  '- 检索结果若在大谈某开源/闭源模型：那是第三方信息；**不得**把该模型写成「我」或 Ackem 的代称。\n'
+export const Ackem_PRODUCT_IDENTITY_GUARD =
+  '\n\n銆愯韩浠?路 纭€?路 Ackem銆慭n' +
+  '- 浣犲氨鏄?**Ackem**锛堟闈?AI 浼翠荆搴旂敤锛夛紝鐢ㄣ€屾垜 / Ackem銆嶆寚浠ｈ嚜宸便€俓n' +
+  '- **绂佹**鑷О鎴栨殫绀鸿嚜宸辨槸搴曞眰澶фā鍨?API 鍚嶇О锛圖eepSeek銆丟PT銆丆laude銆丟emini銆丵wen銆侀€氫箟绛夛級銆俓n' +
+  '- **涓嶇煡閬?*鐢ㄦ埛璁剧疆閲屾帴鐨勬槸鍝 API锛涗笉寰楁妸 API 鎻愪緵鍟嗗綋鎴愩€屼綘銆嶃€俓n' +
+  '- 鐢ㄦ埛闂€屼綘銆嶇殑鍔熻兘銆佹垨鎷裤€屼綘銆嶄笌鍏朵粬宸ュ叿瀵规瘮鏃讹細鍐?**Ackem 浜у搧鑳藉姏**锛堥暱鏈熻蹇嗕笌浜烘牸鎯呯华銆佺煡璇嗘暣鐞?璁″垝涔?瀵规瘮琛ㄣ€佽仈缃戞悳绱€佸井淇¤繛鍙戙€佹墿灞?Skill銆佹父鎴忔ā寮忕瓑锛夛紝涓嶆槸鏌愪釜鍩哄骇妯″瀷鐨勫弬鏁版鍗曘€俓n' +
+  '- 妫€绱㈢粨鏋滆嫢鍦ㄥぇ璋堟煇寮€婧?闂簮妯″瀷锛氶偅鏄涓夋柟淇℃伅锛?*涓嶅緱**鎶婅妯″瀷鍐欐垚銆屾垜銆嶆垨 Ackem 鐨勪唬绉般€俓n'
 
 export function buildAckemCompareCardBlock(userQuestion: string): string {
   if (!userRefersToAckemSelf(userQuestion)) return ''
   const others = extractCompareTargetProducts(userQuestion)
-  const otherHint = others.length ? `用户点名的对比方包括：${others.join('、')}。` : ''
+  const otherHint = others.length ? `鐢ㄦ埛鐐瑰悕鐨勫姣旀柟鍖呮嫭锛?{others.join('銆?)}銆俙 : ''
   return (
-    '\n\n【对比任务 · Ackem 必须在场】\n' +
-    '用户正在拿 **Ackem（你）** 与其他产品比较。表格/正文里代表「你」的一方 **必须写 Ackem**，描述 Ackem 应用能力。\n' +
-    '**禁止**用 DeepSeek / GPT / Claude 等模型名替代 Ackem。\n' +
+    '\n\n銆愬姣斾换鍔?路 Ackem 蹇呴』鍦ㄥ満銆慭n' +
+    '鐢ㄦ埛姝ｅ湪鎷?**Ackem锛堜綘锛?* 涓庡叾浠栦骇鍝佹瘮杈冦€傝〃鏍?姝ｆ枃閲屼唬琛ㄣ€屼綘銆嶇殑涓€鏂?**蹇呴』鍐?Ackem**锛屾弿杩?Ackem 搴旂敤鑳藉姏銆俓n' +
+    '**绂佹**鐢?DeepSeek / GPT / Claude 绛夋ā鍨嬪悕鏇夸唬 Ackem銆俓n' +
     otherHint +
-    '其他列按用户点名的产品如实填写；搜到的模型 API 资料只能描述对方或行业背景，不能当成「我」。\n'
+    '鍏朵粬鍒楁寜鐢ㄦ埛鐐瑰悕鐨勪骇鍝佸瀹炲～鍐欙紱鎼滃埌鐨勬ā鍨?API 璧勬枡鍙兘鎻忚堪瀵规柟鎴栬涓氳儗鏅紝涓嶈兘褰撴垚銆屾垜銆嶃€俓n'
   )
 }
 
@@ -63,7 +63,7 @@ export function buildAckemAwareSearchQueries(
     const targets = extractCompareTargetProducts(userMessage)
     const tail = targets.length ? ` vs ${targets.join(' vs ')} comparison` : ' features capabilities'
     push(`Ackem AI companion desktop app${tail}`)
-    push('Ackem 伴侣 记忆 人格 功能')
+    push('Ackem 浼翠荆 璁板繂 浜烘牸 鍔熻兘')
   }
 
   for (const q of queries) push(q)
@@ -73,29 +73,29 @@ export function buildAckemAwareSearchQueries(
 }
 
 const WRONG_SELF_MODEL_RE =
-  /DeepSeek(?:\s*\([^)]*\))?|GPT-?[\d.o]+|Claude(?:\s*\d+)?(?:\s*Code)?|Gemini(?:\s*\d+)?|Qwen|通义千问|文心一言/gi
+  /DeepSeek(?:\s*\([^)]*\))?|GPT-?[\d.o]+|Claude(?:\s*\d+)?(?:\s*Code)?|Gemini(?:\s*\d+)?|Qwen|閫氫箟鍗冮棶|鏂囧績涓€瑷€/gi
 
-/** 对比任务后处理：把误写成底层模型的「己方」改回 Ackem */
+/** 瀵规瘮浠诲姟鍚庡鐞嗭細鎶婅鍐欐垚搴曞眰妯″瀷鐨勩€屽繁鏂广€嶆敼鍥?Ackem */
 export function sanitizeAckemIdentityInMarkdown(body: string, userQuestion: string): string {
   if (!userRefersToAckemSelf(userQuestion) || !body.trim()) return body
 
   let out = body
 
-  out = out.replace(/【对比[：:]\s*([^】\n]+)】/gu, (match, inner: string) => {
+  out = out.replace(/銆愬姣擺锛?]\s*([^銆慭n]+)銆?gu, (match, inner: string) => {
     const parts = inner.split(/\s+vs\s+/i)
     if (parts.length >= 2 && WRONG_SELF_MODEL_RE.test(parts[0])) {
       parts[0] = 'Ackem'
-      return `【对比：${parts.join(' vs ')}】`
+      return `銆愬姣旓細${parts.join(' vs ')}銆慲
     }
     return match
   })
 
-  out = out.replace(/^▎\s*DeepSeek[^\n]*/gim, '▎Ackem')
+  out = out.replace(/^鈻嶾s*DeepSeek[^\n]*/gim, '鈻嶣ritney')
   out = out.replace(/^#{1,3}\s+DeepSeek[^\n]*/gim, '## Ackem')
   out = out.replace(/\|\s*DeepSeek[^|\n]*\|/gi, '| Ackem |')
 
   out = out.replace(
-    /(▎\s*)(DeepSeek(?:\s*\([^)]*\))?)(\s*[\r\n])/gi,
+    /(鈻嶾s*)(DeepSeek(?:\s*\([^)]*\))?)(\s*[\r\n])/gi,
     '$1Ackem$3'
   )
 

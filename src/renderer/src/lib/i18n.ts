@@ -1,5 +1,5 @@
-// [renderer/i18n] — 渲染进程 i18n 工具
-// IPC + 本地缓存：启动时一次性拉取翻译 Map，之后纯内存查表
+﻿// [renderer/i18n] 鈥?娓叉煋杩涚▼ i18n 宸ュ叿
+// IPC + 鏈湴缂撳瓨锛氬惎鍔ㄦ椂涓€娆℃€ф媺鍙栫炕璇?Map锛屼箣鍚庣函鍐呭瓨鏌ヨ〃
 
 import {
   rendererI18nOverlayEn,
@@ -19,7 +19,7 @@ function bumpI18nVersion(): void {
   for (const fn of i18nListeners) fn()
 }
 
-/** 订阅 i18n 资源更新（preload / refresh 完成后触发重渲染） */
+/** 璁㈤槄 i18n 璧勬簮鏇存柊锛坧reload / refresh 瀹屾垚鍚庤Е鍙戦噸娓叉煋锛?*/
 export function subscribeI18n(onStoreChange: () => void): () => void {
   i18nListeners.add(onStoreChange)
   return () => i18nListeners.delete(onStoreChange)
@@ -29,17 +29,17 @@ export function getI18nVersion(): number {
   return i18nVersion
 }
 
-/** 启动时调用一次，拉取全部翻译资源 */
+/** 鍚姩鏃惰皟鐢ㄤ竴娆★紝鎷夊彇鍏ㄩ儴缈昏瘧璧勬簮 */
 export async function preloadI18n(): Promise<void> {
   if (initPromise) return initPromise
   initPromise = (async () => {
     try {
-      const res = await window.ackem.i18n.getAllResources()
+      const res = await window.Ackem.i18n.getAllResources()
       resources = res
       currentLocale = res.locale
       bumpI18nVersion()
     } catch {
-      // 拉取失败时用空资源，t() 会回退到 key 本身
+      // 鎷夊彇澶辫触鏃剁敤绌鸿祫婧愶紝t() 浼氬洖閫€鍒?key 鏈韩
       resources = { zh: {}, en: {}, locale: 'zh' }
       currentLocale = 'zh'
       bumpI18nVersion()
@@ -48,18 +48,18 @@ export async function preloadI18n(): Promise<void> {
   return initPromise
 }
 
-/** 获取当前 locale */
+/** 鑾峰彇褰撳墠 locale */
 export function getLocale(): string {
   return currentLocale
 }
 
-/** 切换 locale（同步更新本地缓存） */
+/** 鍒囨崲 locale锛堝悓姝ユ洿鏂版湰鍦扮紦瀛橈級 */
 export async function setLocale(locale: string): Promise<void> {
-  await window.ackem.i18n.setLocale(locale)
+  await window.Ackem.i18n.setLocale(locale)
   currentLocale = locale
 }
 
-/** 翻译函数 */
+/** 缈昏瘧鍑芥暟 */
 export function t(key: string, params?: Record<string, string | number>): string {
   const overlay = currentLocale === 'en' ? rendererI18nOverlayEn : rendererI18nOverlayZh
   if (!resources) {
@@ -81,10 +81,10 @@ export function t(key: string, params?: Record<string, string | number>): string
   return value
 }
 
-/** 刷新缓存（语言切换后调用） */
+/** 鍒锋柊缂撳瓨锛堣瑷€鍒囨崲鍚庤皟鐢級 */
 export async function refreshI18n(): Promise<void> {
   try {
-    const res = await window.ackem.i18n.getAllResources()
+    const res = await window.Ackem.i18n.getAllResources()
     resources = res
     currentLocale = res.locale
     bumpI18nVersion()

@@ -1,4 +1,4 @@
-# 💫 Ackem
+﻿# 馃挮 Ackem
 
 ![Version](https://img.shields.io/badge/Version-1.0.0-orange?style=for-the-badge)
 ![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)
@@ -7,78 +7,78 @@
 ![OpenAI Compatible](https://img.shields.io/badge/API-OpenAI--Compatible-412991?style=for-the-badge&logo=openai&logoColor=white)
 ![Electron](https://img.shields.io/badge/Built_with-Electron-47848F?style=for-the-badge&logo=electron&logoColor=white)
 
-**Ackem** · **A**.C.K.E.M — **A**utonomous **C**ompanion **K**eeping **E**motional **M**emory  
-*保持情感记忆的自主伙伴*
+**Ackem** 路 **A**.C.K.E.M 鈥?**A**utonomous **C**ompanion **K**eeping **E**motional **M**emory  
+*淇濇寔鎯呮劅璁板繂鐨勮嚜涓讳紮浼?
 
-**Ackem v1.0.0** — A **local-first** AI companion for Windows. Bring your own LLM (cloud or local); Ackem handles chat, memory, emotion, relationship state, and desktop presence — **all on your hard drive**.
+**Ackem v1.0.0** 鈥?A **local-first** AI companion for Windows. Bring your own LLM (cloud or local); Ackem handles chat, memory, emotion, relationship state, and desktop presence 鈥?**all on your hard drive**.
 
-> **Source**: [GitHub](https://github.com/JasonLiu0826/Ackem) · [Gitee mirror](https://gitee.com/jason_2005/ackem)  
-> **Download**: [GitHub Releases](https://github.com/JasonLiu0826/Ackem/releases) · [Gitee Releases](https://gitee.com/jason_2005/ackem/releases)  
-> **Build**: `npm run dist:green` → `dist/release/Ackem-1.0.0-win-x64/` · [Path map](./docs/CODEBASE-PATHS.md) · [Docs languages](./docs/I18N.md)  
-> **Status:** Ackem is still in **active testing**. As a solo-maintained project, test coverage is limited — you may hit unexpected behavior or rough edges. Frequent crashes and severe lag are uncommon, but imperfections still happen. [Open an Issue](https://github.com/JasonLiu0826/Ackem/issues) if something feels off.
+> **Source**: [GitHub](https://github.com/JasonLiu0826/Ackem) 路 [Gitee mirror](https://gitee.com/jason_2005/Ackem)  
+> **Download**: [GitHub Releases](https://github.com/JasonLiu0826/Ackem/releases) 路 [Gitee Releases](https://gitee.com/jason_2005/Ackem/releases)  
+> **Build**: `npm run dist:green` 鈫?`dist/release/Ackem-1.0.0-win-x64/` 路 [Path map](./docs/CODEBASE-PATHS.md) 路 [Docs languages](./docs/I18N.md)  
+> **Status:** Ackem is still in **active testing**. As a solo-maintained project, test coverage is limited 鈥?you may hit unexpected behavior or rough edges. Frequent crashes and severe lag are uncommon, but imperfections still happen. [Open an Issue](https://github.com/JasonLiu0826/Ackem/issues) if something feels off.
 
-[中文文档](./README.zh.md) · [Privacy & data (EN)](./docs/privacy-and-data.md)
+[涓枃鏂囨。](./README.zh.md) 路 [Privacy & data (EN)](./docs/privacy-and-data.md)
 
 ---
 
 ## At a glance
 
-Ackem is **not** a web chat box — it is a Windows desktop app that stays with you: tray, optional desktop pet, structured memory, and a companion that remembers context over time.
+Ackem is **not** a web chat box 鈥?it is a Windows desktop app that stays with you: tray, optional desktop pet, structured memory, and a companion that remembers context over time.
 
 | | |
 |---|---|
-| 💬 **Chat** | Any OpenAI-compatible API — DeepSeek, OpenAI, Ollama, LM Studio, etc. |
-| 🧠 **Memory** | Conversations become searchable memory; import `.txt` / `.md` as long-term context |
-| 💞 **Companion** | Trust, mood, relationship stage, personality presets, diary, optional proactive messages |
-| 🔒 **Local-first** | Personal data lives in `./data/` next to the exe — **not** bundled in the release zip |
+| 馃挰 **Chat** | Any OpenAI-compatible API 鈥?DeepSeek, OpenAI, Ollama, LM Studio, etc. |
+| 馃 **Memory** | Conversations become searchable memory; import `.txt` / `.md` as long-term context |
+| 馃挒 **Companion** | Trust, mood, relationship stage, personality presets, diary, optional proactive messages |
+| 馃敀 **Local-first** | Personal data lives in `./data/` next to the exe 鈥?**not** bundled in the release zip |
 
-**You need:** Windows 10/11 64-bit · an LLM API key or local server · ~10–30 s on first launch (embedding model extracts once). **No Node.js required** for the green release.
+**You need:** Windows 10/11 64-bit 路 an LLM API key or local server 路 ~10鈥?0 s on first launch (embedding model extracts once). **No Node.js required** for the green release.
 
 ---
 
 ## Screenshots & demo
 
 <details>
-<summary><strong>📷 Screenshots</strong> (click to expand)</summary>
+<summary><strong>馃摲 Screenshots</strong> (click to expand)</summary>
 
 <p align="center">
   <img src="./docs/images/01-loading.png" alt="Loading screen" width="640" />
-  <br /><em>Loading — first launch extracts the local embedding model; main UI opens when the bar completes</em>
+  <br /><em>Loading 鈥?first launch extracts the local embedding model; main UI opens when the bar completes</em>
 </p>
 
 <p align="center">
   <img src="./docs/images/02-home.png" alt="Home" width="640" />
-  <br /><em>Home — chat, memory, games, extensions, settings; relationship & pet preview on the right</em>
+  <br /><em>Home 鈥?chat, memory, games, extensions, settings; relationship & pet preview on the right</em>
 </p>
 
 <p align="center">
   <img src="./docs/images/03-memory-graph.jpg" alt="Memory visualization" width="640" />
-  <br /><em>Memory — structured recall, timelines, and knowledge connections from your conversations</em>
+  <br /><em>Memory 鈥?structured recall, timelines, and knowledge connections from your conversations</em>
 </p>
 
 <p align="center">
   <img src="./docs/images/03-settings.png" alt="Settings" width="640" />
-  <br /><em>Settings — personality, voice, desktop pet, WeChat bridge, extensions, data</em>
+  <br /><em>Settings 鈥?personality, voice, desktop pet, WeChat bridge, extensions, data</em>
 </p>
 
 <p align="center">
   <img src="./docs/images/04-model-api.png" alt="Model & API" width="640" />
-  <br /><em>Model & API — Base URL, API Key, Model ID</em>
+  <br /><em>Model & API 鈥?Base URL, API Key, Model ID</em>
 </p>
 
 <p align="center">
   <img src="./docs/images/05-compliance.png" alt="Compliance" width="640" />
-  <br /><em>Compliance — privacy, data handling, and adult-mode terms on first run</em>
+  <br /><em>Compliance 鈥?privacy, data handling, and adult-mode terms on first run</em>
 </p>
 
 </details>
 
 <details>
-<summary><strong>🎬 Demo GIFs</strong> (click to expand)</summary>
+<summary><strong>馃幀 Demo GIFs</strong> (click to expand)</summary>
 
 <p align="center">
   <img src="./docs/images/01-download-open.gif" alt="Download and open" width="640" />
-  <br /><em>Download zip → extract → launch Ackem.exe → wait for loading → main UI</em>
+  <br /><em>Download zip 鈫?extract 鈫?launch Ackem.exe 鈫?wait for loading 鈫?main UI</em>
 </p>
 
 <p align="center">
@@ -98,18 +98,18 @@ Ackem is a **local-first** Windows desktop application: you configure your LLM e
 
 ### What you can do
 
-- **Chat like with a person** — OpenAI-compatible cloud or local Ollama / LM Studio; configure under **Settings → Model & API**.
-- **Remember what you talk about** — structured memory, search, timelines, knowledge graph; **import** `.txt` / `.md` as long-term memory.
-- **Continuous companionship** — trust, mood, relationship stage, personality presets, companion **diary**, optional proactive outreach.
-- **Beyond the main window** — system tray; optional **desktop pet** (geometric orb + Live2D preview).
-- **Optional capabilities** — voice STT/TTS, **WeChat** bridge (phone messages, brain on PC), **Extension Center**, experimental **Plan · OpenForU** workspace.
-- **Game mode** — experimental; play supported games (e.g. Minecraft) with your companion when extensions allow.
+- **Chat like with a person** 鈥?OpenAI-compatible cloud or local Ollama / LM Studio; configure under **Settings 鈫?Model & API**.
+- **Remember what you talk about** 鈥?structured memory, search, timelines, knowledge graph; **import** `.txt` / `.md` as long-term memory.
+- **Continuous companionship** 鈥?trust, mood, relationship stage, personality presets, companion **diary**, optional proactive outreach.
+- **Beyond the main window** 鈥?system tray; optional **desktop pet** (geometric orb + Live2D preview).
+- **Optional capabilities** 鈥?voice STT/TTS, **WeChat** bridge (phone messages, brain on PC), **Extension Center**, experimental **Plan 路 OpenForU** workspace.
+- **Game mode** 鈥?experimental; play supported games (e.g. Minecraft) with your companion when extensions allow.
 
 ### Where your data lives
 
-Portable green release stores everything under **`data/`** next to `Ackem.exe`: chats, memories, diaries, API keys in settings. **The official zip does not include `data/`** — an empty folder is created on first run. No default telemetry to an Ackem server.
+Portable green release stores everything under **`data/`** next to `Ackem.exe`: chats, memories, diaries, API keys in settings. **The official zip does not include `data/`** 鈥?an empty folder is created on first run. No default telemetry to an Ackem server.
 
-Backup, migration, deletion: [docs/memory-format.md](./docs/memory-format.md) · [docs/distribution-windows.md](./docs/distribution-windows.md)
+Backup, migration, deletion: [docs/memory-format.md](./docs/memory-format.md) 路 [docs/distribution-windows.md](./docs/distribution-windows.md)
 
 ### For developers
 
@@ -133,38 +133,25 @@ Details: [docs/distribution-windows.md](./docs/distribution-windows.md)
 
 ### Steps
 
-1. **Download** — `Ackem-v1.0.0-win-x64.zip` from [GitHub Releases](https://github.com/JasonLiu0826/Ackem/releases) or [Gitee Releases](https://gitee.com/jason_2005/ackem/releases)
-2. **Extract** — fully to an SSD path (do not run inside the zip)
-3. **Launch** — `Ackem.exe` or `启动 Ackem.bat`; first launch ~10–30 s ([loading screen](#screenshots--demo))
-4. **Compliance** — accept privacy terms ([screenshot](#screenshots--demo))
-5. **Configure model** — **Settings → Model & API**: Base URL, API Key (cloud), Model ID
-6. **First chat** — send a message; optionally import `.txt`/`.md` memories
+1. **Download** 鈥?`Ackem-v1.0.0-win-x64.zip` from [GitHub Releases](https://github.com/JasonLiu0826/Ackem/releases) or [Gitee Releases](https://gitee.com/jason_2005/Ackem/releases)
+2. **Extract** 鈥?fully to an SSD path (do not run inside the zip)
+3. **Launch** 鈥?`Ackem.exe` or `鍚姩 Ackem.bat`; first launch ~10鈥?0 s ([loading screen](#screenshots--demo))
+4. **Compliance** 鈥?accept privacy terms ([screenshot](#screenshots--demo))
+5. **Configure model** 鈥?**Settings 鈫?Model & API**: Base URL, API Key (cloud), Model ID
+6. **First chat** 鈥?send a message; optionally import `.txt`/`.md` memories
 
-> **Sharing the zip:** never re-pack your personal `data/` folder — it contains chats, memory, and keys.
-
-### macOS (community build, unofficial) {#macos-community-build-unofficial}
-
-> **Official support:** Windows green release only. The Mac builds below are **community-contributed** by [@deufe](https://github.com/deufe) — not maintained or fully verified by the core team. See [Issue #4](https://github.com/JasonLiu0826/ackem/issues/4).
-
-| File | Architecture | Download |
-|------|----------------|----------|
-| `Ackem-1.0.0-mac-arm64.dmg` | Apple Silicon (M series) | [v3 DMG](https://github.com/deufe/ackem/releases/download/v1.0.0-mac-community-v3/Ackem-1.0.0-mac-arm64.dmg) |
-| `Ackem-1.0.0-mac-x64.dmg` | Intel Mac | [v3 DMG](https://github.com/deufe/ackem/releases/download/v1.0.0-mac-community-v3/Ackem-1.0.0-mac-x64.dmg) |
-
-**Use v3 only** (v1/v2 are outdated). SHA256 and install steps: [v1.0.0 Release notes](https://github.com/JasonLiu0826/ackem/releases/tag/v1.0.0) · [appendix doc](./docs/releases/v1.0.0-mac-community-appendix.md)
-
-**First launch (Gatekeeper):** the build is not Apple-signed. After copying to `/Applications`, run `xattr -cr /Applications/Ackem.app`, then **right-click → Open** once. In-app auto-update is **Windows-only**.
+> **Sharing the zip:** never re-pack your personal `data/` folder 鈥?it contains chats, memory, and keys.
 
 ---
 
 ## Developers
 
-> Ackem is an **Electron app**. The renderer depends on `window.ackem` (preload IPC).  
-> Use **`npm run dev`** — do not open the Vite URL in a browser alone.
+> Ackem is an **Electron app**. The renderer depends on `window.Ackem` (preload IPC).  
+> Use **`npm run dev`** 鈥?do not open the Vite URL in a browser alone.
 
 ### Prerequisites
 
-- Windows 10/11 · Node.js **20+** · `npm ci`
+- Windows 10/11 路 Node.js **20+** 路 `npm ci`
 
 ### Daily development
 
@@ -179,8 +166,8 @@ Dev `data/` is in the repo working tree, separate from green release `data/` nex
 ### Build & package
 
 ```bash
-npm run build          # Compile → out/
-npm run dist:green     # Green release → dist/release/
+npm run build          # Compile 鈫?out/
+npm run dist:green     # Green release 鈫?dist/release/
 npm run dist:setup     # Optional NSIS installer
 ```
 
@@ -198,15 +185,15 @@ npm run test:renderer
 
 | # | System | Description | Docs |
 |---|--------|-------------|------|
-| ① | Overall | Electron shell, orchestrator, conversation lifecycle | [00-overall-system.md](./docs/developer/architecture/00-overall-system.md) |
-| ② | Brain | L0 understanding + L4 memory retrieval & decay | [01-brain-system.md](./docs/developer/architecture/01-brain-system.md) |
-| ③ | Heart | L1 relationship + L2 emotion + L3 expression | [02-heart-system.md](./docs/developer/architecture/02-heart-system.md) |
-| ④ | Mouth | Prompt assembly + LLM calling | [03-mouth-system.md](./docs/developer/architecture/03-mouth-system.md) |
-| ⑤ | Neural | Embedding / vector retrieval | [04-neural-system.md](./docs/developer/architecture/04-neural-system.md) |
-| ⑥ | Extension | Skill/Plugin/Dispatch/OpenForU | [05-extension-system.md](./docs/developer/architecture/05-extension-system.md) |
-| ⑦ | Time | Temporal awareness, circadian rhythm, reunion, reflection | [06-time-system.md](./docs/developer/architecture/06-time-system.md) |
-| — | Data Layer | SQLite schema, Repository pattern, migrations | [07-data-layer.md](./docs/developer/architecture/07-data-layer.md) |
-| — | IPC API | `window.ackem.*` preload bridge, push events | [08-ipc-api.md](./docs/developer/architecture/08-ipc-api.md) |
+| 鈶?| Overall | Electron shell, orchestrator, conversation lifecycle | [00-overall-system.md](./docs/developer/architecture/00-overall-system.md) |
+| 鈶?| Brain | L0 understanding + L4 memory retrieval & decay | [01-brain-system.md](./docs/developer/architecture/01-brain-system.md) |
+| 鈶?| Heart | L1 relationship + L2 emotion + L3 expression | [02-heart-system.md](./docs/developer/architecture/02-heart-system.md) |
+| 鈶?| Mouth | Prompt assembly + LLM calling | [03-mouth-system.md](./docs/developer/architecture/03-mouth-system.md) |
+| 鈶?| Neural | Embedding / vector retrieval | [04-neural-system.md](./docs/developer/architecture/04-neural-system.md) |
+| 鈶?| Extension | Skill/Plugin/Dispatch/OpenForU | [05-extension-system.md](./docs/developer/architecture/05-extension-system.md) |
+| 鈶?| Time | Temporal awareness, circadian rhythm, reunion, reflection | [06-time-system.md](./docs/developer/architecture/06-time-system.md) |
+| 鈥?| Data Layer | SQLite schema, Repository pattern, migrations | [07-data-layer.md](./docs/developer/architecture/07-data-layer.md) |
+| 鈥?| IPC API | `window.Ackem.*` preload bridge, push events | [08-ipc-api.md](./docs/developer/architecture/08-ipc-api.md) |
 
 Index: [docs/developer/architecture/README.md](./docs/developer/architecture/README.md)
 
@@ -214,9 +201,9 @@ Index: [docs/developer/architecture/README.md](./docs/developer/architecture/REA
 
 ## Documentation
 
-> **Languages:** English (`*.md`) · 中文 (`*.zh.md`) — see [I18N.md](./docs/I18N.md)
+> **Languages:** English (`*.md`) 路 涓枃 (`*.zh.md`) 鈥?see [I18N.md](./docs/I18N.md)
 
-| Purpose | English | 中文 |
+| Purpose | English | 涓枃 |
 |---------|---------|------|
 | Repo paths & build | [CODEBASE-PATHS.md](./docs/CODEBASE-PATHS.md) | [CODEBASE-PATHS.zh.md](./docs/CODEBASE-PATHS.zh.md) |
 | Doc map (maintainers) | [OPEN-SOURCE-DOC-MAP.md](./docs/OPEN-SOURCE-DOC-MAP.md) | [OPEN-SOURCE-DOC-MAP.zh.md](./docs/OPEN-SOURCE-DOC-MAP.zh.md) |
@@ -244,13 +231,13 @@ This project is open-sourced under the [AGPL-3.0](./LICENSE) license.
 
 | Use case | Allowed |
 |----------|---------|
-| Personal learning & research | ✅ Yes |
-| Open-source project integration (must remain AGPL-3.0) | ✅ Yes |
-| Academic research & citation | ✅ Yes |
-| Closed-source commercial product | ❌ Commercial license required |
-| SaaS service (source code not provided to users) | ❌ Commercial license required |
-| Enterprise private deployment (not open-sourced) | ❌ Commercial license required |
-| Closed-source API usage (no modification of source) | ⚠️ Gray area, consult us |
+| Personal learning & research | 鉁?Yes |
+| Open-source project integration (must remain AGPL-3.0) | 鉁?Yes |
+| Academic research & citation | 鉁?Yes |
+| Closed-source commercial product | 鉂?Commercial license required |
+| SaaS service (source code not provided to users) | 鉂?Commercial license required |
+| Enterprise private deployment (not open-sourced) | 鉂?Commercial license required |
+| Closed-source API usage (no modification of source) | 鈿狅笍 Gray area, consult us |
 
 ### Commercial Licensing
 
@@ -259,8 +246,6 @@ For commercial use, contact: **jasonliu_lyf_2005@qq.com**
 ### Contributor Agreement
 
 By submitting a contribution to this project, you agree to the [Contributor License Agreement (CLA)](./CLA.md).
-
-Recognized contributors: [CONTRIBUTORS.md](./CONTRIBUTORS.md)
 
 Copyright (C) 2026 Jason Liu (JasonLiu0826)
 

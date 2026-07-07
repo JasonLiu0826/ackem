@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { NavBar } from './components/NavBar'
 import { ChatPage } from './components/ChatPage'
 import { MemoryPage } from './components/MemoryPage'
@@ -16,6 +16,7 @@ import { CommandPalette } from './components/CommandPalette'
 import { PlanPanel } from './components/PlanPanel'
 import { BackgroundTasksPanel } from './components/BackgroundTasksPanel'
 import { PermissionRequestModal } from './components/PermissionRequestModal'
+import { AgentPage } from './components/AgentPage'
 import { KgGraphView } from './components/memory-viz/KgGraphView'
 import { AssocNetworkView } from './components/memory-viz/AssocNetworkView'
 import { EmotionHeatmapView } from './components/memory-viz/EmotionHeatmapView'
@@ -77,7 +78,7 @@ export default function App(): JSX.Element {
   const toast = useAppStore((s) => s.toast)
   const chatResetKey = useAppStore((s) => s.chatResetKey)
   const [bootErr, setBootErr] = useState<string | null>(null)
-  /** 子组件 useEffect 会先于本组件执行；在 IPC 就绪前不得挂载 ChatPage 等，否则会访问 undefined.ackem */
+  /** 瀛愮粍浠?useEffect 浼氬厛浜庢湰缁勪欢鎵ц锛涘湪 IPC 灏辩华鍓嶄笉寰楁寕杞?ChatPage 绛夛紝鍚﹀垯浼氳闂?undefined.Ackem */
   const [bootReady, setBootReady] = useState(false)
   const [permRequest, setPermRequest] = useState<PermissionRequestPayload | null>(null)
 
@@ -86,18 +87,18 @@ export default function App(): JSX.Element {
   const theaterOpen = useUiStore((s) => s.theaterOpen)
 
   useEffect(() => {
-    if (!bootReady || typeof window.ackem === 'undefined') return
-    window.ackem.ui.onExpand((payload) => {
+    if (!bootReady || typeof window.Ackem === 'undefined') return
+    window.Ackem.ui.onExpand((payload) => {
       if (payload.tab) setTab(payload.tab as Tab)
       else setTab('chat')
       requestChatInputFocus()
     })
-    window.ackem.ui.onLevel((p) => {
+    window.Ackem.ui.onLevel((p) => {
       setViewLevel(p.level as 0 | 1 | 2 | 3)
       if (p.level === 3) setTheaterOpen(true)
       else setTheaterOpen(false)
     })
-    window.ackem.ui.onExtensionToast?.((payload) => {
+    window.Ackem.ui.onExtensionToast?.((payload) => {
       if (payload?.text) pushToast(payload.text)
     })
   }, [bootReady, setTab, requestChatInputFocus, setViewLevel, setTheaterOpen, pushToast])
@@ -113,13 +114,13 @@ export default function App(): JSX.Element {
         setBootSplashStatus(
           t('boot.connecting') !== 'boot.connecting' ? t('boot.connecting') : formatBootConnectingMessage()
         )
-        const s = await window.ackem.getSettings()
+        const s = await window.Ackem.getSettings()
         setSettings(s)
         setBootSplashStatus(
-          t('boot.loadingSettings') !== 'boot.loadingSettings' ? t('boot.loadingSettings') : '加载配置…'
+          t('boot.loadingSettings') !== 'boot.loadingSettings' ? t('boot.loadingSettings') : '鍔犺浇閰嶇疆鈥?
         )
-        await window.ackem.ensureLayout()
-        setBootSplashStatus(t('boot.preparing') !== 'boot.preparing' ? t('boot.preparing') : '准备界面…')
+        await window.Ackem.ensureLayout()
+        setBootSplashStatus(t('boot.preparing') !== 'boot.preparing' ? t('boot.preparing') : '鍑嗗鐣岄潰鈥?)
         setBootReady(true)
       } catch (e) {
         setBootErr(e instanceof Error ? e.message : String(e))
@@ -162,11 +163,11 @@ export default function App(): JSX.Element {
     }
   }, [bootReady])
 
-  // BootSplash：进度跑满且 signalBootSplashReady 后自动淡出
+  // BootSplash锛氳繘搴﹁窇婊′笖 signalBootSplashReady 鍚庤嚜鍔ㄦ贰鍑?
 
   useEffect(() => {
-    if (!bootReady || typeof window.ackem === 'undefined') return
-    const unsubscribe = window.ackem.openforu.onNotify((p) => {
+    if (!bootReady || typeof window.Ackem === 'undefined') return
+    const unsubscribe = window.Ackem.openforu.onNotify((p) => {
       useAppStore.getState().setChatRows((prev) => {
         const last = prev[prev.length - 1]
         if (last?.kind === 'system' && last.content === p.text) return prev
@@ -177,8 +178,8 @@ export default function App(): JSX.Element {
   }, [bootReady])
 
   useEffect(() => {
-    if (!bootReady || typeof window.ackem === 'undefined') return
-    return window.ackem.openforu.permissions.onRequest((payload) => {
+    if (!bootReady || typeof window.Ackem === 'undefined') return
+    return window.Ackem.openforu.permissions.onRequest((payload) => {
       setPermRequest(payload)
     })
   }, [bootReady])
@@ -195,7 +196,7 @@ export default function App(): JSX.Element {
           color: '#18181b'
         }}
       >
-        <h1 style={{ fontSize: 18, margin: '0 0 12px' }}>{t('boot.noPreloadTitle') !== 'boot.noPreloadTitle' ? t('boot.noPreloadTitle') : '无法连接主进程'}</h1>
+        <h1 style={{ fontSize: 18, margin: '0 0 12px' }}>{t('boot.noPreloadTitle') !== 'boot.noPreloadTitle' ? t('boot.noPreloadTitle') : '鏃犳硶杩炴帴涓昏繘绋?}</h1>
         <p style={{ margin: 0, fontSize: 13, color: '#52525b', whiteSpace: 'pre-wrap' }}>{bootErr}</p>
       </div>
     )
@@ -228,6 +229,7 @@ export default function App(): JSX.Element {
           {tab === 'diary' && <DiaryPage />}
           {tab === 'gamemode' && <GameModePage />}
           {tab === 'extensions' && <ExtensionCenterPage />}
+          {tab === 'agent' && <AgentPage />}
           {tab === 'trace' && <TracePanel />}
           {tab === 'import' && <ImportPage />}
           {tab === 'settings' && <SettingsPage />}
@@ -247,13 +249,13 @@ export default function App(): JSX.Element {
         payload={permRequest}
         onApprove={() => {
           if (!permRequest) return
-          void window.ackem.openforu.permissions.approve(permRequest.requestId).then(() => {
+          void window.Ackem.openforu.permissions.approve(permRequest.requestId).then(() => {
             setPermRequest(null)
           })
         }}
         onDeny={() => {
           if (!permRequest) return
-          void window.ackem.openforu.permissions.deny(permRequest.requestId).then(() => {
+          void window.Ackem.openforu.permissions.deny(permRequest.requestId).then(() => {
             setPermRequest(null)
           })
         }}

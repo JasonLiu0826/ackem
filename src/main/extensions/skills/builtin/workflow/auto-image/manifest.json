@@ -1,0 +1,17 @@
+﻿{
+  "$schema": "https://Ackem.gitbook.io/Ackem/schemas/skill-manifest",
+  "id": "Ackem/auto-image@1.0.0",
+  "name": "鑱婂ぉ鑷姩閰嶅浘",
+  "version": "1.0.0",
+  "category": "skill",
+  "skillType": "workflow",
+  "description": "鍦ㄦ瘡娆″璇濆洖澶嶅悗锛岃嚜鍔ㄧ敓鎴愪竴寮犱笌鑱婂ぉ鍐呭鐩稿叧鐨勫浘鐗囥€?,
+  "triggers": ["postChatTurn"],
+  "metadata": {
+    "Ackem": {
+      "contact": "https://github.com/Ackem",
+      "filename": "auto-image",
+      "license": "MIT"
+    }
+  }
+}

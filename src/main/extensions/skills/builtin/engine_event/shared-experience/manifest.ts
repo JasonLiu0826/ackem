@@ -1,13 +1,13 @@
-// [S-19] 共同经历系统 — 占位 manifest
+﻿// [S-19] 鍏卞悓缁忓巻绯荤粺 鈥?鍗犱綅 manifest
 import type { SkillManifest } from '../../../types'
 
 export const MANIFEST: SkillManifest = {
-  "id": "ackem/shared-experience@0.0.1",
-  "name": "共同经历系统",
+  "id": "Ackem/shared-experience@0.0.1",
+  "name": "鍏卞悓缁忓巻绯荤粺",
   "version": "0.0.1",
   "category": "skill",
   "skillType": "proactive",
-  "description": "[S-19] 首次事件/里程碑；检索加权与解锁共用数据源",
+  "description": "[S-19] 棣栨浜嬩欢/閲岀▼纰戯紱妫€绱㈠姞鏉冧笌瑙ｉ攣鍏辩敤鏁版嵁婧?,
   "author": "JasonLiu0826",
   "license": "AGPL-3.0",
   "main": "stub.ts",
@@ -26,5 +26,5 @@ export const MANIFEST: SkillManifest = {
     "s-19"
   ]
 } as SkillManifest
-export const SKILL_ID = 'ackem/shared-experience@0.0.1'
+export const SKILL_ID = 'Ackem/shared-experience@0.0.1'
 export const SPEC_ID = 'S-19'

@@ -1,7 +1,7 @@
-// @ackem-extension-stub-not-runtime — 见 src/main/extensions/STUB_FILES.md
-// 此文件不是运行时入口；manifest.json 的 main 仅满足 schema。实装后注册 register.ts / skill.ts / bootstrap.ts。
-// [S-20] 回忆触发 — 占位入口
-// 实装后：实现 skill.ts（SkillHandler）并在 skills/builtin/register-placeholders.ts 中注册
+﻿// @Ackem-extension-stub-not-runtime 鈥?瑙?src/main/extensions/STUB_FILES.md
+// 姝ゆ枃浠朵笉鏄繍琛屾椂鍏ュ彛锛沵anifest.json 鐨?main 浠呮弧瓒?schema銆傚疄瑁呭悗娉ㄥ唽 register.ts / skill.ts / bootstrap.ts銆?
+// [S-20] 鍥炲繂瑙﹀彂 鈥?鍗犱綅鍏ュ彛
+// 瀹炶鍚庯細瀹炵幇 skill.ts锛圫killHandler锛夊苟鍦?skills/builtin/register-placeholders.ts 涓敞鍐?
 
 import { MANIFEST, SKILL_ID, SPEC_ID } from './manifest'
 

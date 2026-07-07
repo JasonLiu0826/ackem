@@ -1,11 +1,11 @@
-import { app, BrowserWindow } from 'electron'
+﻿import { app, BrowserWindow } from 'electron'
 import { resolveRendererHtml } from './outPaths'
 import { loadWindowIcon } from './appIcon'
 
 let splashWindow: BrowserWindow | null = null
 let splashOpened = false
 
-/** 在主进程大 chunk 加载前尽早展示开屏（独立静态页 + 进度条） */
+/** 鍦ㄤ富杩涚▼澶?chunk 鍔犺浇鍓嶅敖鏃╁睍绀哄紑灞忥紙鐙珛闈欐€侀〉 + 杩涘害鏉★級 */
 export function openStartupSplash(): void {
   if (splashOpened) return
   splashOpened = true
@@ -43,12 +43,7 @@ async function showSplashWindow(): Promise<void> {
   })
 
   try {
-    const devUrl = process.env['ELECTRON_RENDERER_URL']
-    if (devUrl && !app.isPackaged) {
-      await win.loadURL(`${devUrl}startup.html`)
-    } else {
-      await win.loadFile(resolveRendererHtml('startup.html'))
-    }
+    await win.loadFile(resolveRendererHtml('startup.html'))
     win.show()
     win.focus()
   } catch (e) {

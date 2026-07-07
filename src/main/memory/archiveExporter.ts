@@ -1,7 +1,7 @@
-// [archiveExporter] — 记忆档案导出器
-// 职责：将 FactStore + EpisodicStore 导出为人类可读的 markdown 档案
-// 按领域/子类分目录组织，用户可像翻阅档案库一样浏览记忆
-// 引用：./factStore, ./episodicStore, ./taxonomy
+﻿// [archiveExporter] 鈥?璁板繂妗ｆ瀵煎嚭鍣?
+// 鑱岃矗锛氬皢 FactStore + EpisodicStore 瀵煎嚭涓轰汉绫诲彲璇荤殑 markdown 妗ｆ
+// 鎸夐鍩?瀛愮被鍒嗙洰褰曠粍缁囷紝鐢ㄦ埛鍙儚缈婚槄妗ｆ搴撲竴鏍锋祻瑙堣蹇?
+// 寮曠敤锛?/factStore, ./episodicStore, ./taxonomy
 
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -10,40 +10,40 @@ import type { FactStore } from './factStore'
 import type { EpisodicStore } from './episodicStore'
 
 const DOMAIN_ZH: Record<string, string> = {
-  IDENTITY: '自我与身份',
-  SOCIAL: '关系与社交',
-  DAILY_LIFE: '日常生活',
-  PURSUITS: '事业与成长',
-  INNER_WORLD: '内心世界',
-  TEMPORAL: '当下与未来'
+  IDENTITY: '鑷垜涓庤韩浠?,
+  SOCIAL: '鍏崇郴涓庣ぞ浜?,
+  DAILY_LIFE: '鏃ュ父鐢熸椿',
+  PURSUITS: '浜嬩笟涓庢垚闀?,
+  INNER_WORLD: '鍐呭績涓栫晫',
+  TEMPORAL: '褰撲笅涓庢湭鏉?
 }
 
 const SUBCAT_ZH: Record<string, string> = {
-  BASIC_PROFILE: '基本信息',
-  LIFE_STORY: '人生经历',
-  VALUES_BELIEFS: '价值观与信念',
-  SELF_PERCEPTION: '自我认知',
-  OUR_BOND: '我们的羁绊',
-  FAMILY: '家庭',
-  FRIENDS: '朋友',
-  PARTNER: '伴侣',
-  ROUTINES: '日常习惯',
-  HEALTH: '身心健康',
-  LIVING_SPACE: '居住环境',
-  LIFESTYLE: '生活方式',
-  CAREER: '事业与工作',
-  LEARNING: '学习与技能',
-  GOALS: '目标与梦想',
-  PROJECTS: '项目与创作',
-  PROCEDURES: '做事方式',
-  MOOD: '情绪状态',
-  TASTES: '喜好与品味',
-  VULNERABILITIES: '脆弱与秘密',
-  INSIDE_JOKES: '默契与暗号',
-  NOW: '当下状态',
-  COMMITMENTS: '承诺与约定',
-  PLANS: '近期计划',
-  WORLD: '外部世界'
+  BASIC_PROFILE: '鍩烘湰淇℃伅',
+  LIFE_STORY: '浜虹敓缁忓巻',
+  VALUES_BELIEFS: '浠峰€艰涓庝俊蹇?,
+  SELF_PERCEPTION: '鑷垜璁ょ煡',
+  OUR_BOND: '鎴戜滑鐨勭緛缁?,
+  FAMILY: '瀹跺涵',
+  FRIENDS: '鏈嬪弸',
+  PARTNER: '浼翠荆',
+  ROUTINES: '鏃ュ父涔犳儻',
+  HEALTH: '韬績鍋ュ悍',
+  LIVING_SPACE: '灞呬綇鐜',
+  LIFESTYLE: '鐢熸椿鏂瑰紡',
+  CAREER: '浜嬩笟涓庡伐浣?,
+  LEARNING: '瀛︿範涓庢妧鑳?,
+  GOALS: '鐩爣涓庢ⅵ鎯?,
+  PROJECTS: '椤圭洰涓庡垱浣?,
+  PROCEDURES: '鍋氫簨鏂瑰紡',
+  MOOD: '鎯呯华鐘舵€?,
+  TASTES: '鍠滃ソ涓庡搧鍛?,
+  VULNERABILITIES: '鑴嗗急涓庣瀵?,
+  INSIDE_JOKES: '榛樺涓庢殫鍙?,
+  NOW: '褰撲笅鐘舵€?,
+  COMMITMENTS: '鎵胯涓庣害瀹?,
+  PLANS: '杩戞湡璁″垝',
+  WORLD: '澶栭儴涓栫晫'
 }
 
 function formatDate(iso: string): string {
@@ -75,7 +75,7 @@ export function exportMemoryArchive(
   const coreFacts = factStore.getCoreFacts()
   const stats: ExportStats = { filesWritten: 0, factsExported: 0, episodesExported: 0, coreCount: coreFacts.length }
 
-  // 按领域→子类分组
+  // 鎸夐鍩熲啋瀛愮被鍒嗙粍
   const grouped = new Map<string, Map<string, typeof active>>()
   for (const d of Object.keys(DOMAIN_ZH)) {
     const subMap = new Map<string, typeof active>()
@@ -88,7 +88,7 @@ export function exportMemoryArchive(
     grouped.set(d, subMap)
   }
 
-  // 为每个子类生成 .md 文件
+  // 涓烘瘡涓瓙绫荤敓鎴?.md 鏂囦欢
   for (const [domain, subMap] of grouped) {
     const domainDir = join(archiveDir, domain)
     mkdirSync(domainDir, { recursive: true })
@@ -100,26 +100,26 @@ export function exportMemoryArchive(
 
       const coreInFile = facts.filter(f => f.tier === 'core')
       let md = `# ${SUBCAT_ZH[subcat] || subcat}\n\n`
-      md += `> 领域：${DOMAIN_ZH[domain] || domain} | `
-      md += `活跃事实：${facts.length} 条`
-      if (coreInFile.length > 0) md += ` | 核心记忆：${coreInFile.length} 条`
-      md += `\n> 最后更新：${new Date().toISOString().slice(0, 16).replace('T', ' ')}\n\n`
+      md += `> 棰嗗煙锛?{DOMAIN_ZH[domain] || domain} | `
+      md += `娲昏穬浜嬪疄锛?{facts.length} 鏉
+      if (coreInFile.length > 0) md += ` | 鏍稿績璁板繂锛?{coreInFile.length} 鏉
+      md += `\n> 鏈€鍚庢洿鏂帮細${new Date().toISOString().slice(0, 16).replace('T', ' ')}\n\n`
       md += `---\n\n`
 
       for (const f of facts) {
-        const prefix = f.tier === 'core' ? '★ ' : ''
-        const layer = f.factLayer === 'consolidated' ? ' [整合洞察]' : ''
+        const prefix = f.tier === 'core' ? '鈽?' : ''
+        const layer = f.factLayer === 'consolidated' ? ' [鏁村悎娲炲療]' : ''
         md += `## ${prefix}${escapeMd(f.subject)}${layer}\n\n`
-        md += `> 权重：${f.weight.toFixed(1)} | 置信度：${formatConfidencePercent(f.confidence)}`
-        if (f.tier === 'core') md += ` | 核心记忆`
-        md += `\n> 创建：${formatDate(f.createdAt)} | 更新：${formatDate(f.updatedAt)}`
+        md += `> 鏉冮噸锛?{f.weight.toFixed(1)} | 缃俊搴︼細${formatConfidencePercent(f.confidence)}`
+        if (f.tier === 'core') md += ` | 鏍稿績璁板繂`
+        md += `\n> 鍒涘缓锛?{formatDate(f.createdAt)} | 鏇存柊锛?{formatDate(f.updatedAt)}`
         if (f.emotionalContext) {
           const emo = f.emotionalContext
-          const valenceLabel = emo.valence > 0.3 ? '正向' : emo.valence < -0.3 ? '负向' : '中性'
-          md += `\n> 记录时情绪：${valenceLabel} | 信任度：${emo.trust} | 关系阶段：${emo.relStage}`
+          const valenceLabel = emo.valence > 0.3 ? '姝ｅ悜' : emo.valence < -0.3 ? '璐熷悜' : '涓€?
+          md += `\n> 璁板綍鏃舵儏缁細${valenceLabel} | 淇′换搴︼細${emo.trust} | 鍏崇郴闃舵锛?{emo.relStage}`
         }
         if (f.triggers.length > 0) {
-          md += `\n> 触发词：${f.triggers.join('、')}`
+          md += `\n> 瑙﹀彂璇嶏細${f.triggers.join('銆?)}`
         }
         md += `\n\n${escapeMd(f.summary)}\n\n---\n\n`
         stats.factsExported++
@@ -131,83 +131,83 @@ export function exportMemoryArchive(
     }
   }
 
-  // 情节记忆时间线
+  // 鎯呰妭璁板繂鏃堕棿绾?
   if (episodicStore) {
     episodicStore.load()
     const episodes = episodicStore.listAll()
     if (episodes.length > 0) {
-      let epMd = `# 情节记忆时间线\n\n> 共 ${episodes.length} 段对话故事\n\n---\n\n`
+      let epMd = `# 鎯呰妭璁板繂鏃堕棿绾縗n\n> 鍏?${episodes.length} 娈靛璇濇晠浜媆n\n---\n\n`
       const sorted = [...episodes].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       for (const ep of sorted) {
-        const intensityBar = '█'.repeat(Math.round(ep.emotionalIntensity * 10)) + '░'.repeat(10 - Math.round(ep.emotionalIntensity * 10))
+        const intensityBar = '鈻?.repeat(Math.round(ep.emotionalIntensity * 10)) + '鈻?.repeat(10 - Math.round(ep.emotionalIntensity * 10))
         epMd += `## ${formatDate(ep.createdAt)}\n\n`
-        epMd += `> 情感强度：${intensityBar} (${(ep.emotionalIntensity*100).toFixed(0)}%) | 主导情绪：${ep.dominantEmotion}\n`
+        epMd += `> 鎯呮劅寮哄害锛?{intensityBar} (${(ep.emotionalIntensity*100).toFixed(0)}%) | 涓诲鎯呯华锛?{ep.dominantEmotion}\n`
         if (ep.keywords.length > 0) {
-          epMd += `> 关键词：${ep.keywords.join('、')}\n`
+          epMd += `> 鍏抽敭璇嶏細${ep.keywords.join('銆?)}\n`
         }
-        epMd += `> 第 ${ep.startTurn}-${ep.endTurn} 轮\n\n`
+        epMd += `> 绗?${ep.startTurn}-${ep.endTurn} 杞甛n\n`
         epMd += `${escapeMd(ep.summary)}\n\n---\n\n`
         stats.episodesExported++
       }
-      writeFileSync(join(archiveDir, '情节记忆时间线.md'), epMd, 'utf-8')
+      writeFileSync(join(archiveDir, '鎯呰妭璁板繂鏃堕棿绾?md'), epMd, 'utf-8')
       stats.filesWritten++
     }
   }
 
-  // 核心记忆精选
+  // 鏍稿績璁板繂绮鹃€?
   if (coreFacts.length > 0) {
-    let coreMd = `# 核心记忆精选\n\n> ${coreFacts.length} 条始终在场的核心记忆，按权重排序\n\n---\n\n`
+    let coreMd = `# 鏍稿績璁板繂绮鹃€塡n\n> ${coreFacts.length} 鏉″缁堝湪鍦虹殑鏍稿績璁板繂锛屾寜鏉冮噸鎺掑簭\n\n---\n\n`
     const sorted = [...coreFacts].sort((a, b) => b.weight - a.weight)
     for (const f of sorted) {
-      coreMd += `## ★ ${escapeMd(f.subject)}\n\n`
-      coreMd += `> 权重：${f.weight.toFixed(1)} | 置信度：${formatConfidencePercent(f.confidence)} | ${SUBCAT_ZH[f.subcategory] || f.subcategory}\n\n`
+      coreMd += `## 鈽?${escapeMd(f.subject)}\n\n`
+      coreMd += `> 鏉冮噸锛?{f.weight.toFixed(1)} | 缃俊搴︼細${formatConfidencePercent(f.confidence)} | ${SUBCAT_ZH[f.subcategory] || f.subcategory}\n\n`
       coreMd += `${escapeMd(f.summary)}\n\n---\n\n`
     }
-    writeFileSync(join(archiveDir, '核心记忆精选.md'), coreMd, 'utf-8')
+    writeFileSync(join(archiveDir, '鏍稿績璁板繂绮鹃€?md'), coreMd, 'utf-8')
     stats.filesWritten++
   }
 
-  // 总索引 README
-  let readme = `# 🗂️ Ackem 记忆档案\n\n`
-  readme += `> 自动生成 | ${new Date().toISOString().slice(0, 16).replace('T', ' ')}\n`
-  readme += `> 总事实：${active.length} 条 | 核心记忆：${coreFacts.length} 条 | 情节：${stats.episodesExported} 段\n\n`
+  // 鎬荤储寮?README
+  let readme = `# 馃梻锔?Ackem 璁板繂妗ｆ\n\n`
+  readme += `> 鑷姩鐢熸垚 | ${new Date().toISOString().slice(0, 16).replace('T', ' ')}\n`
+  readme += `> 鎬讳簨瀹烇細${active.length} 鏉?| 鏍稿績璁板繂锛?{coreFacts.length} 鏉?| 鎯呰妭锛?{stats.episodesExported} 娈礬n\n`
   readme += `---\n\n`
-  readme += `## 如何使用这个档案\n\n`
-  readme += `- 这是 Ackem 对你的所有记忆的结构化归档\n`
-  readme += `- 按领域分目录，每个子类一个 .md 文件\n`
-  readme += `- 你可以直接打开任何文件阅读、修改\n`
-  readme += `- 修改后，在 Ackem 中点击「重建索引」即可让修改生效\n`
-  readme += `- ★ 标记的条目是伴侣的「核心记忆」——始终铭记在心\n`
-  readme += `- **需要 Ackem 记住某事时，请在对话里明确说「请帮我记住……」**（例如：「请帮我记住：我妈妈生日是 10 月 16 日」）。Ackem 会按你的原话写入记忆，具体归类与整理由系统在后台完成\n\n`
-  readme += `---\n\n## 目录\n\n`
+  readme += `## 濡備綍浣跨敤杩欎釜妗ｆ\n\n`
+  readme += `- 杩欐槸 Ackem 瀵逛綘鐨勬墍鏈夎蹇嗙殑缁撴瀯鍖栧綊妗n`
+  readme += `- 鎸夐鍩熷垎鐩綍锛屾瘡涓瓙绫讳竴涓?.md 鏂囦欢\n`
+  readme += `- 浣犲彲浠ョ洿鎺ユ墦寮€浠讳綍鏂囦欢闃呰銆佷慨鏀筡n`
+  readme += `- 淇敼鍚庯紝鍦?Ackem 涓偣鍑汇€岄噸寤虹储寮曘€嶅嵆鍙淇敼鐢熸晥\n`
+  readme += `- 鈽?鏍囪鐨勬潯鐩槸浼翠荆鐨勩€屾牳蹇冭蹇嗐€嶁€斺€斿缁堥摥璁板湪蹇僜n`
+  readme += `- **闇€瑕?Ackem 璁颁綇鏌愪簨鏃讹紝璇峰湪瀵硅瘽閲屾槑纭銆岃甯垜璁颁綇鈥︹€︺€?*锛堜緥濡傦細銆岃甯垜璁颁綇锛氭垜濡堝鐢熸棩鏄?10 鏈?16 鏃ャ€嶏級銆侭ritney 浼氭寜浣犵殑鍘熻瘽鍐欏叆璁板繂锛屽叿浣撳綊绫讳笌鏁寸悊鐢辩郴缁熷湪鍚庡彴瀹屾垚\n\n`
+  readme += `---\n\n## 鐩綍\n\n`
 
   for (const [domain, subMap] of grouped) {
     let domainFacts = 0
     for (const facts of subMap.values()) domainFacts += facts.length
     if (domainFacts === 0) continue
-    readme += `### ${DOMAIN_ZH[domain] || domain}（${domainFacts} 条）\n\n`
+    readme += `### ${DOMAIN_ZH[domain] || domain}锛?{domainFacts} 鏉★級\n\n`
     for (const [subcat, facts] of subMap) {
       if (facts.length === 0) continue
       const coreCount = facts.filter(f => f.tier === 'core').length
-      const coreLabel = coreCount > 0 ? ` ⭐×${coreCount}` : ''
-      readme += `- [${SUBCAT_ZH[subcat] || subcat}](${domain}/${subcat}.md) — ${facts.length} 条${coreLabel}\n`
+      const coreLabel = coreCount > 0 ? ` 猸惷?{coreCount}` : ''
+      readme += `- [${SUBCAT_ZH[subcat] || subcat}](${domain}/${subcat}.md) 鈥?${facts.length} 鏉?{coreLabel}\n`
     }
     readme += '\n'
   }
 
   if (stats.episodesExported > 0) {
-    readme += `### 📖 情节记忆\n\n`
-    readme += `- [情节记忆时间线](情节记忆时间线.md) — ${stats.episodesExported} 段\n\n`
+    readme += `### 馃摉 鎯呰妭璁板繂\n\n`
+    readme += `- [鎯呰妭璁板繂鏃堕棿绾縘(鎯呰妭璁板繂鏃堕棿绾?md) 鈥?${stats.episodesExported} 娈礬n\n`
   }
   if (coreFacts.length > 0) {
-    readme += `### ⭐ 核心记忆\n\n`
-    readme += `- [核心记忆精选](核心记忆精选.md) — ${coreFacts.length} 条\n\n`
+    readme += `### 猸?鏍稿績璁板繂\n\n`
+    readme += `- [鏍稿績璁板繂绮鹃€塢(鏍稿績璁板繂绮鹃€?md) 鈥?${coreFacts.length} 鏉n\n`
   }
 
   writeFileSync(join(archiveDir, 'README.md'), readme, 'utf-8')
   stats.filesWritten++
 
-  // 写入元数据，供前端展示"上次导出时间"
+  // 鍐欏叆鍏冩暟鎹紝渚涘墠绔睍绀?涓婃瀵煎嚭鏃堕棿"
   writeFileSync(
     join(archiveDir, '_meta.json'),
     JSON.stringify({

@@ -1,14 +1,14 @@
-// [factExtractor] — LLM 事实抽取
-// 职责：从一轮对话抽取结构化事实
-// 输入：user/companion 文本、locale、L1/L2 上下文
-// 输出：ExtractionResult
-// 引用：./taxonomy, ../engine/types, ../engine/ackemParams, ../llmClient, ../prompt/memory-fact-extract
+﻿// [factExtractor] 鈥?LLM 浜嬪疄鎶藉彇
+// 鑱岃矗锛氫粠涓€杞璇濇娊鍙栫粨鏋勫寲浜嬪疄
+// 杈撳叆锛歶ser/companion 鏂囨湰銆乴ocale銆丩1/L2 涓婁笅鏂?
+// 杈撳嚭锛欵xtractionResult
+// 寮曠敤锛?/taxonomy, ../engine/types, ../engine/AckemParams, ../llmClient, ../prompt/memory-fact-extract
 
 import type { ExtractionResult, L1State, EmotionState, LlmClient } from '../engine/types'
 import { normalizeConfidence } from '../../shared/confidence'
 import { isValidSubcategory } from './taxonomy'
 import { FACT_EXTRACT_TEMPERATURE, FACT_EXTRACT_SYS_ZH, buildFactExtractSysOld, buildFactExtractUserMsg } from '../prompt/memory-fact-extract'
-import { FACT_EXTRACTION_MAX_PER_TURN } from '../engine/ackemParams'
+import { FACT_EXTRACTION_MAX_PER_TURN } from '../engine/AckemParams'
 
 export class FactExtractor {
   async extract(
@@ -23,7 +23,7 @@ export class FactExtractor {
   ): Promise<ExtractionResult> {
     const lang =
       locale.startsWith('ja') ? 'ja' : locale.startsWith('en') || locale === 'en' ? 'en' : 'zh'
-    // v1.1 升级版 prompt（中文用详细版，其他语言用旧版兼容）
+    // v1.1 鍗囩骇鐗?prompt锛堜腑鏂囩敤璇︾粏鐗堬紝鍏朵粬璇█鐢ㄦ棫鐗堝吋瀹癸級
     const sys = lang === 'zh' ? FACT_EXTRACT_SYS_ZH : buildFactExtractSysOld(locale)
 
     const raw = await llm.chatCompletionJson({

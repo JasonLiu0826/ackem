@@ -1,13 +1,13 @@
-// [P-14] 对话弹出动画 — 占位 manifest（未接入 coordinator.boot）
+﻿// [P-14] 瀵硅瘽寮瑰嚭鍔ㄧ敾 鈥?鍗犱綅 manifest锛堟湭鎺ュ叆 coordinator.boot锛?
 import type { PluginManifest } from '../../../types'
 
 export const MANIFEST: PluginManifest = {
-  "id": "ackem/speech-bubble@0.0.1",
-  "name": "对话弹出动画",
+  "id": "Ackem/speech-bubble@0.0.1",
+  "name": "瀵硅瘽寮瑰嚭鍔ㄧ敾",
   "version": "0.0.1",
   "category": "plugin",
   "pluginType": "skin",
-  "description": "[P-14] 漫画气泡从角色附近浮现（UI 规范 §8）；依赖 Live2D 桌宠",
+  "description": "[P-14] 婕敾姘旀场浠庤鑹查檮杩戞诞鐜帮紙UI 瑙勮寖 搂8锛夛紱渚濊禆 Live2D 妗屽疇",
   "author": "JasonLiu0826",
   "license": "AGPL-3.0",
   "main": "stub.ts",
@@ -24,5 +24,5 @@ export const MANIFEST: PluginManifest = {
     "p-14"
   ]
 } as PluginManifest
-export const PLUGIN_ID = 'ackem/speech-bubble@0.0.1'
+export const PLUGIN_ID = 'Ackem/speech-bubble@0.0.1'
 export const SPEC_ID = 'P-14'

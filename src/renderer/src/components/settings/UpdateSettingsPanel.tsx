@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+﻿import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { UpdateChannel, UpdateCheckResult } from '../../../../shared/updateTypes'
 import { t } from '../../lib/i18n'
 import { ConfirmDialog } from '../ConfirmDialog'
@@ -10,7 +10,7 @@ import {
 } from './settingsUi'
 
 function formatSize(bytes: number): string {
-  if (bytes <= 0) return '—'
+  if (bytes <= 0) return '鈥?
   if (bytes >= 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024 / 1024).toFixed(2)} GB`
   return `${Math.round(bytes / 1024 / 1024)} MB`
 }
@@ -34,8 +34,8 @@ export function UpdateSettingsPanel(): JSX.Element {
 
   const loadMeta = useCallback(async () => {
     const [ver, pref] = await Promise.all([
-      window.ackem.getAppVersion(),
-      window.ackem.getUpdateChannelPreference()
+      window.Ackem.getAppVersion(),
+      window.Ackem.getUpdateChannelPreference()
     ])
     setAppVersion(ver)
     setChannel(pref)
@@ -45,7 +45,7 @@ export function UpdateSettingsPanel(): JSX.Element {
     setChecking(true)
     setError(null)
     try {
-      const result = await window.ackem.checkUpdate()
+      const result = await window.Ackem.checkUpdate()
       setCheck(result)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
@@ -70,7 +70,7 @@ export function UpdateSettingsPanel(): JSX.Element {
 
   const onChannelChange = async (next: UpdateChannel) => {
     setChannel(next)
-    await window.ackem.setUpdateChannelPreference(next)
+    await window.Ackem.setUpdateChannelPreference(next)
   }
 
   const onConfirmUpdate = async () => {
@@ -78,7 +78,7 @@ export function UpdateSettingsPanel(): JSX.Element {
     setStarting(true)
     setError(null)
     try {
-      const res = await window.ackem.startUpdate({
+      const res = await window.Ackem.startUpdate({
         channel,
         targetVersion: selectedRelease.version,
         downloadUrl: selectedRelease.downloadUrl,
@@ -115,7 +115,7 @@ export function UpdateSettingsPanel(): JSX.Element {
         <dl className="settings-meta-list">
           <div className="settings-meta-row">
             <dt>{t('settings.version')}</dt>
-            <dd>{appVersion || '…'}</dd>
+            <dd>{appVersion || '鈥?}</dd>
           </div>
           {check?.checkedAt && (
             <div className="settings-meta-row">
@@ -156,7 +156,7 @@ export function UpdateSettingsPanel(): JSX.Element {
               GitHub:{' '}
               {check.github.error
                 ? t('settings.updateChannelError', { error: check.github.error })
-                : `v${check.github.version} · ${formatSize(check.github.size)}`}
+                : `v${check.github.version} 路 ${formatSize(check.github.size)}`}
             </p>
           )}
           {check?.gitee && (
@@ -164,7 +164,7 @@ export function UpdateSettingsPanel(): JSX.Element {
               Gitee:{' '}
               {check.gitee.error
                 ? t('settings.updateChannelError', { error: check.gitee.error })
-                : `v${check.gitee.version} · ${formatSize(check.gitee.size)}`}
+                : `v${check.gitee.version} 路 ${formatSize(check.gitee.size)}`}
             </p>
           )}
           {selectedRelease && (

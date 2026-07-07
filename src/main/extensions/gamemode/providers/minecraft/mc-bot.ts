@@ -1,6 +1,6 @@
-// [gaming/mc-bot] — Minecraft Bot 核心模块
-// 职责：Mineflayer 生命周期管理 + 行为循环 + Ackem WS 通信
-// 引用：./types, ./mc-behavior, ./mc-humanizer, ./mc-ws-server, ./script-engine
+﻿// [gaming/mc-bot] 鈥?Minecraft Bot 鏍稿績妯″潡
+// 鑱岃矗锛歁ineflayer 鐢熷懡鍛ㄦ湡绠＄悊 + 琛屼负寰幆 + Ackem WS 閫氫俊
+// 寮曠敤锛?/types, ./mc-behavior, ./mc-humanizer, ./mc-ws-server, ./script-engine
 
 import type { Bot } from 'mineflayer'
 import type { McGameState, EngineStateForGaming, McGameEvent } from './types'
@@ -50,21 +50,21 @@ export interface BotConfig {
   port: number
   username: string
   password?: string
-  /** Ackem WebSocket 地址 */
-  ackemWsUrl: string
-  /** 行为决策 tick 间隔（ms） */
+  /** Ackem WebSocket 鍦板潃 */
+  AckemWsUrl: string
+  /** 琛屼负鍐崇瓥 tick 闂撮殧锛坢s锛?*/
   tickIntervalMs: number
-  /** 是否启用自动战斗 */
+  /** 鏄惁鍚敤鑷姩鎴樻枟 */
   autoCombat: boolean
-  /** 是否启用自动跟随 */
+  /** 鏄惁鍚敤鑷姩璺熼殢 */
   autoFollow: boolean
-  /** 是否启用自动挖矿 */
+  /** 鏄惁鍚敤鑷姩鎸栫熆 */
   autoMine: boolean
 }
 
 const DEFAULT_CONFIG: Partial<BotConfig> = {
   port: 25565,
-  ackemWsUrl: 'ws://localhost:19532',
+  AckemWsUrl: 'ws://localhost:19532',
   tickIntervalMs: 500,
   autoCombat: true,
   autoFollow: true,
@@ -80,7 +80,7 @@ let engineState: EngineStateForGaming | null = null
 let gameState: McGameState | null = null
 let playerAfkSec = 0
 let isRunning = false
-/** 玩家名字（跨维度传送时用） */
+/** 鐜╁鍚嶅瓧锛堣法缁村害浼犻€佹椂鐢級 */
 let storedPlayerName = ''
 let mcData: any = null
 let playerCombat: PlayerCombatTrack = createPlayerCombatTrack()
@@ -162,7 +162,7 @@ function pushDebugSnapshot(gs: McGameState, decision: import('./mc-behavior').Be
   }).catch(() => { /* renderer push optional */ })
 }
 
-/** 实机调试快照（供 IPC / UI 轮询） */
+/** 瀹炴満璋冭瘯蹇収锛堜緵 IPC / UI 杞锛?*/
 export function getBotDebugSnapshot(): McBotDebugSnapshot | null {
   if (lastDebugSnapshot) return lastDebugSnapshot
   const gs = gameState
@@ -183,7 +183,7 @@ export function getBotDebugSnapshot(): McBotDebugSnapshot | null {
   })
 }
 
-/** 获取当前 bot 运行状态 */
+/** 鑾峰彇褰撳墠 bot 杩愯鐘舵€?*/
 export function getBotStatus(): {
   connected: boolean
   username: string
@@ -223,7 +223,7 @@ function clearActiveFollowGoal(): void {
   activeFollowSetAt = 0
 }
 
-/** 从世界实体或 tab 列表解析最近玩家（实体未加载时 tab 常有位置） */
+/** 浠庝笘鐣屽疄浣撴垨 tab 鍒楄〃瑙ｆ瀽鏈€杩戠帺瀹讹紙瀹炰綋鏈姞杞芥椂 tab 甯告湁浣嶇疆锛?*/
 function resolveNearestPlayer(b: Bot): { entity: any; username: string } | null {
   const fromWorld = Object.values(b.entities).filter(
     (e: any) => e.type === 'player' && e !== b.entity && e.position,
@@ -251,7 +251,7 @@ function pathfinderHasGoal(b: Bot): boolean {
   return Boolean(pf.goal ?? pf.getGoal?.())
 }
 
-/** 设置跟随目标（供 tick / spawn 兜底） */
+/** 璁剧疆璺熼殢鐩爣锛堜緵 tick / spawn 鍏滃簳锛?*/
 async function ensureFollowPlayer(followDistance = 3, force = false): Promise<boolean> {
   const b = bot
   if (!b?.entity || !(b as any).pathfinder) return false
@@ -330,7 +330,7 @@ function resetStuckWatch(reason: string): void {
   stuckWatch.reason = reason
 }
 
-/** 设置 Ackem 引擎状态（供行为决策器使用） */
+/** 璁剧疆 Ackem 寮曟搸鐘舵€侊紙渚涜涓哄喅绛栧櫒浣跨敤锛?*/
 export function setEngineState(state: EngineStateForGaming): void {
   engineState = state
 }
@@ -346,7 +346,7 @@ function buildGameState(): McGameState | null {
       return e.type === 'mob' && isHostileMob(e.name ?? '')
     })
 
-  // 查找最近玩家（世界实体 + tab 列表）
+  // 鏌ユ壘鏈€杩戠帺瀹讹紙涓栫晫瀹炰綋 + tab 鍒楄〃锛?
   let playerPos = b.entity.position
   let playerNotFound = false
   let nearestPlayerEntity: any = null
@@ -358,7 +358,7 @@ function buildGameState(): McGameState | null {
     const tabPlayers = Object.values(b.players ?? {}) as any[]
     if (tabPlayers.length > 0) {
       storedPlayerName = tabPlayers[0].username ?? storedPlayerName
-      // tab 有玩家但实体未加载：不算跨维度，避免误触发找传送门
+      // tab 鏈夌帺瀹朵絾瀹炰綋鏈姞杞斤細涓嶇畻璺ㄧ淮搴︼紝閬垮厤璇Е鍙戞壘浼犻€侀棬
       playerNotFound = false
     } else {
       playerNotFound = true
@@ -383,18 +383,18 @@ function buildGameState(): McGameState | null {
     }
   })
 
-  // 判断时间
+  // 鍒ゆ柇鏃堕棿
   const timeOfDay = (b as any).time?.timeOfDay ?? 0
   let tod: McGameState['timeOfDay'] = 'day'
   if (timeOfDay > 12500 && timeOfDay < 13500) tod = 'sunset'
   else if (timeOfDay > 13000 || timeOfDay < 1000) tod = 'night'
   else if (timeOfDay > 22000) tod = 'sunrise'
 
-  // 天气（Mineflayer Bot 类型未声明 rainState/thunderState，通过 any 访问）
+  // 澶╂皵锛圡ineflayer Bot 绫诲瀷鏈０鏄?rainState/thunderState锛岄€氳繃 any 璁块棶锛?
   let weather: McGameState['weather'] = 'clear'
   if ((b as any).rainState > 0) weather = (b as any).thunderState > 0 ? 'thunder' : 'rain'
 
-  // 脚下方块检测：水 / 岩浆 + 群系推测
+  // 鑴氫笅鏂瑰潡妫€娴嬶細姘?/ 宀╂祮 + 缇ょ郴鎺ㄦ祴
   let botInWater = false
   let botInLava = false
   let biome: McGameState['biome'] = 'unknown'
@@ -407,13 +407,13 @@ function buildGameState(): McGameState | null {
       botInLava = name.includes('lava')
     }
 
-    // 简单群系推测：采样周围 5 个方块的表面类型
+    // 绠€鍗曠兢绯绘帹娴嬶細閲囨牱鍛ㄥ洿 5 涓柟鍧楃殑琛ㄩ潰绫诲瀷
     const samples = [0, 2, -2, 4, -4]
     const surfaceNames: string[] = []
     for (const dx of samples) {
       for (const dz of samples) {
         try {
-          // 从上往下找第一个非空气方块
+          // 浠庝笂寰€涓嬫壘绗竴涓潪绌烘皵鏂瑰潡
           for (let dy = 3; dy >= -1; dy--) {
             const blk = b.blockAt(b.entity.position.offset(dx, dy, dz))
             if (blk && blk.name !== 'air' && blk.name !== 'cave_air' && blk.name !== 'void_air') {
@@ -425,14 +425,14 @@ function buildGameState(): McGameState | null {
       }
     }
 
-    // 群系推测规则
+    // 缇ょ郴鎺ㄦ祴瑙勫垯
     const dim = normalizeDimension((b as any).game.dimension)
     if (dim === 'nether') {
       biome = 'nether'
     } else if (dim === 'end') {
       biome = 'end'
     } else if (by < 55) {
-      // 地下：Y<55 且头顶有方块
+      // 鍦颁笅锛歒<55 涓斿ご椤舵湁鏂瑰潡
       const above = b.blockAt(b.entity.position.offset(0, 3, 0))
       isUnderground = !above || above.name === 'air' ? false : true
       if (isUnderground) biome = 'underground'
@@ -456,7 +456,7 @@ function buildGameState(): McGameState | null {
     }
   } catch { /* blockAt may fail */ }
 
-  // 扫描周围 8 格方块名（供工作检测）
+  // 鎵弿鍛ㄥ洿 8 鏍兼柟鍧楀悕锛堜緵宸ヤ綔妫€娴嬶級
   const nearbyBlockNames: string[] = []
   try {
     const scanRadius = 4
@@ -472,7 +472,7 @@ function buildGameState(): McGameState | null {
     }
   } catch { /* block scan failure is non-critical */ }
 
-  // 背包物品
+  // 鑳屽寘鐗╁搧
   const botInventory: Array<{ slot: number; name: string }> = []
   try {
     for (const item of b.inventory.items()) {
@@ -515,17 +515,17 @@ function buildGameState(): McGameState | null {
     playerHurtByHostile: isHurtByHostileValid(playerCombat, now) ? playerCombat.lastHurtByHostile : null,
     playerHurtByHostileId: isHurtByHostileValid(playerCombat, now) ? playerCombat.lastHurtByHostileId : null,
     playerRecentlyHurt: isPlayerRecentlyHurt(playerCombat, now),
-    // 建筑检测
+    // 寤虹瓚妫€娴?
     ...(() => {
       const bld = detectBuilding(nearbyBlockNames, { x: bx, y: by, z: bz }, { x: px, y: py, z: pz })
       return { buildingDetected: bld.detected, buildingStyle: bld.style, buildingDescription: bld.description }
     })(),
-    // 玩家睡觉检测（Mineflayer：pose === 'sleeping' 或 isSleeping）
+    // 鐜╁鐫¤妫€娴嬶紙Mineflayer锛歱ose === 'sleeping' 鎴?isSleeping锛?
     playerSleeping: (() => {
       const nearPlayers = entities.filter((e: any) => e.type === 'player' && e !== b.entity)
       return nearPlayers.some((p: any) => p.isSleeping === true || p.pose === 'sleeping')
     })(),
-    // 扫描附近床坐标（半径 16 格）
+    // 鎵弿闄勮繎搴婂潗鏍囷紙鍗婂緞 16 鏍硷級
     nearbyBeds: (() => {
       if (normalizeDimension((b as any).game.dimension) === 'nether') return []
       const beds: Array<{ x: number; y: number; z: number }> = []
@@ -548,17 +548,17 @@ function buildGameState(): McGameState | null {
   }
 }
 
-/** 从 item entity 的 metadata 中解析真实物品名 */
+/** 浠?item entity 鐨?metadata 涓В鏋愮湡瀹炵墿鍝佸悕 */
 function resolveItemName(entity: any): string {
   try {
-    // 1) 尝试 metadata：Minecraft item entity 的 metadata 包含 item stack 数据
+    // 1) 灏濊瘯 metadata锛歁inecraft item entity 鐨?metadata 鍖呭惈 item stack 鏁版嵁
     if (entity.metadata && Array.isArray(entity.metadata)) {
       for (const entry of entity.metadata) {
         if (!entry) continue
-        // metadata entry 格式：{ key: number, value: ... } 或直接在 entry 上
+        // metadata entry 鏍煎紡锛歿 key: number, value: ... } 鎴栫洿鎺ュ湪 entry 涓?
         const itemData = entry.item ?? entry.value?.item ?? entry.blockId ?? entry.itemId
         if (itemData !== undefined && itemData !== null) {
-          // itemData 可能是 { blockId, itemCount, nbt } 或纯数字 id
+          // itemData 鍙兘鏄?{ blockId, itemCount, nbt } 鎴栫函鏁板瓧 id
           const id = typeof itemData === 'object' ? (itemData.blockId ?? itemData.itemId) : itemData
           if (id !== undefined && id !== null && mcData) {
             const itemDef = mcData.items?.[id]
@@ -567,18 +567,18 @@ function resolveItemName(entity: any): string {
         }
       }
     }
-    // 2) fallback：displayName
+    // 2) fallback锛歞isplayName
     if (entity.displayName && typeof entity.displayName === 'string' && entity.displayName !== 'item') {
       return entity.displayName
     }
-    // 3) 最后兜底
-    return '物品'
+    // 3) 鏈€鍚庡厹搴?
+    return '鐗╁搧'
   } catch {
-    return '物品'
+    return '鐗╁搧'
   }
 }
 
-/** 获取 vec3 构造函数（懒加载） */
+/** 鑾峰彇 vec3 鏋勯€犲嚱鏁帮紙鎳掑姞杞斤級 */
 let _Vec3: any = null
 async function getVec3(): Promise<any> {
   if (_Vec3) return _Vec3
@@ -586,11 +586,11 @@ async function getVec3(): Promise<any> {
   return _Vec3
 }
 
-/** 获取 pathfinder goals（懒加载） */
+/** 鑾峰彇 pathfinder goals锛堟噿鍔犺浇锛?*/
 let _goals: any = null
 async function getGoals(): Promise<any> {
   if (_goals) return _goals
-  // mineflayer-pathfinder: CJS 模块，ESM 动态 import 后 goals 在 .default.goals
+  // mineflayer-pathfinder: CJS 妯″潡锛孍SM 鍔ㄦ€?import 鍚?goals 鍦?.default.goals
   const pfModule = await import('mineflayer-pathfinder')
   _goals = pfModule.default?.goals ?? pfModule.goals
   if (!_goals?.GoalNear) {
@@ -651,7 +651,7 @@ async function executeAttackTarget(targetName: string, targetId?: number | strin
       const distance = target.position.distanceTo(b.entity.position)
       if (distance > ATTACK_CHASE_RANGE) return
 
-      // 苦力怕：仅贴脸（<2.2格）后撤；否则保持 3–4 格追击并挥刀
+      // 鑻﹀姏鎬曪細浠呰创鑴革紙<2.2鏍硷級鍚庢挙锛涘惁鍒欎繚鎸?3鈥? 鏍艰拷鍑诲苟鎸ュ垁
       if (isCreeper && distance < 2.2 && (b as any).pathfinder) {
         const goals = await getGoals()
         if (goals?.GoalNear) {
@@ -819,7 +819,7 @@ function isNether(): boolean {
   return normalizeDimension((bot as any)?.game?.dimension) === 'nether'
 }
 
-/** 执行单个 BotAction */
+/** 鎵ц鍗曚釜 BotAction */
 async function executeAction(action: import('./mc-behavior').BotAction): Promise<void> {
   const b = bot // local capture for null safety
   if (!b) return
@@ -919,12 +919,12 @@ async function executeAction(action: import('./mc-behavior').BotAction): Promise
       case 'teleport': {
         clearActiveFollowGoal()
         resetStuckWatch('teleport')
-        // 找到最近的玩家并传送到其身边
+        // 鎵惧埌鏈€杩戠殑鐜╁骞朵紶閫佸埌鍏惰韩杈?
         const players = Object.values(b.entities).filter((e: any) => e.type === 'player' && e !== b.entity) as any[]
         if (players.length > 0) {
           const target = players[0]
           const targetName: string = target.username ?? target.name ?? ''
-          // /tp <自己> <目标> 直接传送到玩家位置
+          // /tp <鑷繁> <鐩爣> 鐩存帴浼犻€佸埌鐜╁浣嶇疆
           if (targetName) {
             b.chat(`/tp ${b.username} ${targetName}`)
           } else {
@@ -935,7 +935,7 @@ async function executeAction(action: import('./mc-behavior').BotAction): Promise
       }
       case 'find_portal': {
         try {
-          // 尝试 findBlocks（较新 mineflayer 版本）
+          // 灏濊瘯 findBlocks锛堣緝鏂?mineflayer 鐗堟湰锛?
           const blocks = (b as any).findBlocks?.({
             matching: (block: any) => block.name === 'nether_portal' || block.name === 'end_portal' || block.name === 'end_gateway',
             maxDistance: 64, count: 1,
@@ -947,7 +947,7 @@ async function executeAction(action: import('./mc-behavior').BotAction): Promise
             b.pathfinder.setGoal(new goals.GoalNear(blocks[0].x, blocks[0].y, blocks[0].z, 1))
             break
           }
-          // 回退：用 findBlock（所有 mineflayer 版本都有）
+          // 鍥為€€锛氱敤 findBlock锛堟墍鏈?mineflayer 鐗堟湰閮芥湁锛?
           const portal = b.findBlock({
             matching: (block: any) => block.name === 'nether_portal' || block.name === 'end_portal' || block.name === 'end_gateway',
             maxDistance: 64,
@@ -1002,7 +1002,7 @@ async function executeAction(action: import('./mc-behavior').BotAction): Promise
   }
 }
 
-/** 游戏状态上报 + 行为决策 tick */
+/** 娓告垙鐘舵€佷笂鎶?+ 琛屼负鍐崇瓥 tick */
 async function doTick(): Promise<void> {
   if (!bot?.entity || !isRunning) return
   if (tickInProgress) return
@@ -1014,14 +1014,14 @@ async function doTick(): Promise<void> {
     gameState = gs
     await checkAndRecoverIfStuck(gs)
 
-    // 上报游戏状态到 Ackem
+    // 涓婃姤娓告垙鐘舵€佸埌 Ackem
     const socket = ws
     if (socket && socket.readyState === socket.OPEN) {
       socket.send(JSON.stringify({ type: 'game_state', ...gs }))
     }
     callbacks.onStateChange?.(gs)
 
-    // 行为决策（需要引擎状态）
+    // 琛屼负鍐崇瓥锛堥渶瑕佸紩鎿庣姸鎬侊級
     if (engineState) {
       const decision = decideBehavior({
         state: gs,
@@ -1036,7 +1036,7 @@ async function doTick(): Promise<void> {
       callbacks.onDecision?.({ ...decision, actions })
       pushDebugSnapshot(gs, { ...decision, actions })
 
-      // 执行动作列表
+      // 鎵ц鍔ㄤ綔鍒楄〃
       if (decision.delayMs > 0) {
         await new Promise(r => setTimeout(r, Math.min(decision.delayMs, 3000)))
       }
@@ -1051,7 +1051,7 @@ async function doTick(): Promise<void> {
       }
     }
 
-    // 无路径目标且未在战斗时强制补跟随（解决连接后站桩、玩家实体晚加载）
+    // 鏃犺矾寰勭洰鏍囦笖鏈湪鎴樻枟鏃跺己鍒惰ˉ璺熼殢锛堣В鍐宠繛鎺ュ悗绔欐々銆佺帺瀹跺疄浣撴櫄鍔犺浇锛?
     if (
       config?.autoFollow !== false &&
       bot &&
@@ -1065,7 +1065,7 @@ async function doTick(): Promise<void> {
   }
 }
 
-/** 推送 MC 游戏事件 → 脚本反应 + 聊天 + 渲染进程 */
+/** 鎺ㄩ€?MC 娓告垙浜嬩欢 鈫?鑴氭湰鍙嶅簲 + 鑱婂ぉ + 娓叉煋杩涚▼ */
 async function emitMcGameEvent(
   type: string,
   payload?: Record<string, string>,
@@ -1090,7 +1090,7 @@ async function emitMcGameEvent(
   } catch { /* ignore reaction errors */ }
 }
 
-/** 从服务器消息推断 MC 事件类型 */
+/** 浠庢湇鍔″櫒娑堟伅鎺ㄦ柇 MC 浜嬩欢绫诲瀷 */
 function detectServerEventType(msg: string): string {
   if (msg.includes('has made the advancement') || msg.includes('has completed the challenge') || msg.includes('has reached the goal')) return 'mc:achievement_unlock'
   if (msg.includes('fell from a high place') || msg.includes('hit the ground too hard')) return 'mc:death_by_fall'
@@ -1107,7 +1107,7 @@ function detectServerEventType(msg: string): string {
   return 'mc:game_event'
 }
 
-/** 从服务器消息中提取关键信息 */
+/** 浠庢湇鍔″櫒娑堟伅涓彁鍙栧叧閿俊鎭?*/
 function extractPayload(msg: string): Record<string, string> {
   const payload: Record<string, string> = {}
   const advMatch = msg.match(/\[(.+?)\]/)
@@ -1117,24 +1117,24 @@ function extractPayload(msg: string): Record<string, string> {
   return payload
 }
 
-/** 初始化 Mineflayer bot */
+/** 鍒濆鍖?Mineflayer bot */
 export async function startBot(cfg: Partial<BotConfig> & { host: string; username: string }): Promise<void> {
   if (isRunning) await stopBot()
 
   config = { ...DEFAULT_CONFIG, ...cfg } as BotConfig
 
-  // 动态导入 Mineflayer（ESM 兼容）
+  // 鍔ㄦ€佸鍏?Mineflayer锛圗SM 鍏煎锛?
   const { createBot } = await import('mineflayer')
   bot = createBot({
     host: config.host,
     port: config.port,
     username: config.username,
     password: config.password,
-    // @ts-ignore - 离线服务器不需要认证
+    // @ts-ignore - 绂荤嚎鏈嶅姟鍣ㄤ笉闇€瑕佽璇?
     auth: config.password ? 'microsoft' : 'offline',
   })
 
-  // 事件监听 — 失败重连
+  // 浜嬩欢鐩戝惉 鈥?澶辫触閲嶈繛
   bot.on('error', (err) => {
     callbacks.onError?.(`Bot error: ${err.message}`)
   })
@@ -1142,7 +1142,7 @@ export async function startBot(cfg: Partial<BotConfig> & { host: string; usernam
   bot.on('end', (reason) => {
     callbacks.onError?.(`Bot disconnected: ${reason}`)
     if (isRunning && reason !== 'manualDisconnect') {
-      // 自动重连
+      // 鑷姩閲嶈繛
       setTimeout(() => {
         if (isRunning && config) {
           startBot(config).catch(() => {})
@@ -1155,11 +1155,11 @@ export async function startBot(cfg: Partial<BotConfig> & { host: string; usernam
     callbacks.onError?.(`Bot kicked: ${reason}`)
   })
 
-  // 聊天监听
+  // 鑱婂ぉ鐩戝惉
   bot.on('chat', (username: string, message: string) => {
-    if (username === bot!.username) return // 忽略自己的消息
+    if (username === bot!.username) return // 蹇界暐鑷繁鐨勬秷鎭?
 
-    // 服务器消息 → 解析为游戏事件 → 脚本反应
+    // 鏈嶅姟鍣ㄦ秷鎭?鈫?瑙ｆ瀽涓烘父鎴忎簨浠?鈫?鑴氭湰鍙嶅簲
     if (!username || username === 'Server' || username === '' || message.startsWith('[') || message.includes('has made the advancement') || message.includes('was slain') || message.includes('fell from') || message.includes('drowned') || message.includes('blew up') || message.includes('went up in flames') || message.includes('tried to swim in lava') || message.includes('starved to death') || message.includes('was killed by') || message.includes('hit the ground too hard') || message.includes('froze to death')) {
       const gameEvent: McGameEvent = {
         type: detectServerEventType(message),
@@ -1198,7 +1198,7 @@ export async function startBot(cfg: Partial<BotConfig> & { host: string; usernam
     updateOnPlayerSwing(playerCombat, target)
   })
 
-  // 玩家行为监听（移动、攻击等）+ Bot 受伤后退
+  // 鐜╁琛屼负鐩戝惉锛堢Щ鍔ㄣ€佹敾鍑荤瓑锛? Bot 鍙椾激鍚庨€€
   bot.on('entityHurt', (entity: any, source?: any) => {
     const hurtBot = bot
     if (!hurtBot?.entity) return
@@ -1223,7 +1223,7 @@ export async function startBot(cfg: Partial<BotConfig> & { host: string; usernam
       }
     }
 
-    // GAP-13: Bot 自己被怪打 → 后退两步
+    // GAP-13: Bot 鑷繁琚€墦 鈫?鍚庨€€涓ゆ
     if (entity === hurtBot.entity) {
       const yaw = hurtBot.entity.yaw + Math.PI
       const backX = hurtBot.entity.position.x + Math.sin(yaw) * 2
@@ -1247,22 +1247,22 @@ export async function startBot(cfg: Partial<BotConfig> & { host: string; usernam
     }
   })
 
-  // ── Bot 死亡与重生 ──
+  // 鈹€鈹€ Bot 姝讳骸涓庨噸鐢?鈹€鈹€
   let deathMessageTimer: ReturnType<typeof setTimeout> | null = null
 
   bot.on('death', () => {
     const deathN = recordDeath()
-    // 延迟发言：重生后再说话（避免死在死亡界面发不出消息）
+    // 寤惰繜鍙戣█锛氶噸鐢熷悗鍐嶈璇濓紙閬垮厤姝诲湪姝讳骸鐣岄潰鍙戜笉鍑烘秷鎭級
     const personality = engineState?.personalityId ?? 'deredere'
     const line = deathReaction(personality, deathN)
 
-    // 通知渲染进程
+    // 閫氱煡娓叉煋杩涚▼
     callbacks.onEvent?.({ type: 'mc:bot_death', raw: 'death#' + deathN, timestamp: new Date().toISOString() }, line)
     log.info('bot died', { count: deathN })
   })
 
   bot.on('spawn', () => {
-    // 重生后发言（首次生成不说话，deathN=0）
+    // 閲嶇敓鍚庡彂瑷€锛堥娆＄敓鎴愪笉璇磋瘽锛宒eathN=0锛?
     if (deathMessageTimer) clearTimeout(deathMessageTimer)
     deathMessageTimer = setTimeout(() => {
       const b = bot
@@ -1292,7 +1292,7 @@ export async function startBot(cfg: Partial<BotConfig> & { host: string; usernam
     }, 1500)
   })
 
-  // 等待 bot 生成完成
+  // 绛夊緟 bot 鐢熸垚瀹屾垚
   await new Promise<void>((resolve, reject) => {
     const timeout = setTimeout(() => reject(new Error('Bot spawn timeout')), 30_000)
     bot!.once('spawn', () => {
@@ -1301,14 +1301,14 @@ export async function startBot(cfg: Partial<BotConfig> & { host: string; usernam
     })
   })
 
-  // ── 背包事件监听 ──
+  // 鈹€鈹€ 鑳屽寘浜嬩欢鐩戝惉 鈹€鈹€
   const b = bot!
 
-  // 捡起物品：如果在玩家附近捡的，标记为礼物（只反应有价值物品）
+  // 鎹¤捣鐗╁搧锛氬鏋滃湪鐜╁闄勮繎鎹＄殑锛屾爣璁颁负绀肩墿锛堝彧鍙嶅簲鏈変环鍊肩墿鍝侊級
   b.on('playerCollect', (collector: any, collected: any) => {
     if (collector !== b.entity) return
     const itemName = resolveItemName(collected)
-    // 查找附近玩家
+    // 鏌ユ壘闄勮繎鐜╁
     const nearbyPlayers = Object.values(b.entities).filter(
       (e: any) => e.type === 'player' && e !== b.entity
     )
@@ -1317,7 +1317,7 @@ export async function startBot(cfg: Partial<BotConfig> & { host: string; usernam
       return d < 5
     })
     if (hasNearbyPlayer && itemName) {
-      // 只对值得捡的物品有反应（钻石、铁、金等，无视泥土/沙子/腐肉）
+      // 鍙鍊煎緱鎹＄殑鐗╁搧鏈夊弽搴旓紙閽荤煶銆侀搧銆侀噾绛夛紝鏃犺娉ュ湡/娌欏瓙/鑵愯倝锛?
       if (isWorthPickup(itemName)) {
         const slot = b.inventory.items().length - 1
         if (slot >= 0) markSlotAsGifted(slot)
@@ -1325,15 +1325,15 @@ export async function startBot(cfg: Partial<BotConfig> & { host: string; usernam
         const reaction = giftReaction(itemName, engineState?.personalityId ?? 'deredere')
         b.chat(reaction)
         if (isFirst) {
-          const displayName = oreLabel(itemName) !== '矿石' ? oreLabel(itemName) : itemName.replace(/_/g, ' ')
-          setTimeout(() => b.chat('这是我第一次收到' + displayName + '！'), 2000)
+          const displayName = oreLabel(itemName) !== '鐭跨煶' ? oreLabel(itemName) : itemName.replace(/_/g, ' ')
+          setTimeout(() => b.chat('杩欐槸鎴戠涓€娆℃敹鍒? + displayName + '锛?), 2000)
         }
         callbacks.onEvent?.({ type: 'mc:gift_received', raw: itemName, timestamp: new Date().toISOString(), payload: { itemName } }, reaction)
       }
     }
   })
 
-  // 背包变化检测：满了就抱怨
+  // 鑳屽寘鍙樺寲妫€娴嬶細婊′簡灏辨姳鎬?
   let lastInventorySize = 0
   setInterval(() => {
     if (!isRunning || !b?.inventory) return
@@ -1341,13 +1341,13 @@ export async function startBot(cfg: Partial<BotConfig> & { host: string; usernam
     const used = items.length
     const total = b.inventory.slots.length
 
-    // 背包接近满时抱怨
+    // 鑳屽寘鎺ヨ繎婊℃椂鎶辨€?
     if (used >= total - 2 && used !== lastInventorySize) {
       const stats = getGiftStats()
       const line = fullInventoryLine(engineState?.personalityId ?? 'deredere', stats.giftedCount)
       b.chat(line)
 
-      // 尝试自动丢弃低价值非礼物物品
+      // 灏濊瘯鑷姩涓㈠純浣庝环鍊奸潪绀肩墿鐗╁搧
       const discardSlot = findDiscardableSlot(items.map(i => ({ slot: i.slot, name: i.name, count: i.count })), engineState?.personalityId ?? 'deredere')
       if (discardSlot !== null) {
         try { b.tossStack(items.find(i => i.slot === discardSlot)!) } catch { /* toss may fail */ }
@@ -1355,14 +1355,14 @@ export async function startBot(cfg: Partial<BotConfig> & { host: string; usernam
     }
     lastInventorySize = used
 
-    // 清理已经不存在的礼物槽位
+    // 娓呯悊宸茬粡涓嶅瓨鍦ㄧ殑绀肩墿妲戒綅
     cleanupGiftedSlots(items.map(i => i.slot))
   }, 5000)
 
-  // 玩家死亡：检测附近大量掉落物
+  // 鐜╁姝讳骸锛氭娴嬮檮杩戝ぇ閲忔帀钀界墿
   b.on('entitySpawn', (entity: any) => {
     if (entity.name !== 'item' && entity.displayName !== 'Item') return
-    // 统计附近掉落物
+    // 缁熻闄勮繎鎺夎惤鐗?
     const nearbyEntityItems = Object.values(b.entities).filter(
       (e: any) => e.name === 'item' || e.displayName === 'Item'
     ).length
@@ -1371,26 +1371,26 @@ export async function startBot(cfg: Partial<BotConfig> & { host: string; usernam
         (e: any) => e.type === 'player' && e !== b.entity
       )
       if (playerEntities.length > 0) {
-        // 玩家死了：帮忙捡装备
-        b.chat('你的东西！我帮你捡……')
-        callbacks.onEvent?.({ type: 'mc:player_death_drops', raw: 'nearbyItems:' + String(nearbyEntityItems), timestamp: new Date().toISOString(), payload: { itemName: 'items_x' + String(nearbyEntityItems) } }, '你的东西掉了！我帮你捡……')
+        // 鐜╁姝讳簡锛氬府蹇欐崱瑁呭
+        b.chat('浣犵殑涓滆タ锛佹垜甯綘鎹♀€︹€?)
+        callbacks.onEvent?.({ type: 'mc:player_death_drops', raw: 'nearbyItems:' + String(nearbyEntityItems), timestamp: new Date().toISOString(), payload: { itemName: 'items_x' + String(nearbyEntityItems) } }, '浣犵殑涓滆タ鎺変簡锛佹垜甯綘鎹♀€︹€?)
       }
     }
   })
 
-  // 加载 pathfinder 插件
+  // 鍔犺浇 pathfinder 鎻掍欢
   try {
     const { pathfinder, Movements } = await import('mineflayer-pathfinder')
     bot.loadPlugin(pathfinder)
     const mcDataLib = await import('minecraft-data')
     const versionData = (mcDataLib as any).default(bot.version)
     mcData = versionData
-    // Movements 需要 MC 数据来识别危险方块（岩浆/水等）
+    // Movements 闇€瑕?MC 鏁版嵁鏉ヨ瘑鍒嵄闄╂柟鍧楋紙宀╂祮/姘寸瓑锛?
     const MovementsCtor = Movements as any
     const moves = new MovementsCtor(bot, versionData)
     moves.canDig = false
     moves.allowParkour = true
-    // 显式禁止进入危险方块
+    // 鏄惧紡绂佹杩涘叆鍗遍櫓鏂瑰潡
     const dangerBlocks = ['lava', 'flowing_lava', 'water', 'flowing_water', 'fire', 'cactus', 'sweet_berry_bush', 'wither_rose', 'cobweb', 'powder_snow']
     for (const name of dangerBlocks) {
       const block = versionData.blocksByName[name]
@@ -1422,10 +1422,10 @@ export async function startBot(cfg: Partial<BotConfig> & { host: string; usernam
 
   isRunning = true
 
-  // 连接 Ackem WebSocket
-  connectWs(config.ackemWsUrl)
+  // 杩炴帴 Ackem WebSocket
+  connectWs(config.AckemWsUrl)
 
-  // 启动行为 tick 循环
+  // 鍚姩琛屼负 tick 寰幆
   tickTimer = setInterval(() => {
     void doTick()
   }, config.tickIntervalMs)
@@ -1434,7 +1434,7 @@ export async function startBot(cfg: Partial<BotConfig> & { host: string; usernam
   log.info('connected', { username: config.username, host: config.host, port: config.port })
 }
 
-/** 停止 bot */
+/** 鍋滄 bot */
 export async function stopBot(): Promise<void> {
   isRunning = false
   if (tickTimer) { clearInterval(tickTimer); tickTimer = null }
@@ -1443,7 +1443,7 @@ export async function stopBot(): Promise<void> {
 
   if (bot) {
     bot.removeAllListeners()
-    // @ts-ignore - reason 参数标记手动断开
+    // @ts-ignore - reason 鍙傛暟鏍囪鎵嬪姩鏂紑
     bot.end('manualDisconnect')
     bot = null
   }
@@ -1464,12 +1464,12 @@ export async function stopBot(): Promise<void> {
   log.info('stopped')
 }
 
-/** 设置回调 */
+/** 璁剧疆鍥炶皟 */
 export function setBotCallbacks(cbs: BotCallbacks): void {
   callbacks = cbs
 }
 
-/** 连接到 Ackem WebSocket */
+/** 杩炴帴鍒?Ackem WebSocket */
 async function connectWs(url: string): Promise<void> {
   try {
     const { default: WebSocket } = await import('ws')
@@ -1513,12 +1513,12 @@ function disconnectWs(): void {
   }
 }
 
-/** 获取当前游戏状态（供外部查询） */
+/** 鑾峰彇褰撳墠娓告垙鐘舵€侊紙渚涘閮ㄦ煡璇級 */
 export function getCurrentGameState(): McGameState | null {
   return gameState
 }
 
-/** 执行聊天命令解析出的动作序列（含 hold → toss 间隔） */
+/** 鎵ц鑱婂ぉ鍛戒护瑙ｆ瀽鍑虹殑鍔ㄤ綔搴忓垪锛堝惈 hold 鈫?toss 闂撮殧锛?*/
 export async function executeBotActions(actions: import('./mc-behavior').BotAction[]): Promise<void> {
   for (let i = 0; i < actions.length; i++) {
     const action = actions[i]
@@ -1529,20 +1529,20 @@ export async function executeBotActions(actions: import('./mc-behavior').BotActi
   }
 }
 
-/** 让 bot 在游戏内发言（供 Ackem LLM 回复使用） */
+/** 璁?bot 鍦ㄦ父鎴忓唴鍙戣█锛堜緵 Ackem LLM 鍥炲浣跨敤锛?*/
 export function botSendChat(message: string): void {
   if (!bot || !isRunning) return
-  // 截断过长的消息（MC 聊天栏限制 256 字符）
-  const truncated = message.length > 250 ? message.slice(0, 250) + '…' : message
+  // 鎴柇杩囬暱鐨勬秷鎭紙MC 鑱婂ぉ鏍忛檺鍒?256 瀛楃锛?
+  const truncated = message.length > 250 ? message.slice(0, 250) + '鈥? : message
   bot.chat(truncated)
 }
 
-/** 获取 bot 实例引用（供回调中直接操作） */
+/** 鑾峰彇 bot 瀹炰緥寮曠敤锛堜緵鍥炶皟涓洿鎺ユ搷浣滐級 */
 export function getBotInstance(): Bot | null {
   return bot
 }
 
-/** 获取 Bot 当前背包物品（供命令解析用） */
+/** 鑾峰彇 Bot 褰撳墠鑳屽寘鐗╁搧锛堜緵鍛戒护瑙ｆ瀽鐢級 */
 export function getBotInventory(): Array<{ slot: number; name: string; count: number }> {
   if (!bot?.inventory) return []
   return bot.inventory.items().map((i: any) => ({

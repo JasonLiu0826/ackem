@@ -1,5 +1,5 @@
-// [autoConsolidationPolicy] — 自动记忆整合触发策略（FIX-014）
-// 职责：统一 chat/ingest 的整合间隔、事实数门槛与有意义事件密度判断
+﻿// [autoConsolidationPolicy] 鈥?鑷姩璁板繂鏁村悎瑙﹀彂绛栫暐锛團IX-014锛?
+// 鑱岃矗锛氱粺涓€ chat/ingest 鐨勬暣鍚堥棿闅斻€佷簨瀹炴暟闂ㄦ涓庢湁鎰忎箟浜嬩欢瀵嗗害鍒ゆ柇
 
 import {
   CONSOLIDATION_INTERVAL_TURNS,
@@ -7,7 +7,7 @@ import {
   CONSOLIDATION_MEANINGFUL_DENSITY,
   CONSOLIDATION_MIN_FACTS,
   CONSOLIDATION_MIN_TURNS,
-} from '../engine/ackemParams'
+} from '../engine/AckemParams'
 import type { MemoryFact, TurnTrace } from '../engine/types'
 import type { FactStore } from './factStore'
 

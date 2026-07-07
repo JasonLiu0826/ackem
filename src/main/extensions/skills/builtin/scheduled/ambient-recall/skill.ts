@@ -1,4 +1,4 @@
-import type { EngineSnapshot } from '../../../../protocols'
+﻿import type { EngineSnapshot } from '../../../../protocols'
 import type { SkillHandler, SkillInvocation, SkillResult } from '../../../types'
 import { AMBIENT_RECALL_MANIFEST } from './manifest'
 import { listEstablishedHabits } from '../../../../../memory/proceduralHabits'
@@ -10,7 +10,7 @@ function resolveDataRootForRecall(): string {
   try {
     return resolveDataRoot(loadSettings())
   } catch {
-    return process.env.ACKEM_TEST_DATA_ROOT ?? ''
+    return process.env.Ackem_TEST_DATA_ROOT ?? ''
   }
 }
 
@@ -41,7 +41,7 @@ async function execute(invocation: SkillInvocation): Promise<SkillResult> {
         type: 'ambient_recall:mention',
         payload: { fact: fact.slice(0, 120) },
         injectToContext: true,
-        contextInjection: `[回忆] ${output}`,
+        contextInjection: `[鍥炲繂] ${output}`,
         timestamp: new Date().toISOString()
       }
     ],

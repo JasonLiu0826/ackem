@@ -1,4 +1,4 @@
-# 💫 Ackem
+﻿# 馃挮 Ackem
 
 ![Version](https://img.shields.io/badge/Version-1.0.0-orange?style=for-the-badge)
 ![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)
@@ -7,166 +7,153 @@
 ![OpenAI Compatible](https://img.shields.io/badge/API-OpenAI--Compatible-412991?style=for-the-badge&logo=openai&logoColor=white)
 ![Electron](https://img.shields.io/badge/Built_with-Electron-47848F?style=for-the-badge&logo=electron&logoColor=white)
 
-**Ackem** · **A**.C.K.E.M — 保持情感记忆的自主伙伴  
+**Ackem** 路 **A**.C.K.E.M 鈥?淇濇寔鎯呮劅璁板繂鐨勮嚜涓讳紮浼? 
 *Autonomous Companion Keeping Emotional Memory*
 
-**Ackem v1.0.0** — 运行在你 Windows 电脑上的 **本地优先** AI 伴侣。自备大模型（云端或本机），Ackem 负责对话、记忆、情绪与关系、桌宠陪伴 — **数据都在本机硬盘**。
+**Ackem v1.0.0** 鈥?杩愯鍦ㄤ綘 Windows 鐢佃剳涓婄殑 **鏈湴浼樺厛** AI 浼翠荆銆傝嚜澶囧ぇ妯″瀷锛堜簯绔垨鏈満锛夛紝Ackem 璐熻矗瀵硅瘽銆佽蹇嗐€佹儏缁笌鍏崇郴銆佹瀹犻櫔浼?鈥?**鏁版嵁閮藉湪鏈満纭洏**銆?
 
-> **源码**：[GitHub](https://github.com/JasonLiu0826/Ackem) · [Gitee 镜像](https://gitee.com/jason_2005/ackem)  
-> **下载**：[GitHub Releases](https://github.com/JasonLiu0826/Ackem/releases) · [Gitee Releases](https://gitee.com/jason_2005/ackem/releases)  
-> **构建**：`npm run dist:green` → `dist/release/Ackem-1.0.0-win-x64/` · [路径说明](./docs/CODEBASE-PATHS.zh.md) · [文档语言](./docs/I18N.zh.md)  
-> **状态：** Ackem 目前仍处于**测试与快速迭代**阶段。个人维护，测试覆盖面有限，使用中可能遇到预期之外的情况或细节瑕疵；一般不会出现频繁闪退或严重卡顿，但完善度仍在持续改进。欢迎 [提交 Issue](https://github.com/JasonLiu0826/Ackem/issues) 反馈。
+> **婧愮爜**锛歔GitHub](https://github.com/JasonLiu0826/Ackem) 路 [Gitee 闀滃儚](https://gitee.com/jason_2005/Ackem)  
+> **涓嬭浇**锛歔GitHub Releases](https://github.com/JasonLiu0826/Ackem/releases) 路 [Gitee Releases](https://gitee.com/jason_2005/Ackem/releases)  
+> **鏋勫缓**锛歚npm run dist:green` 鈫?`dist/release/Ackem-1.0.0-win-x64/` 路 [璺緞璇存槑](./docs/CODEBASE-PATHS.zh.md) 路 [鏂囨。璇█](./docs/I18N.zh.md)  
+> **鐘舵€侊細** Ackem 鐩墠浠嶅浜?*娴嬭瘯涓庡揩閫熻凯浠?*闃舵銆備釜浜虹淮鎶わ紝娴嬭瘯瑕嗙洊闈㈡湁闄愶紝浣跨敤涓彲鑳介亣鍒伴鏈熶箣澶栫殑鎯呭喌鎴栫粏鑺傜憰鐤碉紱涓€鑸笉浼氬嚭鐜伴绻侀棯閫€鎴栦弗閲嶅崱椤匡紝浣嗗畬鍠勫害浠嶅湪鎸佺画鏀硅繘銆傛杩?[鎻愪氦 Issue](https://github.com/JasonLiu0826/Ackem/issues) 鍙嶉銆?
 
-English: [README.md](./README.md) · [Privacy & data](./docs/privacy-and-data.md)
+English: [README.md](./README.md) 路 [Privacy & data](./docs/privacy-and-data.md)
 
 ---
 
-## 一句话了解
+## 涓€鍙ヨ瘽浜嗚В
 
-Ackem **不是**网页聊天框，而是常驻桌面的 Windows 应用：系统托盘、可选桌宠、结构化记忆，以及能记住上下文的 AI 伴侣。
+Ackem **涓嶆槸**缃戦〉鑱婂ぉ妗嗭紝鑰屾槸甯搁┗妗岄潰鐨?Windows 搴旂敤锛氱郴缁熸墭鐩樸€佸彲閫夋瀹犮€佺粨鏋勫寲璁板繂锛屼互鍙婅兘璁颁綇涓婁笅鏂囩殑 AI 浼翠荆銆?
 
 | | |
 |---|---|
-| 💬 **对话** | 任意 OpenAI 兼容接口 — DeepSeek、OpenAI、Ollama、LM Studio 等 |
-| 🧠 **记忆** | 对话写入可检索记忆；可导入 `.txt` / `.md` 作为长期上下文 |
-| 💞 **陪伴** | 信任、情绪、关系阶段、人格预设、日记、可选主动消息 |
-| 🔒 **本地优先** | 个人数据在 exe 旁 `./data/` — **官方 zip 不含** `data/` |
+| 馃挰 **瀵硅瘽** | 浠绘剰 OpenAI 鍏煎鎺ュ彛 鈥?DeepSeek銆丱penAI銆丱llama銆丩M Studio 绛?|
+| 馃 **璁板繂** | 瀵硅瘽鍐欏叆鍙绱㈣蹇嗭紱鍙鍏?`.txt` / `.md` 浣滀负闀挎湡涓婁笅鏂?|
+| 馃挒 **闄即** | 淇′换銆佹儏缁€佸叧绯婚樁娈点€佷汉鏍奸璁俱€佹棩璁般€佸彲閫変富鍔ㄦ秷鎭?|
+| 馃敀 **鏈湴浼樺厛** | 涓汉鏁版嵁鍦?exe 鏃?`./data/` 鈥?**瀹樻柟 zip 涓嶅惈** `data/` |
 
-**你需要：** Windows 10/11 64 位 · 大模型 API 或本机推理服务 · 首次启动约 10–30 秒（embedding 模型解压一次）。绿色版 **无需 Node.js**。
+**浣犻渶瑕侊細** Windows 10/11 64 浣?路 澶фā鍨?API 鎴栨湰鏈烘帹鐞嗘湇鍔?路 棣栨鍚姩绾?10鈥?0 绉掞紙embedding 妯″瀷瑙ｅ帇涓€娆★級銆傜豢鑹茬増 **鏃犻渶 Node.js**銆?
 
 ---
 
-## 界面与演示
+## 鐣岄潰涓庢紨绀?
 
 <details>
-<summary><strong>📷 界面截图</strong>（点击展开）</summary>
+<summary><strong>馃摲 鐣岄潰鎴浘</strong>锛堢偣鍑诲睍寮€锛?/summary>
 
 <p align="center">
-  <img src="./docs/images/01-loading.png" alt="加载界面" width="640" />
-  <br /><em>加载界面 — 首次启动解压本地 embedding 模型，进度条完成后进入主界面</em>
+  <img src="./docs/images/01-loading.png" alt="鍔犺浇鐣岄潰" width="640" />
+  <br /><em>鍔犺浇鐣岄潰 鈥?棣栨鍚姩瑙ｅ帇鏈湴 embedding 妯″瀷锛岃繘搴︽潯瀹屾垚鍚庤繘鍏ヤ富鐣岄潰</em>
 </p>
 
 <p align="center">
-  <img src="./docs/images/02-home.png" alt="主页面" width="640" />
-  <br /><em>主页面 — 对话、记忆、游戏、扩展与设置；右侧为关系状态与桌宠预览</em>
+  <img src="./docs/images/02-home.png" alt="涓婚〉闈? width="640" />
+  <br /><em>涓婚〉闈?鈥?瀵硅瘽銆佽蹇嗐€佹父鎴忋€佹墿灞曚笌璁剧疆锛涘彸渚т负鍏崇郴鐘舵€佷笌妗屽疇棰勮</em>
 </p>
 
 <p align="center">
-  <img src="./docs/images/03-memory-graph.jpg" alt="记忆可视化" width="640" />
-  <br /><em>记忆 — 对话沉淀为结构化回忆、时间线与知识关联</em>
+  <img src="./docs/images/03-memory-graph.jpg" alt="璁板繂鍙鍖? width="640" />
+  <br /><em>璁板繂 鈥?瀵硅瘽娌夋穩涓虹粨鏋勫寲鍥炲繂銆佹椂闂寸嚎涓庣煡璇嗗叧鑱?/em>
 </p>
 
 <p align="center">
-  <img src="./docs/images/03-settings.png" alt="设置界面" width="640" />
-  <br /><em>设置 — 人格、语音、桌宠、微信通道、扩展与数据管理</em>
+  <img src="./docs/images/03-settings.png" alt="璁剧疆鐣岄潰" width="640" />
+  <br /><em>璁剧疆 鈥?浜烘牸銆佽闊炽€佹瀹犮€佸井淇￠€氶亾銆佹墿灞曚笌鏁版嵁绠＄悊</em>
 </p>
 
 <p align="center">
-  <img src="./docs/images/04-model-api.png" alt="配置模型" width="640" />
-  <br /><em>模型与 API — Base URL、API Key、模型 ID</em>
+  <img src="./docs/images/04-model-api.png" alt="閰嶇疆妯″瀷" width="640" />
+  <br /><em>妯″瀷涓?API 鈥?Base URL銆丄PI Key銆佹ā鍨?ID</em>
 </p>
 
 <p align="center">
-  <img src="./docs/images/05-compliance.png" alt="合规勾选" width="640" />
-  <br /><em>合规 — 首次运行确认隐私、数据处理与成人模式条款</em>
+  <img src="./docs/images/05-compliance.png" alt="鍚堣鍕鹃€? width="640" />
+  <br /><em>鍚堣 鈥?棣栨杩愯纭闅愮銆佹暟鎹鐞嗕笌鎴愪汉妯″紡鏉℃</em>
 </p>
 
 </details>
 
 <details>
-<summary><strong>🎬 演示 GIF</strong>（点击展开）</summary>
+<summary><strong>馃幀 婕旂ず GIF</strong>锛堢偣鍑诲睍寮€锛?/summary>
 
 <p align="center">
-  <img src="./docs/images/01-download-open.gif" alt="下载并打开" width="640" />
-  <br /><em>下载 zip → 解压 → 启动 Ackem.exe → 等待加载 → 进入主界面</em>
+  <img src="./docs/images/01-download-open.gif" alt="涓嬭浇骞舵墦寮€" width="640" />
+  <br /><em>涓嬭浇 zip 鈫?瑙ｅ帇 鈫?鍚姩 Ackem.exe 鈫?绛夊緟鍔犺浇 鈫?杩涘叆涓荤晫闈?/em>
 </p>
 
 <p align="center">
-  <img src="./docs/images/02-daily-chat.gif" alt="日常对话" width="640" />
-  <br /><em>配置模型后自然聊天；回复会结合记忆与关系状态</em>
+  <img src="./docs/images/02-daily-chat.gif" alt="鏃ュ父瀵硅瘽" width="640" />
+  <br /><em>閰嶇疆妯″瀷鍚庤嚜鐒惰亰澶╋紱鍥炲浼氱粨鍚堣蹇嗕笌鍏崇郴鐘舵€?/em>
 </p>
 
 </details>
 
 ---
 
-## 详细介绍
+## 璇︾粏浠嬬粛
 
-### Ackem 是什么？
+### Ackem 鏄粈涔堬紵
 
-Ackem 是 **本地优先** 的 Windows 桌面程序：你配置大模型接口，Ackem 负责 **对话、记忆、情绪与关系状态、桌宠陪伴**，数据保存在 **你自己的电脑** 上。
+Ackem 鏄?**鏈湴浼樺厛** 鐨?Windows 妗岄潰绋嬪簭锛氫綘閰嶇疆澶фā鍨嬫帴鍙ｏ紝Ackem 璐熻矗 **瀵硅瘽銆佽蹇嗐€佹儏缁笌鍏崇郴鐘舵€併€佹瀹犻櫔浼?*锛屾暟鎹繚瀛樺湪 **浣犺嚜宸辩殑鐢佃剳** 涓娿€?
 
-### 你可以用它做什么
+### 浣犲彲浠ョ敤瀹冨仛浠€涔?
 
-- **像和人聊天一样对话** — 云端或本机 Ollama / LM Studio；在 **设置 → 模型与 API** 填写即可。
-- **记住你们说过的事** — 结构化记忆、搜索、时间线、知识图谱；**导入** txt / md 作为长期记忆。
-- **有连续感的陪伴** — 信任、情绪、关系阶段、人格预设、伴侣 **日记**、可选主动找你聊几句。
-- **不只在主窗口** — 系统托盘；可选 **桌宠** 小窗（几何光球 + Live2D 预览）。
-- **可选能力** — 语音识别与播报、**微信** 通道（手机发消息、大脑在本机）、**扩展中心**、实验中的 **Plan · OpenForU**。
-- **游戏模式** — 实验中；可与伴侣一起玩支持的游戏（如 Minecraft，视扩展而定）。
+- **鍍忓拰浜鸿亰澶╀竴鏍峰璇?* 鈥?浜戠鎴栨湰鏈?Ollama / LM Studio锛涘湪 **璁剧疆 鈫?妯″瀷涓?API** 濉啓鍗冲彲銆?
+- **璁颁綇浣犱滑璇磋繃鐨勪簨** 鈥?缁撴瀯鍖栬蹇嗐€佹悳绱€佹椂闂寸嚎銆佺煡璇嗗浘璋憋紱**瀵煎叆** txt / md 浣滀负闀挎湡璁板繂銆?
+- **鏈夎繛缁劅鐨勯櫔浼?* 鈥?淇′换銆佹儏缁€佸叧绯婚樁娈点€佷汉鏍奸璁俱€佷即渚?**鏃ヨ**銆佸彲閫変富鍔ㄦ壘浣犺亰鍑犲彞銆?
+- **涓嶅彧鍦ㄤ富绐楀彛** 鈥?绯荤粺鎵樼洏锛涘彲閫?**妗屽疇** 灏忕獥锛堝嚑浣曞厜鐞?+ Live2D 棰勮锛夈€?
+- **鍙€夎兘鍔?* 鈥?璇煶璇嗗埆涓庢挱鎶ャ€?*寰俊** 閫氶亾锛堟墜鏈哄彂娑堟伅銆佸ぇ鑴戝湪鏈満锛夈€?*鎵╁睍涓績**銆佸疄楠屼腑鐨?**Plan 路 OpenForU**銆?
+- **娓告垙妯″紡** 鈥?瀹為獙涓紱鍙笌浼翠荆涓€璧风帺鏀寔鐨勬父鎴忥紙濡?Minecraft锛岃鎵╁睍鑰屽畾锛夈€?
 
-### 数据在哪里
+### 鏁版嵁鍦ㄥ摢閲?
 
-绿色版默认把全部个人数据放在 **exe 同级的 `data/`**：聊天记录、记忆、日记、设置里的 API Key 等。**官方 zip 不含 `data/`**，首次运行才在本机生成空目录。无默认上传到 Ackem 服务器的遥测。
+缁胯壊鐗堥粯璁ゆ妸鍏ㄩ儴涓汉鏁版嵁鏀惧湪 **exe 鍚岀骇鐨?`data/`**锛氳亰澶╄褰曘€佽蹇嗐€佹棩璁般€佽缃噷鐨?API Key 绛夈€?*瀹樻柟 zip 涓嶅惈 `data/`**锛岄娆¤繍琛屾墠鍦ㄦ湰鏈虹敓鎴愮┖鐩綍銆傛棤榛樿涓婁紶鍒?Ackem 鏈嶅姟鍣ㄧ殑閬ユ祴銆?
 
-备份、迁移、删除：[docs/memory-format.zh.md](./docs/memory-format.zh.md) · [docs/distribution-windows.zh.md](./docs/distribution-windows.zh.md)
+澶囦唤銆佽縼绉汇€佸垹闄わ細[docs/memory-format.zh.md](./docs/memory-format.zh.md) 路 [docs/distribution-windows.zh.md](./docs/distribution-windows.zh.md)
 
-### 给开发者
+### 缁欏紑鍙戣€?
 
-请看下方 **[开发者](#开发者)**、[系统架构](#系统架构七系统) 与 [文档索引](#文档)。
+璇风湅涓嬫柟 **[寮€鍙戣€匽(#寮€鍙戣€?**銆乕绯荤粺鏋舵瀯](#绯荤粺鏋舵瀯涓冪郴缁? 涓?[鏂囨。绱㈠紩](#鏂囨。)銆?
 
 ---
 
-## 5 分钟上手（终端用户）
+## 5 鍒嗛挓涓婃墜锛堢粓绔敤鎴凤級
 
-适用：**已下载官方 Release**，本机 **无需 Node.js**。
+閫傜敤锛?*宸蹭笅杞藉畼鏂?Release**锛屾湰鏈?**鏃犻渶 Node.js**銆?
 
-### 隐私说明（必读）
+### 闅愮璇存槑锛堝繀璇伙級
 
-| 官方包 **不含** | 首次运行后 **仅在本机** |
+| 瀹樻柟鍖?**涓嶅惈** | 棣栨杩愯鍚?**浠呭湪鏈満** |
 |----------------|------------------------|
-| 用户记忆、聊天记录、导入文件 | `data/`（便携模式，exe 旁） |
-| API Key、模型凭证 | 设置 → 本机 userData |
-| 维护者或他人的私人数据 | 由你自己配置与写入 |
+| 鐢ㄦ埛璁板繂銆佽亰澶╄褰曘€佸鍏ユ枃浠?| `data/`锛堜究鎼烘ā寮忥紝exe 鏃侊級 |
+| API Key銆佹ā鍨嬪嚟璇?| 璁剧疆 鈫?鏈満 userData |
+| 缁存姢鑰呮垨浠栦汉鐨勭浜烘暟鎹?| 鐢变綘鑷繁閰嶇疆涓庡啓鍏?|
 
-详见 [docs/distribution-windows.zh.md](./docs/distribution-windows.zh.md)。
+璇﹁ [docs/distribution-windows.zh.md](./docs/distribution-windows.zh.md)銆?
 
-### 步骤
+### 姝ラ
 
-1. **下载** — [GitHub Releases](https://github.com/JasonLiu0826/Ackem/releases) 或 [Gitee Releases](https://gitee.com/jason_2005/ackem/releases) 获取 `Ackem-v1.0.0-win-x64.zip`
-2. **解压** — 完整解压到 SSD 目录（勿在 zip 内直接运行）
-3. **启动** — 双击 `Ackem.exe` 或 `启动 Ackem.bat`；首次约 10–30 秒（见 [加载界面](#界面与演示)）
-4. **合规确认** — 勾选隐私与数据处理条款（见 [合规截图](#界面与演示)）
-5. **配置模型** — **设置 → 模型与 API**：Base URL、API Key（云端必填）、模型 ID
-6. **首次对话** — 发一条消息确认回复；可选导入 txt/md 记忆
+1. **涓嬭浇** 鈥?[GitHub Releases](https://github.com/JasonLiu0826/Ackem/releases) 鎴?[Gitee Releases](https://gitee.com/jason_2005/Ackem/releases) 鑾峰彇 `Ackem-v1.0.0-win-x64.zip`
+2. **瑙ｅ帇** 鈥?瀹屾暣瑙ｅ帇鍒?SSD 鐩綍锛堝嬁鍦?zip 鍐呯洿鎺ヨ繍琛岋級
+3. **鍚姩** 鈥?鍙屽嚮 `Ackem.exe` 鎴?`鍚姩 Ackem.bat`锛涢娆＄害 10鈥?0 绉掞紙瑙?[鍔犺浇鐣岄潰](#鐣岄潰涓庢紨绀?锛?
+4. **鍚堣纭** 鈥?鍕鹃€夐殣绉佷笌鏁版嵁澶勭悊鏉℃锛堣 [鍚堣鎴浘](#鐣岄潰涓庢紨绀?锛?
+5. **閰嶇疆妯″瀷** 鈥?**璁剧疆 鈫?妯″瀷涓?API**锛欱ase URL銆丄PI Key锛堜簯绔繀濉級銆佹ā鍨?ID
+6. **棣栨瀵硅瘽** 鈥?鍙戜竴鏉℃秷鎭‘璁ゅ洖澶嶏紱鍙€夊鍏?txt/md 璁板繂
 
-> **分享 zip 前：** 切勿把个人 `data/` 文件夹打进压缩包 — 其中含对话、记忆与密钥。
-
-### macOS（社区构建 · 非官方） {#macos-community-build-unofficial}
-
-> **官方支持范围：** 仅 Windows 绿色版。以下 Mac 包由社区贡献者 [@deufe](https://github.com/deufe) 构建，**非**核心团队维护或完整实机验证。详见 [Issue #4](https://github.com/JasonLiu0826/ackem/issues/4)。
-
-| 文件 | 架构 | 下载 |
-|------|------|------|
-| `Ackem-1.0.0-mac-arm64.dmg` | Apple Silicon（M 系列） | [v3 DMG](https://github.com/deufe/ackem/releases/download/v1.0.0-mac-community-v3/Ackem-1.0.0-mac-arm64.dmg) |
-| `Ackem-1.0.0-mac-x64.dmg` | Intel Mac | [v3 DMG](https://github.com/deufe/ackem/releases/download/v1.0.0-mac-community-v3/Ackem-1.0.0-mac-x64.dmg) |
-
-**请仅使用 v3**（v1/v2 已过时）。SHA256 与安装步骤：[v1.0.0 Release 说明](https://github.com/JasonLiu0826/ackem/releases/tag/v1.0.0) · [附录文档](./docs/releases/v1.0.0-mac-community-appendix.md)
-
-**首次打开（Gatekeeper）：** 无 Apple 签名。拖入「应用程序」后执行 `xattr -cr /Applications/Ackem.app`，再 **右键 → 打开** 一次。应用内自动更新 **仅支持 Windows**。
+> **鍒嗕韩 zip 鍓嶏細** 鍒囧嬁鎶婁釜浜?`data/` 鏂囦欢澶规墦杩涘帇缂╁寘 鈥?鍏朵腑鍚璇濄€佽蹇嗕笌瀵嗛挜銆?
 
 ---
 
-## 开发者
+## 寮€鍙戣€?
 
-> Ackem 是 **Electron 应用**，渲染进程依赖 `window.ackem`（preload IPC）。  
-> 请用 **`npm run dev`** 启动，不要在浏览器单独打开 Vite 地址。
+> Ackem 鏄?**Electron 搴旂敤**锛屾覆鏌撹繘绋嬩緷璧?`window.Ackem`锛坧reload IPC锛夈€? 
+> 璇风敤 **`npm run dev`** 鍚姩锛屼笉瑕佸湪娴忚鍣ㄥ崟鐙墦寮€ Vite 鍦板潃銆?
 
-### 环境
+### 鐜
 
-- Windows 10/11 · Node.js **20+** · `npm ci`
+- Windows 10/11 路 Node.js **20+** 路 `npm ci`
 
-### 日常开发
+### 鏃ュ父寮€鍙?
 
 ```bash
 cd Ackem-v0.0.0
@@ -174,17 +161,17 @@ npm install
 npm run dev
 ```
 
-开发时 `data/` 在工作目录下，与绿色版 exe 旁的 `data/` 相互独立。
+寮€鍙戞椂 `data/` 鍦ㄥ伐浣滅洰褰曚笅锛屼笌缁胯壊鐗?exe 鏃佺殑 `data/` 鐩镐簰鐙珛銆?
 
-### 构建与打包
+### 鏋勫缓涓庢墦鍖?
 
 ```bash
-npm run build          # 编译 → out/
-npm run dist:green     # 绿色版 → dist/release/
-npm run dist:setup     # 可选 NSIS 安装包
+npm run build          # 缂栬瘧 鈫?out/
+npm run dist:green     # 缁胯壊鐗?鈫?dist/release/
+npm run dist:setup     # 鍙€?NSIS 瀹夎鍖?
 ```
 
-### 测试
+### 娴嬭瘯
 
 ```bash
 npm run typecheck
@@ -194,76 +181,74 @@ npm run test:renderer
 
 ---
 
-## 系统架构（七系统）
+## 绯荤粺鏋舵瀯锛堜竷绯荤粺锛?
 
-| # | 系统 | 说明 | 文档 |
+| # | 绯荤粺 | 璇存槑 | 鏂囨。 |
 |---|------|------|------|
-| ① | 整体 | Electron、orchestrator、一轮对话链路 | [00-overall-system.md](./docs/developer/architecture/00-overall-system.md) |
-| ② | 脑 | L0 理解 + L4 记忆检索与衰减 | [01-brain-system.md](./docs/developer/architecture/01-brain-system.md) |
-| ③ | 心 | L1 关系 + L2 情绪 + L3 表达 | [02-heart-system.md](./docs/developer/architecture/02-heart-system.md) |
-| ④ | 嘴 | Prompt 组装 + LLM 调用 | [03-mouth-system.md](./docs/developer/architecture/03-mouth-system.md) |
-| ⑤ | 神经 | Embedding / 向量检索 | [04-neural-system.md](./docs/developer/architecture/04-neural-system.md) |
-| ⑥ | 扩展 | Skill/Plugin/Dispatch/OpenForU | [05-extension-system.md](./docs/developer/architecture/05-extension-system.md) |
-| ⑦ | 时间 | 时间感知、作息曲线、重逢、感慨 | [06-time-system.md](./docs/developer/architecture/06-time-system.md) |
-| — | 数据层 | SQLite 模式、Repository、迁移 | [07-data-layer.md](./docs/developer/architecture/07-data-layer.md) |
-| — | IPC 接口 | `window.ackem.*` preload 桥、推送事件 | [08-ipc-api.md](./docs/developer/architecture/08-ipc-api.md) |
+| 鈶?| 鏁翠綋 | Electron銆乷rchestrator銆佷竴杞璇濋摼璺?| [00-overall-system.md](./docs/developer/architecture/00-overall-system.md) |
+| 鈶?| 鑴?| L0 鐞嗚В + L4 璁板繂妫€绱笌琛板噺 | [01-brain-system.md](./docs/developer/architecture/01-brain-system.md) |
+| 鈶?| 蹇?| L1 鍏崇郴 + L2 鎯呯华 + L3 琛ㄨ揪 | [02-heart-system.md](./docs/developer/architecture/02-heart-system.md) |
+| 鈶?| 鍢?| Prompt 缁勮 + LLM 璋冪敤 | [03-mouth-system.md](./docs/developer/architecture/03-mouth-system.md) |
+| 鈶?| 绁炵粡 | Embedding / 鍚戦噺妫€绱?| [04-neural-system.md](./docs/developer/architecture/04-neural-system.md) |
+| 鈶?| 鎵╁睍 | Skill/Plugin/Dispatch/OpenForU | [05-extension-system.md](./docs/developer/architecture/05-extension-system.md) |
+| 鈶?| 鏃堕棿 | 鏃堕棿鎰熺煡銆佷綔鎭洸绾裤€侀噸閫€佹劅鎱?| [06-time-system.md](./docs/developer/architecture/06-time-system.md) |
+| 鈥?| 鏁版嵁灞?| SQLite 妯″紡銆丷epository銆佽縼绉?| [07-data-layer.md](./docs/developer/architecture/07-data-layer.md) |
+| 鈥?| IPC 鎺ュ彛 | `window.Ackem.*` preload 妗ャ€佹帹閫佷簨浠?| [08-ipc-api.md](./docs/developer/architecture/08-ipc-api.md) |
 
-索引：[docs/developer/architecture/README.md](./docs/developer/architecture/README.md)
+绱㈠紩锛歔docs/developer/architecture/README.md](./docs/developer/architecture/README.md)
 
 ---
 
-## 文档
+## 鏂囨。
 
-> **语言：** English（`*.md`）· 中文（`*.zh.md`）— 见 [I18N.zh.md](./docs/I18N.zh.md)
+> **璇█锛?* English锛坄*.md`锛壜?涓枃锛坄*.zh.md`锛夆€?瑙?[I18N.zh.md](./docs/I18N.zh.md)
 
-| 用途 | English | 中文 |
+| 鐢ㄩ€?| English | 涓枃 |
 |------|---------|------|
-| 代码库与产物路径 | [CODEBASE-PATHS.md](./docs/CODEBASE-PATHS.md) | [CODEBASE-PATHS.zh.md](./docs/CODEBASE-PATHS.zh.md) |
-| 开源文档地图（维护者） | [OPEN-SOURCE-DOC-MAP.md](./docs/OPEN-SOURCE-DOC-MAP.md) | [OPEN-SOURCE-DOC-MAP.zh.md](./docs/OPEN-SOURCE-DOC-MAP.zh.md) |
-| 扩展开发者协议 | [DEVELOPER-EXTENSION-PROTOCOL.md](./docs/developer/DEVELOPER-EXTENSION-PROTOCOL.md) | [DEVELOPER-EXTENSION-PROTOCOL.zh.md](./docs/developer/DEVELOPER-EXTENSION-PROTOCOL.zh.md) |
-| 开发者环境搭建 | [dev-setup.md](./docs/developer/dev-setup.md) | [dev-setup.zh.md](./docs/developer/dev-setup.zh.md) |
-| 架构索引 | [architecture/README.md](./docs/developer/architecture/README.md) | [architecture/README.zh.md](./docs/developer/architecture/README.zh.md) |
-| 数据目录格式 | [memory-format.md](./docs/memory-format.md) | [memory-format.zh.md](./docs/memory-format.zh.md) |
-| AI 上下文与检索 | [ai-context-and-retrieval-policy.md](./docs/ai-context-and-retrieval-policy.md) | [ai-context-and-retrieval-policy.zh.md](./docs/ai-context-and-retrieval-policy.zh.md) |
-| 隐私与数据处理 | [privacy-and-data.md](./docs/privacy-and-data.md) | [privacy-and-data.zh.md](./docs/privacy-and-data.zh.md) |
-| 本地模型配置 | [local-models-windows.md](./docs/local-models-windows.md) | [local-models-windows.zh.md](./docs/local-models-windows.zh.md) |
-| 成人模式与安全 | [adult-and-safety-policy.md](./docs/adult-and-safety-policy.md) | [adult-and-safety-policy.zh.md](./docs/adult-and-safety-policy.zh.md) |
-| 感知能力 | [perception-layer.md](./docs/perception-layer.md) | [perception-layer.zh.md](./docs/perception-layer.zh.md) |
-| 敏感能力 | [sensitive-capabilities.md](./docs/sensitive-capabilities.md) | [sensitive-capabilities.zh.md](./docs/sensitive-capabilities.zh.md) |
-| Windows 分发 | [distribution-windows.md](./docs/distribution-windows.md) | [distribution-windows.zh.md](./docs/distribution-windows.zh.md) |
-| 索引与规模 | [indexing-and-scale.md](./docs/indexing-and-scale.md) | [indexing-and-scale.zh.md](./docs/indexing-and-scale.zh.md) |
-| 安全策略 | [SECURITY.md](./SECURITY.md) | [SECURITY.zh.md](./SECURITY.zh.md) |
-| 贡献指南 | [CONTRIBUTING.md](./CONTRIBUTING.md) | [CONTRIBUTING.zh.md](./CONTRIBUTING.zh.md) |
-| 行为准则 | [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) | [CODE_OF_CONDUCT.zh.md](./CODE_OF_CONDUCT.zh.md) |
+| 浠ｇ爜搴撲笌浜х墿璺緞 | [CODEBASE-PATHS.md](./docs/CODEBASE-PATHS.md) | [CODEBASE-PATHS.zh.md](./docs/CODEBASE-PATHS.zh.md) |
+| 寮€婧愭枃妗ｅ湴鍥撅紙缁存姢鑰咃級 | [OPEN-SOURCE-DOC-MAP.md](./docs/OPEN-SOURCE-DOC-MAP.md) | [OPEN-SOURCE-DOC-MAP.zh.md](./docs/OPEN-SOURCE-DOC-MAP.zh.md) |
+| 鎵╁睍寮€鍙戣€呭崗璁?| [DEVELOPER-EXTENSION-PROTOCOL.md](./docs/developer/DEVELOPER-EXTENSION-PROTOCOL.md) | [DEVELOPER-EXTENSION-PROTOCOL.zh.md](./docs/developer/DEVELOPER-EXTENSION-PROTOCOL.zh.md) |
+| 寮€鍙戣€呯幆澧冩惌寤?| [dev-setup.md](./docs/developer/dev-setup.md) | [dev-setup.zh.md](./docs/developer/dev-setup.zh.md) |
+| 鏋舵瀯绱㈠紩 | [architecture/README.md](./docs/developer/architecture/README.md) | [architecture/README.zh.md](./docs/developer/architecture/README.zh.md) |
+| 鏁版嵁鐩綍鏍煎紡 | [memory-format.md](./docs/memory-format.md) | [memory-format.zh.md](./docs/memory-format.zh.md) |
+| AI 涓婁笅鏂囦笌妫€绱?| [ai-context-and-retrieval-policy.md](./docs/ai-context-and-retrieval-policy.md) | [ai-context-and-retrieval-policy.zh.md](./docs/ai-context-and-retrieval-policy.zh.md) |
+| 闅愮涓庢暟鎹鐞?| [privacy-and-data.md](./docs/privacy-and-data.md) | [privacy-and-data.zh.md](./docs/privacy-and-data.zh.md) |
+| 鏈湴妯″瀷閰嶇疆 | [local-models-windows.md](./docs/local-models-windows.md) | [local-models-windows.zh.md](./docs/local-models-windows.zh.md) |
+| 鎴愪汉妯″紡涓庡畨鍏?| [adult-and-safety-policy.md](./docs/adult-and-safety-policy.md) | [adult-and-safety-policy.zh.md](./docs/adult-and-safety-policy.zh.md) |
+| 鎰熺煡鑳藉姏 | [perception-layer.md](./docs/perception-layer.md) | [perception-layer.zh.md](./docs/perception-layer.zh.md) |
+| 鏁忔劅鑳藉姏 | [sensitive-capabilities.md](./docs/sensitive-capabilities.md) | [sensitive-capabilities.zh.md](./docs/sensitive-capabilities.zh.md) |
+| Windows 鍒嗗彂 | [distribution-windows.md](./docs/distribution-windows.md) | [distribution-windows.zh.md](./docs/distribution-windows.zh.md) |
+| 绱㈠紩涓庤妯?| [indexing-and-scale.md](./docs/indexing-and-scale.md) | [indexing-and-scale.zh.md](./docs/indexing-and-scale.zh.md) |
+| 瀹夊叏绛栫暐 | [SECURITY.md](./SECURITY.md) | [SECURITY.zh.md](./SECURITY.zh.md) |
+| 璐＄尞鎸囧崡 | [CONTRIBUTING.md](./CONTRIBUTING.md) | [CONTRIBUTING.zh.md](./CONTRIBUTING.zh.md) |
+| 琛屼负鍑嗗垯 | [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) | [CODE_OF_CONDUCT.zh.md](./CODE_OF_CONDUCT.zh.md) |
 
 ---
 
-## 许可证
+## 璁稿彲璇?
 
-本项目以 [AGPL-3.0](./LICENSE) 协议开源。
+鏈」鐩互 [AGPL-3.0](./LICENSE) 鍗忚寮€婧愩€?
 
-| 使用场景 | 是否允许 |
+| 浣跨敤鍦烘櫙 | 鏄惁鍏佽 |
 |---------|---------|
-| 个人学习与研究 | ✅ 允许 |
-| 开源项目集成（需同样以 AGPL-3.0 开源） | ✅ 允许 |
-| 学术研究与论文引用 | ✅ 允许 |
-| 闭源商业产品 | ❌ 需商业授权 |
-| SaaS 服务（不向用户提供源码） | ❌ 需商业授权 |
-| 企业私有化部署（不开源） | ❌ 需商业授权 |
-| 闭源产品通过 API 调用（不修改源码） | ⚠️ 灰色地带，建议咨询 |
+| 涓汉瀛︿範涓庣爺绌?| 鉁?鍏佽 |
+| 寮€婧愰」鐩泦鎴愶紙闇€鍚屾牱浠?AGPL-3.0 寮€婧愶級 | 鉁?鍏佽 |
+| 瀛︽湳鐮旂┒涓庤鏂囧紩鐢?| 鉁?鍏佽 |
+| 闂簮鍟嗕笟浜у搧 | 鉂?闇€鍟嗕笟鎺堟潈 |
+| SaaS 鏈嶅姟锛堜笉鍚戠敤鎴锋彁渚涙簮鐮侊級 | 鉂?闇€鍟嗕笟鎺堟潈 |
+| 浼佷笟绉佹湁鍖栭儴缃诧紙涓嶅紑婧愶級 | 鉂?闇€鍟嗕笟鎺堟潈 |
+| 闂簮浜у搧閫氳繃 API 璋冪敤锛堜笉淇敼婧愮爜锛?| 鈿狅笍 鐏拌壊鍦板甫锛屽缓璁挩璇?|
 
-### 商业授权
+### 鍟嗕笟鎺堟潈
 
-如需商业授权，请联系：**jasonliu_lyf_2005@qq.com**
+濡傞渶鍟嗕笟鎺堟潈锛岃鑱旂郴锛?*jasonliu_lyf_2005@qq.com**
 
-### 贡献者协议
+### 璐＄尞鑰呭崗璁?
 
-向本项目提交贡献，即表示您同意 [贡献者许可协议（CLA）](./CLA.md)。
+鍚戞湰椤圭洰鎻愪氦璐＄尞锛屽嵆琛ㄧず鎮ㄥ悓鎰?[璐＄尞鑰呰鍙崗璁紙CLA锛塢(./CLA.md)銆?
 
-已认可贡献者：[CONTRIBUTORS.zh.md](./CONTRIBUTORS.zh.md)
-
-版权所有 (C) 2026 Jason Liu (JasonLiu0826)
+鐗堟潈鎵€鏈?(C) 2026 Jason Liu (JasonLiu0826)
 
 ---
 
-*开源版侧重本地 txt/md 与可审计检索。闭源商业部署或 SaaS 场景见 [LICENSE](./LICENSE) 中的商业授权说明。*
+*寮€婧愮増渚ч噸鏈湴 txt/md 涓庡彲瀹¤妫€绱€傞棴婧愬晢涓氶儴缃叉垨 SaaS 鍦烘櫙瑙?[LICENSE](./LICENSE) 涓殑鍟嗕笟鎺堟潈璇存槑銆?

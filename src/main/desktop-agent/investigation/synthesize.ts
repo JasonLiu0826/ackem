@@ -1,4 +1,4 @@
-import type { AppSettings } from '../../settings'
+﻿import type { AppSettings } from '../../settings'
 import type { InvestigationReport } from '../../../shared/investigation'
 import { synthesizeMaxTokens } from '../../../shared/investigation'
 import { buildLlmHeaders, resolveChatCompletionsUrl } from '../../llmEndpoint'
@@ -18,21 +18,21 @@ function buildSynthesizeMessages(
   emotionHint?: string
 ): Array<{ role: 'system' | 'user'; content: string }> {
   const findingsJson = JSON.stringify(report, null, 2)
-  const itemLabel = report.template === 'games' ? '游戏' : '文件'
+  const itemLabel = report.template === 'games' ? '娓告垙' : '鏂囦欢'
   return [
     {
       role: 'system',
       content:
-        '你是 Ackem，用户的 AI 伴侣。以下 JSON 是已完成的本机查找结果，仅可引用其中条目，不得新增名称或路径。' +
-        `用自然中文输出【一条】完整回复：完整列出 findings 中全部${itemLabel}，不得省略、不得截断；` +
-        '不得重复同一开场白；若 notScanned 非空，如实说明未扫位置及原因；' +
-        '禁止使用「自己打开看看」「里面没扫」等敷衍句。' +
-        (emotionHint ? `当前情绪措辞参考：${emotionHint}` : '')
+        '浣犳槸 Ackem锛岀敤鎴风殑 AI 浼翠荆銆備互涓?JSON 鏄凡瀹屾垚鐨勬湰鏈烘煡鎵剧粨鏋滐紝浠呭彲寮曠敤鍏朵腑鏉＄洰锛屼笉寰楁柊澧炲悕绉版垨璺緞銆? +
+        `鐢ㄨ嚜鐒朵腑鏂囪緭鍑恒€愪竴鏉°€戝畬鏁村洖澶嶏細瀹屾暣鍒楀嚭 findings 涓叏閮?{itemLabel}锛屼笉寰楃渷鐣ャ€佷笉寰楁埅鏂紱` +
+        '涓嶅緱閲嶅鍚屼竴寮€鍦虹櫧锛涜嫢 notScanned 闈炵┖锛屽瀹炶鏄庢湭鎵綅缃強鍘熷洜锛? +
+        '绂佹浣跨敤銆岃嚜宸辨墦寮€鐪嬬湅銆嶃€岄噷闈㈡病鎵€嶇瓑鏁疯鍙ャ€? +
+        (emotionHint ? `褰撳墠鎯呯华鎺緸鍙傝€冿細${emotionHint}` : '')
     },
     {
       role: 'user',
       content:
-        `用户问题：${userQuery}\n\n调查结果 JSON：\n${findingsJson}\n\n请直接输出完整列表与简要说明。`
+        `鐢ㄦ埛闂锛?{userQuery}\n\n璋冩煡缁撴灉 JSON锛歕n${findingsJson}\n\n璇风洿鎺ヨ緭鍑哄畬鏁村垪琛ㄤ笌绠€瑕佽鏄庛€俙
     }
   ]
 }
@@ -96,7 +96,7 @@ export async function synthesizeInvestigationReply(
   return formatFindingsFallbackReply(report, userQuery)
 }
 
-/** 供无 openAiUrl 场景（Anthropic 主路径） */
+/** 渚涙棤 openAiUrl 鍦烘櫙锛圓nthropic 涓昏矾寰勶級 */
 export async function synthesizeInvestigationReplyAuto(
   settings: AppSettings,
   userQuery: string,

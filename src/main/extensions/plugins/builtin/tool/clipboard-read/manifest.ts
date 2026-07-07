@@ -1,13 +1,13 @@
-// [P-06] 剪贴板读取 — 占位 manifest（未接入 coordinator.boot）
+﻿// [P-06] 鍓创鏉胯鍙?鈥?鍗犱綅 manifest锛堟湭鎺ュ叆 coordinator.boot锛?
 import type { PluginManifest } from '../../../types'
 
 export const MANIFEST: PluginManifest = {
-  "id": "ackem/clipboard-read@0.0.1",
-  "name": "剪贴板读取",
+  "id": "Ackem/clipboard-read@0.0.1",
+  "name": "鍓创鏉胯鍙?,
   "version": "0.0.1",
   "category": "plugin",
   "pluginType": "tool",
-  "description": "[P-06] 一键将剪贴板并入本轮 Prompt；默认关",
+  "description": "[P-06] 涓€閿皢鍓创鏉垮苟鍏ユ湰杞?Prompt锛涢粯璁ゅ叧",
   "author": "JasonLiu0826",
   "license": "AGPL-3.0",
   "main": "stub.ts",
@@ -24,5 +24,5 @@ export const MANIFEST: PluginManifest = {
     "p-06"
   ]
 } as PluginManifest
-export const PLUGIN_ID = 'ackem/clipboard-read@0.0.1'
+export const PLUGIN_ID = 'Ackem/clipboard-read@0.0.1'
 export const SPEC_ID = 'P-06'

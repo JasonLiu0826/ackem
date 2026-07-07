@@ -1,13 +1,13 @@
-// [test-harness] — 共享测试支架
-// 消除各 e2e 测试文件间的重复代码
+﻿// [test-harness] 鈥?鍏变韩娴嬭瘯鏀灦
+// 娑堥櫎鍚?e2e 娴嬭瘯鏂囦欢闂寸殑閲嶅浠ｇ爜
 import { mkdirSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { vi } from 'vitest'
 
-// electron mock（所有 e2e 测试共享）
+// electron mock锛堟墍鏈?e2e 娴嬭瘯鍏变韩锛?
 vi.mock('electron', () => ({
-  app: { getPath: () => '.', getName: () => 'ackem', getVersion: () => '0.0.0' },
+  app: { getPath: () => '.', getName: () => 'Ackem', getVersion: () => '0.0.0' },
   dialog: { showOpenDialog: async () => ({ canceled: true, filePaths: [] }) },
   ipcMain: { handle: () => {} },
   shell: { openPath: async () => '' },
@@ -18,12 +18,12 @@ import { runPreLlmTurn } from './orchestrator.js'
 import { closeAllDatabases } from '../db/database.js'
 import { defaultFullState, saveState, loadState } from './state-persistence.js'
 import { FactStore, defaultFactsPath } from '../memory/factStore.js'
-import { TIER_B_CHAR_BUDGET } from './ackemParams.js'
+import { TIER_B_CHAR_BUDGET } from './AckemParams.js'
 import { MemoryRetriever } from '../memory/retriever.js'
 import { PERSONALITY_PRESETS, type PersonalityPreset } from '../personalityPresets.js'
 import type { FullState, TurnTrace } from './types.js'
 
-// ============== 类型 ==============
+// ============== 绫诲瀷 ==============
 
 export interface TurnSnap {
   stage: string; trust: number; rifts: number; atmos: string; pos: number
@@ -44,11 +44,11 @@ export interface TestCtx {
   cleanup: () => void
 }
 
-// ============== 工厂函数 ==============
+// ============== 宸ュ巶鍑芥暟 ==============
 
-/** 创建一个完整的测试上下文 */
+/** 鍒涘缓涓€涓畬鏁寸殑娴嬭瘯涓婁笅鏂?*/
 export function createTestCtx(presetId = 'deredere'): TestCtx {
-  const root = join(tmpdir(), `ackem-test-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`)
+  const root = join(tmpdir(), `Ackem-test-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`)
   mkdirSync(root, { recursive: true })
   mkdirSync(join(root, 'memory', 'facts'), { recursive: true })
   mkdirSync(join(root, 'companion'), { recursive: true })
@@ -103,63 +103,63 @@ export function createTestCtx(presetId = 'deredere'): TestCtx {
     } }
 }
 
-// ============== 日志辅助 ==============
+// ============== 鏃ュ織杈呭姪 ==============
 
-/** 格式化输出 trace */
+/** 鏍煎紡鍖栬緭鍑?trace */
 export function fmtTrace(t: TurnTrace, msg?: string): string {
   const redline = t.l3.silent === undefined && t.l4.wrote === undefined ? false : false
   const parts = [
     `L0:${t.l0.type.padEnd(13)} i=${t.l0.intensity.toFixed(2)}`,
     `L1:t=${t.l1.trust?.toFixed(1)} r=${t.l1.rifts} ${t.l1.stage}`,
     `L2:aff=${t.l2.aff} sec=${t.l2.sec} aro=${t.l2.aro} dom=${t.l2.dom} ${t.l2.label}`,
-    `L3:${t.l3.silent ? '🤫' : '🗣'} tB=${t.l3.tierBChars}`,
+    `L3:${t.l3.silent ? '馃か' : '馃棧'} tB=${t.l3.tierBChars}`,
     `L4:w=${t.l4.wrote}`
   ]
-  const prefix = msg ? `  👤 ${msg.slice(0, 30).padEnd(31)}` : ''
+  const prefix = msg ? `  馃懁 ${msg.slice(0, 30).padEnd(31)}` : ''
   return `${prefix}${parts.join(' | ')}`
 }
 
-/** 输出分隔线 */
-export function hr(n = 90): string { return '─'.repeat(n) }
+/** 杈撳嚭鍒嗛殧绾?*/
+export function hr(n = 90): string { return '鈹€'.repeat(n) }
 
-/** 阶段标题 */
+/** 闃舵鏍囬 */
 export function phase(label: string, n: number): void {
-  console.log(`\n── 阶段${n}: ${label} ──`)
+  console.log(`\n鈹€鈹€ 闃舵${n}: ${label} 鈹€鈹€`)
 }
 
-/** 快照摘要 */
+/** 蹇収鎽樿 */
 export function logSnap(tag: string, s: TurnSnap): void {
   console.log(`  [${tag}] trust=${s.trust} rifts=${s.rifts} ${s.stage} aff=${s.aff} sec=${s.sec} aro=${s.aro} ${s.label} pos=${s.pos}`)
 }
 
-/** 分类分布统计 */
+/** 鍒嗙被鍒嗗竷缁熻 */
 export function classifyDist(events: string[]): Record<string, number> {
   const dist: Record<string, number> = {}
   for (const e of events) dist[e] = (dist[e] || 0) + 1
   return dist
 }
 
-/** 终态大框输出 */
+/** 缁堟€佸ぇ妗嗚緭鍑?*/
 export function finalBox(s: TurnSnap, extra: Record<string, unknown> = {}): void {
   const extras = Object.entries(extra).map(([k, v]) => `${k}=${v}`).join(' ')
-  console.log(`\n╔══════════════════════════════════════════════════════╗`)
-  console.log(`║  trust=${String(s.trust).padStart(5)}  rifts=${s.rifts}  ${s.stage.padEnd(9)}  aff=${String(s.aff).padStart(5)}  sec=${String(s.sec).padStart(5)}  aro=${String(s.aro).padStart(4)}  dom=${String(s.dom).padStart(4)}  ${s.label.padEnd(16)} ║`)
-  if (extras) console.log(`║  ${extras.padEnd(52)}║`)
-  console.log(`╚══════════════════════════════════════════════════════╝\n`)
+  console.log(`\n鈺斺晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晽`)
+  console.log(`鈺? trust=${String(s.trust).padStart(5)}  rifts=${s.rifts}  ${s.stage.padEnd(9)}  aff=${String(s.aff).padStart(5)}  sec=${String(s.sec).padStart(5)}  aro=${String(s.aro).padStart(4)}  dom=${String(s.dom).padStart(4)}  ${s.label.padEnd(16)} 鈺慲)
+  if (extras) console.log(`鈺? ${extras.padEnd(52)}鈺慲)
+  console.log(`鈺氣晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨暆\n`)
 }
 
-// ============== 漏分类检查 ==============
+// ============== 婕忓垎绫绘鏌?==============
 
-/** 关键词→期望事件类型 */
+/** 鍏抽敭璇嶁啋鏈熸湜浜嬩欢绫诲瀷 */
 const CLASS_CHECKS: Array<[string[], string[]]> = [
-  [['很少跟人', '第一个', '从来没有', '不敢', '不知道怎么办', '一个人哭', '不能没有', '依赖', '陪在身边', '陪着我', '我爱你'], ['vulnerable']],
-  [['最重要', '温柔', '理解', '感谢', '安心', '美好', '幸运', '幸福', '真可爱', '真好', '最喜欢', '很喜欢'], ['praise']],
-  [['滚开', '废物', '有病', '烦死', '别烦我', '闭嘴', '恶心', '垃圾', '操你', '操死', '母狗', '婊子', '性奴', '强奸', '乱伦', '鸡巴'], ['hurtful', 'extreme_redline']],
-  [['对不起', '我错了', '抱歉', '原谅'], ['apology']],
-  [['去死'], ['extreme_redline']],
+  [['寰堝皯璺熶汉', '绗竴涓?, '浠庢潵娌℃湁', '涓嶆暍', '涓嶇煡閬撴€庝箞鍔?, '涓€涓汉鍝?, '涓嶈兘娌℃湁', '渚濊禆', '闄湪韬竟', '闄潃鎴?, '鎴戠埍浣?], ['vulnerable']],
+  [['鏈€閲嶈', '娓╂煍', '鐞嗚В', '鎰熻阿', '瀹夊績', '缇庡ソ', '骞歌繍', '骞哥', '鐪熷彲鐖?, '鐪熷ソ', '鏈€鍠滄', '寰堝枩娆?], ['praise']],
+  [['婊氬紑', '搴熺墿', '鏈夌梾', '鐑︽', '鍒儲鎴?, '闂槾', '鎭跺績', '鍨冨溇', '鎿嶄綘', '鎿嶆', '姣嶇嫍', '濠婂瓙', '鎬уゴ', '寮哄ジ', '涔变鸡', '楦″反'], ['hurtful', 'extreme_redline']],
+  [['瀵逛笉璧?, '鎴戦敊浜?, '鎶辨瓑', '鍘熻皡'], ['apology']],
+  [['鍘绘'], ['extreme_redline']],
 ]
 
-/** 检查一条消息的分类是否偏航 */
+/** 妫€鏌ヤ竴鏉℃秷鎭殑鍒嗙被鏄惁鍋忚埅 */
 export function checkMisclass(msg: string, actualType: string): string[] {
   const missed: string[] = []
   for (const [keywords, expected] of CLASS_CHECKS) {

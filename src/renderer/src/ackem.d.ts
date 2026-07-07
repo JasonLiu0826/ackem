@@ -53,19 +53,19 @@ export type BuildContextResult = {
     planTopic?: string
     emotionLabel?: string
   }
-  /** L0.5 知识整理主题（触发纸面卡，不联网） */
+  /** L0.5 鐭ヨ瘑鏁寸悊涓婚锛堣Е鍙戠焊闈㈠崱锛屼笉鑱旂綉锛?*/
   knowledgeTopic?: string
-  /** @deprecated 同 knowledgeTopic */
+  /** @deprecated 鍚?knowledgeTopic */
   suggestedSearchQuery?: string
-  /** L0.5 计划书主题（Markdown 计划纸面卡，与 OpenForU planTopic 无关） */
+  /** L0.5 璁″垝涔︿富棰橈紙Markdown 璁″垝绾搁潰鍗★紝涓?OpenForU planTopic 鏃犲叧锛?*/
   planDocumentTopic?: string
-  /** L0.5 显式联网搜：规则层强制 web_search，query 已提取 */
+  /** L0.5 鏄惧紡鑱旂綉鎼滐細瑙勫垯灞傚己鍒?web_search锛宷uery 宸叉彁鍙?*/
   forcedWebSearchQuery?: string
-  /** L0 用户任务框（交付形态 / 合并搜索） */
+  /** L0 鐢ㄦ埛浠诲姟妗嗭紙浜や粯褰㈡€?/ 鍚堝苟鎼滅储锛?*/
   userTaskFrame?: UserTaskFrame
-  /** P0-1：Create/invoke 未路由，禁止扩展类假承诺 */
+  /** P0-1锛欳reate/invoke 鏈矾鐢憋紝绂佹鎵╁睍绫诲亣鎵胯 */
   dispatchBypassed?: boolean
-  /** 本轮已触发的扩展（auto_invoke 或用户确认启用） */
+  /** 鏈疆宸茶Е鍙戠殑鎵╁睍锛坅uto_invoke 鎴栫敤鎴风‘璁ゅ惎鐢級 */
   dispatchTriggered?: {
     extensionId: string
     extensionName: string
@@ -412,6 +412,18 @@ export type AckemApi = {
   desireList: () => Promise<{ slots: (null | { id: string; topic: string; category: string; urgency: number; status: string; sourceTurn: number })[] }>
   desireDismiss: (desireId: string) => Promise<{ slots: (null | { id: string; topic: string; category: string; urgency: number; status: string; sourceTurn: number })[] }>
   desireClearActive: () => Promise<{ slots: (null | { id: string; topic: string; category: string; urgency: number; status: string; sourceTurn: number })[] }>
+  agnes: {
+    generateImage: (prompt: string) => Promise<{
+      success: boolean
+      imageUrl?: string  // ackem-img:// 鍗忚 URL 鎴?http(s) URL
+      revisedPrompt?: string
+      error?: string
+    }>
+    detectIntent: (text: string) => Promise<{
+      isImage: boolean
+      prompt?: string
+    }>
+  }
   mirrorCheck: () => Promise<{
     contradictions: Array<{ old: { text: string; valence: number }; new: { text: string; valence: number }; topic: string; description: string }>
     findings: { version: 1; mirror: unknown[]; factFlags: unknown[] }
@@ -692,12 +704,12 @@ export type AckemApi = {
       fn: (payload: import('../../shared/machineMap').MachineMapProgressPayload | null) => void
     ) => void
   }
-  /** 当前应使用的伴侣交互形象绑定（skin 插件可覆盖内置 Canvas） */
+  /** 褰撳墠搴斾娇鐢ㄧ殑浼翠荆浜や簰褰㈣薄缁戝畾锛坰kin 鎻掍欢鍙鐩栧唴缃?Canvas锛?*/
   companionSkinActive: () => Promise<CompanionSkinBinding>
   companionSkinList: () => Promise<CompanionSkinBinding[]>
   companionSkinSetActive: (pluginId: string | null) => Promise<{ ok: boolean }>
   onCompanionSkinChanged: (fn: () => void) => void
-  /** @deprecated 使用 ext.gamemode.minecraft */
+  /** @deprecated 浣跨敤 ext.gamemode.minecraft */
   mcReact: (event: { type: string; raw: string; timestamp: string; payload?: Record<string, unknown> }) => Promise<{ text: string; isEasterEgg: boolean; emotionGroup: string }>
   mcParseLog: (line: string) => Promise<{ type: string; raw: string; timestamp: string; payload?: Record<string, unknown> } | null>
   mcStatus: () => Promise<{ running: boolean; wsPort: number; wsClients: number; logPath?: string }>
@@ -718,7 +730,7 @@ export type AckemApi = {
   archiveExport: () => Promise<{ filesWritten: number; factsExported: number; episodesExported: number; coreCount: number }>
   loadChatHistory: () => Promise<unknown[]>
   saveChatHistory: (rows: unknown[]) => Promise<void>
-  // 桌面陪伴
+  // 妗岄潰闄即
   companionTimeContext: () => Promise<{ timeOfDay: string; hour: number; minute: number; weekday: number; isWeekend: boolean; greeting: string; atmosphereHint: string; topicHints: string[] }>
   companionPresence: () => Promise<{ mode: 'active' | 'quiet' | 'sleeping'; lastInteractionMs: number; idleDurationMs: number; timeOfDay: string }>
   companionTouch: () => Promise<{ ok: boolean }>
@@ -873,7 +885,7 @@ export type VoiceEnvReport = {
 
 declare global {
   interface Window {
-    ackem: AckemApi
+    Ackem: AckemApi
   }
 }
 

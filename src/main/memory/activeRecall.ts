@@ -1,11 +1,11 @@
-// [activeRecall] — 主动回忆
-// 职责：在合适的时机，伴侣主动提起旧记忆，形成"自然想起"的对话体验
-// 对标 MemGPT recall memory / Character.AI 主动话题
-// 引用：../engine/ackemParams, ../engine/types, ./factStore
+﻿// [activeRecall] 鈥?涓诲姩鍥炲繂
+// 鑱岃矗锛氬湪鍚堥€傜殑鏃舵満锛屼即渚ｄ富鍔ㄦ彁璧锋棫璁板繂锛屽舰鎴?鑷劧鎯宠捣"鐨勫璇濅綋楠?
+// 瀵规爣 MemGPT recall memory / Character.AI 涓诲姩璇濋
+// 寮曠敤锛?./engine/AckemParams, ../engine/types, ./factStore
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
-import { ACTIVE_RECALL_MIN_INTERVAL, ACTIVE_RECALL_PROBABILITY } from '../engine/ackemParams'
+import { ACTIVE_RECALL_MIN_INTERVAL, ACTIVE_RECALL_PROBABILITY } from '../engine/AckemParams'
 import type { MemoryFact } from '../engine/types'
 import type { FactStore } from './factStore'
 import { cosineSimilarity } from './factEmbeddingCache'
@@ -36,7 +36,7 @@ export class ActiveRecall {
   }
 
   /**
-   * 挑选主动回忆候选（无副作用，供 topicSelector 仲裁后再 markRecalled）
+   * 鎸戦€変富鍔ㄥ洖蹇嗗€欓€夛紙鏃犲壇浣滅敤锛屼緵 topicSelector 浠茶鍚庡啀 markRecalled锛?
    */
   selectRecallCandidate(
     factStore: FactStore,
@@ -77,7 +77,7 @@ export class ActiveRecall {
           return baseWeights[i] * 0.5 + semanticScore * 0.5
         })
       }
-    } catch { /* 降级：用基础权重 */ }
+    } catch { /* 闄嶇骇锛氱敤鍩虹鏉冮噸 */ }
     const totalW = weights.reduce((a, b) => a + b, 0)
     if (totalW <= 0) return null
 
@@ -97,9 +97,9 @@ export class ActiveRecall {
   }
 
   /**
-   * 尝试触发一次主动回忆
-   * @param conversationEmbed 最近对话的 Embedding（可选，用于语义选旧事）
-   * @returns 回忆提示文本，若不应触发则返回 null
+   * 灏濊瘯瑙﹀彂涓€娆′富鍔ㄥ洖蹇?
+   * @param conversationEmbed 鏈€杩戝璇濈殑 Embedding锛堝彲閫夛紝鐢ㄤ簬璇箟閫夋棫浜嬶級
+   * @returns 鍥炲繂鎻愮ず鏂囨湰锛岃嫢涓嶅簲瑙﹀彂鍒欒繑鍥?null
    */
   tryRecall(
     factStore: FactStore,
@@ -124,15 +124,15 @@ export class ActiveRecall {
     const sub = fact.subject
     const sum = fact.summary
     const phrases = [
-      `说起来，之前记得${sub.includes('喜欢') ? `你${sub}` : `你提到过${sub}`}。${sum.slice(0, 40)}`,
-      `突然想到，你之前说过${sub}。现在还是这样吗？`,
-      `对了，${sub}的事我一直记着。${sum.length < 50 ? sum : ''}`,
-      `我记得你之前${sub}，最近有什么新的变化吗？`
+      `璇磋捣鏉ワ紝涔嬪墠璁板緱${sub.includes('鍠滄') ? `浣?{sub}` : `浣犳彁鍒拌繃${sub}`}銆?{sum.slice(0, 40)}`,
+      `绐佺劧鎯冲埌锛屼綘涔嬪墠璇磋繃${sub}銆傜幇鍦ㄨ繕鏄繖鏍峰悧锛焋,
+      `瀵逛簡锛?{sub}鐨勪簨鎴戜竴鐩磋鐫€銆?{sum.length < 50 ? sum : ''}`,
+      `鎴戣寰椾綘涔嬪墠${sub}锛屾渶杩戞湁浠€涔堟柊鐨勫彉鍖栧悧锛焋
     ]
     return phrases[Math.floor(Math.random() * phrases.length)].slice(0, 120)
   }
 
-  /** 手动标记某事实已被回忆（避免 LLM 已主动提起但我们又重复） */
+  /** 鎵嬪姩鏍囪鏌愪簨瀹炲凡琚洖蹇嗭紙閬垮厤 LLM 宸蹭富鍔ㄦ彁璧蜂絾鎴戜滑鍙堥噸澶嶏級 */
   markRecalled(factId: string, currentTurn: number): void {
     this.history.push({ factId, recalledAtTurn: currentTurn })
   }

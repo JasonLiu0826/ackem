@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Python voice service HTTP client + process lifecycle management.
  *
  * - Starts/stops the Python voice-service subprocess
@@ -158,7 +158,7 @@ export class PythonVoiceService {
       this.process.on('error', (err) => {
         const hint =
           'ENOENT' in err && (err as NodeJS.ErrnoException).code === 'ENOENT'
-            ? '未找到 Python。Windows 请安装 Python 3 并确保 py -3 可用；或手动运行 Ackem/voice-service/server.py'
+            ? '鏈壘鍒?Python銆俉indows 璇峰畨瑁?Python 3 骞剁‘淇?py -3 鍙敤锛涙垨鎵嬪姩杩愯 Ackem/voice-service/server.py'
             : String(err)
         this.lastStartError = hint
         console.error('[voice-service] spawn error:', err)
@@ -178,7 +178,7 @@ export class PythonVoiceService {
 
       this.lastStartError =
         this.lastStartError ??
-        '语音服务启动超时（30s）。请在本机执行: pip install -r Ackem/voice-service/requirements.txt'
+        '璇煶鏈嶅姟鍚姩瓒呮椂锛?0s锛夈€傝鍦ㄦ湰鏈烘墽琛? pip install -r Ackem/voice-service/requirements.txt'
       console.error('[voice-service]', this.lastStartError)
       this.setState('error')
       return false
@@ -253,7 +253,7 @@ export class PythonVoiceService {
         if (!resp.ok) return null
         const audio = await resp.arrayBuffer()
         if (audio.byteLength > 0) return audio
-        // Empty response — retry
+        // Empty response 鈥?retry
         if (attempt < MAX_RETRIES) {
           console.warn('[voice-service] TTS returned empty, retrying (%d/%d)', attempt + 1, MAX_RETRIES)
           await new Promise((r) => setTimeout(r, 500))
@@ -293,7 +293,7 @@ export class PythonVoiceService {
           return data.port
         }
       } catch {
-        // Port not in use — good, we can use it
+        // Port not in use 鈥?good, we can use it
         return p
       }
     }
@@ -346,7 +346,7 @@ export class PythonVoiceService {
 // Singleton
 export const voiceService = new PythonVoiceService()
 
-/** Uvicorn access lines for GET /health — filtered from Electron console (watchdog + Settings poll). */
+/** Uvicorn access lines for GET /health 鈥?filtered from Electron console (watchdog + Settings poll). */
 function isHealthAccessLogLine(msg: string): boolean {
   return /"GET \/health HTTP\/1\.1"\s+200/.test(msg)
 }

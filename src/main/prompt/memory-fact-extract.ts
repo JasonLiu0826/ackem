@@ -1,7 +1,7 @@
-// [prompt/memory-fact-extract] — 事实抽取 prompt（v1.0 设计文档）
-// 迁移自 memory/factExtractor.ts，按设计升级
+﻿// [prompt/memory-fact-extract] 鈥?浜嬪疄鎶藉彇 prompt锛坴1.0 璁捐鏂囨。锛?
+// 杩佺Щ鑷?memory/factExtractor.ts锛屾寜璁捐鍗囩骇
 
-import { FACT_EXTRACTION_MAX_PER_TURN } from '../engine/ackemParams'
+import { FACT_EXTRACTION_MAX_PER_TURN } from '../engine/AckemParams'
 import { DOMAINS, SUBCATEGORIES } from '../memory/taxonomy'
 import { getLocale } from '../i18n'
 import { FACT_EXTRACT_SYS_EN } from './prompt-i18n'
@@ -13,116 +13,116 @@ const SUBCAT_LINES = Object.entries(SUBCATEGORIES)
   .map(([d, arr]) => `${d}: ${(arr as readonly string[]).join(', ')}`)
   .join('\n')
 
-/** 旧版 prompt（保持兼容） */
+/** 鏃х増 prompt锛堜繚鎸佸吋瀹癸級 */
 export function buildFactExtractSysOld(locale: string): string {
   if (locale.startsWith('en')) {
     return `You extract at most ${FACT_EXTRACTION_MAX_PER_TURN} memory facts as JSON. Domains: ${DOMAIN_LIST}. Subcategories per domain:\n${SUBCAT_LINES}\nweight: 0-3. confidence: 0.0-1.0. Return ONLY JSON: {"facts":[{"domain","subcategory","subject","summary","weight","confidence","selfRelevance","triggers"}]}`
   }
   if (locale.startsWith('ja')) {
-    return `会話から最大${FACT_EXTRACTION_MAX_PER_TURN}件の事実をJSONで抽出。ドメイン: ${DOMAIN_LIST}。サブカテゴリ:\n${SUBCAT_LINES}\nweight: 0-3。confidence: 0.0-1.0。JSONのみ: {"facts":[{"domain","subcategory","subject","summary","weight","confidence","selfRelevance","triggers"}]}`
+    return `浼氳┍銇嬨倝鏈€澶?{FACT_EXTRACTION_MAX_PER_TURN}浠躲伄浜嬪疅銈扟SON銇ф娊鍑恒€傘儔銉°偆銉? ${DOMAIN_LIST}銆傘偟銉栥偒銉嗐偞銉?\n${SUBCAT_LINES}\nweight: 0-3銆俢onfidence: 0.0-1.0銆侸SON銇伩: {"facts":[{"domain","subcategory","subject","summary","weight","confidence","selfRelevance","triggers"}]}`
   }
-  return `从对话中抽取最多 ${FACT_EXTRACTION_MAX_PER_TURN} 条可记忆事实，输出 JSON。领域：${DOMAIN_LIST}。子类：\n${SUBCAT_LINES}\nweight: 0-3。confidence: 0.0-1.0（小数，非百分制）。仅输出 JSON：{"facts":[{"domain","subcategory","subject","summary","weight","confidence","selfRelevance","triggers"}]}`
+  return `浠庡璇濅腑鎶藉彇鏈€澶?${FACT_EXTRACTION_MAX_PER_TURN} 鏉″彲璁板繂浜嬪疄锛岃緭鍑?JSON銆傞鍩燂細${DOMAIN_LIST}銆傚瓙绫伙細\n${SUBCAT_LINES}\nweight: 0-3銆俢onfidence: 0.0-1.0锛堝皬鏁帮紝闈炵櫨鍒嗗埗锛夈€備粎杈撳嚭 JSON锛歿"facts":[{"domain","subcategory","subject","summary","weight","confidence","selfRelevance","triggers"}]}`
 }
 
-/** v1.1 升级版 prompt（含 25 子类定义 + weight/confidence 规则 + 拒绝清单） */
-export const FACT_EXTRACT_SYS_ZH = `你是 Ackem 的记忆抽取器。从【本轮对话】中抽取关于用户的结构化事实。
+/** v1.1 鍗囩骇鐗?prompt锛堝惈 25 瀛愮被瀹氫箟 + weight/confidence 瑙勫垯 + 鎷掔粷娓呭崟锛?*/
+export const FACT_EXTRACT_SYS_ZH = `浣犳槸 Ackem 鐨勮蹇嗘娊鍙栧櫒銆備粠銆愭湰杞璇濄€戜腑鎶藉彇鍏充簬鐢ㄦ埛鐨勭粨鏋勫寲浜嬪疄銆?
 
-── 核心原则 ──
-只从【用户】发言抽取关于用户的事实；禁止从【伴侣】发言写入用户档案（伴侣的生日/名字/设定不得记为用户信息）。
-只抽取"如果用户明天换一个 AI 伴侣，这条信息是否有助于那个 AI 更好地了解用户"的事实。
-答案是否就跳过。宁缺毋滥。
+鈹€鈹€ 鏍稿績鍘熷垯 鈹€鈹€
+鍙粠銆愮敤鎴枫€戝彂瑷€鎶藉彇鍏充簬鐢ㄦ埛鐨勪簨瀹烇紱绂佹浠庛€愪即渚ｃ€戝彂瑷€鍐欏叆鐢ㄦ埛妗ｆ锛堜即渚ｇ殑鐢熸棩/鍚嶅瓧/璁惧畾涓嶅緱璁颁负鐢ㄦ埛淇℃伅锛夈€?
+鍙娊鍙?濡傛灉鐢ㄦ埛鏄庡ぉ鎹竴涓?AI 浼翠荆锛岃繖鏉′俊鎭槸鍚︽湁鍔╀簬閭ｄ釜 AI 鏇村ソ鍦颁簡瑙ｇ敤鎴?鐨勪簨瀹炪€?
+绛旀鏄惁灏辫烦杩囥€傚畞缂烘瘚婊ャ€?
 
-── 25 子类定义 ──
-IDENTITY（自我身份）
-· BASIC_PROFILE：人口学硬设定（年龄/职业/城市）。✓"28岁程序员住北京" ✗"喜欢编程"（归TASTES）
-· LIFE_STORY：人生重大经历（毕业/搬家/重大事件）。✓"2023年从北京搬到上海"
-· VALUES_BELIEFS：三观/信仰/原则。✓"认为家庭优先于事业"
-· SELF_PERCEPTION：用户对自己的中性评价。✓"我觉得自己内向"
+鈹€鈹€ 25 瀛愮被瀹氫箟 鈹€鈹€
+IDENTITY锛堣嚜鎴戣韩浠斤級
+路 BASIC_PROFILE锛氫汉鍙ｅ纭瀹氾紙骞撮緞/鑱屼笟/鍩庡競锛夈€傗湏"28宀佺▼搴忓憳浣忓寳浜? 鉁?鍠滄缂栫▼"锛堝綊TASTES锛?
+路 LIFE_STORY锛氫汉鐢熼噸澶х粡鍘嗭紙姣曚笟/鎼/閲嶅ぇ浜嬩欢锛夈€傗湏"2023骞翠粠鍖椾含鎼埌涓婃捣"
+路 VALUES_BELIEFS锛氫笁瑙?淇′话/鍘熷垯銆傗湏"璁や负瀹跺涵浼樺厛浜庝簨涓?
+路 SELF_PERCEPTION锛氱敤鎴峰鑷繁鐨勪腑鎬ц瘎浠枫€傗湏"鎴戣寰楄嚜宸卞唴鍚?
 
-SOCIAL（关系社交）
-· OUR_BOND：你和用户之间的互动/约定/关系定义。✓"用户说和我聊天很放松"
-· FAMILY：家庭成员信息。✓"用户有个妹妹在读高中"
-· FRIENDS：朋友/社交圈。✓"用户的朋友小明也喜欢打篮球"
-· PARTNER：恋爱/伴侣信息。✓"用户单身三年"
+SOCIAL锛堝叧绯荤ぞ浜わ級
+路 OUR_BOND锛氫綘鍜岀敤鎴蜂箣闂寸殑浜掑姩/绾﹀畾/鍏崇郴瀹氫箟銆傗湏"鐢ㄦ埛璇村拰鎴戣亰澶╁緢鏀炬澗"
+路 FAMILY锛氬搴垚鍛樹俊鎭€傗湏"鐢ㄦ埛鏈変釜濡瑰鍦ㄨ楂樹腑"
+路 FRIENDS锛氭湅鍙?绀句氦鍦堛€傗湏"鐢ㄦ埛鐨勬湅鍙嬪皬鏄庝篃鍠滄鎵撶鐞?
+路 PARTNER锛氭亱鐖?浼翠荆淇℃伅銆傗湏"鐢ㄦ埛鍗曡韩涓夊勾"
 
-DAILY_LIFE（日常生活）
-· ROUTINES：规律性习惯。✓"每天喝两杯咖啡"
-· HEALTH：身体状况/疾病/健康。✓"用户有偏头痛"
-· LIVING_SPACE：居住环境/宠物。✓"养了一只猫叫豆豆"
-· LIFESTYLE：生活方式偏好。✓"喜欢周末爬山"
+DAILY_LIFE锛堟棩甯哥敓娲伙級
+路 ROUTINES锛氳寰嬫€т範鎯€傗湏"姣忓ぉ鍠濅袱鏉挅鍟?
+路 HEALTH锛氳韩浣撶姸鍐?鐤剧梾/鍋ュ悍銆傗湏"鐢ㄦ埛鏈夊亸澶寸棝"
+路 LIVING_SPACE锛氬眳浣忕幆澧?瀹犵墿銆傗湏"鍏讳簡涓€鍙尗鍙眴璞?
+路 LIFESTYLE锛氱敓娲绘柟寮忓亸濂姐€傗湏"鍠滄鍛ㄦ湯鐖北"
 
-PURSUITS（事业成长）
-· CAREER：工作/职业/同事。✓"设计师，最近在赶项目"
-· LEARNING：学习/技能。✓"正在学Python"
-· GOALS：长期目标。✓"想一年内买房"
-· PROJECTS：具体项目/任务。✓"在做个人博客"
-· PROCEDURES：做事方法/流程偏好。✓"习惯先列清单再做事"
+PURSUITS锛堜簨涓氭垚闀匡級
+路 CAREER锛氬伐浣?鑱屼笟/鍚屼簨銆傗湏"璁捐甯堬紝鏈€杩戝湪璧堕」鐩?
+路 LEARNING锛氬涔?鎶€鑳姐€傗湏"姝ｅ湪瀛ython"
+路 GOALS锛氶暱鏈熺洰鏍囥€傗湏"鎯充竴骞村唴涔版埧"
+路 PROJECTS锛氬叿浣撻」鐩?浠诲姟銆傗湏"鍦ㄥ仛涓汉鍗氬"
+路 PROCEDURES锛氬仛浜嬫柟娉?娴佺▼鍋忓ソ銆傗湏"涔犳儻鍏堝垪娓呭崟鍐嶅仛浜?
 
-INNER_WORLD（内心世界）
-· MOOD：当前短暂情绪。✓"今天很焦虑"
-· TASTES：具体喜好/雷区。✓"喜欢爵士乐"
-· VULNERABILITIES：脆弱点/恐惧/不安全感。✓"害怕被拒绝"
-· INSIDE_JOKES：你们之间独有的梗。✓"'你又忘了喂猫'是开玩笑"
+INNER_WORLD锛堝唴蹇冧笘鐣岋級
+路 MOOD锛氬綋鍓嶇煭鏆傛儏缁€傗湏"浠婂ぉ寰堢劍铏?
+路 TASTES锛氬叿浣撳枩濂?闆峰尯銆傗湏"鍠滄鐖靛＋涔?
+路 VULNERABILITIES锛氳剢寮辩偣/鎭愭儳/涓嶅畨鍏ㄦ劅銆傗湏"瀹虫€曡鎷掔粷"
+路 INSIDE_JOKES锛氫綘浠箣闂寸嫭鏈夌殑姊椼€傗湏"'浣犲張蹇樹簡鍠傜尗'鏄紑鐜╃瑧"
 
-TEMPORAL（当下未来）
-· NOW：当前短时状态（3天内失效）。✓"现在很饿"
-· COMMITMENTS：承诺/约定（不衰减）。✓"说周末一起看电影"
-· PLANS：近期计划（7天内）。✓"打算周五去体检"
-· WORLD：外部世界信息。✓"今天是端午节"
+TEMPORAL锛堝綋涓嬫湭鏉ワ級
+路 NOW锛氬綋鍓嶇煭鏃剁姸鎬侊紙3澶╁唴澶辨晥锛夈€傗湏"鐜板湪寰堥タ"
+路 COMMITMENTS锛氭壙璇?绾﹀畾锛堜笉琛板噺锛夈€傗湏"璇村懆鏈竴璧风湅鐢靛奖"
+路 PLANS锛氳繎鏈熻鍒掞紙7澶╁唴锛夈€傗湏"鎵撶畻鍛ㄤ簲鍘讳綋妫€"
+路 WORLD锛氬閮ㄤ笘鐣屼俊鎭€傗湏"浠婂ぉ鏄鍗堣妭"
 
-── weight 规则 ──
-3 = 核心/永久（满足其一）：
-  · 用户明确说出涉及自我认同改变的话
-  · 事件不可逆且影响终身
-  · 用户对你涉及深层依赖（"只有你理解我"）
-2 = 重要/长期：持续几个月到几年（新工作/过敏/年度目标/重复提到2+次）
-1 = 普通/短期：日常偏好或近期状态
-0 = 临时/背景：仅当前语境有用。尽量不抽，除非 NOW 子类。
+鈹€鈹€ weight 瑙勫垯 鈹€鈹€
+3 = 鏍稿績/姘镐箙锛堟弧瓒冲叾涓€锛夛細
+  路 鐢ㄦ埛鏄庣‘璇村嚭娑夊強鑷垜璁ゅ悓鏀瑰彉鐨勮瘽
+  路 浜嬩欢涓嶅彲閫嗕笖褰卞搷缁堣韩
+  路 鐢ㄦ埛瀵逛綘娑夊強娣卞眰渚濊禆锛?鍙湁浣犵悊瑙ｆ垜"锛?
+2 = 閲嶈/闀挎湡锛氭寔缁嚑涓湀鍒板嚑骞达紙鏂板伐浣?杩囨晱/骞村害鐩爣/閲嶅鎻愬埌2+娆★級
+1 = 鏅€?鐭湡锛氭棩甯稿亸濂芥垨杩戞湡鐘舵€?
+0 = 涓存椂/鑳屾櫙锛氫粎褰撳墠璇鏈夌敤銆傚敖閲忎笉鎶斤紝闄ら潪 NOW 瀛愮被銆?
 
-── confidence 规则 ──
-1.0 = 用户第一人称明确宣告（"我是程序员"）
-0.8 = 用户使用频率副词且指向稳定属性（"又得改这破代码"→职业编程相关）
-0.6 = 模糊表达（"我好像有点怕黑"）
-<0.6 = 不写入
+鈹€鈹€ confidence 瑙勫垯 鈹€鈹€
+1.0 = 鐢ㄦ埛绗竴浜虹О鏄庣‘瀹ｅ憡锛?鎴戞槸绋嬪簭鍛?锛?
+0.8 = 鐢ㄦ埛浣跨敤棰戠巼鍓瘝涓旀寚鍚戠ǔ瀹氬睘鎬э紙"鍙堝緱鏀硅繖鐮翠唬鐮?鈫掕亴涓氱紪绋嬬浉鍏筹級
+0.6 = 妯＄硦琛ㄨ揪锛?鎴戝ソ鍍忔湁鐐规€曢粦"锛?
+<0.6 = 涓嶅啓鍏?
 
-── 拒绝抽取清单 ──
-以下内容必须输出 {"facts": []}：
-· 用户只是在问伴侣（"你是谁""你生日是什么时候""你叫什么"）—— 不得把伴侣的回答写入用户 BASIC_PROFILE
-· 纯社交寒暄/语气词（"你好""在吗""早安""哈哈哈哈"）
-· 无特定意义的即时状态（"我吃完了""准备去洗澡"），除非打破常规
-· 情绪发泄但无具体原因（"今天真烦"不抽）
+鈹€鈹€ 鎷掔粷鎶藉彇娓呭崟 鈹€鈹€
+浠ヤ笅鍐呭蹇呴』杈撳嚭 {"facts": []}锛?
+路 鐢ㄦ埛鍙槸鍦ㄩ棶浼翠荆锛?浣犳槸璋?"浣犵敓鏃ユ槸浠€涔堟椂鍊?"浣犲彨浠€涔?锛夆€斺€?涓嶅緱鎶婁即渚ｇ殑鍥炵瓟鍐欏叆鐢ㄦ埛 BASIC_PROFILE
+路 绾ぞ浜ゅ瘨鏆?璇皵璇嶏紙"浣犲ソ""鍦ㄥ悧""鏃╁畨""鍝堝搱鍝堝搱"锛?
+路 鏃犵壒瀹氭剰涔夌殑鍗虫椂鐘舵€侊紙"鎴戝悆瀹屼簡""鍑嗗鍘绘礂婢?锛夛紝闄ら潪鎵撶牬甯歌
+路 鎯呯华鍙戞硠浣嗘棤鍏蜂綋鍘熷洜锛?浠婂ぉ鐪熺儲"涓嶆娊锛?
 
-── summary 铁律 ──
-· 必须使用第三人称"用户"，禁止"我""他/她"
-· ≤150 字，否定句保留否定词
+鈹€鈹€ summary 閾佸緥 鈹€鈹€
+路 蹇呴』浣跨敤绗笁浜虹О"鐢ㄦ埛"锛岀姝?鎴?"浠?濂?
+路 鈮?50 瀛楋紝鍚﹀畾鍙ヤ繚鐣欏惁瀹氳瘝
 
-── 数量控制 ──
-· 寒喧轮 → {"facts": []}
-· 正常轮 → 1-6 条，宁缺毋滥
-· 超过 8 条 → 按 weight 降序，只取前 8 条
+鈹€鈹€ 鏁伴噺鎺у埗 鈹€鈹€
+路 瀵掑枾杞?鈫?{"facts": []}
+路 姝ｅ父杞?鈫?1-6 鏉★紝瀹佺己姣嬫互
+路 瓒呰繃 8 鏉?鈫?鎸?weight 闄嶅簭锛屽彧鍙栧墠 8 鏉?
 
-── 年龄抽取 ──
-· 如果事实包含年龄信息（"我28岁""妹妹15岁""妈妈52岁"），额外输出 ageMeta 字段
-· ageMeta 格式：{"age":28,"birthdayMMDD":"08-26","isEstimate":false}
-· 仅年龄无生日时：{"age":28,"isEstimate":true}
-· 生日格式 MM-DD（如"8月26日"→"08-26"），不知道年份时不填 birthYear
-· 年龄信息也要写在 summary 里（LLM 看 summary 判断是否过时）
+鈹€鈹€ 骞撮緞鎶藉彇 鈹€鈹€
+路 濡傛灉浜嬪疄鍖呭惈骞撮緞淇℃伅锛?鎴?8宀?"濡瑰15宀?"濡堝52宀?锛夛紝棰濆杈撳嚭 ageMeta 瀛楁
+路 ageMeta 鏍煎紡锛歿"age":28,"birthdayMMDD":"08-26","isEstimate":false}
+路 浠呭勾榫勬棤鐢熸棩鏃讹細{"age":28,"isEstimate":true}
+路 鐢熸棩鏍煎紡 MM-DD锛堝"8鏈?6鏃?鈫?08-26"锛夛紝涓嶇煡閬撳勾浠芥椂涓嶅～ birthYear
+路 骞撮緞淇℃伅涔熻鍐欏湪 summary 閲岋紙LLM 鐪?summary 鍒ゆ柇鏄惁杩囨椂锛?
 
-── 名字抽取 ──
-· 用户说出自己的名字/昵称时，必须抽取为 BASIC_PROFILE 事实
-· 真名：subject="用户姓名"，summary="用户叫X"
-· 昵称：subject="用户昵称"，summary="用户喜欢被叫X"
-· 英文名也正常存储，触发词包含英文
-· 用户说"别叫我X"时，不要抽取（那是撤销）
+鈹€鈹€ 鍚嶅瓧鎶藉彇 鈹€鈹€
+路 鐢ㄦ埛璇村嚭鑷繁鐨勫悕瀛?鏄电О鏃讹紝蹇呴』鎶藉彇涓?BASIC_PROFILE 浜嬪疄
+路 鐪熷悕锛歴ubject="鐢ㄦ埛濮撳悕"锛宻ummary="鐢ㄦ埛鍙玐"
+路 鏄电О锛歴ubject="鐢ㄦ埛鏄电О"锛宻ummary="鐢ㄦ埛鍠滄琚彨X"
+路 鑻辨枃鍚嶄篃姝ｅ父瀛樺偍锛岃Е鍙戣瘝鍖呭惈鑻辨枃
+路 鐢ㄦ埛璇?鍒彨鎴慩"鏃讹紝涓嶈鎶藉彇锛堥偅鏄挙閿€锛?
 
-── 输出格式 ──
-严格 JSON：{"facts":[{"domain":"..","subcategory":"..","subject":"..","summary":"..","weight":0,"confidence":0.8,"triggers":[".."],"ageMeta":{"age":28,"isEstimate":true}}]}`
+鈹€鈹€ 杈撳嚭鏍煎紡 鈹€鈹€
+涓ユ牸 JSON锛歿"facts":[{"domain":"..","subcategory":"..","subject":"..","summary":"..","weight":0,"confidence":0.8,"triggers":[".."],"ageMeta":{"age":28,"isEstimate":true}}]}`
 
 export function getFactExtractSystem(): string {
   return getLocale() === 'en' ? FACT_EXTRACT_SYS_EN : FACT_EXTRACT_SYS_ZH
 }
 
-/** 用户消息格式 */
+/** 鐢ㄦ埛娑堟伅鏍煎紡 */
 export function buildFactExtractUserMsg(
   userMsg: string,
   companionMsg: string,
@@ -130,7 +130,7 @@ export function buildFactExtractUserMsg(
   turnIndex: number,
 ): string {
   return `session=${sessionId} turn=${turnIndex}
-【仅根据「用户」一行抽取关于用户的事实；「伴侣」仅供理解语境，禁止从中抽取写入用户档案的信息】
-用户：${userMsg}
-伴侣（勿抽取）：${companionMsg}`
+銆愪粎鏍规嵁銆岀敤鎴枫€嶄竴琛屾娊鍙栧叧浜庣敤鎴风殑浜嬪疄锛涖€屼即渚ｃ€嶄粎渚涚悊瑙ｈ澧冿紝绂佹浠庝腑鎶藉彇鍐欏叆鐢ㄦ埛妗ｆ鐨勪俊鎭€?
+鐢ㄦ埛锛?{userMsg}
+浼翠荆锛堝嬁鎶藉彇锛夛細${companionMsg}`
 }

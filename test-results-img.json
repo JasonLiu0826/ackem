@@ -1,0 +1,99 @@
+{
+  "summary": {
+    "ok": 13,
+    "fail": 2,
+    "avgMs": 26132
+  },
+  "results": [
+    {
+      "id": "IMG-01",
+      "ok": true,
+      "ms": 25409,
+      "kb": 1294
+    },
+    {
+      "id": "IMG-02",
+      "ok": true,
+      "ms": 14131,
+      "kb": 1471
+    },
+    {
+      "id": "IMG-03",
+      "ok": true,
+      "ms": 39800,
+      "kb": 1357
+    },
+    {
+      "id": "IMG-04",
+      "ok": false,
+      "ms": 90010,
+      "err": "This operation was aborted"
+    },
+    {
+      "id": "IMG-05",
+      "ok": true,
+      "ms": 18206,
+      "kb": 1634
+    },
+    {
+      "id": "IMG-06",
+      "ok": true,
+      "ms": 18030,
+      "kb": 1616
+    },
+    {
+      "id": "IMG-07",
+      "ok": true,
+      "ms": 33752,
+      "kb": 1471
+    },
+    {
+      "id": "IMG-08",
+      "ok": false,
+      "ms": 90000,
+      "err": "This operation was aborted"
+    },
+    {
+      "id": "IMG-09",
+      "ok": true,
+      "ms": 25931,
+      "kb": 1273
+    },
+    {
+      "id": "IMG-10",
+      "ok": true,
+      "ms": 41567,
+      "kb": 1334
+    },
+    {
+      "id": "REP-A",
+      "ok": true,
+      "ms": 10659,
+      "kb": 1307
+    },
+    {
+      "id": "REP-B",
+      "ok": true,
+      "ms": 14943,
+      "kb": 1483
+    },
+    {
+      "id": "SZ-1024",
+      "ok": true,
+      "ms": 53588,
+      "kb": 1497
+    },
+    {
+      "id": "SZ-1792V",
+      "ok": true,
+      "ms": 15703,
+      "kb": 1313
+    },
+    {
+      "id": "SZ-1792H",
+      "ok": true,
+      "ms": 27992,
+      "kb": 1447
+    }
+  ]
+}

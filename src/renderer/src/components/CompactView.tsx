@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+﻿import { useCallback, useEffect, useMemo, useState } from 'react'
 import { t } from '../lib/i18n'
 import { emotionLightColor } from '../lib/emotionColors'
 import { useChatSend } from '../hooks/useChatSend'
@@ -23,7 +23,7 @@ export function CompactView(): JSX.Element {
   const [idleRest, setIdleRest] = useState(false)
 
   const refreshEmotion = useCallback(() => {
-    void window.ackem
+    void window.Ackem
       .getState()
       .then((raw) => {
         const s = raw as {
@@ -43,7 +43,7 @@ export function CompactView(): JSX.Element {
   }, [refreshEmotion])
 
   useEffect(() => {
-    window.ackem.ui.onChatBubble((p) => {
+    window.Ackem.ui.onChatBubble((p) => {
       if (!p.text?.trim()) return
       const id = Date.now()
       setBubble({ text: p.text, id })
@@ -53,7 +53,7 @@ export function CompactView(): JSX.Element {
 
   useEffect(() => {
     const checkIdle = () => {
-      void window.ackem.companionPresence().then((p) => {
+      void window.Ackem.companionPresence().then((p) => {
         setIdleRest(p.idleDurationMs > 30 * 60 * 1000)
       })
     }
@@ -88,17 +88,17 @@ export function CompactView(): JSX.Element {
     if (!t) return
     setInput('')
     void send(t)
-    void window.ackem.companionTouch()
+    void window.Ackem.companionTouch()
   }
 
   const openMain = (tab?: Tab) => {
-    void window.ackem.ui.expandToMain(tab ? { tab } : undefined)
+    void window.Ackem.ui.expandToMain(tab ? { tab } : undefined)
   }
 
   return (
     <div className="compact-view relative flex h-full min-h-0 flex-col bg-surface">
       <div className="relative min-h-0 flex-1 overflow-visible">
-        {/* 光球：大画布绘制 + 居中，光晕在透明区自然衰减，无方形裁切层 */}
+        {/* 鍏夌悆锛氬ぇ鐢诲竷缁樺埗 + 灞呬腑锛屽厜鏅曞湪閫忔槑鍖鸿嚜鐒惰“鍑忥紝鏃犳柟褰㈣鍒囧眰 */}
         <div className="compact-orb-layer pointer-events-none absolute z-0 overflow-visible" aria-hidden>
           <CompanionAvatar
             state={avatarState}
@@ -129,7 +129,7 @@ export function CompactView(): JSX.Element {
             className="flex flex-col items-center gap-1"
             onClick={() => setArcOpen(!arcOpen)}
             onDoubleClick={() => openMain('chat')}
-            title="单击菜单 · 双击展开主面板"
+            title="鍗曞嚮鑿滃崟 路 鍙屽嚮灞曞紑涓婚潰鏉?
           >
             <LightCore className={idleRest ? 'scale-50 opacity-60' : ''} trust={trust} />
           </button>
@@ -142,7 +142,7 @@ export function CompactView(): JSX.Element {
       </div>
 
       <p className="compact-pet-hint shrink-0 px-4 pb-2 text-center text-[10px] leading-relaxed tracking-wide text-ink-muted">
-        桌宠模式下部分功能受限
+        妗屽疇妯″紡涓嬮儴鍒嗗姛鑳藉彈闄?
       </p>
 
       <div className="compact-no-drag relative z-10 px-4 pb-3">
@@ -158,7 +158,7 @@ export function CompactView(): JSX.Element {
                 }
               }
             })}
-            placeholder={settings ? '说点什么…' : '加载中…'}
+            placeholder={settings ? '璇寸偣浠€涔堚€? : '鍔犺浇涓€?}
             disabled={!settings || busy}
             className="min-w-0 flex-1 border-0 bg-transparent px-3 py-2 text-sm text-ink outline-none placeholder:text-ink-muted/70"
           />
@@ -168,7 +168,7 @@ export function CompactView(): JSX.Element {
             onClick={handleSend}
             className="chat-send-btn flex h-9 w-10 shrink-0 items-center justify-center text-sm disabled:opacity-50"
           >
-            →
+            鈫?
           </button>
         </div>
         <div

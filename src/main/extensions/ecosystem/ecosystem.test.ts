@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest'
+﻿import { describe, expect, it } from 'vitest'
 import {
-  ACKEM_ENGINE_API_VERSION,
+  Ackem_ENGINE_API_VERSION,
   buildAckemExtensionPackage,
   formatExtensionId,
   generatePublisherKeyPair,
@@ -14,8 +14,8 @@ import {
 } from './index'
 
 describe('ecosystem extensionId', () => {
-  it('parses ackem/community/u namespaces', () => {
-    expect(parseExtensionId('ackem/web-search@1.0.0')?.scope).toBe('ackem')
+  it('parses Ackem/community/u namespaces', () => {
+    expect(parseExtensionId('Ackem/web-search@1.0.0')?.scope).toBe('Ackem')
     expect(parseExtensionId('community/hello-world@2.1.0')?.scope).toBe('community')
     expect(parseExtensionId('u/my-timer@1.0.0')?.scope).toBe('u')
     expect(parseExtensionId('invalid/foo')).toBeNull()
@@ -24,7 +24,7 @@ describe('ecosystem extensionId', () => {
   it('formatExtensionId round-trips slug', () => {
     expect(formatExtensionId('community', 'demo-skill', '1.0.0')).toBe('community/demo-skill@1.0.0')
     expect(isCommunityExtensionId('community/demo-skill@1.0.0')).toBe(true)
-    expect(isOfficialExtensionId('ackem/foo@1.0.0')).toBe(true)
+    expect(isOfficialExtensionId('Ackem/foo@1.0.0')).toBe(true)
     expect(isUserExtensionId('u/foo@1.0.0')).toBe(true)
   })
 })
@@ -67,14 +67,14 @@ describe('ecosystem manifestValidate', () => {
       license: 'MIT',
       main: 'skill.json',
       engineVersion: '>=0.0.0 <1.0.0',
-      engineApiVersion: `^${ACKEM_ENGINE_API_VERSION}`
+      engineApiVersion: `^${Ackem_ENGINE_API_VERSION}`
     })
     expect(result.ok).toBe(true)
   })
 })
 
 describe('ecosystem package signing', () => {
-  it('builds and verifies signed .ackem-ext package', () => {
+  it('builds and verifies signed .Ackem-ext package', () => {
     const keys = generatePublisherKeyPair('test-publisher:2026')
     const manifest = {
       id: 'community/plug-demo@1.0.0',
@@ -87,7 +87,7 @@ describe('ecosystem package signing', () => {
       license: 'MIT',
       main: 'skill.json',
       engineVersion: '>=0.0.0 <1.0.0',
-      engineApiVersion: `^${ACKEM_ENGINE_API_VERSION}`,
+      engineApiVersion: `^${Ackem_ENGINE_API_VERSION}`,
       triggers: ['keyword'],
       keywords: ['plug-demo'],
       permissions: ['engine_read', 'engine_inject', 'readonly'],
@@ -95,8 +95,8 @@ describe('ecosystem package signing', () => {
         mode: 'dispatched' as const,
         subtype: 'keyword_hint' as const,
         time: { habits: [], scenarios: [], keywords: ['plug-demo'] },
-        habits: ['用户说 plug-demo'],
-        scenarios: ['测试'],
+        habits: ['鐢ㄦ埛璇?plug-demo'],
+        scenarios: ['娴嬭瘯'],
         summary: 'plug demo',
         keywords: ['plug-demo']
       }
@@ -105,7 +105,7 @@ describe('ecosystem package signing', () => {
       {
         version: '1.0.0',
         promptTemplates: {
-          contextInjection: '【社区扩展】用户触发了 plug-demo，请简短确认。'
+          contextInjection: '銆愮ぞ鍖烘墿灞曘€戠敤鎴疯Е鍙戜簡 plug-demo锛岃绠€鐭‘璁ゃ€?
         }
       },
       null,
@@ -122,7 +122,7 @@ describe('ecosystem package signing', () => {
       files,
       privateKeyPem: keys.privateKeyPem
     })
-    expect(pkg.format).toBe('ackem-ext')
+    expect(pkg.format).toBe('Ackem-ext')
     expect(pkg.signature.manifestId).toBe('community/plug-demo@1.0.0')
   })
 })

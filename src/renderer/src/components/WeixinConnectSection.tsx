@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+﻿import { useCallback, useEffect, useRef, useState } from 'react'
 import { t } from '../lib/i18n'
 import {
   SettingsBlock,
@@ -39,7 +39,7 @@ export function WeixinConnectSection(): JSX.Element {
 
   const refreshStatus = useCallback(async () => {
     try {
-      const s = await window.ackem.weixinGetStatus()
+      const s = await window.Ackem.weixinGetStatus()
       setStatus(s)
       if (s.connected) setPhase('done')
     } catch {
@@ -49,7 +49,7 @@ export function WeixinConnectSection(): JSX.Element {
 
   useEffect(() => {
     void refreshStatus()
-    const unsub = window.ackem.onWeixinStatusChanged?.((s) => setStatus(s))
+    const unsub = window.Ackem.onWeixinStatusChanged?.((s) => setStatus(s))
     return () => {
       unsub?.()
       if (pollRef.current != null) window.clearInterval(pollRef.current)
@@ -68,7 +68,7 @@ export function WeixinConnectSection(): JSX.Element {
     pollRef.current = window.setInterval(() => {
       void (async () => {
         try {
-          const res = await window.ackem.weixinPollLogin({ qrcode: code, verifyCode: verifyCode || undefined })
+          const res = await window.Ackem.weixinPollLogin({ qrcode: code, verifyCode: verifyCode || undefined })
           setLoginHint(weixinStatusLabel(res.status))
           if (res.ok) {
             stopPoll()
@@ -96,7 +96,7 @@ export function WeixinConnectSection(): JSX.Element {
     setBusy(true)
     setLoginHint('')
     try {
-      const res = await window.ackem.weixinStartLogin()
+      const res = await window.Ackem.weixinStartLogin()
       setQrcode(res.qrcode)
       setQrImg(res.qrcodeImgContent)
       setPhase('qr')
@@ -112,7 +112,7 @@ export function WeixinConnectSection(): JSX.Element {
     if (!qrcode || !verifyCode.trim()) return
     setBusy(true)
     try {
-      const res = await window.ackem.weixinSubmitVerifyCode({ qrcode, verifyCode: verifyCode.trim() })
+      const res = await window.Ackem.weixinSubmitVerifyCode({ qrcode, verifyCode: verifyCode.trim() })
       if (res.ok) {
         setPhase('done')
         await refreshStatus()
@@ -129,7 +129,7 @@ export function WeixinConnectSection(): JSX.Element {
     setBusy(true)
     stopPoll()
     try {
-      await window.ackem.weixinDisconnect()
+      await window.Ackem.weixinDisconnect()
       setPhase('idle')
       setQrcode('')
       setQrImg('')
@@ -140,12 +140,12 @@ export function WeixinConnectSection(): JSX.Element {
   }
 
   const setEnabled = async (on: boolean) => {
-    await window.ackem.weixinSetEnabled(on)
+    await window.Ackem.weixinSetEnabled(on)
     await refreshStatus()
   }
 
   const setProactiveEnabled = async (on: boolean) => {
-    await window.ackem.weixinSetProactiveEnabled(on)
+    await window.Ackem.weixinSetProactiveEnabled(on)
     await refreshStatus()
   }
 
@@ -266,7 +266,7 @@ export function WeixinConnectSection(): JSX.Element {
                 disabled={busy}
                 onClick={() => {
                   setBusy(true)
-                  void window.ackem
+                  void window.Ackem
                     .weixinRestart()
                     .then(() => refreshStatus())
                     .finally(() => setBusy(false))

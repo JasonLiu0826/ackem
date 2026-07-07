@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 
 type McBubble = {
   id: number
@@ -14,24 +14,24 @@ const MAX_BUBBLES = 4
 const TTL_MS = 8000
 
 function eventIcon(type: string): string {
-  if (type.includes('death') || type.includes('slain') || type.includes('killed')) return '💀'
-  if (type.includes('achievement') || type.includes('advancement')) return '⭐'
-  if (type.includes('diamond') || type.includes('emerald') || type.includes('netherite')) return '💎'
-  if (type.includes('creeper')) return '💥'
-  if (type.includes('dragon') || type.includes('wither') || type.includes('warden')) return '🐉'
-  if (type.includes('dimension') || type.includes('portal')) return '🌀'
-  if (type.includes('chat')) return '💬'
-  if (type.includes('hungry') || type.includes('starve') || type.includes('food')) return '🍖'
-  if (type.includes('rain') || type.includes('thunder') || type.includes('weather')) return '🌧️'
-  if (type.includes('iron_golem') || type.includes('villager')) return '🤖'
-  if (type.includes('zombie') || type.includes('skeleton') || type.includes('spider')) return '🧟'
-  if (type.includes('treasure') || type.includes('chest') || type.includes('loot')) return '🎁'
-  if (type.includes('bed') || type.includes('sleep')) return '🛏️'
-  if (type.includes('fish') || type.includes('water')) return '🎣'
-  if (type.includes('fire') || type.includes('lava') || type.includes('burn')) return '🔥'
-  if (type.includes('elytra') || type.includes('fly')) return '🪶'
-  if (type.includes('tame') || type.includes('wolf') || type.includes('pet')) return '🐺'
-  return '🎮'
+  if (type.includes('death') || type.includes('slain') || type.includes('killed')) return '馃拃'
+  if (type.includes('achievement') || type.includes('advancement')) return '猸?
+  if (type.includes('diamond') || type.includes('emerald') || type.includes('netherite')) return '馃拵'
+  if (type.includes('creeper')) return '馃挜'
+  if (type.includes('dragon') || type.includes('wither') || type.includes('warden')) return '馃悏'
+  if (type.includes('dimension') || type.includes('portal')) return '馃寑'
+  if (type.includes('chat')) return '馃挰'
+  if (type.includes('hungry') || type.includes('starve') || type.includes('food')) return '馃崠'
+  if (type.includes('rain') || type.includes('thunder') || type.includes('weather')) return '馃導锔?
+  if (type.includes('iron_golem') || type.includes('villager')) return '馃'
+  if (type.includes('zombie') || type.includes('skeleton') || type.includes('spider')) return '馃'
+  if (type.includes('treasure') || type.includes('chest') || type.includes('loot')) return '馃巵'
+  if (type.includes('bed') || type.includes('sleep')) return '馃洀锔?
+  if (type.includes('fish') || type.includes('water')) return '馃帲'
+  if (type.includes('fire') || type.includes('lava') || type.includes('burn')) return '馃敟'
+  if (type.includes('elytra') || type.includes('fly')) return '馃'
+  if (type.includes('tame') || type.includes('wolf') || type.includes('pet')) return '馃惡'
+  return '馃幃'
 }
 
 function eventTypeLabel(type: string): string {
@@ -75,8 +75,8 @@ export function McEventStack(): JSX.Element | null {
       }, TTL_MS)
     }
 
-    window.ackem?.ext.gamemode.onEvent('minecraft', handlePayload)
-    window.ackem?.onMcEvent(handlePayload as (p: { event: unknown; reaction: unknown }) => void)
+    window.Ackem?.ext.gamemode.onEvent('minecraft', handlePayload)
+    window.Ackem?.onMcEvent(handlePayload as (p: { event: unknown; reaction: unknown }) => void)
   }, [])
 
   if (bubbles.length === 0) return null

@@ -1,23 +1,23 @@
-/**
- * FIX-036 — 检测是否在浏览器直开 Vite（无 Electron preload）
+﻿/**
+ * FIX-036 鈥?妫€娴嬫槸鍚﹀湪娴忚鍣ㄧ洿寮€ Vite锛堟棤 Electron preload锛?
  */
 export function isAckemPreloadAvailable(): boolean {
-  return typeof window !== 'undefined' && typeof window.ackem !== 'undefined'
+  return typeof window !== 'undefined' && typeof window.Ackem !== 'undefined'
 }
 
 export function formatMissingPreloadError(): string {
   const en =
-    'window.ackem is missing. If you opened http://localhost:5173 in a browser, close it and start Electron instead (npm run dev or 一键启动.bat). In Electron, check preload errors in DevTools.'
+    'window.Ackem is missing. If you opened http://localhost:5173 in a browser, close it and start Electron instead (npm run dev or 涓€閿惎鍔?bat). In Electron, check preload errors in DevTools.'
   const zh =
-    '未检测到 window.ackem。若在浏览器打开 http://localhost:5173 会出现此情况，请关闭浏览器并用 npm run dev / 一键启动.bat 启动 Electron；若在 Electron 内仍如此，请检查 preload 是否报错。'
+    '鏈娴嬪埌 window.Ackem銆傝嫢鍦ㄦ祻瑙堝櫒鎵撳紑 http://localhost:5173 浼氬嚭鐜版鎯呭喌锛岃鍏抽棴娴忚鍣ㄥ苟鐢?npm run dev / 涓€閿惎鍔?bat 鍚姩 Electron锛涜嫢鍦?Electron 鍐呬粛濡傛锛岃妫€鏌?preload 鏄惁鎶ラ敊銆?
   if (typeof navigator !== 'undefined' && navigator.language.toLowerCase().startsWith('en')) {
     return en
   }
   return zh
 }
 
-export const BOOT_CONNECTING_ZH = '正在连接主进程…'
-export const BOOT_CONNECTING_EN = 'Connecting to main process…'
+export const BOOT_CONNECTING_ZH = '姝ｅ湪杩炴帴涓昏繘绋嬧€?
+export const BOOT_CONNECTING_EN = 'Connecting to main process鈥?
 
 export function formatBootConnectingMessage(): string {
   if (typeof navigator !== 'undefined' && navigator.language.toLowerCase().startsWith('en')) {

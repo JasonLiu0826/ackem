@@ -1,6 +1,6 @@
-/**
- * In-app「开源协议须知」正文（设置 → 开源协议须知）。
- * 与 dist/应用内合规文本.md、仓库 LICENSE/CLA 保持一致。
+﻿/**
+ * In-app銆屽紑婧愬崗璁』鐭ャ€嶆鏂囷紙璁剧疆 鈫?寮€婧愬崗璁』鐭ワ級銆?
+ * 涓?dist/搴旂敤鍐呭悎瑙勬枃鏈?md銆佷粨搴?LICENSE/CLA 淇濇寔涓€鑷淬€?
  */
 
 export type OssNoticeLink = {
@@ -30,77 +30,77 @@ const ZH: OssNoticeContent = {
   updated: '2026-06-28',
   sections: [
     {
-      title: '开源许可',
+      title: '寮€婧愯鍙?,
       paragraphs: [
-        'Ackem 以 GNU Affero 通用公共许可证第 3 版（AGPL-3.0）开源发布。',
-        '版权所有 © 2026 Jason Liu（JasonLiu0826）。',
-        '在遵守 AGPL-3.0 的前提下，您可自由使用、研究、修改与分发本软件；修改后的衍生作品须以相同协议开源。',
-        '若您通过网络向他人提供基于本软件的服务（含 SaaS、远程 API 等），须向用户提供获取完整源代码的途径。'
+        'Ackem 浠?GNU Affero 閫氱敤鍏叡璁稿彲璇佺 3 鐗堬紙AGPL-3.0锛夊紑婧愬彂甯冦€?,
+        '鐗堟潈鎵€鏈?漏 2026 Jason Liu锛圝asonLiu0826锛夈€?,
+        '鍦ㄩ伒瀹?AGPL-3.0 鐨勫墠鎻愪笅锛屾偍鍙嚜鐢变娇鐢ㄣ€佺爺绌躲€佷慨鏀逛笌鍒嗗彂鏈蒋浠讹紱淇敼鍚庣殑琛嶇敓浣滃搧椤讳互鐩稿悓鍗忚寮€婧愩€?,
+        '鑻ユ偍閫氳繃缃戠粶鍚戜粬浜烘彁渚涘熀浜庢湰杞欢鐨勬湇鍔★紙鍚?SaaS銆佽繙绋?API 绛夛級锛岄』鍚戠敤鎴锋彁渚涜幏鍙栧畬鏁存簮浠ｇ爜鐨勯€斿緞銆?
       ],
       links: [
-        { label: '完整 LICENSE（GitHub）', url: `${REPO}/blob/main/LICENSE` },
-        { label: 'AGPL-3.0 官方全文', url: 'https://www.gnu.org/licenses/agpl-3.0.html' }
+        { label: '瀹屾暣 LICENSE锛圙itHub锛?, url: `${REPO}/blob/main/LICENSE` },
+        { label: 'AGPL-3.0 瀹樻柟鍏ㄦ枃', url: 'https://www.gnu.org/licenses/agpl-3.0.html' }
       ]
     },
     {
-      title: '允许的使用（无需单独商业授权）',
+      title: '鍏佽鐨勪娇鐢紙鏃犻渶鍗曠嫭鍟嗕笟鎺堟潈锛?,
       bullets: [
-        '个人学习、研究与非商业自用',
-        'Fork 或集成到其他项目，且衍生作品同样以 AGPL-3.0 开源',
-        '学术论文、教学与公开演示（注明 Ackem 与许可证）'
+        '涓汉瀛︿範銆佺爺绌朵笌闈炲晢涓氳嚜鐢?,
+        'Fork 鎴栭泦鎴愬埌鍏朵粬椤圭洰锛屼笖琛嶇敓浣滃搧鍚屾牱浠?AGPL-3.0 寮€婧?,
+        '瀛︽湳璁烘枃銆佹暀瀛︿笌鍏紑婕旂ず锛堟敞鏄?Ackem 涓庤鍙瘉锛?
       ]
     },
     {
-      title: '需要商业授权的场景',
+      title: '闇€瑕佸晢涓氭巿鏉冪殑鍦烘櫙',
       bullets: [
-        '闭源商业产品或服务中嵌入、分发或修改 Ackem',
-        'SaaS / 托管服务且不愿向终端用户提供对应源代码',
-        '企业内私有化部署且不愿按 AGPL 开源定制部分',
-        '闭源产品仅通过 API 调用 Ackem（边界情形，建议事先咨询）'
+        '闂簮鍟嗕笟浜у搧鎴栨湇鍔′腑宓屽叆銆佸垎鍙戞垨淇敼 Ackem',
+        'SaaS / 鎵樼鏈嶅姟涓斾笉鎰垮悜缁堢鐢ㄦ埛鎻愪緵瀵瑰簲婧愪唬鐮?,
+        '浼佷笟鍐呯鏈夊寲閮ㄧ讲涓斾笉鎰挎寜 AGPL 寮€婧愬畾鍒堕儴鍒?,
+        '闂簮浜у搧浠呴€氳繃 API 璋冪敤 Ackem锛堣竟鐣屾儏褰紝寤鸿浜嬪厛鍜ㄨ锛?
       ],
-      paragraphs: [`商业授权申请：${COMMERCIAL_EMAIL}`]
+      paragraphs: [`鍟嗕笟鎺堟潈鐢宠锛?{COMMERCIAL_EMAIL}`]
     },
     {
-      title: '第三方组件',
+      title: '绗笁鏂圭粍浠?,
       paragraphs: [
-        'Ackem 基于 Electron、Chromium、Node.js 及多项 npm 开源库构建；另可能捆绑 embedding 模型、语音服务等运行时。',
-        '各组件保留其原有许可证。Windows 绿色版目录内可提供 LICENSE.electron.txt；完整依赖摘要见仓库 NOTICE.md。'
+        'Ackem 鍩轰簬 Electron銆丆hromium銆丯ode.js 鍙婂椤?npm 寮€婧愬簱鏋勫缓锛涘彟鍙兘鎹嗙粦 embedding 妯″瀷銆佽闊虫湇鍔＄瓑杩愯鏃躲€?,
+        '鍚勭粍浠朵繚鐣欏叾鍘熸湁璁稿彲璇併€俉indows 缁胯壊鐗堢洰褰曞唴鍙彁渚?LICENSE.electron.txt锛涘畬鏁翠緷璧栨憳瑕佽浠撳簱 NOTICE.md銆?
       ],
-      links: [{ label: 'NOTICE.md（GitHub）', url: `${REPO}/blob/main/NOTICE.md` }]
+      links: [{ label: 'NOTICE.md锛圙itHub锛?, url: `${REPO}/blob/main/NOTICE.md` }]
     },
     {
-      title: '贡献者',
+      title: '璐＄尞鑰?,
       paragraphs: [
-        '感谢所有为 Ackem 提交代码、文档与扩展的开发者。',
-        '向本项目提交 Pull Request 即表示您同意贡献者许可协议（CLA v1.1）。'
+        '鎰熻阿鎵€鏈変负 Ackem 鎻愪氦浠ｇ爜銆佹枃妗ｄ笌鎵╁睍鐨勫紑鍙戣€呫€?,
+        '鍚戞湰椤圭洰鎻愪氦 Pull Request 鍗宠〃绀烘偍鍚屾剰璐＄尞鑰呰鍙崗璁紙CLA v1.1锛夈€?
       ],
       links: [
         { label: 'CLA.md', url: `${REPO}/blob/main/CLA.md` },
-        { label: '贡献者列表', url: `${REPO}/graphs/contributors` }
+        { label: '璐＄尞鑰呭垪琛?, url: `${REPO}/graphs/contributors` }
       ]
     },
     {
-      title: '隐私与用户数据',
+      title: '闅愮涓庣敤鎴锋暟鎹?,
       paragraphs: [
-        'Ackem 以本地优先方式运行：对话、记忆、情绪状态、导入文件与 OpenForU 工作区均保存在您的设备上。',
-        '本应用默认不收集、不上传、不共享您的对话内容；API Key 与模型凭证仅在您填写后存于本机设置文件。',
-        '便携版数据目录：安装目录旁 .\\data\\',
-        '用户目录模式：%LOCALAPPDATA%\\Ackem\\',
-        '备份建议：完全退出 Ackem 后，拷贝整棵 data 目录（含 ackem.db）。卸载应用不会上传您的数据。'
+        'Ackem 浠ユ湰鍦颁紭鍏堟柟寮忚繍琛岋細瀵硅瘽銆佽蹇嗐€佹儏缁姸鎬併€佸鍏ユ枃浠朵笌 OpenForU 宸ヤ綔鍖哄潎淇濆瓨鍦ㄦ偍鐨勮澶囦笂銆?,
+        '鏈簲鐢ㄩ粯璁や笉鏀堕泦銆佷笉涓婁紶銆佷笉鍏变韩鎮ㄧ殑瀵硅瘽鍐呭锛汚PI Key 涓庢ā鍨嬪嚟璇佷粎鍦ㄦ偍濉啓鍚庡瓨浜庢湰鏈鸿缃枃浠躲€?,
+        '渚挎惡鐗堟暟鎹洰褰曪細瀹夎鐩綍鏃?.\\data\\',
+        '鐢ㄦ埛鐩綍妯″紡锛?LOCALAPPDATA%\\Ackem\\',
+        '澶囦唤寤鸿锛氬畬鍏ㄩ€€鍑?Ackem 鍚庯紝鎷疯礉鏁存５ data 鐩綍锛堝惈 Ackem.db锛夈€傚嵏杞藉簲鐢ㄤ笉浼氫笂浼犳偍鐨勬暟鎹€?
       ]
     },
     {
-      title: '官方发行包说明',
+      title: '瀹樻柟鍙戣鍖呰鏄?,
       bullets: [
-        '不含任何用户的 data/（记忆、聊天、导入）',
-        '不含 API Key、.env 或开发者密钥',
-        '不含维护者或第三方的私人数据',
-        '凭证需在首次运行后于「设置」中自行配置'
+        '涓嶅惈浠讳綍鐢ㄦ埛鐨?data/锛堣蹇嗐€佽亰澶┿€佸鍏ワ級',
+        '涓嶅惈 API Key銆?env 鎴栧紑鍙戣€呭瘑閽?,
+        '涓嶅惈缁存姢鑰呮垨绗笁鏂圭殑绉佷汉鏁版嵁',
+        '鍑瘉闇€鍦ㄩ娆¤繍琛屽悗浜庛€岃缃€嶄腑鑷閰嶇疆'
       ],
-      paragraphs: ['详细分发说明见随包 docs/ 或 GitHub 仓库 docs/distribution-windows.md。']
+      paragraphs: ['璇︾粏鍒嗗彂璇存槑瑙侀殢鍖?docs/ 鎴?GitHub 浠撳簱 docs/distribution-windows.md銆?]
     }
   ],
-  footer: `Ackem ${'v1.0.0'} · 开源仓库 ${REPO}`
+  footer: `Ackem ${'v1.0.0'} 路 寮€婧愪粨搴?${REPO}`
 }
 
 const EN: OssNoticeContent = {
@@ -111,7 +111,7 @@ const EN: OssNoticeContent = {
       title: 'Open-source license',
       paragraphs: [
         'Ackem is released under the GNU Affero General Public License v3.0 (AGPL-3.0).',
-        'Copyright © 2026 Jason Liu (JasonLiu0826).',
+        'Copyright 漏 2026 Jason Liu (JasonLiu0826).',
         'You may use, study, modify, and distribute this software under AGPL-3.0; derivative works must use the same license.',
         'If you offer network-facing services based on Ackem (including SaaS or remote APIs), you must provide a way for users to obtain the complete corresponding source code.'
       ],
@@ -134,7 +134,7 @@ const EN: OssNoticeContent = {
         'Embedding, distributing, or modifying Ackem in a closed-source commercial product',
         'SaaS / hosted service without offering source code to end users',
         'Private enterprise deployment without open-sourcing customizations under AGPL',
-        'Closed-source products calling Ackem via API only (gray area — contact us first)'
+        'Closed-source products calling Ackem via API only (gray area 鈥?contact us first)'
       ],
       paragraphs: [`Commercial licensing: ${COMMERCIAL_EMAIL}`]
     },
@@ -164,7 +164,7 @@ const EN: OssNoticeContent = {
         'By default the app does not collect or upload conversation content; API keys are stored locally after you enter them in Settings.',
         'Portable data folder: .\\data\\ next to Ackem.exe',
         'User-directory mode: %LOCALAPPDATA%\\Ackem\\',
-        'Backup tip: quit Ackem fully, then copy the entire data folder (including ackem.db). Uninstall does not upload your data.'
+        'Backup tip: quit Ackem fully, then copy the entire data folder (including Ackem.db). Uninstall does not upload your data.'
       ]
     },
     {
@@ -178,7 +178,7 @@ const EN: OssNoticeContent = {
       paragraphs: ['See bundled docs/ or docs/distribution-windows.md on GitHub.']
     }
   ],
-  footer: `Ackem v1.0.0 · ${REPO}`
+  footer: `Ackem v1.0.0 路 ${REPO}`
 }
 
 export function getOssNoticeContent(locale: string): OssNoticeContent {

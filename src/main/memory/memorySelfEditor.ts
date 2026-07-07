@@ -1,9 +1,9 @@
-// [memorySelfEditor] — 记忆自编辑
-// 职责：批量矛盾检测+自主更新/合并/退役事实，记录编辑日志
-// 对标 MemGPT self-editing memory
-// 引用：../engine/types, ./factStore, ./contradictionDetector
+﻿// [memorySelfEditor] 鈥?璁板繂鑷紪杈?
+// 鑱岃矗锛氭壒閲忕煕鐩炬娴?鑷富鏇存柊/鍚堝苟/閫€褰逛簨瀹烇紝璁板綍缂栬緫鏃ュ織
+// 瀵规爣 MemGPT self-editing memory
+// 寮曠敤锛?./engine/types, ./factStore, ./contradictionDetector
 
-import { SELF_EDIT_LOG_KEEP, SELF_EDIT_LOG_MAX, SELF_EDIT_REINFORCE_WEIGHT_BOOST } from '../engine/ackemParams'
+import { SELF_EDIT_LOG_KEEP, SELF_EDIT_LOG_MAX, SELF_EDIT_REINFORCE_WEIGHT_BOOST } from '../engine/AckemParams'
 import type { ContradictionCheck, LlmClient, MemoryFact } from '../engine/types'
 import type { FactStore } from './factStore'
 import { ContradictionDetector } from './contradictionDetector'
@@ -21,7 +21,7 @@ export class MemorySelfEditor {
   private editLog: EditLogEntry[] = []
 
   /**
-   * 批量检查多条新事实与相似已有事实，一次 LLM 调用完成所有判断
+   * 鎵归噺妫€鏌ュ鏉℃柊浜嬪疄涓庣浉浼煎凡鏈変簨瀹烇紝涓€娆?LLM 璋冪敤瀹屾垚鎵€鏈夊垽鏂?
    */
   async batchResolve(
     pairs: Array<{ newFact: MemoryFact; existing: MemoryFact }>,
@@ -32,7 +32,7 @@ export class MemorySelfEditor {
     const validPairs = pairs.filter(p => p.newFact.id !== p.existing.id && p.newFact.factLayer !== 'consolidated')
     if (validPairs.length === 0) return results
 
-    // 批量送检：2+ 对 → 一次 LLM 调用；1 对 → 单独调用
+    // 鎵归噺閫佹锛?+ 瀵?鈫?涓€娆?LLM 璋冪敤锛? 瀵?鈫?鍗曠嫭璋冪敤
     let checks: Array<{ check: ContradictionCheck; pair: typeof validPairs[0] }> = []
     if (validPairs.length >= 2) {
       const batchResults = await this.detector.checkBatch(validPairs, llm)
@@ -67,19 +67,19 @@ export class MemorySelfEditor {
       })
       factStore.retireFact(newFact.id)
       this.log('merge_reinforce', newFact.id, existing.id, check.reason)
-      return `强化并合并：${check.reason}`
+      return `寮哄寲骞跺悎骞讹細${check.reason}`
     }
 
     if (check.judgment === 'conflict') {
       if (check.action === 'keep_new') {
         factStore.retireFact(existing.id)
         this.log('retire_old_conflict', existing.id, newFact.id, check.reason)
-        return `退役旧事实（冲突，保留新）：${check.reason}`
+        return `閫€褰规棫浜嬪疄锛堝啿绐侊紝淇濈暀鏂帮級锛?{check.reason}`
       }
       if (check.action === 'keep_old') {
         factStore.retireFact(newFact.id)
         this.log('retire_new_conflict', newFact.id, existing.id, check.reason)
-        return `退役新事实（冲突，保留旧）：${check.reason}`
+        return `閫€褰规柊浜嬪疄锛堝啿绐侊紝淇濈暀鏃э級锛?{check.reason}`
       }
       if (check.action === 'merge') {
         const mergedSummary = newFact.summary.length >= existing.summary.length
@@ -90,11 +90,11 @@ export class MemorySelfEditor {
         })
         factStore.retireFact(newFact.id)
         this.log('merge_conflict', newFact.id, existing.id, check.reason)
-        return `合并冲突事实：${check.reason}`
+        return `鍚堝苟鍐茬獊浜嬪疄锛?{check.reason}`
       }
       if (check.action === 'flag') {
         this.log('flag', newFact.id, existing.id, check.reason)
-        return `标记为需人工确认：${check.reason}`
+        return `鏍囪涓洪渶浜哄伐纭锛?{check.reason}`
       }
     }
     return null

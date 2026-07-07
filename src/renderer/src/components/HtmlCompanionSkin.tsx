@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+﻿import { useEffect, useRef } from 'react'
 import { t } from '../lib/i18n'
 import type { CompanionAvatarState, CompanionSkinBinding } from '../../../shared/companionSkin'
 
@@ -9,7 +9,7 @@ type Props = {
   className?: string
 }
 
-/** 插件包内 HTML 皮肤：通过 postMessage 同步状态 */
+/** 鎻掍欢鍖呭唴 HTML 鐨偆锛氶€氳繃 postMessage 鍚屾鐘舵€?*/
 export function HtmlCompanionSkin({
   binding,
   state,
@@ -21,7 +21,7 @@ export function HtmlCompanionSkin({
   useEffect(() => {
     const win = iframeRef.current?.contentWindow
     if (!win) return
-    win.postMessage({ type: 'ackem:companion-avatar', state }, '*')
+    win.postMessage({ type: 'Ackem:companion-avatar', state }, '*')
   }, [state, binding.entry])
 
   return (

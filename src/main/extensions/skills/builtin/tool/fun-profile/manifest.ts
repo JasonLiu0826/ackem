@@ -1,24 +1,24 @@
-import type { SkillManifest } from '../../../types'
+﻿import type { SkillManifest } from '../../../types'
 import type { DispatchConfig } from '../../../../protocols'
 
 const DISPATCH: DispatchConfig = {
   mode: 'dispatched',
   subtype: 'llm_function_call',
   time: { active_hours: '00:00-23:59', cooldown_minutes: 10 },
-  habits: ['用户要趣味档案、小传、宠溺吐槽人设卡'],
-  scenarios: ['基于已授权记忆生成娱乐向纸面卡'],
-  summary: '用已授权记忆生成宠溺/调侃风趣味小传（非正式档案）。',
-  keywords: ['趣味档案', '小传', '我的人设', '档案'],
+  habits: ['鐢ㄦ埛瑕佽叮鍛虫。妗堛€佸皬浼犮€佸疇婧哄悙妲戒汉璁惧崱'],
+  scenarios: ['鍩轰簬宸叉巿鏉冭蹇嗙敓鎴愬ū涔愬悜绾搁潰鍗?],
+  summary: '鐢ㄥ凡鎺堟潈璁板繂鐢熸垚瀹犳汉/璋冧緝椋庤叮鍛冲皬浼狅紙闈炴寮忔。妗堬級銆?,
+  keywords: ['瓒ｅ懗妗ｆ', '灏忎紶', '鎴戠殑浜鸿', '妗ｆ'],
   personality_hint: 'playful'
 }
 
 export const FUN_PROFILE_MANIFEST: SkillManifest = {
-  id: 'ackem/fun-profile@0.0.1',
-  name: '趣味档案生成',
+  id: 'Ackem/fun-profile@0.0.1',
+  name: '瓒ｅ懗妗ｆ鐢熸垚',
   version: '0.0.1',
   category: 'skill',
   skillType: 'tool',
-  description: '基于已授权记忆生成宠溺/调侃风趣味小传。',
+  description: '鍩轰簬宸叉巿鏉冭蹇嗙敓鎴愬疇婧?璋冧緝椋庤叮鍛冲皬浼犮€?,
   author: 'JasonLiu0826',
   license: 'AGPL-3.0',
   main: 'skill.ts',
@@ -29,11 +29,11 @@ export const FUN_PROFILE_MANIFEST: SkillManifest = {
   adultModeSafe: true,
   functionDef: {
     name: 'generate_fun_profile',
-    description: '根据已授权记忆生成趣味档案小传（娱乐向）。',
+    description: '鏍规嵁宸叉巿鏉冭蹇嗙敓鎴愯叮鍛虫。妗堝皬浼狅紙濞变箰鍚戯級銆?,
     parameters: {
       type: 'object',
       properties: {
-        tone: { type: 'string', description: '宠溺 或 调侃，默认按亲密度' }
+        tone: { type: 'string', description: '瀹犳汉 鎴?璋冧緝锛岄粯璁ゆ寜浜插瘑搴? }
       },
       required: []
     }

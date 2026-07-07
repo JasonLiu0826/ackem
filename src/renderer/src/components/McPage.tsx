@@ -1,7 +1,7 @@
-import { useEffect, useState, useCallback } from 'react'
+﻿import { useEffect, useState, useCallback } from 'react'
 import { t } from '../lib/i18n'
 import { useAppStore } from '../store/appStore'
-import type { McBotDebugSnapshot } from '../ackem'
+import type { McBotDebugSnapshot } from '../Ackem'
 
 type BotStatus = {
   connected: boolean
@@ -19,17 +19,17 @@ type McStatus = {
   wsClients: number
 }
 
-/* ══════════════════════════════════════════════════════════════
-   MC 陪伴独立控制台
-   ══════════════════════════════════════════════════════════════ */
-const mc = () => window.ackem.ext.gamemode.minecraft
+/* 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲
+   MC 闄即鐙珛鎺у埗鍙?
+   鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲 */
+const mc = () => window.Ackem.ext.gamemode.minecraft
 
 export function McPage(props: { onBack?: () => void }): JSX.Element {
   const settings = useAppStore((s) => s.settings)
   const setSettings = useAppStore((s) => s.setSettings)
   const pushToast = useAppStore((s) => s.pushToast)
 
-  // ── Bot 连接（从持久化设置恢复）──
+  // 鈹€鈹€ Bot 杩炴帴锛堜粠鎸佷箙鍖栬缃仮澶嶏級鈹€鈹€
   const [botHost, setBotHost] = useState(settings?.mcBotHost || 'localhost')
   const [botPort, setBotPort] = useState(settings?.mcBotPort || 25565)
   const [botUsername, setBotUsername] = useState(settings?.mcBotUsername || 'AckemBot')
@@ -37,28 +37,28 @@ export function McPage(props: { onBack?: () => void }): JSX.Element {
   const [botConnecting, setBotConnecting] = useState(false)
   const [botStatus, setBotStatus] = useState<BotStatus>({ connected: false })
 
-  // ── 日志监听（从持久化设置恢复）──
+  // 鈹€鈹€ 鏃ュ織鐩戝惉锛堜粠鎸佷箙鍖栬缃仮澶嶏級鈹€鈹€
   const [logPath, setLogPath] = useState(settings?.mcLogPath || '')
   const [wsPort, setWsPort] = useState(19532)
   const [wsStatus, setWsStatus] = useState<McStatus>({ running: false, wsPort: 19532, wsClients: 0 })
   const [logWatching, setLogWatching] = useState(false)
 
-  // ── 测试 ──
+  // 鈹€鈹€ 娴嬭瘯 鈹€鈹€
   const [testReaction, setTestReaction] = useState('')
   const [testBusy, setTestBusy] = useState(false)
 
-  // ── 实机调试 ──
+  // 鈹€鈹€ 瀹炴満璋冭瘯 鈹€鈹€
   const [botDebug, setBotDebug] = useState<McBotDebugSnapshot | null>(null)
 
-  // 持久化 MC 设置
+  // 鎸佷箙鍖?MC 璁剧疆
   const saveMcSettings = useCallback(async (patch: Record<string, unknown>) => {
     try {
-      const next = await window.ackem.setSettings(patch as Partial<import('../ackem').AppSettings>)
+      const next = await window.Ackem.setSettings(patch as Partial<import('../Ackem').AppSettings>)
       if (setSettings) setSettings(next)
     } catch { /* ignore */ }
   }, [setSettings])
 
-  // 定期刷新 Bot 状态
+  // 瀹氭湡鍒锋柊 Bot 鐘舵€?
   useEffect(() => {
     const t = setInterval(async () => {
       try {
@@ -69,7 +69,7 @@ export function McPage(props: { onBack?: () => void }): JSX.Element {
     return () => clearInterval(t)
   }, [])
 
-  // 刷新 WS 状态
+  // 鍒锋柊 WS 鐘舵€?
   const refreshWsStatus = useCallback(async () => {
     try {
       const s = await mc().getWsStatus() as McStatus
@@ -78,9 +78,9 @@ export function McPage(props: { onBack?: () => void }): JSX.Element {
   }, [])
   useEffect(() => { void refreshWsStatus() }, [refreshWsStatus])
 
-  // 实机调试：推送 + 轮询兜底
+  // 瀹炴満璋冭瘯锛氭帹閫?+ 杞鍏滃簳
   useEffect(() => {
-    window.ackem.onMcBotDebug((snap) => setBotDebug(snap))
+    window.Ackem.onMcBotDebug((snap) => setBotDebug(snap))
     const poll = setInterval(async () => {
       if (!botStatus.connected) return
       try {
@@ -92,21 +92,21 @@ export function McPage(props: { onBack?: () => void }): JSX.Element {
   }, [botStatus.connected])
 
   const opStateLabel: Record<string, string> = {
-    IDLE: '空闲',
-    FOLLOWING: '跟随',
-    COMBAT: '战斗',
-    RESCUE: '救援',
-    STUCK: '卡住',
-    NAVIGATING: '导航',
-    PORTAL: '传送门',
+    IDLE: '绌洪棽',
+    FOLLOWING: '璺熼殢',
+    COMBAT: '鎴樻枟',
+    RESCUE: '鏁戞彺',
+    STUCK: '鍗′綇',
+    NAVIGATING: '瀵艰埅',
+    PORTAL: '浼犻€侀棬',
   }
 
-  // ── 操作函数 ──
+  // 鈹€鈹€ 鎿嶄綔鍑芥暟 鈹€鈹€
   const syncEngine = async () => {
     try {
       await mc().syncEngineState()
-      pushToast('引擎状态已同步到 MC')
-    } catch (e) { pushToast('同步失败：' + (e instanceof Error ? e.message : String(e))) }
+      pushToast('寮曟搸鐘舵€佸凡鍚屾鍒?MC')
+    } catch (e) { pushToast('鍚屾澶辫触锛? + (e instanceof Error ? e.message : String(e))) }
   }
 
   const connectBot = async () => {
@@ -118,9 +118,9 @@ export function McPage(props: { onBack?: () => void }): JSX.Element {
         ...(botPassword ? { password: botPassword } : {}),
       })
       setBotStatus({ connected: true, username: botUsername })
-      pushToast(`✅ ${botUsername} 已加入游戏`)
+      pushToast(`鉁?${botUsername} 宸插姞鍏ユ父鎴廯)
     } catch (e) {
-      pushToast('连接失败：' + (e instanceof Error ? e.message : String(e)))
+      pushToast('杩炴帴澶辫触锛? + (e instanceof Error ? e.message : String(e)))
     } finally { setBotConnecting(false) }
   }
 
@@ -129,9 +129,9 @@ export function McPage(props: { onBack?: () => void }): JSX.Element {
     try {
       await mc().botStop()
       setBotStatus({ connected: false })
-      pushToast('Bot 已断开')
+      pushToast('Bot 宸叉柇寮€')
     } catch (e) {
-      pushToast('断开失败：' + (e instanceof Error ? e.message : String(e)))
+      pushToast('鏂紑澶辫触锛? + (e instanceof Error ? e.message : String(e)))
     } finally { setBotConnecting(false) }
   }
 
@@ -139,38 +139,38 @@ export function McPage(props: { onBack?: () => void }): JSX.Element {
     setTestBusy(true)
     setTestReaction('')
     try {
-      // 先用日志解析测试事件
+      // 鍏堢敤鏃ュ織瑙ｆ瀽娴嬭瘯浜嬩欢
       const line = '[Server thread/INFO]: JasonLiu has made the advancement [Diamonds!]'
       const event = await mc().parseLog(line)
-      if (!event) { pushToast('日志解析失败'); return }
+      if (!event) { pushToast('鏃ュ織瑙ｆ瀽澶辫触'); return }
       const r = await mc().react(event)
       setTestReaction(`[${event.type.replace('mc:', '')}] ${r.text}`)
-      if (r.isEasterEgg) pushToast('🎉 触发了彩蛋！')
+      if (r.isEasterEgg) pushToast('馃帀 瑙﹀彂浜嗗僵铔嬶紒')
     } catch (e) {
-      pushToast('测试失败：' + (e instanceof Error ? e.message : String(e)))
+      pushToast('娴嬭瘯澶辫触锛? + (e instanceof Error ? e.message : String(e)))
     } finally { setTestBusy(false) }
   }
 
-  // ── 人格战斗风格速查 ──
+  // 鈹€鈹€ 浜烘牸鎴樻枟椋庢牸閫熸煡 鈹€鈹€
   const presetId = useAppStore((s) => s.settings?.personalityPresetId)
   const combatStyles: Record<string, string> = {
-    deredere:   '温柔 · 先保你再管自己 · 血量低会撤退',
-    tsundere:   '傲娇 · 冲前面不承认 · 嘴硬"没在帮你"',
-    yandere:    '病娇 · 追到底死也不退 · 谁敢碰你谁死',
-    kuudere:    '三无 · 沉默高效 · 每刀精准',
-    genki:      '元气 · 边打边叫"呀！""哈！"',
-    shitakiri:  '毒舌 · 用斧头 · "用斧是看得起你"',
-    mesugaki:   '雌小鬼 · 远程放冷箭 · 近身就跑',
-    gap_moe:    '反差 · 慢悠悠→瞬间切钻石剑"滚开！！！"',
-    ice_queen:  '冷艳 · 冷静高效 · 不废话',
-    bokke:      '天然呆 · 反应慢 · 偶尔打空"诶？"',
-    loyal_pup:  '忠犬 · 死也不退 · 永远在你前面',
-    mommy:      '妈妈 · 时刻准备加血 · "你又没吃东西对吧"',
+    deredere:   '娓╂煍 路 鍏堜繚浣犲啀绠¤嚜宸?路 琛€閲忎綆浼氭挙閫€',
+    tsundere:   '鍌插▏ 路 鍐插墠闈笉鎵胯 路 鍢寸‖"娌″湪甯綘"',
+    yandere:    '鐥呭▏ 路 杩藉埌搴曟涔熶笉閫€ 路 璋佹暍纰颁綘璋佹',
+    kuudere:    '涓夋棤 路 娌夐粯楂樻晥 路 姣忓垁绮惧噯',
+    genki:      '鍏冩皵 路 杈规墦杈瑰彨"鍛€锛?"鍝堬紒"',
+    shitakiri:  '姣掕垖 路 鐢ㄦ枾澶?路 "鐢ㄦ枾鏄湅寰楄捣浣?',
+    mesugaki:   '闆屽皬楝?路 杩滅▼鏀惧喎绠?路 杩戣韩灏辫窇',
+    gap_moe:    '鍙嶅樊 路 鎱㈡偁鎮犫啋鐬棿鍒囬捇鐭冲墤"婊氬紑锛侊紒锛?',
+    ice_queen:  '鍐疯壋 路 鍐烽潤楂樻晥 路 涓嶅簾璇?,
+    bokke:      '澶╃劧鍛?路 鍙嶅簲鎱?路 鍋跺皵鎵撶┖"璇讹紵"',
+    loyal_pup:  '蹇犵姮 路 姝讳篃涓嶉€€ 路 姘歌繙鍦ㄤ綘鍓嶉潰',
+    mommy:      '濡堝 路 鏃跺埢鍑嗗鍔犺 路 "浣犲張娌″悆涓滆タ瀵瑰惂"',
   }
 
   return (
     <div className="mc-settings-page h-full overflow-y-auto bg-surface">
-      {/* ═══ 页头 ═══ */}
+      {/* 鈺愨晲鈺?椤靛ご 鈺愨晲鈺?*/}
       <header className="glass-panel border-b border-surface-inset/60 px-6 py-4">
         {props.onBack && (
           <button
@@ -178,144 +178,144 @@ export function McPage(props: { onBack?: () => void }): JSX.Element {
             onClick={props.onBack}
             className="mb-2 text-xs text-ink-muted hover:text-ink transition"
           >
-            ← 返回游戏列表
+            鈫?杩斿洖娓告垙鍒楄〃
           </button>
         )}
-        <h1 className="text-base font-semibold text-ink">Minecraft 陪伴</h1>
+        <h1 className="text-base font-semibold text-ink">Minecraft 闄即</h1>
         <p className="mt-0.5 text-xs text-ink-muted">
-          AI 伴侣以独立玩家身份进入 Minecraft，与你一起挖矿、打怪、盖房子。
+          AI 浼翠荆浠ョ嫭绔嬬帺瀹惰韩浠借繘鍏?Minecraft锛屼笌浣犱竴璧锋寲鐭裤€佹墦鎬€佺洊鎴垮瓙銆?
         </p>
       </header>
 
       <div className="mx-auto max-w-3xl px-6 py-6 space-y-6">
 
-        {/* ═══ 状态总览 ═══ */}
+        {/* 鈺愨晲鈺?鐘舵€佹€昏 鈺愨晲鈺?*/}
         <section className="glass-panel rounded-2xl p-5">
-          <h2 className="text-sm font-semibold text-ink mb-4">状态总览</h2>
+          <h2 className="text-sm font-semibold text-ink mb-4">鐘舵€佹€昏</h2>
           <div className="grid grid-cols-2 gap-4">
-            {/* Bot 状态 */}
+            {/* Bot 鐘舵€?*/}
             <div className="rounded-xl border border-surface-inset bg-surface p-4">
               <div className="flex items-center gap-2 mb-2">
                 <span className={`inline-block w-2.5 h-2.5 rounded-full ${botStatus.connected ? 'bg-green-500 animate-pulse' : 'bg-surface-inset'}`} />
-                <span className="text-sm font-medium text-ink">Bot 连接</span>
+                <span className="text-sm font-medium text-ink">Bot 杩炴帴</span>
               </div>
               {botStatus.connected ? (
                 <div className="space-y-1 text-xs text-ink-muted">
-                  <div>账号：<span className="text-ink font-medium">{botStatus.username}</span></div>
-                  <div>血量：<span className="text-ink">{botStatus.health ?? '?'}</span> / 20</div>
-                  <div>维度：<span className="text-ink">{botStatus.dimension ?? '?'}</span></div>
-                  <div>坐标：<span className="font-mono text-ink">
+                  <div>璐﹀彿锛?span className="text-ink font-medium">{botStatus.username}</span></div>
+                  <div>琛€閲忥細<span className="text-ink">{botStatus.health ?? '?'}</span> / 20</div>
+                  <div>缁村害锛?span className="text-ink">{botStatus.dimension ?? '?'}</span></div>
+                  <div>鍧愭爣锛?span className="font-mono text-ink">
                     ({botStatus.position?.x?.toFixed(0) ?? '?'}, {botStatus.position?.y?.toFixed(0) ?? '?'}, {botStatus.position?.z?.toFixed(0) ?? '?'})
                   </span></div>
-                  <div>Ackem WS：{botStatus.wsConnected ? '已连接' : '未连接'}</div>
+                  <div>Ackem WS锛歿botStatus.wsConnected ? '宸茶繛鎺? : '鏈繛鎺?}</div>
                 </div>
               ) : (
-                <div className="text-xs text-ink-muted">未连接</div>
+                <div className="text-xs text-ink-muted">鏈繛鎺?/div>
               )}
             </div>
 
-            {/* WS + 日志状态 */}
+            {/* WS + 鏃ュ織鐘舵€?*/}
             <div className="rounded-xl border border-surface-inset bg-surface p-4">
               <div className="flex items-center gap-2 mb-2">
                 <span className={`inline-block w-2.5 h-2.5 rounded-full ${wsStatus.running ? 'bg-blue-500' : 'bg-surface-inset'}`} />
-                <span className="text-sm font-medium text-ink">WebSocket 服务</span>
+                <span className="text-sm font-medium text-ink">WebSocket 鏈嶅姟</span>
               </div>
               <div className="space-y-1 text-xs text-ink-muted">
-                <div>端口：<span className="font-mono text-ink">ws://localhost:{wsStatus.wsPort}</span></div>
-                <div>连接数：<span className="text-ink">{wsStatus.wsClients}</span></div>
+                <div>绔彛锛?span className="font-mono text-ink">ws://localhost:{wsStatus.wsPort}</span></div>
+                <div>杩炴帴鏁帮細<span className="text-ink">{wsStatus.wsClients}</span></div>
               </div>
               <button
                 onClick={() => void refreshWsStatus()}
                 className="field-btn-secondary mt-3 px-2.5 py-1 text-[11px] text-ink-muted"
               >
-                刷新
+                鍒锋柊
               </button>
             </div>
           </div>
         </section>
 
-        {/* ═══ 实机调试面板 ═══ */}
+        {/* 鈺愨晲鈺?瀹炴満璋冭瘯闈㈡澘 鈺愨晲鈺?*/}
         {botStatus.connected && (
           <section className="mc-debug-section rounded-2xl p-5">
-            <h2 className="text-sm font-semibold text-ink mb-1">实机调试</h2>
+            <h2 className="text-sm font-semibold text-ink mb-1">瀹炴満璋冭瘯</h2>
             <p className="text-xs text-ink-muted mb-4">
-              实时查看 Bot 决策、路径与战斗目标，便于排查站桩、不打怪等问题。
+              瀹炴椂鏌ョ湅 Bot 鍐崇瓥銆佽矾寰勪笌鎴樻枟鐩爣锛屼究浜庢帓鏌ョ珯妗┿€佷笉鎵撴€瓑闂銆?
             </p>
             {botDebug ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs font-mono">
                 <div className="mc-debug-cell">
-                  <div className="text-ink-muted mb-0.5">运行状态</div>
+                  <div className="text-ink-muted mb-0.5">杩愯鐘舵€?/div>
                   <div className="text-ink font-semibold">{opStateLabel[botDebug.opState] ?? botDebug.opState}</div>
                 </div>
                 <div className="mc-debug-cell">
-                  <div className="text-ink-muted mb-0.5">决策</div>
-                  <div className="text-ink">{botDebug.decisionType ?? '—'} ({botDebug.decisionPriority ?? '—'})</div>
+                  <div className="text-ink-muted mb-0.5">鍐崇瓥</div>
+                  <div className="text-ink">{botDebug.decisionType ?? '鈥?} ({botDebug.decisionPriority ?? '鈥?})</div>
                 </div>
                 <div className="mc-debug-cell col-span-2 sm:col-span-1">
-                  <div className="text-ink-muted mb-0.5">动作</div>
-                  <div className="text-ink truncate" title={botDebug.actionSummary}>{botDebug.actionSummary || '—'}</div>
+                  <div className="text-ink-muted mb-0.5">鍔ㄤ綔</div>
+                  <div className="text-ink truncate" title={botDebug.actionSummary}>{botDebug.actionSummary || '鈥?}</div>
                 </div>
                 <div className="mc-debug-cell">
-                  <div className="text-ink-muted mb-0.5">路径</div>
+                  <div className="text-ink-muted mb-0.5">璺緞</div>
                   <div className="text-ink">{botDebug.pathStatus}</div>
                 </div>
                 <div className="mc-debug-cell">
-                  <div className="text-ink-muted mb-0.5">距玩家</div>
-                  <div className="text-ink">{botDebug.distToPlayer} 格</div>
+                  <div className="text-ink-muted mb-0.5">璺濈帺瀹?/div>
+                  <div className="text-ink">{botDebug.distToPlayer} 鏍?/div>
                 </div>
                 <div className="mc-debug-cell">
-                  <div className="text-ink-muted mb-0.5">卡住</div>
+                  <div className="text-ink-muted mb-0.5">鍗′綇</div>
                   <div className={botDebug.stuckForMs >= 2500 ? 'font-semibold text-danger' : 'text-ink'}>
-                    {(botDebug.stuckForMs / 1000).toFixed(1)}s · {botDebug.stuckReason}
+                    {(botDebug.stuckForMs / 1000).toFixed(1)}s 路 {botDebug.stuckReason}
                   </div>
                 </div>
                 <div className="mc-debug-cell">
-                  <div className="text-ink-muted mb-0.5">攻击目标</div>
+                  <div className="text-ink-muted mb-0.5">鏀诲嚮鐩爣</div>
                   <div className="text-ink truncate" title={String(botDebug.attackTargetId ?? '')}>
-                    {botDebug.attackTargetName ?? '—'}
+                    {botDebug.attackTargetName ?? '鈥?}
                     {botDebug.attackRemainingMs > 0 ? ` (${(botDebug.attackRemainingMs / 1000).toFixed(1)}s)` : ''}
                   </div>
                 </div>
                 <div className="mc-debug-cell">
-                  <div className="text-ink-muted mb-0.5">跟随</div>
-                  <div className="text-ink">{botDebug.followEntityId != null ? `${botDebug.followRange}格` : '—'}</div>
+                  <div className="text-ink-muted mb-0.5">璺熼殢</div>
+                  <div className="text-ink">{botDebug.followEntityId != null ? `${botDebug.followRange}鏍糮 : '鈥?}</div>
                 </div>
                 <div className="mc-debug-cell">
-                  <div className="text-ink-muted mb-0.5">玩家威胁</div>
+                  <div className="text-ink-muted mb-0.5">鐜╁濞佽儊</div>
                   <div className="text-ink">
-                    {botDebug.playerInDanger ? (botDebug.nearestThreatToPlayer ?? '有') : '无'}
-                    {botDebug.playerAttacking ? ` · 挥刀:${botDebug.playerAttacking}` : ''}
+                    {botDebug.playerInDanger ? (botDebug.nearestThreatToPlayer ?? '鏈?) : '鏃?}
+                    {botDebug.playerAttacking ? ` 路 鎸ュ垁:${botDebug.playerAttacking}` : ''}
                   </div>
                 </div>
                 <div className="mc-debug-cell">
-                  <div className="text-ink-muted mb-0.5">玩家实体</div>
+                  <div className="text-ink-muted mb-0.5">鐜╁瀹炰綋</div>
                   <div className={botDebug.playerNotFound ? 'font-semibold text-accent' : 'text-ink'}>
-                    {botDebug.playerNotFound ? '未找到（可能跨维度）' : '已锁定'}
+                    {botDebug.playerNotFound ? '鏈壘鍒帮紙鍙兘璺ㄧ淮搴︼級' : '宸查攣瀹?}
                   </div>
                 </div>
                 <div className="mc-debug-cell">
-                  <div className="text-ink-muted mb-0.5">路径目标</div>
+                  <div className="text-ink-muted mb-0.5">璺緞鐩爣</div>
                   <div className={botDebug.hasPathGoal ? 'text-success' : 'font-semibold text-danger'}>
-                    {botDebug.hasPathGoal ? '已设置' : '未设置'}
+                    {botDebug.hasPathGoal ? '宸茶缃? : '鏈缃?}
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="text-xs text-ink-muted">等待调试数据…</div>
+              <div className="text-xs text-ink-muted">绛夊緟璋冭瘯鏁版嵁鈥?/div>
             )}
           </section>
         )}
 
-        {/* ═══ Bot 连接面板 ═══ */}
+        {/* 鈺愨晲鈺?Bot 杩炴帴闈㈡澘 鈺愨晲鈺?*/}
         <section className="glass-panel rounded-2xl p-5">
-          <h2 className="text-sm font-semibold text-ink mb-1">Bot 控制</h2>
+          <h2 className="text-sm font-semibold text-ink mb-1">Bot 鎺у埗</h2>
           <p className="text-xs text-ink-muted mb-4">
-            让 AI 伴侣以独立玩家身份登录 MC 服务器，自主行动。
+            璁?AI 浼翠荆浠ョ嫭绔嬬帺瀹惰韩浠界櫥褰?MC 鏈嶅姟鍣紝鑷富琛屽姩銆?
           </p>
 
           <div className="grid grid-cols-2 gap-3 mb-4">
             <label className="block">
-              <span className="text-xs font-medium text-ink-muted">服务器地址</span>
+              <span className="text-xs font-medium text-ink-muted">鏈嶅姟鍣ㄥ湴鍧€</span>
               <input
                 className="field-input mt-1"
                 value={botHost}
@@ -327,7 +327,7 @@ export function McPage(props: { onBack?: () => void }): JSX.Element {
               />
             </label>
             <label className="block">
-              <span className="text-xs font-medium text-ink-muted">端口</span>
+              <span className="text-xs font-medium text-ink-muted">绔彛</span>
               <input
                 type="number"
                 className="field-input mt-1"
@@ -339,7 +339,7 @@ export function McPage(props: { onBack?: () => void }): JSX.Element {
               />
             </label>
             <label className="block">
-              <span className="text-xs font-medium text-ink-muted">MC 账号名（她的名字）</span>
+              <span className="text-xs font-medium text-ink-muted">MC 璐﹀彿鍚嶏紙濂圭殑鍚嶅瓧锛?/span>
               <input
                 className="field-input mt-1"
                 value={botUsername}
@@ -351,13 +351,13 @@ export function McPage(props: { onBack?: () => void }): JSX.Element {
               />
             </label>
             <label className="block">
-              <span className="text-xs font-medium text-ink-muted">密码（离线服务器留空）</span>
+              <span className="text-xs font-medium text-ink-muted">瀵嗙爜锛堢绾挎湇鍔″櫒鐣欑┖锛?/span>
               <input
                 type="password"
                 className="field-input mt-1"
                 value={botPassword}
                 onChange={(e) => setBotPassword(e.target.value)}
-                placeholder="留空 = 离线模式"
+                placeholder="鐣欑┖ = 绂荤嚎妯″紡"
               />
             </label>
           </div>
@@ -374,7 +374,7 @@ export function McPage(props: { onBack?: () => void }): JSX.Element {
                 ) : (
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 )}
-                断开 Bot
+                鏂紑 Bot
               </button>
             ) : (
               <button
@@ -387,7 +387,7 @@ export function McPage(props: { onBack?: () => void }): JSX.Element {
                 ) : (
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                 )}
-                连接 Bot
+                杩炴帴 Bot
               </button>
             )}
             <button
@@ -396,21 +396,21 @@ export function McPage(props: { onBack?: () => void }): JSX.Element {
               className="field-btn-secondary inline-flex items-center gap-1.5 px-4 py-2.5 text-sm transition"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-              同步引擎状态
+              鍚屾寮曟搸鐘舵€?
             </button>
           </div>
         </section>
 
-        {/* ═══ 日志监听 ═══ */}
+        {/* 鈺愨晲鈺?鏃ュ織鐩戝惉 鈺愨晲鈺?*/}
         <section className="glass-panel rounded-2xl p-5">
-          <h2 className="text-sm font-semibold text-ink mb-1">日志监听（只读模式）</h2>
+          <h2 className="text-sm font-semibold text-ink mb-1">鏃ュ織鐩戝惉锛堝彧璇绘ā寮忥級</h2>
           <p className="text-xs text-ink-muted mb-4">
-            读取 MC latest.log，在 Ackem 聊天页显示伴侣反应。不需要 Bot 登录，适合只想看她说台词。
+            璇诲彇 MC latest.log锛屽湪 Ackem 鑱婂ぉ椤垫樉绀轰即渚ｅ弽搴斻€備笉闇€瑕?Bot 鐧诲綍锛岄€傚悎鍙兂鐪嬪ス璇村彴璇嶃€?
           </p>
 
           <div className="grid grid-cols-[1fr_auto] gap-3 mb-4">
             <label className="block">
-              <span className="text-xs font-medium text-ink-muted">MC 日志路径</span>
+              <span className="text-xs font-medium text-ink-muted">MC 鏃ュ織璺緞</span>
               <input
                 className="field-input field-input--mono mt-1"
                 value={logPath}
@@ -432,13 +432,13 @@ export function McPage(props: { onBack?: () => void }): JSX.Element {
                     await mc().syncEngineState()
                     await mc().logStart(logPath)
                     setLogWatching(true)
-                    pushToast('日志监听已启动')
-                  } catch (e) { pushToast('启动失败：' + (e instanceof Error ? e.message : String(e))) }
+                    pushToast('鏃ュ織鐩戝惉宸插惎鍔?)
+                  } catch (e) { pushToast('鍚姩澶辫触锛? + (e instanceof Error ? e.message : String(e))) }
                 }}
                 className="mc-btn-log-start inline-flex items-center gap-1.5 px-3 py-1.5 text-xs disabled:opacity-50 transition"
               >
                 <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" /></svg>
-                启动监听
+                鍚姩鐩戝惉
               </button>
             ) : (
               <button
@@ -447,39 +447,39 @@ export function McPage(props: { onBack?: () => void }): JSX.Element {
                   try {
                     await mc().logStop()
                     setLogWatching(false)
-                    pushToast('日志监听已停止')
-                  } catch (e) { pushToast('停止失败：' + (e instanceof Error ? e.message : String(e))) }
+                    pushToast('鏃ュ織鐩戝惉宸插仠姝?)
+                  } catch (e) { pushToast('鍋滄澶辫触锛? + (e instanceof Error ? e.message : String(e))) }
                 }}
                 className="mc-btn-log-stop inline-flex items-center gap-1.5 px-3 py-1.5 text-xs transition"
               >
                 <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clipRule="evenodd" /></svg>
-                停止监听
+                鍋滄鐩戝惉
               </button>
             )}
             {logWatching && (
               <span className="inline-flex items-center gap-1 text-xs font-medium text-accent">
                 <span className="inline-block w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
-                监听中
+                鐩戝惉涓?
               </span>
             )}
           </div>
         </section>
 
-        {/* ═══ 测试区 ═══ */}
+        {/* 鈺愨晲鈺?娴嬭瘯鍖?鈺愨晲鈺?*/}
         <section className="glass-panel rounded-2xl p-5">
-          <h2 className="text-sm font-semibold text-ink mb-1">测试反应</h2>
+          <h2 className="text-sm font-semibold text-ink mb-1">娴嬭瘯鍙嶅簲</h2>
           <p className="text-xs text-ink-muted mb-4">
-            模拟 MC 事件，预览当前人格会给出什么反应。
+            妯℃嫙 MC 浜嬩欢锛岄瑙堝綋鍓嶄汉鏍间細缁欏嚭浠€涔堝弽搴斻€?
           </p>
 
           <div className="flex flex-wrap gap-2 mb-3">
             {[
-              { label: '挖到钻石', line: '[Server thread/INFO]: Steve has made the advancement [Diamonds!]' },
-              { label: '被苦力怕炸死', line: '[Server thread/INFO]: Steve blew up' },
-              { label: '被骷髅射死', line: '[Server thread/INFO]: Steve was shot by Skeleton' },
-              { label: '掉进岩浆', line: '[Server thread/INFO]: Steve tried to swim in lava' },
-              { label: '进入下界', line: '[Server thread/INFO]: Steve has made the advancement [We Need to Go Deeper]' },
-              { label: '击败末影龙', line: '[Server thread/INFO]: Steve has made the advancement [Free the End]' },
+              { label: '鎸栧埌閽荤煶', line: '[Server thread/INFO]: Steve has made the advancement [Diamonds!]' },
+              { label: '琚嫤鍔涙€曠偢姝?, line: '[Server thread/INFO]: Steve blew up' },
+              { label: '琚楂呭皠姝?, line: '[Server thread/INFO]: Steve was shot by Skeleton' },
+              { label: '鎺夎繘宀╂祮', line: '[Server thread/INFO]: Steve tried to swim in lava' },
+              { label: '杩涘叆涓嬬晫', line: '[Server thread/INFO]: Steve has made the advancement [We Need to Go Deeper]' },
+              { label: '鍑昏触鏈奖榫?, line: '[Server thread/INFO]: Steve has made the advancement [Free the End]' },
             ].map(({ label, line }) => (
               <button
                 key={label}
@@ -488,11 +488,11 @@ export function McPage(props: { onBack?: () => void }): JSX.Element {
                   setTestBusy(true); setTestReaction('')
                   try {
                     const event = await mc().parseLog(line)
-                    if (!event) { pushToast('解析失败'); return }
+                    if (!event) { pushToast('瑙ｆ瀽澶辫触'); return }
                     const r = await mc().react(event)
-                    setTestReaction(`🎮 [${event.type.replace('mc:', '')}] ${r.text}${r.isEasterEgg ? ' 🎉彩蛋！' : ''}`)
+                    setTestReaction(`馃幃 [${event.type.replace('mc:', '')}] ${r.text}${r.isEasterEgg ? ' 馃帀褰╄泲锛? : ''}`)
                   } catch (e) {
-                    pushToast('测试失败：' + (e instanceof Error ? e.message : String(e)))
+                    pushToast('娴嬭瘯澶辫触锛? + (e instanceof Error ? e.message : String(e)))
                   } finally { setTestBusy(false) }
                 }}
                 className="mc-chip-preset px-3 py-1.5 text-xs disabled:opacity-50"
@@ -509,19 +509,19 @@ export function McPage(props: { onBack?: () => void }): JSX.Element {
           )}
         </section>
 
-        {/* ═══ 当前人格 MC 行为预览 ═══ */}
+        {/* 鈺愨晲鈺?褰撳墠浜烘牸 MC 琛屼负棰勮 鈺愨晲鈺?*/}
         <section className="glass-panel rounded-2xl p-5">
-          <h2 className="text-sm font-semibold text-ink mb-1">当前人格 · MC 行为预览</h2>
+          <h2 className="text-sm font-semibold text-ink mb-1">褰撳墠浜烘牸 路 MC 琛屼负棰勮</h2>
           <p className="text-xs text-ink-muted mb-4">
-            以下展示当前选中的人格在 MC 中的行为倾向。切换人格后点「同步引擎状态」即可生效。
+            浠ヤ笅灞曠ず褰撳墠閫変腑鐨勪汉鏍煎湪 MC 涓殑琛屼负鍊惧悜銆傚垏鎹汉鏍煎悗鐐广€屽悓姝ュ紩鎿庣姸鎬併€嶅嵆鍙敓鏁堛€?
           </p>
 
           <div className="rounded-xl border border-surface-inset bg-surface p-4">
             <div className="flex items-center gap-3 mb-3">
               <span className="text-lg">
-                {presetId === 'yandere' ? '🔪' : presetId === 'tsundere' ? '💢' : presetId === 'genki' ? '🌟' :
-                 presetId === 'kuudere' ? '🌙' : presetId === 'bokke' ? '🌸' : presetId === 'loyal_pup' ? '🐕' :
-                 presetId === 'mommy' ? '🍰' : presetId === 'deredere' ? '💕' : '💬'}
+                {presetId === 'yandere' ? '馃敧' : presetId === 'tsundere' ? '馃挗' : presetId === 'genki' ? '馃専' :
+                 presetId === 'kuudere' ? '馃寵' : presetId === 'bokke' ? '馃尭' : presetId === 'loyal_pup' ? '馃悤' :
+                 presetId === 'mommy' ? '馃嵃' : presetId === 'deredere' ? '馃挄' : '馃挰'}
               </span>
               <div>
                 <div className="text-sm font-medium text-ink">
@@ -531,48 +531,48 @@ export function McPage(props: { onBack?: () => void }): JSX.Element {
                   })}
                 </div>
                 <div className="text-xs text-ink-muted mt-0.5">
-                  {presetId ? combatStyles[presetId] ?? '通用战斗风格' : '（选择人格后显示）'}
+                  {presetId ? combatStyles[presetId] ?? '閫氱敤鎴樻枟椋庢牸' : '锛堥€夋嫨浜烘牸鍚庢樉绀猴級'}
                 </div>
               </div>
             </div>
 
             <div className="grid grid-cols-3 gap-3 text-xs">
               <div className="rounded-lg bg-surface-inset/50 p-2.5">
-                <div className="text-ink-muted mb-0.5">战斗风格</div>
+                <div className="text-ink-muted mb-0.5">鎴樻枟椋庢牸</div>
                 <div className="text-ink font-medium">
-                  {presetId === 'yandere' || presetId === 'loyal_pup' ? '死战不退' :
-                   presetId === 'mesugaki' ? '远程风筝' :
-                   presetId === 'genki' ? '边打边叫' :
-                   presetId === 'mommy' || presetId === 'deredere' ? '优先保护你' : '正常战斗'}
+                  {presetId === 'yandere' || presetId === 'loyal_pup' ? '姝绘垬涓嶉€€' :
+                   presetId === 'mesugaki' ? '杩滅▼椋庣瓭' :
+                   presetId === 'genki' ? '杈规墦杈瑰彨' :
+                   presetId === 'mommy' || presetId === 'deredere' ? '浼樺厛淇濇姢浣? : '姝ｅ父鎴樻枟'}
                 </div>
               </div>
               <div className="rounded-lg bg-surface-inset/50 p-2.5">
-                <div className="text-ink-muted mb-0.5">跟随距离</div>
+                <div className="text-ink-muted mb-0.5">璺熼殢璺濈</div>
                 <div className="text-ink font-medium">
-                  {presetId === 'yandere' || presetId === 'loyal_pup' || presetId === 'mommy' || presetId === 'deredere' ? '紧贴（1-2 格）' :
-                   presetId === 'ice_queen' || presetId === 'mesugaki' ? '偏远（4-5 格）' : '适中（3 格）'}
+                  {presetId === 'yandere' || presetId === 'loyal_pup' || presetId === 'mommy' || presetId === 'deredere' ? '绱ц创锛?-2 鏍硷級' :
+                   presetId === 'ice_queen' || presetId === 'mesugaki' ? '鍋忚繙锛?-5 鏍硷級' : '閫備腑锛? 鏍硷級'}
                 </div>
               </div>
               <div className="rounded-lg bg-surface-inset/50 p-2.5">
-                <div className="text-ink-muted mb-0.5">说话频率</div>
+                <div className="text-ink-muted mb-0.5">璇磋瘽棰戠巼</div>
                 <div className="text-ink font-medium">
-                  {presetId === 'genki' ? '话很多' :
-                   presetId === 'kuudere' || presetId === 'ice_queen' ? '极少说话' : '正常'}
+                  {presetId === 'genki' ? '璇濆緢澶? :
+                   presetId === 'kuudere' || presetId === 'ice_queen' ? '鏋佸皯璇磋瘽' : '姝ｅ父'}
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* ═══ 快速上手 ═══ */}
+        {/* 鈺愨晲鈺?蹇€熶笂鎵?鈺愨晲鈺?*/}
         <section className="rounded-2xl border border-dashed border-surface-inset bg-surface p-5">
-          <h2 className="text-sm font-semibold text-ink mb-3">快速上手</h2>
+          <h2 className="text-sm font-semibold text-ink mb-3">蹇€熶笂鎵?/h2>
           <ol className="space-y-2 text-xs text-ink-muted list-decimal list-inside leading-relaxed">
-            <li>打开 Minecraft → 进入单人存档 → <strong className="text-ink">Esc → 对局域网开放</strong> → 记下端口号</li>
-            <li>在上面 Bot 控制区填 <code className="rounded bg-surface-inset px-1">localhost</code> 和那个端口</li>
-            <li>填一个 Bot 账号名（<strong className="text-danger">不要和你自己的 MC 名一样</strong>）</li>
-            <li>先点 <strong className="text-ink">「同步引擎状态」</strong>，再点 <strong className="text-success">「连接 Bot」</strong></li>
-            <li>回到游戏——她出现在你身边 ✨</li>
+            <li>鎵撳紑 Minecraft 鈫?杩涘叆鍗曚汉瀛樻。 鈫?<strong className="text-ink">Esc 鈫?瀵瑰眬鍩熺綉寮€鏀?/strong> 鈫?璁颁笅绔彛鍙?/li>
+            <li>鍦ㄤ笂闈?Bot 鎺у埗鍖哄～ <code className="rounded bg-surface-inset px-1">localhost</code> 鍜岄偅涓鍙?/li>
+            <li>濉竴涓?Bot 璐﹀彿鍚嶏紙<strong className="text-danger">涓嶈鍜屼綘鑷繁鐨?MC 鍚嶄竴鏍?/strong>锛?/li>
+            <li>鍏堢偣 <strong className="text-ink">銆屽悓姝ュ紩鎿庣姸鎬併€?/strong>锛屽啀鐐?<strong className="text-success">銆岃繛鎺?Bot銆?/strong></li>
+            <li>鍥炲埌娓告垙鈥斺€斿ス鍑虹幇鍦ㄤ綘韬竟 鉁?/li>
           </ol>
         </section>
 

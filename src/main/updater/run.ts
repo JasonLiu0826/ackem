@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, shell } from 'electron'
+﻿import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import { resolvePreloadPath, resolveRendererHtml } from '../outPaths'
 import { readUpdateJob, runUpdatePipeline, launchAckem } from '../update/pipeline'
 
@@ -45,13 +45,13 @@ function createUpdaterWindow(jobPath: string): BrowserWindow {
 }
 
 export async function runAckemUpdater(): Promise<void> {
-  const arg = process.argv.find((a) => a.startsWith('--ackem-updater='))
+  const arg = process.argv.find((a) => a.startsWith('--Ackem-updater='))
   if (!arg) {
-    console.error('Missing --ackem-updater=job.json')
+    console.error('Missing --Ackem-updater=job.json')
     app.quit()
     return
   }
-  const jobPath = arg.slice('--ackem-updater='.length).replace(/^"|"$/g, '')
+  const jobPath = arg.slice('--Ackem-updater='.length).replace(/^"|"$/g, '')
 
   await app.whenReady()
 
@@ -64,7 +64,7 @@ export async function runAckemUpdater(): Promise<void> {
   })
   ipcMain.handle('updater:launchAckem', () => {
     const job = readUpdateJob(jobPath)
-    launchAckem(job.ackemExe)
+    launchAckem(job.AckemExe)
     app.quit()
   })
   ipcMain.handle('updater:openRelease', () => {

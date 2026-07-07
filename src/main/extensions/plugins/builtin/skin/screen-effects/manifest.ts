@@ -1,19 +1,19 @@
-import type { PluginManifest } from '../../../types'
+﻿import type { PluginManifest } from '../../../types'
 
-export const SCREEN_EFFECTS_PLUGIN_ID = 'ackem/screen-effects@0.0.1'
+export const SCREEN_EFFECTS_PLUGIN_ID = 'Ackem/screen-effects@0.0.1'
 
-/** W8 前仅 pulse 广播 stub，无粒子/满屏特效 */
+/** W8 鍓嶄粎 pulse 骞挎挱 stub锛屾棤绮掑瓙/婊″睆鐗规晥 */
 export const SCREEN_EFFECTS_IMPLEMENTATION_STATUS = 'stub' as const
 
 export const SCREEN_EFFECTS_MANIFEST: PluginManifest = {
   id: SCREEN_EFFECTS_PLUGIN_ID,
-  name: '屏幕特效（Stub）',
+  name: '灞忓箷鐗规晥锛圫tub锛?,
   version: '0.0.1',
   category: 'plugin',
   pluginType: 'skin',
   implementationStatus: SCREEN_EFFECTS_IMPLEMENTATION_STATUS,
   description:
-    '【Stub · W8 待实装】当前仅向 UI 广播轻量 pulse 事件，无红心/樱花等粒子特效；情绪联动粒子留 W8。',
+    '銆怱tub 路 W8 寰呭疄瑁呫€戝綋鍓嶄粎鍚?UI 骞挎挱杞婚噺 pulse 浜嬩欢锛屾棤绾㈠績/妯辫姳绛夌矑瀛愮壒鏁堬紱鎯呯华鑱斿姩绮掑瓙鐣?W8銆?,
   author: 'JasonLiu0826',
   license: 'AGPL-3.0',
   main: 'bootstrap.ts',
@@ -26,9 +26,9 @@ export const SCREEN_EFFECTS_MANIFEST: PluginManifest = {
     subtype: 'emotion_delta',
     time: { cooldown_minutes: 30 },
     habits: [],
-    scenarios: ['高 aff 情绪事件（设计目标，W8 实装粒子）'],
-    summary: 'Stub：ui:screenFx pulse 广播（非满屏粒子）',
-    keywords: ['特效', '粒子', '红心']
+    scenarios: ['楂?aff 鎯呯华浜嬩欢锛堣璁＄洰鏍囷紝W8 瀹炶绮掑瓙锛?],
+    summary: 'Stub锛歶i:screenFx pulse 骞挎挱锛堥潪婊″睆绮掑瓙锛?,
+    keywords: ['鐗规晥', '绮掑瓙', '绾㈠績']
   }
 }
 

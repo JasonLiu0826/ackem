@@ -1,4 +1,4 @@
-import type { PlanSession } from '../../../shared/planSession'
+﻿import type { PlanSession } from '../../../shared/planSession'
 import type { SkillManifest } from '../skills/types'
 import type { PluginManifest, PluginPermission } from '../plugins/types'
 import type { AgentGenerationResult } from './types'
@@ -39,14 +39,14 @@ const ALLOWED_UPLUGIN_PERMISSIONS = new Set<PluginPermission>([
 
 function assertPlanConfirmed(session: PlanSession): void {
   if (!session.planConfirmed) {
-    throw new Error('方案尚未确认，无法生成')
+    throw new Error('鏂规灏氭湭纭锛屾棤娉曠敓鎴?)
   }
 }
 
 function parseUskillPermissions(session: PlanSession): string[] {
   const fromDraft = session.dispatchDraft?.permissions ?? []
   const fromSummary = session.planSummary?.permissions
-    ? session.planSummary.permissions.split(/[·,，、;；|│]/).map((s) => s.trim())
+    ? session.planSummary.permissions.split(/[路,锛屻€?锛泑鈹俔/).map((s) => s.trim())
     : []
   const merged = [...fromDraft, ...fromSummary]
     .map((p) => p.replace(/\s+/g, '_').toLowerCase())
@@ -57,7 +57,7 @@ function parseUskillPermissions(session: PlanSession): string[] {
 function parseUpluginPermissions(session: PlanSession): PluginPermission[] {
   const fromDraft = session.dispatchDraft?.permissions ?? []
   const fromSummary = session.planSummary?.permissions
-    ? session.planSummary.permissions.split(/[·,，、;；|│]/).map((s) => s.trim())
+    ? session.planSummary.permissions.split(/[路,锛屻€?锛泑鈹俔/).map((s) => s.trim())
     : []
   const merged = [...fromDraft, ...fromSummary]
     .map((p) => p.replace(/\s+/g, '_').toLowerCase())
@@ -104,7 +104,7 @@ function buildSkillConfig(
           : undefined
     },
     promptTemplates: {
-      contextInjection: `【${manifest.name} 已触发】${behavior}。用 Ackem 伴侣的自然语气回应，并落实该能力描述的行为。`,
+      contextInjection: `銆?{manifest.name} 宸茶Е鍙戙€?{behavior}銆傜敤 Ackem 浼翠荆鐨勮嚜鐒惰姘斿洖搴旓紝骞惰惤瀹炶鑳藉姏鎻忚堪鐨勮涓恒€俙,
       ...(autonomous ? { userFacing: behavior } : {})
     },
     variables: {},
@@ -112,21 +112,21 @@ function buildSkillConfig(
   }
 }
 
-/** 从已确认 Plan 会话生成 uskill 产物（OF-04 v1：确定性生成，不依赖 LLM） */
+/** 浠庡凡纭 Plan 浼氳瘽鐢熸垚 uskill 浜х墿锛圤F-04 v1锛氱‘瀹氭€х敓鎴愶紝涓嶄緷璧?LLM锛?*/
 export function generateUskillFromSession(session: PlanSession): AgentGenerationResult {
   const log: string[] = []
   assertPlanConfirmed(session)
   const artifactKind = resolvePlanArtifactKind(session)
   if (artifactKind === 'undecided') {
-    throw new Error('方案中尚未明确产物类型，请先在 Plan 中确认 uskill 或 uplugin')
+    throw new Error('鏂规涓皻鏈槑纭骇鐗╃被鍨嬶紝璇峰厛鍦?Plan 涓‘璁?uskill 鎴?uplugin')
   }
   if (!isUskillPlan(session)) {
-    throw new Error('当前会话产物类型不是 uskill，请使用 generateUpluginFromSession')
+    throw new Error('褰撳墠浼氳瘽浜х墿绫诲瀷涓嶆槸 uskill锛岃浣跨敤 generateUpluginFromSession')
   }
 
   const draft = session.dispatchDraft ?? {}
   const dispatch = buildDispatchFromDraft(draft, session.planSummary)
-  log.push('已从 dispatchDraft 构建 dispatch 配置')
+  log.push('宸蹭粠 dispatchDraft 鏋勫缓 dispatch 閰嶇疆')
 
   const slug = inferUskillSlug(session)
   const name = inferDisplayName(session)
@@ -155,7 +155,7 @@ export function generateUskillFromSession(session: PlanSession): AgentGeneration
   }
 
   const skillConfig = buildSkillConfig(session, manifest, dispatch)
-  log.push(`生成 manifest id=${manifest.id}`)
+  log.push(`鐢熸垚 manifest id=${manifest.id}`)
 
   return {
     manifest,
@@ -165,7 +165,7 @@ export function generateUskillFromSession(session: PlanSession): AgentGeneration
     },
     suggestedPermissions: permissions,
     permissionReasons: Object.fromEntries(
-      permissions.map((p) => [p, `Plan 方案声明的 ${p} 权限`])
+      permissions.map((p) => [p, `Plan 鏂规澹版槑鐨?${p} 鏉冮檺`])
     ),
     generationLog: log
   }
@@ -191,17 +191,17 @@ export type GeneratedUpluginBundle = {
   generationLog: string[]
 }
 
-/** 从已确认 Plan 会话生成 uplugin 产物（OF-06 v1：模板 + inject hook，不编译用户 TS） */
+/** 浠庡凡纭 Plan 浼氳瘽鐢熸垚 uplugin 浜х墿锛圤F-06 v1锛氭ā鏉?+ inject hook锛屼笉缂栬瘧鐢ㄦ埛 TS锛?*/
 export function generateUpluginFromSession(session: PlanSession): GeneratedUpluginBundle {
   const log: string[] = []
   assertPlanConfirmed(session)
   if (!isUpluginPlan(session)) {
-    throw new Error('当前会话产物类型不是 uplugin，请使用 generateUskillFromSession')
+    throw new Error('褰撳墠浼氳瘽浜х墿绫诲瀷涓嶆槸 uplugin锛岃浣跨敤 generateUskillFromSession')
   }
 
   const draft = session.dispatchDraft ?? {}
   const dispatch = buildDispatchFromDraft(draft, session.planSummary)
-  log.push('已从 dispatchDraft 构建 dispatch 配置')
+  log.push('宸蹭粠 dispatchDraft 鏋勫缓 dispatch 閰嶇疆')
 
   const slug = inferUskillSlug(session)
   const name = inferDisplayName(session)
@@ -242,13 +242,13 @@ export function generateUpluginFromSession(session: PlanSession): GeneratedUplug
   const files: Record<string, string> = {
     'manifest.json': `${JSON.stringify(manifest, null, 2)}\n`,
     'plugin.meta.json': `${JSON.stringify(meta, null, 2)}\n`,
-    'README.md': `# ${name}\n\nOpenForU uplugin。触发后通过 beforeUserMessage 注入上下文或 Surface 界面。\n\n${behavior}\n`
+    'README.md': `# ${name}\n\nOpenForU uplugin銆傝Е鍙戝悗閫氳繃 beforeUserMessage 娉ㄥ叆涓婁笅鏂囨垨 Surface 鐣岄潰銆俓n\n${behavior}\n`
   }
 
   const uiSpec = session.designSpec?.ui
   if (uiSpec?.type === 'surface' && uiSpec.designBrief) {
     const title = uiSpec.surfaceTitle ?? name
-    const actions = uiSpec.primaryActions.length ? uiSpec.primaryActions : ['开始', '重置']
+    const actions = uiSpec.primaryActions.length ? uiSpec.primaryActions : ['寮€濮?, '閲嶇疆']
     const widgetId =
       uiSpec.widgetId ??
       inferWidgetIdFromText(session.designSpec?.purpose ?? name)
@@ -268,10 +268,10 @@ export function generateUpluginFromSession(session: PlanSession): GeneratedUplug
     meta.generatedBy = 'openforu-design-spec-surface'
     files['surface.html'] = html
     files['plugin.meta.json'] = `${JSON.stringify(meta, null, 2)}\n`
-    log.push(`已根据 Design Spec 生成 Widget Surface (${widgetId})`)
+    log.push(`宸叉牴鎹?Design Spec 鐢熸垚 Widget Surface (${widgetId})`)
   }
 
-  log.push(`生成 uplugin manifest id=${manifest.id}`)
+  log.push(`鐢熸垚 uplugin manifest id=${manifest.id}`)
 
   return {
     manifest,

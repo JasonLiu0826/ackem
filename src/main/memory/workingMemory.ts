@@ -1,9 +1,9 @@
-// [workingMemory] — 工作记忆/近期上下文缓冲区
-// 职责：维护最近N轮对话摘要，按会话隔离，作为检索上下文前置补充
-// 对标 MemGPT working context / recall memory
-// 引用：../engine/ackemParams
+﻿// [workingMemory] 鈥?宸ヤ綔璁板繂/杩戞湡涓婁笅鏂囩紦鍐插尯
+// 鑱岃矗锛氱淮鎶ゆ渶杩慛杞璇濇憳瑕侊紝鎸変細璇濋殧绂伙紝浣滀负妫€绱笂涓嬫枃鍓嶇疆琛ュ厖
+// 瀵规爣 MemGPT working context / recall memory
+// 寮曠敤锛?./engine/AckemParams
 
-import { WORKING_MEMORY_CHAR_BUDGET, WORKING_MEMORY_MAX_EXCHANGES } from '../engine/ackemParams'
+import { WORKING_MEMORY_CHAR_BUDGET, WORKING_MEMORY_MAX_EXCHANGES } from '../engine/AckemParams'
 
 export type Exchange = {
   turnIndex: number
@@ -40,11 +40,11 @@ export class WorkingMemory {
     const recent = this.getRecent(sessionId)
     if (recent.length === 0) return ''
 
-    const lines: string[] = ['【近期对话上下文（最近几轮）】']
+    const lines: string[] = ['銆愯繎鏈熷璇濅笂涓嬫枃锛堟渶杩戝嚑杞級銆?]
     let chars = 0
     for (const ex of recent) {
-      const userLine = `用户：${ex.userText.slice(0, 200)}`
-      const asstLine = `伴侣：${ex.assistantText.slice(0, 200)}`
+      const userLine = `鐢ㄦ埛锛?{ex.userText.slice(0, 200)}`
+      const asstLine = `浼翠荆锛?{ex.assistantText.slice(0, 200)}`
       const block = `${userLine}\n${asstLine}`
       if (chars + block.length > WORKING_MEMORY_CHAR_BUDGET) break
       lines.push(block)

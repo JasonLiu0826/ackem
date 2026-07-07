@@ -1,4 +1,4 @@
-// [S-13] 用户生日检测
+﻿// [S-13] 鐢ㄦ埛鐢熸棩妫€娴?
 import type { SkillManifest } from '../../../types'
 import type { DispatchConfig } from '../../../../protocols'
 
@@ -6,20 +6,20 @@ const BIRTHDAY_DISPATCH: DispatchConfig = {
   mode: 'dispatched',
   subtype: 'keyword_hint',
   time: { active_hours: '00:00-23:59', cooldown_minutes: 60 },
-  habits: ['用户提到生日或具体月日'],
-  scenarios: ['解析并记住生日', '幂等不重复记录'],
-  summary: '检测对话中的生日信息并记入上下文（非 OS 日历）。',
-  keywords: ['生日', 'birthday', '生日期', '诞辰'],
+  habits: ['鐢ㄦ埛鎻愬埌鐢熸棩鎴栧叿浣撴湀鏃?],
+  scenarios: ['瑙ｆ瀽骞惰浣忕敓鏃?, '骞傜瓑涓嶉噸澶嶈褰?],
+  summary: '妫€娴嬪璇濅腑鐨勭敓鏃ヤ俊鎭苟璁板叆涓婁笅鏂囷紙闈?OS 鏃ュ巻锛夈€?,
+  keywords: ['鐢熸棩', 'birthday', '鐢熸棩鏈?, '璇炶景'],
   personality_hint: 'gentle_care'
 }
 
 export const BIRTHDAY_DETECT_MANIFEST: SkillManifest = {
-  id: 'ackem/birthday-detect@0.0.1',
-  name: '用户生日检测',
+  id: 'Ackem/birthday-detect@0.0.1',
+  name: '鐢ㄦ埛鐢熸棩妫€娴?,
   version: '0.0.1',
   category: 'skill',
   skillType: 'rule',
-  description: '对话中检测生日信息并确认记住。',
+  description: '瀵硅瘽涓娴嬬敓鏃ヤ俊鎭苟纭璁颁綇銆?,
   author: 'JasonLiu0826',
   license: 'AGPL-3.0',
   main: 'skill.ts',

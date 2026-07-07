@@ -1,4 +1,4 @@
-import { kvGet, kvSet } from '../../db/repos/kv'
+﻿import { kvGet, kvSet } from '../../db/repos/kv'
 
 const NS = 'weixin_proactive'
 
@@ -36,7 +36,7 @@ export function recordProactiveSent(dataRoot: string, atMs = Date.now()): void {
   kvSet(dataRoot, NS, KEY_PROACTIVE_SENT, String(atMs))
 }
 
-/** 首次启动时写入「当前」，避免刚连上就主动发 */
+/** 棣栨鍚姩鏃跺啓鍏ャ€屽綋鍓嶃€嶏紝閬垮厤鍒氳繛涓婂氨涓诲姩鍙?*/
 export function ensureActivityBaselines(dataRoot: string, atMs = Date.now()): void {
   if (getLastDesktopAckemActivityMs(dataRoot) == null) {
     recordDesktopAckemActivity(dataRoot, atMs)

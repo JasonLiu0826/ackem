@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+﻿import { useCallback, useEffect, useMemo, useState } from 'react'
 import { t } from '../lib/i18n'
 import { useAppStore } from '../store/appStore'
 import { useUiStore } from '../store/uiStore'
@@ -28,25 +28,25 @@ export function CommandPalette(): JSX.Element | null {
 
   const cmds: Cmd[] = useMemo(
     () => [
-      { id: 'chat', label: '打开对话', run: () => setTab('chat') },
-      { id: 'memory', label: '打开记忆', run: () => setTab('memory') },
-      { id: 'diary', label: '打开日记', run: () => setTab('diary') },
-      { id: 'settings', label: '打开设置', run: () => setTab('settings') },
-      { id: 'trace', label: '打开调试', run: () => setTab('trace') },
-      { id: 'ext', label: '打开扩展中心', run: () => setTab('extensions') },
-      { id: 'theater', label: '进入剧院模式', run: () => setTheater(true) },
-      { id: 'pet', label: '折叠到桌宠', run: () => void window.ackem.ui.showPet() },
-      { id: 'expand', label: '展开主面板', run: () => void window.ackem.ui.expandToMain() },
-      { id: 'plan', label: '创建扩展 (Plan)', run: openPlan },
+      { id: 'chat', label: '鎵撳紑瀵硅瘽', run: () => setTab('chat') },
+      { id: 'memory', label: '鎵撳紑璁板繂', run: () => setTab('memory') },
+      { id: 'diary', label: '鎵撳紑鏃ヨ', run: () => setTab('diary') },
+      { id: 'settings', label: '鎵撳紑璁剧疆', run: () => setTab('settings') },
+      { id: 'trace', label: '鎵撳紑璋冭瘯', run: () => setTab('trace') },
+      { id: 'ext', label: '鎵撳紑鎵╁睍涓績', run: () => setTab('extensions') },
+      { id: 'theater', label: '杩涘叆鍓ч櫌妯″紡', run: () => setTheater(true) },
+      { id: 'pet', label: '鎶樺彔鍒版瀹?, run: () => void window.Ackem.ui.showPet() },
+      { id: 'expand', label: '灞曞紑涓婚潰鏉?, run: () => void window.Ackem.ui.expandToMain() },
+      { id: 'plan', label: '鍒涘缓鎵╁睍 (Plan)', run: openPlan },
       {
         id: 'theme',
-        label: '切换明/暗主题',
+        label: '鍒囨崲鏄?鏆椾富棰?,
         run: () => setTheme(toggleTheme(theme))
       },
       {
         id: 'diary-gen',
-        label: '生成今日日记',
-        run: () => void window.ackem.diaryGenerate()
+        label: '鐢熸垚浠婃棩鏃ヨ',
+        run: () => void window.Ackem.diaryGenerate()
       }
     ],
     [setTab, setTheater, openPlan, theme]
@@ -76,7 +76,7 @@ export function CommandPalette(): JSX.Element | null {
           autoFocus
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="搜索命令…"
+          placeholder="鎼滅储鍛戒护鈥?
           className="w-full border-0 bg-transparent px-3 py-2.5 text-sm outline-none"
           onKeyDown={(e) => {
             if (e.key === 'Enter' && filtered[0]) {
@@ -101,7 +101,7 @@ export function CommandPalette(): JSX.Element | null {
             </li>
           ))}
           {filtered.length === 0 && (
-            <li className="px-3 py-4 text-center text-xs text-ink-muted">无匹配命令</li>
+            <li className="px-3 py-4 text-center text-xs text-ink-muted">鏃犲尮閰嶅懡浠?/li>
           )}
         </ul>
       </div>

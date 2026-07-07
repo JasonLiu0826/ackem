@@ -27,13 +27,13 @@ export type BuildContextResult = {
   knowledgeTopic?: string
   suggestedSearchQuery?: string
   forcedWebSearchQuery?: string
-  /** L0.5 计划书主题（Markdown 纸面卡） */
+  /** L0.5 璁″垝涔︿富棰橈紙Markdown 绾搁潰鍗★級 */
   planDocumentTopic?: string
-  /** L0 用户任务框（交付形态 / 合并搜索策略） */
+  /** L0 鐢ㄦ埛浠诲姟妗嗭紙浜や粯褰㈡€?/ 鍚堝苟鎼滅储绛栫暐锛?*/
   userTaskFrame?: UserTaskFrame
-  /** P0-1：Create/invoke 未路由，禁止扩展类假承诺 */
+  /** P0-1锛欳reate/invoke 鏈矾鐢憋紝绂佹鎵╁睍绫诲亣鎵胯 */
   dispatchBypassed?: boolean
-  /** 本轮已触发的扩展（auto_invoke 或用户确认启用） */
+  /** 鏈疆宸茶Е鍙戠殑鎵╁睍锛坅uto_invoke 鎴栫敤鎴风‘璁ゅ惎鐢級 */
   dispatchTriggered?: {
     extensionId: string
     extensionName: string
@@ -115,7 +115,7 @@ const gamemodeMinecraft = {
   logStatus: () => gamemodeInvoke<{ active: boolean }>('logStatus')
 }
 
-contextBridge.exposeInMainWorld('ackem', {
+contextBridge.exposeInMainWorld('Ackem', {
   getSettings: (): Promise<AppSettings> => ipcRenderer.invoke('settings:get'),
   getAppVersion: (): Promise<string> => ipcRenderer.invoke('update:getAppVersion'),
   checkUpdate: (): Promise<import('../shared/updateTypes').UpdateCheckResult> =>
@@ -322,6 +322,21 @@ contextBridge.exposeInMainWorld('ackem', {
   desireList: () => ipcRenderer.invoke('desire:list'),
   desireDismiss: (desireId: string) => ipcRenderer.invoke('desire:dismiss', desireId),
   desireClearActive: () => ipcRenderer.invoke('desire:clearActive'),
+  agnes: {
+    generateImage: (prompt: string) =>
+      ipcRenderer.invoke('agnes:generateImage', { prompt }) as Promise<{
+        success: boolean
+        imagePath?: string
+        imageUrl?: string
+        revisedPrompt?: string
+        error?: string
+      }> ,
+    detectIntent: (text: string) =>
+      ipcRenderer.invoke('agnes:detectIntent', { text }) as Promise<{
+        isImage: boolean
+        prompt?: string
+      }>
+  },
   mirrorCheck: () => ipcRenderer.invoke('mirror:check'),
   mirrorFindings: () => ipcRenderer.invoke('mirror:findings'),
   diaryGenerate: (opts?: { date?: string; force?: boolean }) => ipcRenderer.invoke('diary:generate', opts),
@@ -453,27 +468,27 @@ contextBridge.exposeInMainWorld('ackem', {
     ipcRenderer.removeAllListeners('companionSkin:changed')
     ipcRenderer.on('companionSkin:changed', () => fn())
   },
-  /** @deprecated 使用 ext.gamemode.minecraft */
+  /** @deprecated 浣跨敤 ext.gamemode.minecraft */
   mcReact: gamemodeMinecraft.react,
-  /** @deprecated 使用 ext.gamemode.minecraft */
+  /** @deprecated 浣跨敤 ext.gamemode.minecraft */
   mcParseLog: gamemodeMinecraft.parseLog,
-  /** @deprecated 使用 ext.gamemode.minecraft */
+  /** @deprecated 浣跨敤 ext.gamemode.minecraft */
   mcStatus: gamemodeMinecraft.getWsStatus,
-  /** @deprecated 使用 ext.gamemode.minecraft */
+  /** @deprecated 浣跨敤 ext.gamemode.minecraft */
   mcSetEngineState: gamemodeMinecraft.syncEngineState,
-  /** @deprecated 使用 ext.gamemode.minecraft */
+  /** @deprecated 浣跨敤 ext.gamemode.minecraft */
   mcBotStart: gamemodeMinecraft.botStart,
-  /** @deprecated 使用 ext.gamemode.minecraft */
+  /** @deprecated 浣跨敤 ext.gamemode.minecraft */
   mcBotStop: gamemodeMinecraft.botStop,
-  /** @deprecated 使用 ext.gamemode.minecraft */
+  /** @deprecated 浣跨敤 ext.gamemode.minecraft */
   mcBotStatus: gamemodeMinecraft.botStatus,
-  /** @deprecated 使用 ext.gamemode.minecraft */
+  /** @deprecated 浣跨敤 ext.gamemode.minecraft */
   mcBotDebug: gamemodeMinecraft.botDebug,
-  /** @deprecated 使用 ext.gamemode.minecraft */
+  /** @deprecated 浣跨敤 ext.gamemode.minecraft */
   mcLogStart: gamemodeMinecraft.logStart,
-  /** @deprecated 使用 ext.gamemode.minecraft */
+  /** @deprecated 浣跨敤 ext.gamemode.minecraft */
   mcLogStop: gamemodeMinecraft.logStop,
-  /** @deprecated 使用 ext.gamemode.minecraft */
+  /** @deprecated 浣跨敤 ext.gamemode.minecraft */
   mcLogStatus: gamemodeMinecraft.logStatus,
   sessionList: () => ipcRenderer.invoke('session:list'),
   sessionCreate: (name: string) => ipcRenderer.invoke('session:create', name),
@@ -607,7 +622,7 @@ contextBridge.exposeInMainWorld('ackem', {
     ipcRenderer.removeAllListeners('dispatch:proactive')
     ipcRenderer.on('dispatch:proactive', (_e, payload) => fn(payload))
   },
-  /** @deprecated 使用 ext.gamemode.onEvent('minecraft', ...) */
+  /** @deprecated 浣跨敤 ext.gamemode.onEvent('minecraft', ...) */
   onMcEvent: (fn: (payload: { event: unknown; reaction: unknown }) => void) => {
     ipcRenderer.removeAllListeners('mc:event')
     ipcRenderer.on('mc:event', (_e, payload) => fn(payload))

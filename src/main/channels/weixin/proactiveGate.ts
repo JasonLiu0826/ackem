@@ -1,4 +1,4 @@
-import {
+﻿import {
   getLastDesktopAckemActivityMs,
   getLastProactiveSentMs,
   getLastWeixinAckemActivityMs
@@ -7,7 +7,7 @@ import {
 export const PROACTIVE_IDLE_MS = 3 * 60 * 60 * 1000
 export const PROACTIVE_COOLDOWN_MS = 3 * 60 * 60 * 1000
 
-/** 8:00（含）～ 22:00（不含）可发；22:00～次日 8:00 为睡觉区间 */
+/** 8:00锛堝惈锛夛綖 22:00锛堜笉鍚級鍙彂锛?2:00锝炴鏃?8:00 涓虹潯瑙夊尯闂?*/
 export function isWeixinProactiveAwakeWindow(now = new Date()): boolean {
   const h = now.getHours()
   return h >= 8 && h < 22

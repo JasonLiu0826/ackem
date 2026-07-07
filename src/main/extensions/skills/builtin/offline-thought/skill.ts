@@ -1,4 +1,4 @@
-import { loadSettings } from '../../../../settings'
+﻿import { loadSettings } from '../../../../settings'
 import { resolveDataRoot } from '../../../../paths'
 import { loadState, saveState, defaultFullState } from '../../../../engine/state-persistence'
 import { defaultPersonalitySlice } from '../../../../personalityPresets'
@@ -14,7 +14,7 @@ function resolveDataRootForSkill(): string {
   try {
     return resolveDataRoot(loadSettings())
   } catch {
-    return process.env.ACKEM_TEST_DATA_ROOT ?? ''
+    return process.env.Ackem_TEST_DATA_ROOT ?? ''
   }
 }
 
@@ -37,7 +37,7 @@ export async function runOfflineThoughtGeneration(input: {
   const traces = traceLatest(10)
   if (traces.length === 0) return 0
 
-  // 从记忆库找最相关的近期事实，用于个性化思绪
+  // 浠庤蹇嗗簱鎵炬渶鐩稿叧鐨勮繎鏈熶簨瀹烇紝鐢ㄤ簬涓€у寲鎬濈华
   let relatedFact: MemoryFact | undefined
   try {
     const store = new FactStore(defaultFactsPath(input.dataRoot))
@@ -45,7 +45,7 @@ export async function runOfflineThoughtGeneration(input: {
     const active = store.listActive().slice(0, 20)
     if (active.length > 0 && store._embeddingCache && store._embeddingCache.size > 0) {
       const embeds = active.map(f => store._embeddingCache!.get(f.id) ?? [])
-      // 找"最不闲聊"的事实（最高权重 × 最强情感强度的作为首选）
+      // 鎵?鏈€涓嶉棽鑱?鐨勪簨瀹烇紙鏈€楂樻潈閲?脳 鏈€寮烘儏鎰熷己搴︾殑浣滀负棣栭€夛級
       let best = active[0], bestScore = 0
       for (const f of active) {
         const s = (f.weight / 3) * f.emotionalContext.intensity * f.selfRelevance
@@ -53,7 +53,7 @@ export async function runOfflineThoughtGeneration(input: {
       }
       relatedFact = best
     }
-  } catch { /* 降级 */ }
+  } catch { /* 闄嶇骇 */ }
 
   const thoughts = generateOfflineThoughts(traces, state.relationship, state.emotion, relatedFact)
   if (thoughts.length === 0) return 0

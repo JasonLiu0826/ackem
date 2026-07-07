@@ -1,12 +1,12 @@
-// [episodicStore] — 情节记忆存储
-// 职责：episodes.v1.json CRUD、检索
-// 对标 MemGPT episodic memory / Character.AI conversation memory
-// 引用：../engine/types, ../engine/ackemParams
+﻿// [episodicStore] 鈥?鎯呰妭璁板繂瀛樺偍
+// 鑱岃矗锛歟pisodes.v1.json CRUD銆佹绱?
+// 瀵规爣 MemGPT episodic memory / Character.AI conversation memory
+// 寮曠敤锛?./engine/types, ../engine/AckemParams
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { randomUUID } from 'node:crypto'
-import { EPISODE_MAX_KEYWORDS, EPISODE_INTENSITY_WEIGHT, EPISODE_MIN_SCORE, EPISODE_RECENCY_DECAY, EPISODE_RETRIEVAL_MAX, EPISODE_SUMMARY_MAX_CHARS } from '../engine/ackemParams'
+import { EPISODE_MAX_KEYWORDS, EPISODE_INTENSITY_WEIGHT, EPISODE_MIN_SCORE, EPISODE_RECENCY_DECAY, EPISODE_RETRIEVAL_MAX, EPISODE_SUMMARY_MAX_CHARS } from '../engine/AckemParams'
 import {
   countEpisodesInDb,
   loadEpisodesFromDb,
@@ -22,7 +22,7 @@ type EpisodesFile = { version: string; episodes: Episode[] }
 export class EpisodicStore {
   private episodes: Episode[] = []
   private readonly path: string
-  /** Phase 3: DB 可用时走增量写入 */
+  /** Phase 3: DB 鍙敤鏃惰蛋澧為噺鍐欏叆 */
   private useDb = false
 
   constructor(filePath: string) {
@@ -56,7 +56,7 @@ export class EpisodicStore {
     }
   }
 
-  /** Phase 3: 仅用于 JSON 回退模式 */
+  /** Phase 3: 浠呯敤浜?JSON 鍥為€€妯″紡 */
   private persist(): void {
     if (this.useDb) return
     mkdirSync(dirname(this.path), { recursive: true })
@@ -131,10 +131,10 @@ export class EpisodicStore {
   /** Build a text block from retrieved episodes for Tier B injection */
   buildRetrievalBlock(episodes: Episode[], charBudget: number): string {
     if (episodes.length === 0) return ''
-    const lines: string[] = ['【情节记忆（过往对话片段）】']
+    const lines: string[] = ['銆愭儏鑺傝蹇嗭紙杩囧線瀵硅瘽鐗囨锛夈€?]
     let chars = 0
     for (const ep of episodes) {
-      const line = `· ${ep.summary}（${ep.dominantEmotion}）`
+      const line = `路 ${ep.summary}锛?{ep.dominantEmotion}锛塦
       if (chars + line.length + 2 > charBudget) break
       lines.push(line)
       chars += line.length + 2

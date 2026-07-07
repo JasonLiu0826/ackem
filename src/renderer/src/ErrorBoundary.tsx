@@ -1,4 +1,4 @@
-import { Component, type ErrorInfo, type ReactNode } from 'react'
+﻿import { Component, type ErrorInfo, type ReactNode } from 'react'
 
 type Props = { children: ReactNode }
 type State = { err: Error | null }
@@ -27,9 +27,9 @@ export class ErrorBoundary extends Component<Props, State> {
             color: '#18181b'
           }}
         >
-          <h1 style={{ fontSize: 18, margin: '0 0 12px' }}>界面渲染出错</h1>
+          <h1 style={{ fontSize: 18, margin: '0 0 12px' }}>鐣岄潰娓叉煋鍑洪敊</h1>
           <p style={{ margin: '0 0 8px', color: '#52525b', fontSize: 13 }}>
-            开发模式下请查看已弹出的开发者工具 Console；或把下面信息发 issue。
+            寮€鍙戞ā寮忎笅璇锋煡鐪嬪凡寮瑰嚭鐨勫紑鍙戣€呭伐鍏?Console锛涙垨鎶婁笅闈俊鎭彂 issue銆?
           </p>
           <pre
             style={{

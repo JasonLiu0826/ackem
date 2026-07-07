@@ -1,13 +1,13 @@
-// [P-15] 语气模组 — 占位 manifest（未接入 coordinator.boot）
+﻿// [P-15] 璇皵妯＄粍 鈥?鍗犱綅 manifest锛堟湭鎺ュ叆 coordinator.boot锛?
 import type { PluginManifest } from '../../../types'
 
 export const MANIFEST: PluginManifest = {
-  "id": "ackem/prompt-mod@0.0.1",
-  "name": "语气模组",
+  "id": "Ackem/prompt-mod@0.0.1",
+  "name": "璇皵妯＄粍",
   "version": "0.0.1",
   "category": "plugin",
   "pluginType": "personality",
-  "description": "[P-15] 可切换语气模板；版本化；与事实记忆隔离",
+  "description": "[P-15] 鍙垏鎹㈣姘旀ā鏉匡紱鐗堟湰鍖栵紱涓庝簨瀹炶蹇嗛殧绂?,
   "author": "JasonLiu0826",
   "license": "AGPL-3.0",
   "main": "stub.ts",
@@ -25,5 +25,5 @@ export const MANIFEST: PluginManifest = {
     "p-15"
   ]
 } as PluginManifest
-export const PLUGIN_ID = 'ackem/prompt-mod@0.0.1'
+export const PLUGIN_ID = 'Ackem/prompt-mod@0.0.1'
 export const SPEC_ID = 'P-15'

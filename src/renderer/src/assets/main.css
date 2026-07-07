@@ -1137,6 +1137,17 @@ html.theater-open body {
   border-radius: 8px;
 }
 
+/* 聊天消息可选中（支持拖拽复制） */
+.message-user,
+.message-her,
+.message-user *,
+.message-her *,
+.md-content {
+  -webkit-user-select: text;
+  user-select: text;
+  cursor: text;
+}
+
 .message-emotion-bridge {
   height: 1px;
   margin: 12px auto;

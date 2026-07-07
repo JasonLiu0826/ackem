@@ -1,5 +1,5 @@
-/**
- * JE-3c / OID：Extension Surface 专用 preload — IR 窄 API
+﻿/**
+ * JE-3c / OID锛欵xtension Surface 涓撶敤 preload 鈥?IR 绐?API
  */
 import { contextBridge, ipcRenderer } from 'electron'
 
@@ -27,7 +27,7 @@ function ensureStateSubscription(): void {
   })
 }
 
-contextBridge.exposeInMainWorld('ackem', {
+contextBridge.exposeInMainWorld('Ackem', {
   extension: {
     getContext: (): Promise<SurfaceContext | null> =>
       ipcRenderer.invoke('surface:getContext') as Promise<SurfaceContext | null>,

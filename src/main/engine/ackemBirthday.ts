@@ -1,12 +1,12 @@
-// [ackemBirthday] — Ackem 生日（ACKEM-CANON-1.0 固定常量）
+// [AckemBirthday] 鈥?Ackem 鐢熸棩锛圔RITNEY-CANON-1.0 鍥哄畾甯搁噺锛?
 import { ACKEM_CANON } from '../canon/ackemCanon'
 
-/** 返回 Canon 固定出生日；不再读取 dataRoot/ackem-birthday.json */
+/** 杩斿洖 Canon 鍥哄畾鍑虹敓鏃ワ紱涓嶅啀璇诲彇 dataRoot/Ackem-birthday.json */
 export function getAckemBirthday(_dataRoot?: string): string {
   return ACKEM_CANON.birthDate
 }
 
-/** @deprecated 仅供旧测试兼容，Canon 模式下无缓存 */
+/** @deprecated 浠呬緵鏃ф祴璇曞吋瀹癸紝Canon 妯″紡涓嬫棤缂撳瓨 */
 export function _resetAckemBirthdayCache(): void {
   /* no-op */
 }

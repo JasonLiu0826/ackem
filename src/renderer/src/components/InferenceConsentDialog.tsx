@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+﻿import { useEffect, useRef, useState } from 'react'
 import { t } from '../lib/i18n'
 import { INFERENCE_CONSENT_VERSION } from '../../../shared/types'
 
@@ -19,7 +19,7 @@ type Props = {
   onCancel: () => void
 }
 
-/** M3 六维推断知情确认（云端/本地分流文案） */
+/** M3 鍏淮鎺ㄦ柇鐭ユ儏纭锛堜簯绔?鏈湴鍒嗘祦鏂囨锛?*/
 export function InferenceConsentDialog({
   open,
   estimate,
@@ -50,7 +50,7 @@ export function InferenceConsentDialog({
   if (!open || !estimate) return null
 
   const { charCount, tokenMin, tokenMax, isLocal, fileCount } = estimate
-  const title = isLocal ? '确认使用本地模型推断画像' : '确认使用云端模型推断画像'
+  const title = isLocal ? '纭浣跨敤鏈湴妯″瀷鎺ㄦ柇鐢诲儚' : '纭浣跨敤浜戠妯″瀷鎺ㄦ柇鐢诲儚'
 
   return (
     <div
@@ -73,25 +73,25 @@ export function InferenceConsentDialog({
           {isLocal ? (
             <>
               <p>
-                本次操作将在 <strong className="text-ink">本机/局域网</strong> 运行推理，扫描约{' '}
-                <strong className="text-ink">{charCount.toLocaleString()}</strong> 字（{fileCount}{' '}
-                个文件）。
+                鏈鎿嶄綔灏嗗湪 <strong className="text-ink">鏈満/灞€鍩熺綉</strong> 杩愯鎺ㄧ悊锛屾壂鎻忕害{' '}
+                <strong className="text-ink">{charCount.toLocaleString()}</strong> 瀛楋紙{fileCount}{' '}
+                涓枃浠讹級銆?
               </p>
-              <p>将占用本地 CPU/GPU 算力，可能需要数秒至数分钟；大模型可能占用较多显存。</p>
-              <p>文本不会离开您的设备（除非 base URL 指向远程机器）。不会消耗云端 API Token。</p>
+              <p>灏嗗崰鐢ㄦ湰鍦?CPU/GPU 绠楀姏锛屽彲鑳介渶瑕佹暟绉掕嚦鏁板垎閽燂紱澶фā鍨嬪彲鑳藉崰鐢ㄨ緝澶氭樉瀛樸€?/p>
+              <p>鏂囨湰涓嶄細绂诲紑鎮ㄧ殑璁惧锛堥櫎闈?base URL 鎸囧悜杩滅▼鏈哄櫒锛夈€備笉浼氭秷鑰椾簯绔?API Token銆?/p>
             </>
           ) : (
             <>
               <p>
-                本次操作将向您配置的 <strong className="text-ink">远端 API</strong> 发送文本，扫描约{' '}
-                <strong className="text-ink">{charCount.toLocaleString()}</strong> 字（约{' '}
-                {tokenMin.toLocaleString()}–{tokenMax.toLocaleString()} Token，粗估）。
+                鏈鎿嶄綔灏嗗悜鎮ㄩ厤缃殑 <strong className="text-ink">杩滅 API</strong> 鍙戦€佹枃鏈紝鎵弿绾' '}
+                <strong className="text-ink">{charCount.toLocaleString()}</strong> 瀛楋紙绾' '}
+                {tokenMin.toLocaleString()}鈥搟tokenMax.toLocaleString()} Token锛岀矖浼帮級銆?
               </p>
-              <p>将消耗您云账户的 API Token/额度；具体计费以提供商为准。</p>
-              <p>文本不会发往 Ackem 官方服务器，仅发往您在设置中填写的 base URL。</p>
+              <p>灏嗘秷鑰楁偍浜戣处鎴风殑 API Token/棰濆害锛涘叿浣撹璐逛互鎻愪緵鍟嗕负鍑嗐€?/p>
+              <p>鏂囨湰涓嶄細鍙戝線 Ackem 瀹樻柟鏈嶅姟鍣紝浠呭彂寰€鎮ㄥ湪璁剧疆涓～鍐欑殑 base URL銆?/p>
             </>
           )}
-          <p className="text-xs">知情同意版本 v{INFERENCE_CONSENT_VERSION}</p>
+          <p className="text-xs">鐭ユ儏鍚屾剰鐗堟湰 v{INFERENCE_CONSENT_VERSION}</p>
         </div>
         <label className="mb-5 flex items-start gap-2 text-sm text-ink">
           <input
@@ -100,7 +100,7 @@ export function InferenceConsentDialog({
             checked={checked}
             onChange={(e) => setChecked(e.target.checked)}
           />
-          <span>我已阅读并理解上述说明，同意继续推断。</span>
+          <span>鎴戝凡闃呰骞剁悊瑙ｄ笂杩拌鏄庯紝鍚屾剰缁х画鎺ㄦ柇銆?/span>
         </label>
         <div className="flex gap-3">
           <button
@@ -110,7 +110,7 @@ export function InferenceConsentDialog({
             onClick={onCancel}
             className="flex-1 rounded-xl border border-surface-inset bg-surface px-4 py-2.5 text-sm text-ink-muted transition-colors hover:bg-surface-raised hover:text-ink disabled:opacity-50"
           >
-            取消
+            鍙栨秷
           </button>
           <button
             type="button"
@@ -118,7 +118,7 @@ export function InferenceConsentDialog({
             onClick={onConfirm}
             className="flex-1 rounded-xl bg-accent px-4 py-2.5 text-sm text-white transition-colors hover:bg-accent-hover disabled:opacity-50"
           >
-            {loading ? '推断中…' : '开始推断'}
+            {loading ? '鎺ㄦ柇涓€? : '寮€濮嬫帹鏂?}
           </button>
         </div>
       </div>

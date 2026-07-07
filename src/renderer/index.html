@@ -18,7 +18,7 @@
         overflow: hidden;
       }
 
-      #ackem-boot-splash {
+      #Ackem-boot-splash {
         position: fixed;
         inset: 0;
         z-index: 99999;
@@ -26,7 +26,7 @@
         transition: opacity 0.42s ease, visibility 0.42s ease;
       }
 
-      #ackem-boot-splash.ackem-boot-splash--out {
+      #Ackem-boot-splash.Ackem-boot-splash--out {
         opacity: 0;
         visibility: hidden;
         pointer-events: none;
@@ -37,14 +37,16 @@
         background: #0f0d14;
       }
 
-      html.ackem-booting body {
+      html.Ackem-booting body {
         background: #0f0d14 !important;
       }
     </style>
   </head>
   <body class="bg-surface text-ink antialiased">
-    <div id="ackem-boot-splash" aria-live="polite" aria-busy="true"></div>
+    <div id="Ackem-boot-splash" aria-live="polite" aria-busy="true"></div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
+
+

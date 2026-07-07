@@ -1,4 +1,4 @@
-import type { SkillManifest } from '../../../types'
+﻿import type { SkillManifest } from '../../../types'
 import type { DispatchConfig } from '../../../../protocols'
 
 const EMERGENCY_DISPATCH: DispatchConfig = {
@@ -9,26 +9,26 @@ const EMERGENCY_DISPATCH: DispatchConfig = {
     cooldown_minutes: 30
   },
   habits: [
-    "用户说'好难受''撑不住了''好焦虑'",
-    '用户表达崩溃、害怕、情绪失控等需要陪伴的信号'
+    "鐢ㄦ埛璇?濂介毦鍙?'鎾戜笉浣忎簡''濂界劍铏?",
+    '鐢ㄦ埛琛ㄨ揪宕╂簝銆佸鎬曘€佹儏缁け鎺х瓑闇€瑕侀櫔浼寸殑淇″彿'
   ],
   scenarios: [
-    '用户情绪低谷、焦虑、崩溃边缘',
-    '用户明确需要安抚与陪伴（非心理治疗）',
-    '用户表达无力、害怕、睡不着等 distress 信号'
+    '鐢ㄦ埛鎯呯华浣庤胺銆佺劍铏戙€佸穿婧冭竟缂?,
+    '鐢ㄦ埛鏄庣‘闇€瑕佸畨鎶氫笌闄即锛堥潪蹇冪悊娌荤枟锛?,
+    '鐢ㄦ埛琛ㄨ揪鏃犲姏銆佸鎬曘€佺潯涓嶇潃绛?distress 淇″彿'
   ],
-  summary: '应急陪伴模式：降低刺激、增强安全感，用温柔短句陪伴（非心理治疗）。',
-  keywords: ['崩溃', '焦虑', '难过', '害怕', '受不了', '撑不住', '好难受', '睡不着', '好怕', '应急', '撑不住'],
+  summary: '搴旀€ラ櫔浼存ā寮忥細闄嶄綆鍒烘縺銆佸寮哄畨鍏ㄦ劅锛岀敤娓╂煍鐭彞闄即锛堥潪蹇冪悊娌荤枟锛夈€?,
+  keywords: ['宕╂簝', '鐒﹁檻', '闅捐繃', '瀹虫€?, '鍙椾笉浜?, '鎾戜笉浣?, '濂介毦鍙?, '鐫′笉鐫€', '濂芥€?, '搴旀€?, '鎾戜笉浣?],
   personality_hint: 'gentle_care'
 }
 
 export const EMERGENCY_COMPANION_MANIFEST: SkillManifest = {
-  id: 'ackem/emergency-companion@1.0.0',
-  name: '应急陪伴模式',
+  id: 'Ackem/emergency-companion@1.0.0',
+  name: '搴旀€ラ櫔浼存ā寮?,
   version: '1.0.0',
   category: 'skill',
   skillType: 'rule',
-  description: '检测 distress 关键词后进入温柔应急陪伴模式（非心理治疗）；Ackem 基础能力，始终启用',
+  description: '妫€娴?distress 鍏抽敭璇嶅悗杩涘叆娓╂煍搴旀€ラ櫔浼存ā寮忥紙闈炲績鐞嗘不鐤楋級锛汢ritney 鍩虹鑳藉姏锛屽缁堝惎鐢?,
   author: 'JasonLiu0826',
   license: 'AGPL-3.0',
   main: 'skill.ts',

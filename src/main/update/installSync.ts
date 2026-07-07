@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto'
+﻿import { createHash } from 'node:crypto'
 import { spawnSync } from 'node:child_process'
 import { existsSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
@@ -16,10 +16,10 @@ export function assertHealthyAsar(asarPath: string, label = 'app.asar'): number 
   }
   const size = statSync(asarPath).size
   if (size > MAX_ASAR_BYTES) {
-    throw new Error(`${label} too large — refuse to install broken asar pack`)
+    throw new Error(`${label} too large 鈥?refuse to install broken asar pack`)
   }
   if (size < MIN_ASAR_BYTES) {
-    throw new Error(`${label} too small — file may be truncated`)
+    throw new Error(`${label} too small 鈥?file may be truncated`)
   }
   return size
 }
@@ -44,7 +44,7 @@ export function syncReleaseFromStaging(stagingDir: string, installDir: string): 
   const dstAsar = join(installDir, 'resources', 'app.asar')
   assertHealthyAsar(dstAsar, 'installed app.asar')
   if (sha256(srcAsar) !== sha256(dstAsar)) {
-    throw new Error('app.asar mismatch after install — files may be locked')
+    throw new Error('app.asar mismatch after install 鈥?files may be locked')
   }
   if (!existsSync(join(installDir, 'Ackem.exe'))) {
     throw new Error('Ackem.exe missing after install')

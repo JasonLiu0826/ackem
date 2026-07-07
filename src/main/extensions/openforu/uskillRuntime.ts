@@ -1,29 +1,29 @@
-import type { SkillManifest } from '../skills/types'
+﻿import type { SkillManifest } from '../skills/types'
 import type { UskilConfig } from './loader'
 
-/** 构建注入 LLM 的上下文块（Dispatch 执行后进入管家层→表达层） */
+/** 鏋勫缓娉ㄥ叆 LLM 鐨勪笂涓嬫枃鍧楋紙Dispatch 鎵ц鍚庤繘鍏ョ瀹跺眰鈫掕〃杈惧眰锛?*/
 export function buildUskillContextInjection(manifest: SkillManifest, config: UskilConfig): string {
   const fromTemplate = config.promptTemplates?.contextInjection?.trim()
   if (fromTemplate) return fromTemplate
 
   const reply = config.onKeyword?.reply?.trim()
   if (reply) {
-    return `【${manifest.name} 已触发】${reply}。用 Ackem 伴侣的自然语气回应，并落实该能力描述的行为。`
+    return `銆?{manifest.name} 宸茶Е鍙戙€?{reply}銆傜敤 Ackem 浼翠荆鐨勮嚜鐒惰姘斿洖搴旓紝骞惰惤瀹炶鑳藉姏鎻忚堪鐨勮涓恒€俙
   }
 
   return ''
 }
 
-/** 用户可见的短反馈（toast / trace） */
+/** 鐢ㄦ埛鍙鐨勭煭鍙嶉锛坱oast / trace锛?*/
 export function buildUskillUserFacing(manifest: SkillManifest, config: UskilConfig): string {
   return (
     config.promptTemplates?.userFacing?.trim() ||
     config.onKeyword?.reply?.trim() ||
-    `${manifest.name} 已触发`
+    `${manifest.name} 宸茶Е鍙慲
   )
 }
 
-/** autonomous tick 到点时的 proactive 文案（不经 LLM / EmotionPanel） */
+/** autonomous tick 鍒扮偣鏃剁殑 proactive 鏂囨锛堜笉缁?LLM / EmotionPanel锛?*/
 export function buildUskillProactiveMessage(manifest: SkillManifest, config: UskilConfig): string {
   const fromUserFacing = config.promptTemplates?.userFacing?.trim()
   if (fromUserFacing) return fromUserFacing
@@ -34,10 +34,10 @@ export function buildUskillProactiveMessage(manifest: SkillManifest, config: Usk
   const desc = manifest.description?.trim()
   if (desc) return desc
 
-  return `${manifest.name} 提醒`
+  return `${manifest.name} 鎻愰啋`
 }
 
-/** manifest + skill.json 是否启用 scheduler autonomous tick */
+/** manifest + skill.json 鏄惁鍚敤 scheduler autonomous tick */
 export function isUskillAutonomousEnabled(manifest: SkillManifest, config: UskilConfig): boolean {
   return manifest.dispatch?.mode === 'autonomous' && config.onProactive?.enabled === true
 }

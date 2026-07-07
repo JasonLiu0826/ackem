@@ -1,6 +1,6 @@
-import type { DispatchCatalogEntry, DispatchConfig } from '../protocols'
+﻿import type { DispatchCatalogEntry, DispatchConfig } from '../protocols'
 
-/** 从 keywords 生成默认 `/关键词`（开发保底，无需重启 Ackem） */
+/** 浠?keywords 鐢熸垚榛樿 `/鍏抽敭璇峘锛堝紑鍙戜繚搴曪紝鏃犻渶閲嶅惎 Ackem锛?*/
 export function buildSlashAliasesFromKeywords(keywords: string[]): string[] {
   const out: string[] = []
   for (const kw of keywords) {
@@ -11,7 +11,7 @@ export function buildSlashAliasesFromKeywords(keywords: string[]): string[] {
   return [...new Set(out)]
 }
 
-/** 扩展可用的 slash 命令（manifest.dispatch.slash 优先，否则由 keywords 推导） */
+/** 鎵╁睍鍙敤鐨?slash 鍛戒护锛坢anifest.dispatch.slash 浼樺厛锛屽惁鍒欑敱 keywords 鎺ㄥ锛?*/
 export function getSlashCommandsForEntry(entry: DispatchCatalogEntry): string[] {
   const explicit = entry.dispatch.slash?.map((s) => normalizeSlashToken(s)).filter(Boolean) as string[]
   if (explicit?.length) return [...new Set(explicit)]
@@ -25,8 +25,8 @@ function normalizeSlashToken(raw: string): string {
 }
 
 /**
- * 匹配用户输入 `/番茄钟` 或 `/沙箱探针`（可带后续说明：`/番茄钟 开始吧`）
- * 返回命中的 catalog 条目；不依赖 LLM、不依赖「开始/打开」前缀。
+ * 鍖归厤鐢ㄦ埛杈撳叆 `/鐣寗閽焋 鎴?`/娌欑鎺㈤拡`锛堝彲甯﹀悗缁鏄庯細`/鐣寗閽?寮€濮嬪惂`锛?
+ * 杩斿洖鍛戒腑鐨?catalog 鏉＄洰锛涗笉渚濊禆 LLM銆佷笉渚濊禆銆屽紑濮?鎵撳紑銆嶅墠缂€銆?
  */
 export function matchSlashInvoke(
   message: string,
@@ -51,8 +51,8 @@ export function matchSlashInvoke(
 }
 
 /**
- * 用户发了 `/关键词`，但对应扩展未 active（未启用 / error / installed）时命中。
- * 用于注入「请到扩展中心启用」类提示，避免只走人设闲聊。
+ * 鐢ㄦ埛鍙戜簡 `/鍏抽敭璇峘锛屼絾瀵瑰簲鎵╁睍鏈?active锛堟湭鍚敤 / error / installed锛夋椂鍛戒腑銆?
+ * 鐢ㄤ簬娉ㄥ叆銆岃鍒版墿灞曚腑蹇冨惎鐢ㄣ€嶇被鎻愮ず锛岄伩鍏嶅彧璧颁汉璁鹃棽鑱娿€?
  */
 export function matchSlashInvokeDisabled(
   message: string,
@@ -75,18 +75,18 @@ export function matchSlashInvokeDisabled(
   return undefined
 }
 
-/** Plan 生成 dispatch 时写入 slash 列表 */
+/** Plan 鐢熸垚 dispatch 鏃跺啓鍏?slash 鍒楄〃 */
 export function attachSlashToDispatch(config: DispatchConfig): DispatchConfig {
   const slash = buildSlashAliasesFromKeywords(config.keywords)
   return slash.length ? { ...config, slash } : config
 }
 
-/** 部署成功 / 扩展中心展示用 */
+/** 閮ㄧ讲鎴愬姛 / 鎵╁睍涓績灞曠ず鐢?*/
 export function formatSlashInvokeHint(dispatch: DispatchConfig): string {
   const slash = dispatch.slash?.length
     ? dispatch.slash
     : buildSlashAliasesFromKeywords(dispatch.keywords)
   if (!slash.length) return ''
-  const shown = slash.slice(0, 4).map((s) => `\`${s}\``).join(' · ')
-  return `- 保底触发（主聊天）：${shown} — 命中即调用，不依赖自然语言`
+  const shown = slash.slice(0, 4).map((s) => `\`${s}\``).join(' 路 ')
+  return `- 淇濆簳瑙﹀彂锛堜富鑱婂ぉ锛夛細${shown} 鈥?鍛戒腑鍗宠皟鐢紝涓嶄緷璧栬嚜鐒惰瑷€`
 }

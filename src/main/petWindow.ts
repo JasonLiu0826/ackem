@@ -1,4 +1,4 @@
-import { app, BrowserWindow, screen } from 'electron'
+﻿import { app, BrowserWindow, screen } from 'electron'
 import { loadWindowIcon } from './appIcon'
 import { resolvePreloadPath, resolveRendererHtml } from './outPaths'
 import { getUiTheme } from './uiTheme'
@@ -6,7 +6,7 @@ import { createLogger } from './logger'
 
 const log = createLogger('petWindow')
 
-/** 每次打开桌宠时的默认尺寸（最小窗口，设计参考 360×540 可手动拉大） */
+/** 姣忔鎵撳紑妗屽疇鏃剁殑榛樿灏哄锛堟渶灏忕獥鍙ｏ紝璁捐鍙傝€?360脳540 鍙墜鍔ㄦ媺澶э級 */
 const PET_DEFAULT_WIDTH = 300
 const PET_DEFAULT_HEIGHT = 420
 const PET_MARGIN = 16
@@ -73,7 +73,7 @@ export function createPetWindow(): BrowserWindow {
   return win
 }
 
-/** 主显示器工作区右下角（避开任务栏） */
+/** 涓绘樉绀哄櫒宸ヤ綔鍖哄彸涓嬭锛堥伩寮€浠诲姟鏍忥級 */
 function placePetBottomRight(win: BrowserWindow): void {
   const { width, height } = win.getBounds()
   const { workArea } = screen.getPrimaryDisplay()

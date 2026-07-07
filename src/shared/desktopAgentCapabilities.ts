@@ -1,6 +1,6 @@
-import type { DesktopAgentSettingsSlice } from './desktopAgent'
+﻿import type { DesktopAgentSettingsSlice } from './desktopAgent'
 
-/** 电脑助手能力处理器 — 匹配后如何执行 */
+/** 鐢佃剳鍔╂墜鑳藉姏澶勭悊鍣?鈥?鍖归厤鍚庡浣曟墽琛?*/
 export type DesktopAgentCapabilityHandler =
   | 'investigate_games'
   | 'investigate_documents'
@@ -12,11 +12,11 @@ export type DesktopAgentCapabilityDef = {
   label: string
   uiGroup: string
   handler: DesktopAgentCapabilityHandler
-  /** Embedding 路由用例（用户可能说的话） */
+  /** Embedding 璺敱鐢ㄤ緥锛堢敤鎴峰彲鑳借鐨勮瘽锛?*/
   exampleQueries: string[]
-  /** 匹配成功后注入 LLM 的执行提示 */
+  /** 鍖归厤鎴愬姛鍚庢敞鍏?LLM 鐨勬墽琛屾彁绀?*/
   routingHint: string
-  /** 需要设置项开启才可用；省略表示默认可用 */
+  /** 闇€瑕佽缃」寮€鍚墠鍙敤锛涚渷鐣ヨ〃绀洪粯璁ゅ彲鐢?*/
   requiresSetting?: keyof DesktopAgentSettingsSlice
 }
 
@@ -31,135 +31,135 @@ export type DesktopAgentCapabilityMatch = {
 }
 
 /**
- * 电脑助手模式能力目录（Embedding 路由表 + 设置页说明的唯一来源）
- * 新增能力：只在此追加条目，并写好 exampleQueries。
+ * 鐢佃剳鍔╂墜妯″紡鑳藉姏鐩綍锛圗mbedding 璺敱琛?+ 璁剧疆椤佃鏄庣殑鍞竴鏉ユ簮锛?
+ * 鏂板鑳藉姏锛氬彧鍦ㄦ杩藉姞鏉＄洰锛屽苟鍐欏ソ exampleQueries銆?
  */
 export const DESKTOP_AGENT_CAPABILITY_CATALOG: DesktopAgentCapabilityDef[] = [
   {
     id: 'investigate_games',
-    label: '查找本机游戏',
-    uiGroup: '本机查找',
+    label: '鏌ユ壘鏈満娓告垙',
+    uiGroup: '鏈満鏌ユ壘',
     handler: 'investigate_games',
     exampleQueries: [
-      '我电脑里有哪些游戏',
-      '帮我查查装了什么游戏',
-      'steam库里有什么',
-      'epic上有哪些游戏',
-      '仔细查找我的游戏',
-      '游戏列表',
-      '本地安装了哪些游戏'
+      '鎴戠數鑴戦噷鏈夊摢浜涙父鎴?,
+      '甯垜鏌ユ煡瑁呬簡浠€涔堟父鎴?,
+      'steam搴撻噷鏈変粈涔?,
+      'epic涓婃湁鍝簺娓告垙',
+      '浠旂粏鏌ユ壘鎴戠殑娓告垙',
+      '娓告垙鍒楄〃',
+      '鏈湴瀹夎浜嗗摢浜涙父鎴?
     ],
     routingHint:
-      '用户要本机游戏清单。先读 MachineMap / Investigation，只列扫描证据中的游戏，禁止联网搜索或编造。'
+      '鐢ㄦ埛瑕佹湰鏈烘父鎴忔竻鍗曘€傚厛璇?MachineMap / Investigation锛屽彧鍒楁壂鎻忚瘉鎹腑鐨勬父鎴忥紝绂佹鑱旂綉鎼滅储鎴栫紪閫犮€?
   },
   {
     id: 'investigate_documents',
-    label: '查找本机文档',
-    uiGroup: '本机查找',
+    label: '鏌ユ壘鏈満鏂囨。',
+    uiGroup: '鏈満鏌ユ壘',
     handler: 'investigate_documents',
     exampleQueries: [
-      '桌面有哪些pdf',
-      '文档文件夹里有什么word',
-      '列出下载里的文档',
-      '帮我找一下pdf文件',
-      '我有哪些文档'
+      '妗岄潰鏈夊摢浜沺df',
+      '鏂囨。鏂囦欢澶归噷鏈変粈涔坵ord',
+      '鍒楀嚭涓嬭浇閲岀殑鏂囨。',
+      '甯垜鎵句竴涓媝df鏂囦欢',
+      '鎴戞湁鍝簺鏂囨。'
     ],
     routingHint:
-      '用户要本机文档清单。走 Investigation 文档模板或 use_computer 搜索，只引用真实路径。'
+      '鐢ㄦ埛瑕佹湰鏈烘枃妗ｆ竻鍗曘€傝蛋 Investigation 鏂囨。妯℃澘鎴?use_computer 鎼滅储锛屽彧寮曠敤鐪熷疄璺緞銆?
   },
   {
     id: 'browse_search',
-    label: '浏览与查找',
-    uiGroup: '文件操作',
+    label: '娴忚涓庢煡鎵?,
+    uiGroup: '鏂囦欢鎿嶄綔',
     handler: 'use_computer',
     exampleQueries: [
-      '列出这个文件夹里有什么',
-      '搜索文件名包含',
-      '找一下桌面上的文件',
-      '看看某个目录',
-      'grep搜索文件内容'
+      '鍒楀嚭杩欎釜鏂囦欢澶归噷鏈変粈涔?,
+      '鎼滅储鏂囦欢鍚嶅寘鍚?,
+      '鎵句竴涓嬫闈笂鐨勬枃浠?,
+      '鐪嬬湅鏌愪釜鐩綍',
+      'grep鎼滅储鏂囦欢鍐呭'
     ],
-    routingHint: '用 use_computer 列出/搜索/读取，多步探索后再汇总回答。'
+    routingHint: '鐢?use_computer 鍒楀嚭/鎼滅储/璇诲彇锛屽姝ユ帰绱㈠悗鍐嶆眹鎬诲洖绛斻€?
   },
   {
     id: 'read_content',
-    label: '读取内容',
-    uiGroup: '文件操作',
+    label: '璇诲彇鍐呭',
+    uiGroup: '鏂囦欢鎿嶄綔',
     handler: 'use_computer',
     exampleQueries: [
-      '读一下这个文件',
-      '打开看看内容',
-      '这份pdf说了什么',
-      '总结一下这个word',
-      '图片里是什么'
+      '璇讳竴涓嬭繖涓枃浠?,
+      '鎵撳紑鐪嬬湅鍐呭',
+      '杩欎唤pdf璇翠簡浠€涔?,
+      '鎬荤粨涓€涓嬭繖涓獁ord',
+      '鍥剧墖閲屾槸浠€涔?
     ],
-    routingHint: '用 use_computer 读取文本/文档/图片，基于真实内容回答。',
+    routingHint: '鐢?use_computer 璇诲彇鏂囨湰/鏂囨。/鍥剧墖锛屽熀浜庣湡瀹炲唴瀹瑰洖绛斻€?,
     requiresSetting: 'desktopAgentAllowDocumentRead'
   },
   {
     id: 'organize_files',
-    label: '整理与修改文件',
-    uiGroup: '文件操作',
+    label: '鏁寸悊涓庝慨鏀规枃浠?,
+    uiGroup: '鏂囦欢鎿嶄綔',
     handler: 'use_computer',
     exampleQueries: [
-      '复制到',
-      '移动到',
-      '重命名',
-      '新建文件夹',
-      '写入文件',
-      '删除这个文件',
-      '清理桌面文件',
-      '帮我清理下载文件夹',
-      '清空这个目录里的临时文件'
+      '澶嶅埗鍒?,
+      '绉诲姩鍒?,
+      '閲嶅懡鍚?,
+      '鏂板缓鏂囦欢澶?,
+      '鍐欏叆鏂囦欢',
+      '鍒犻櫎杩欎釜鏂囦欢',
+      '娓呯悊妗岄潰鏂囦欢',
+      '甯垜娓呯悊涓嬭浇鏂囦欢澶?,
+      '娓呯┖杩欎釜鐩綍閲岀殑涓存椂鏂囦欢'
     ],
-    routingHint: '用 use_computer 执行复制/移动/写入/删除；每次写操作需用户确认。',
+    routingHint: '鐢?use_computer 鎵ц澶嶅埗/绉诲姩/鍐欏叆/鍒犻櫎锛涙瘡娆″啓鎿嶄綔闇€鐢ㄦ埛纭銆?,
     requiresSetting: 'desktopAgentAllowFileWrite'
   },
   {
     id: 'app_control',
-    label: '控制应用程序',
-    uiGroup: '应用',
+    label: '鎺у埗搴旂敤绋嬪簭',
+    uiGroup: '搴旂敤',
     handler: 'use_computer',
     exampleQueries: [
-      '打开chrome',
-      '启动微信',
-      '关闭某个软件',
-      '把窗口切到前面',
-      '聚焦应用'
+      '鎵撳紑chrome',
+      '鍚姩寰俊',
+      '鍏抽棴鏌愪釜杞欢',
+      '鎶婄獥鍙ｅ垏鍒板墠闈?,
+      '鑱氱劍搴旂敤'
     ],
-    routingHint: '用 use_computer 打开/关闭/聚焦应用；需用户在弹窗确认。',
+    routingHint: '鐢?use_computer 鎵撳紑/鍏抽棴/鑱氱劍搴旂敤锛涢渶鐢ㄦ埛鍦ㄥ脊绐楃‘璁ゃ€?,
     requiresSetting: 'desktopAgentAllowAppControl'
   },
   {
     id: 'download_install',
-    label: '下载与安装',
-    uiGroup: '应用',
+    label: '涓嬭浇涓庡畨瑁?,
+    uiGroup: '搴旂敤',
     handler: 'use_computer',
-    exampleQueries: ['下载文件', '从链接下载', '安装这个软件', '运行安装包'],
-    routingHint: '用 use_computer 下载或运行安装包；必须 HTTPS 且用户确认。',
+    exampleQueries: ['涓嬭浇鏂囦欢', '浠庨摼鎺ヤ笅杞?, '瀹夎杩欎釜杞欢', '杩愯瀹夎鍖?],
+    routingHint: '鐢?use_computer 涓嬭浇鎴栬繍琛屽畨瑁呭寘锛涘繀椤?HTTPS 涓旂敤鎴风‘璁ゃ€?,
     requiresSetting: 'desktopAgentAllowDownload'
   },
   {
-    id: 'import_ackem',
-    label: '导入 Ackem',
-    uiGroup: '知识库',
+    id: 'import_Ackem',
+    label: '瀵煎叆 Ackem',
+    uiGroup: '鐭ヨ瘑搴?,
     handler: 'use_computer',
-    exampleQueries: ['导入到ackem', '把这个文件加入知识库', '导入本地文档'],
-    routingHint: '用 use_computer import_to_ackem 或先确认路径再导入。'
+    exampleQueries: ['瀵煎叆鍒癰ritney', '鎶婅繖涓枃浠跺姞鍏ョ煡璇嗗簱', '瀵煎叆鏈湴鏂囨。'],
+    routingHint: '鐢?use_computer import_to_Ackem 鎴栧厛纭璺緞鍐嶅鍏ャ€?
   },
   {
     id: 'capability_help',
-    label: '能力说明',
-    uiGroup: '帮助',
+    label: '鑳藉姏璇存槑',
+    uiGroup: '甯姪',
     handler: 'capability_help',
     exampleQueries: [
-      '电脑助手能做什么',
-      '你会什么',
-      '你能帮我操作电脑吗',
-      '有哪些功能',
-      '可以做什么'
+      '鐢佃剳鍔╂墜鑳藉仛浠€涔?,
+      '浣犱細浠€涔?,
+      '浣犺兘甯垜鎿嶄綔鐢佃剳鍚?,
+      '鏈夊摢浜涘姛鑳?,
+      '鍙互鍋氫粈涔?
     ],
-    routingHint: '用自然中文介绍当前已开放的电脑助手能力，给 1~2 个例子，不要堆技术名词。'
+    routingHint: '鐢ㄨ嚜鐒朵腑鏂囦粙缁嶅綋鍓嶅凡寮€鏀剧殑鐢佃剳鍔╂墜鑳藉姏锛岀粰 1~2 涓緥瀛愶紝涓嶈鍫嗘妧鏈悕璇嶃€?
   }
 ]
 
@@ -175,14 +175,14 @@ function settingEnabled(
   return settings[key] === true
 }
 
-/** 当前用户设置下可用于 Embedding 路由的能力条目 */
+/** 褰撳墠鐢ㄦ埛璁剧疆涓嬪彲鐢ㄤ簬 Embedding 璺敱鐨勮兘鍔涙潯鐩?*/
 export function listRoutableDesktopAgentCapabilities(
   settings: DesktopAgentSettingsSlice
 ): DesktopAgentCapabilityDef[] {
   return DESKTOP_AGENT_CAPABILITY_CATALOG.filter((c) => settingEnabled(settings, c.requiresSetting))
 }
 
-/** 设置页展示：按 uiGroup 分组 */
+/** 璁剧疆椤靛睍绀猴細鎸?uiGroup 鍒嗙粍 */
 export function groupDesktopAgentCapabilitiesByUi(
   settings: DesktopAgentSettingsSlice
 ): Array<{ group: string; items: Array<{ label: string; enabled: boolean; detail: string }> }> {
@@ -191,12 +191,12 @@ export function groupDesktopAgentCapabilitiesByUi(
     const enabled = settingEnabled(settings, cap.requiresSetting)
     const detail =
       cap.handler === 'investigate_games' || cap.handler === 'investigate_documents'
-        ? 'Embedding 匹配后自动本机查找，再由大模型整理一条回复'
+        ? 'Embedding 鍖归厤鍚庤嚜鍔ㄦ湰鏈烘煡鎵撅紝鍐嶇敱澶фā鍨嬫暣鐞嗕竴鏉″洖澶?
         : cap.handler === 'capability_help'
-          ? 'Embedding 匹配后直接由大模型介绍能力'
+          ? 'Embedding 鍖归厤鍚庣洿鎺ョ敱澶фā鍨嬩粙缁嶈兘鍔?
           : enabled
-            ? 'Embedding 匹配后由大模型调用 use_computer 多步完成'
-            : '需在上方权限中开启对应开关'
+            ? 'Embedding 鍖归厤鍚庣敱澶фā鍨嬭皟鐢?use_computer 澶氭瀹屾垚'
+            : '闇€鍦ㄤ笂鏂规潈闄愪腑寮€鍚搴斿紑鍏?
     const row = { label: cap.label, enabled, detail }
     const list = map.get(cap.uiGroup) ?? []
     list.push(row)
@@ -207,8 +207,8 @@ export function groupDesktopAgentCapabilitiesByUi(
 
 export function buildCapabilityRoutingSystemHint(match: DesktopAgentCapabilityMatch): string {
   return [
-    `【电脑助手 · 能力路由】已匹配：${match.label}（${match.source}，相似度 ${(match.score * 100).toFixed(0)}%）`,
-    `参考例句：${match.matchedQuery}`,
+    `銆愮數鑴戝姪鎵?路 鑳藉姏璺敱銆戝凡鍖归厤锛?{match.label}锛?{match.source}锛岀浉浼煎害 ${(match.score * 100).toFixed(0)}%锛塦,
+    `鍙傝€冧緥鍙ワ細${match.matchedQuery}`,
     match.routingHint
   ].join('\n')
 }

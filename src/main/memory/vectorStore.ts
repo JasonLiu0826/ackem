@@ -1,15 +1,15 @@
-// [vectorStore] — TF-IDF 向量语义搜索
-// 职责：将事实向量化为 TF-IDF 稀疏向量，支持余弦相似度检索
-// 对标 MemGPT / OpenAI Memory 的 embedding 搜索
-// 可选注入 embedQuery 函数以使用外部 embedding 模型替代 TF-IDF
-// 引用：../engine/types
+﻿// [vectorStore] 鈥?TF-IDF 鍚戦噺璇箟鎼滅储
+// 鑱岃矗锛氬皢浜嬪疄鍚戦噺鍖栦负 TF-IDF 绋€鐤忓悜閲忥紝鏀寔浣欏鸡鐩镐技搴︽绱?
+// 瀵规爣 MemGPT / OpenAI Memory 鐨?embedding 鎼滅储
+// 鍙€夋敞鍏?embedQuery 鍑芥暟浠ヤ娇鐢ㄥ閮?embedding 妯″瀷鏇夸唬 TF-IDF
+// 寮曠敤锛?./engine/types
 
-import { VECTOR_SEARCH_MIN_SCORE } from '../engine/ackemParams'
+import { VECTOR_SEARCH_MIN_SCORE } from '../engine/AckemParams'
 import type { MemoryFact } from '../engine/types'
 
 type SparseVec = Map<number, number>
 
-/** 外部 embedding 函数签名：输入文本，输出 N 维浮点向量 */
+/** 澶栭儴 embedding 鍑芥暟绛惧悕锛氳緭鍏ユ枃鏈紝杈撳嚭 N 缁存诞鐐瑰悜閲?*/
 export type EmbedFn = (text: string) => Promise<number[]> | number[]
 
 export class VectorStore {
@@ -18,17 +18,17 @@ export class VectorStore {
   private termToId = new Map<string, number>()
   private nextId = 0
   private lastFactHash = ''
-  /** 可选外部 embedding 函数，提供后用于查询向量化 */
+  /** 鍙€夊閮?embedding 鍑芥暟锛屾彁渚涘悗鐢ㄤ簬鏌ヨ鍚戦噺鍖?*/
   embedQuery?: EmbedFn
-  /** 可选批量 embedding 函数，用于构建事实的稠密向量缓存 */
+  /** 鍙€夋壒閲?embedding 鍑芥暟锛岀敤浜庢瀯寤轰簨瀹炵殑绋犲瘑鍚戦噺缂撳瓨 */
   embedFacts?: (texts: string[]) => Promise<number[][]>
-  /** 稠密向量缓存（embedding 空间），与 TF-IDF 稀疏向量独立 */
+  /** 绋犲瘑鍚戦噺缂撳瓨锛坋mbedding 绌洪棿锛夛紝涓?TF-IDF 绋€鐤忓悜閲忕嫭绔?*/
   private denseVectors: Array<{ factId: string; vec: number[]; norm: number }> = []
   private denseLastHash = ''
 
-  /** Rebuild vocabulary and vectors from all active facts（跳过未变更时） */
+  /** Rebuild vocabulary and vectors from all active facts锛堣烦杩囨湭鍙樻洿鏃讹級 */
   build(facts: MemoryFact[]): void {
-    // 用总条数+所有时间戳求和的 hash 检测事实库变更，任一事实增删改都会触发重建
+    // 鐢ㄦ€绘潯鏁?鎵€鏈夋椂闂存埑姹傚拰鐨?hash 妫€娴嬩簨瀹炲簱鍙樻洿锛屼换涓€浜嬪疄澧炲垹鏀归兘浼氳Е鍙戦噸寤?
     const totalUpdated = facts.reduce((sum, f) => sum + new Date(f.updatedAt).getTime(), 0)
     const hash = `${facts.length}-${totalUpdated}`
     if (hash === this.lastFactHash && this.vectors.length > 0) return
@@ -81,7 +81,7 @@ export class VectorStore {
     }
   }
 
-  /** 使用 embedding 的异步搜索（若可用），回退 TF-IDF */
+  /** 浣跨敤 embedding 鐨勫紓姝ユ悳绱紙鑻ュ彲鐢級锛屽洖閫€ TF-IDF */
   async searchAsync(
     query: string,
     topK: number,
@@ -107,7 +107,7 @@ export class VectorStore {
     return this.denseVectors.length > 0
   }
 
-  /** 导出稠密向量到 Map（供 factStore._embeddingCache 挂载） */
+  /** 瀵煎嚭绋犲瘑鍚戦噺鍒?Map锛堜緵 factStore._embeddingCache 鎸傝浇锛?*/
   syncDenseCacheToMap(): Map<string, number[]> {
     const map = new Map<string, number[]>()
     for (const { factId, vec } of this.denseVectors) {
@@ -116,7 +116,7 @@ export class VectorStore {
     return map
   }
 
-  /** 从外部 Map / SQLite 加载填充稠密缓存 */
+  /** 浠庡閮?Map / SQLite 鍔犺浇濉厖绋犲瘑缂撳瓨 */
   loadDenseCacheFromMap(
     entries: Map<string, number[]>,
     corpusHash: string
@@ -134,7 +134,7 @@ export class VectorStore {
     return this.denseLastHash
   }
 
-  /** 异步构建稠密向量缓存（在 build() 之后调用，需要 embedFacts 可用） */
+  /** 寮傛鏋勫缓绋犲瘑鍚戦噺缂撳瓨锛堝湪 build() 涔嬪悗璋冪敤锛岄渶瑕?embedFacts 鍙敤锛?*/
   async buildDenseCache(facts: MemoryFact[]): Promise<void> {
     if (!this.embedFacts) return
     const active = facts.filter(f => f.status === 'active')
@@ -157,7 +157,7 @@ export class VectorStore {
     }
   }
 
-  /** 用稠密 embedding 向量做余弦相似度搜索 */
+  /** 鐢ㄧ瀵?embedding 鍚戦噺鍋氫綑寮︾浉浼煎害鎼滅储 */
   private searchByDenseVector(qVec: number[], topK: number): Array<{ factId: string; score: number }> {
     const qNorm = Math.sqrt(qVec.reduce((s, v) => s + v * v, 0)) || 1
     const scored = this.denseVectors.map(({ factId, vec, norm }) => {
@@ -210,7 +210,7 @@ export class VectorStore {
   private tokenize(fact: MemoryFact): string[] {
     const text = `${fact.subject} ${fact.summary} ${fact.triggers.join(' ')}`.toLowerCase()
     // Split on CJK punctuation, whitespace, and keep 1-char CJK + 2-char words
-    const words = text.split(/[\s,，。！？、；：""''（）【】《》.!?;:()\[\]{}"']+/u).filter(w => w.length >= 1)
+    const words = text.split(/[\s,锛屻€傦紒锛熴€侊紱锛?"''锛堬級銆愩€戙€娿€?!?;:()\[\]{}"']+/u).filter(w => w.length >= 1)
     const tokens: string[] = []
     for (const w of words) {
       // Full word
@@ -225,7 +225,7 @@ export class VectorStore {
 
   private vectorizeQuery(query: string): SparseVec {
     const tokens = query.toLowerCase()
-      .split(/[\s,，。！？、；：""''（）【】《》.!?;:()\[\]{}"']+/u)
+      .split(/[\s,锛屻€傦紒锛熴€侊紱锛?"''锛堬級銆愩€戙€娿€?!?;:()\[\]{}"']+/u)
       .filter(w => w.length >= 1)
     const bigrams: string[] = []
     for (const w of tokens) {

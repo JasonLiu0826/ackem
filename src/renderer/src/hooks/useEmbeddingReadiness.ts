@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import {
   isEmbeddingReadyForChat,
   type EmbeddingReadinessSnapshot,
@@ -13,12 +13,12 @@ export function useEmbeddingReadiness() {
     let unsub: (() => void) | undefined
     void (async () => {
       try {
-        const snap = await window.ackem.embeddingReadiness()
+        const snap = await window.Ackem.embeddingReadiness()
         setEmbeddingReadiness(snap as EmbeddingReadinessSnapshot)
       } catch {
         /* ignore */
       }
-      unsub = window.ackem.onEmbeddingReadinessChanged((snap) => {
+      unsub = window.Ackem.onEmbeddingReadinessChanged((snap) => {
         setEmbeddingReadiness(snap as EmbeddingReadinessSnapshot)
       })
     })()

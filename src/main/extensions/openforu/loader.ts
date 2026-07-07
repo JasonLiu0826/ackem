@@ -1,21 +1,21 @@
-// [openforu/loader] — 用户自创扩展加载器
+﻿// [openforu/loader] 鈥?鐢ㄦ埛鑷垱鎵╁睍鍔犺浇鍣?
 //
-// 职责：
-//   1. 扫描 data/openforu/uskills/ 和 data/openforu/uplugins/ 目录
-//   2. 解析 manifest.json，校验格式
-//   3. 将 uskills 注册到 SkillRegistry，uplugins 注册到 PluginRegistry
-//   4. uplugin 受限权限集（默认低于官方 Plugin）
-//   5. 提供启用/禁用/卸载接口
+// 鑱岃矗锛?
+//   1. 鎵弿 data/openforu/uskills/ 鍜?data/openforu/uplugins/ 鐩綍
+//   2. 瑙ｆ瀽 manifest.json锛屾牎楠屾牸寮?
+//   3. 灏?uskills 娉ㄥ唽鍒?SkillRegistry锛寀plugins 娉ㄥ唽鍒?PluginRegistry
+//   4. uplugin 鍙楅檺鏉冮檺闆嗭紙榛樿浣庝簬瀹樻柟 Plugin锛?
+//   5. 鎻愪緵鍚敤/绂佺敤/鍗歌浇鎺ュ彛
 //
-// 架构：
-//   ExtensionsCoordinator.boot() → OpenForULoader.boot()
-//     → scanUskills() → SkillRegistry.register()
-//     → scanUplugins() → PluginRegistry.registerBuiltin()
+// 鏋舵瀯锛?
+//   ExtensionsCoordinator.boot() 鈫?OpenForULoader.boot()
+//     鈫?scanUskills() 鈫?SkillRegistry.register()
+//     鈫?scanUplugins() 鈫?PluginRegistry.registerBuiltin()
 //
-// 安全：
-//   - uplugin 默认权限限制为 readonly + engine_read，其他权限需用户逐项审批
-//   - uplugin 运行在受限沙箱中
-//   - uskill 本质为 JSON 配置，不包含可执行代码，安全风险低
+// 瀹夊叏锛?
+//   - uplugin 榛樿鏉冮檺闄愬埗涓?readonly + engine_read锛屽叾浠栨潈闄愰渶鐢ㄦ埛閫愰」瀹℃壒
+//   - uplugin 杩愯鍦ㄥ彈闄愭矙绠变腑
+//   - uskill 鏈川涓?JSON 閰嶇疆锛屼笉鍖呭惈鍙墽琛屼唬鐮侊紝瀹夊叏椋庨櫓浣?
 
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -47,15 +47,15 @@ import {
 import { readRevisionIndex, restoreExtensionRevision } from './refine/revisionStore'
 
 export type DeployUpluginOptions = {
-  /** 单测 / 内部路径跳过审批弹窗 */
+  /** 鍗曟祴 / 鍐呴儴璺緞璺宠繃瀹℃壒寮圭獥 */
   skipApproval?: boolean
 }
 
 export type { UpluginMeta } from './upluginRuntime'
 
-// ═══════════════════════════════════════════════════════════════
-// 类型
-// ═══════════════════════════════════════════════════════════════
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+// 绫诲瀷
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
 
 export interface UskilConfig {
   version: string
@@ -98,9 +98,9 @@ export interface UpluginInstance {
   grantedPermissions: PluginPermission[]
 }
 
-// ═══════════════════════════════════════════════════════════════
-// OpenForU 加载器
-// ═══════════════════════════════════════════════════════════════
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+// OpenForU 鍔犺浇鍣?
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
 
 export class OpenForULoader {
   private dataRoot: string
@@ -157,9 +157,9 @@ export class OpenForULoader {
     mkdirSync(this.upluginsDir, { recursive: true })
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // 启动
-  // ═══════════════════════════════════════════════════════════
+  // 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+  // 鍚姩
+  // 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
 
   async boot(): Promise<ExtensionOpResult> {
     const skillResult = await this.scanUskills()
@@ -175,9 +175,9 @@ export class OpenForULoader {
     return { ok: true }
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // uskill 扫描与注册
-  // ═══════════════════════════════════════════════════════════════
+  // 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+  // uskill 鎵弿涓庢敞鍐?
+  // 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
 
   async scanUskills(): Promise<ExtensionOpResult> {
     if (!existsSync(this.uskillsDir)) return { ok: true }
@@ -199,9 +199,9 @@ export class OpenForULoader {
           ? JSON.parse(readFileSync(configPath, 'utf-8'))
           : { version: '1.0.0' }
 
-        // 校验 id 格式（u/ 前缀标识用户自创）
+        // 鏍￠獙 id 鏍煎紡锛坲/ 鍓嶇紑鏍囪瘑鐢ㄦ埛鑷垱锛?
         if (!manifest.id.startsWith('u/')) {
-          continue // 跳过非 uskill
+          continue // 璺宠繃闈?uskill
         }
 
         const instance: UskilInstance = {
@@ -212,7 +212,7 @@ export class OpenForULoader {
           dirPath: skillDir
         }
 
-        // 注册为 SkillHandler（uskill 通过配置驱动，无需编译代码）
+        // 娉ㄥ唽涓?SkillHandler锛坲skill 閫氳繃閰嶇疆椹卞姩锛屾棤闇€缂栬瘧浠ｇ爜锛?
         const handler = this.createUskilHandler(instance)
         const regResult = await this.skillRegistry.register(handler)
         if (!regResult.ok) {
@@ -224,15 +224,15 @@ export class OpenForULoader {
 
         this.uskills.set(manifest.id, instance)
       } catch (err) {
-        // 跳过损坏的 uskill
-        console.error(`[openforu] 加载 uskill '${entry.name}' 失败:`, err)
+        // 璺宠繃鎹熷潖鐨?uskill
+        console.error(`[openforu] 鍔犺浇 uskill '${entry.name}' 澶辫触:`, err)
       }
     }
 
     return { ok: true }
   }
 
-  /** 同步 registry 激活状态；带合法 dispatch 的新 uskill 自动激活以进入调度 catalog */
+  /** 鍚屾 registry 婵€娲荤姸鎬侊紱甯﹀悎娉?dispatch 鐨勬柊 uskill 鑷姩婵€娲讳互杩涘叆璋冨害 catalog */
   private async syncUskillActivation(instance: UskilInstance): Promise<void> {
     const { manifest } = instance
     const reg = this.skillRegistry.get(manifest.id)
@@ -249,7 +249,7 @@ export class OpenForULoader {
       instance.lastError = reg.lastError
       return
     }
-    // 仅对首次扫描、尚未激活过的 installed 态自动激活（尊重用户手动关闭）
+    // 浠呭棣栨鎵弿銆佸皻鏈縺娲昏繃鐨?installed 鎬佽嚜鍔ㄦ縺娲伙紙灏婇噸鐢ㄦ埛鎵嬪姩鍏抽棴锛?
     if (reg?.status !== 'installed') return
     if (!manifest.dispatch) return
     if (validateDispatchConfig(manifest.dispatch).length > 0) return
@@ -268,7 +268,7 @@ export class OpenForULoader {
     }
   }
 
-  /** 同步 registry 激活状态；带合法 dispatch 的新 uplugin 自动激活 */
+  /** 鍚屾 registry 婵€娲荤姸鎬侊紱甯﹀悎娉?dispatch 鐨勬柊 uplugin 鑷姩婵€娲?*/
   private async syncUpluginActivation(instance: UpluginInstance): Promise<void> {
     const { manifest } = instance
     const reg = this.pluginRegistry.get(manifest.id)
@@ -299,7 +299,7 @@ export class OpenForULoader {
     if (actResult.ok) instance.status = 'active'
   }
 
-  /** 为 uskill 创建 SkillHandler（从配置驱动，不执行代码） */
+  /** 涓?uskill 鍒涘缓 SkillHandler锛堜粠閰嶇疆椹卞姩锛屼笉鎵ц浠ｇ爜锛?*/
   private createUskilHandler(instance: UskilInstance): SkillHandler {
     const { manifest, config } = instance
     const autonomousEnabled = isUskillAutonomousEnabled(manifest, config)
@@ -376,11 +376,11 @@ export class OpenForULoader {
     return handler
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // uplugin 扫描与注册
-  // ═══════════════════════════════════════════════════════════════
+  // 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+  // uplugin 鎵弿涓庢敞鍐?
+  // 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
 
-  /** 若 live 目录丢失但 revisions 有快照，从最新 revision 恢复（仅 registry 仍登记该扩展时） */
+  /** 鑻?live 鐩綍涓㈠け浣?revisions 鏈夊揩鐓э紝浠庢渶鏂?revision 鎭㈠锛堜粎 registry 浠嶇櫥璁拌鎵╁睍鏃讹級 */
   private isUpluginSlugInRegistry(slug: string): boolean {
     for (const p of this.pluginRegistry.listInstalled()) {
       if (!p.manifest.id.startsWith('u/')) continue
@@ -441,7 +441,7 @@ export class OpenForULoader {
             manifest,
             meta,
             status: 'error',
-            lastError: `禁止申请的权限：${forbidden.join('、')}`,
+            lastError: `绂佹鐢宠鐨勬潈闄愶細${forbidden.join('銆?)}`,
             installedAt: new Date().toISOString(),
             dirPath: pluginDir,
             grantedPermissions
@@ -506,16 +506,16 @@ export class OpenForULoader {
           await this.syncUpluginActivation(instance)
         }
       } catch (err) {
-        console.error(`[openforu] 加载 uplugin '${entry.name}' 失败:`, err)
+        console.error(`[openforu] 鍔犺浇 uplugin '${entry.name}' 澶辫触:`, err)
       }
     }
 
     return { ok: true }
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // 查询
-  // ═══════════════════════════════════════════════════════════
+  // 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+  // 鏌ヨ
+  // 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
 
   listUskills(): UskilInstance[] {
     return Array.from(this.uskills.values())
@@ -533,7 +533,7 @@ export class OpenForULoader {
     return this.uplugins.get(id)
   }
 
-  /** 列出所有已安装的用户扩展（合并 uskills + uplugins） */
+  /** 鍒楀嚭鎵€鏈夊凡瀹夎鐨勭敤鎴锋墿灞曪紙鍚堝苟 uskills + uplugins锛?*/
   listAll(): Array<{ type: 'uskill' | 'uplugin'; instance: UskilInstance | UpluginInstance }> {
     return [
       ...Array.from(this.uskills.values()).map(i => ({ type: 'uskill' as const, instance: i })),
@@ -541,7 +541,7 @@ export class OpenForULoader {
     ]
   }
 
-  /** 获取需要用户审批的权限列表 */
+  /** 鑾峰彇闇€瑕佺敤鎴峰鎵圭殑鏉冮檺鍒楄〃 */
   getPendingApprovals(): Array<{
     pluginId: string
     pluginName: string
@@ -563,13 +563,13 @@ export class OpenForULoader {
           permissions: pending as PluginPermission[],
           reasons: pending.map((p) => {
             switch (p) {
-              case 'network_outbound': return '需要访问外部 API'
-              case 'clipboard_read': return '需要读取剪贴板内容'
-              case 'foreground_detect': return '需要检测前台窗口标题'
-              case 'data_write': return '需要写入数据到磁盘'
-              case 'system_notification': return '需要发送系统通知'
-              case 'engine_inject': return '需要向对话上下文注入提示'
-              default: return `需要 ${p} 权限`
+              case 'network_outbound': return '闇€瑕佽闂閮?API'
+              case 'clipboard_read': return '闇€瑕佽鍙栧壀璐存澘鍐呭'
+              case 'foreground_detect': return '闇€瑕佹娴嬪墠鍙扮獥鍙ｆ爣棰?
+              case 'data_write': return '闇€瑕佸啓鍏ユ暟鎹埌纾佺洏'
+              case 'system_notification': return '闇€瑕佸彂閫佺郴缁熼€氱煡'
+              case 'engine_inject': return '闇€瑕佸悜瀵硅瘽涓婁笅鏂囨敞鍏ユ彁绀?
+              default: return `闇€瑕?${p} 鏉冮檺`
             }
           })
         })
@@ -578,14 +578,14 @@ export class OpenForULoader {
     return result
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // 生命周期管理
-  // ═══════════════════════════════════════════════════════════
+  // 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+  // 鐢熷懡鍛ㄦ湡绠＄悊
+  // 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
 
-  /** 启用 uskill */
+  /** 鍚敤 uskill */
   async activateUskil(id: string): Promise<ExtensionOpResult> {
     const instance = this.uskills.get(id)
-    if (!instance) return { ok: false, error: `uskill '${id}' 未安装` }
+    if (!instance) return { ok: false, error: `uskill '${id}' 鏈畨瑁卄 }
 
     const handler = this.createUskilHandler(instance)
     const regResult = await this.skillRegistry.register(handler)
@@ -598,17 +598,17 @@ export class OpenForULoader {
     return { ok: true }
   }
 
-  /** 禁用 uskill */
+  /** 绂佺敤 uskill */
   async deactivateUskil(id: string): Promise<ExtensionOpResult> {
     const instance = this.uskills.get(id)
-    if (!instance) return { ok: false, error: `uskill '${id}' 未安装` }
+    if (!instance) return { ok: false, error: `uskill '${id}' 鏈畨瑁卄 }
 
     const result = await this.skillRegistry.deactivate(id)
     if (result.ok) instance.status = 'disabled'
     return result
   }
 
-  /** 删除 uskill（删除目录 + 从注册表移除） */
+  /** 鍒犻櫎 uskill锛堝垹闄ょ洰褰?+ 浠庢敞鍐岃〃绉婚櫎锛?*/
   async removeUskil(id: string): Promise<ExtensionOpResult> {
     if (!this.uskills.get(id)) {
       await this.scanUskills()
@@ -621,14 +621,14 @@ export class OpenForULoader {
     try {
       const { rmSync } = await import('node:fs')
       rmSync(dirPath, { recursive: true, force: true })
-    } catch { /* 目录可能已删除 */ }
+    } catch { /* 鐩綍鍙兘宸插垹闄?*/ }
     this.uskills.delete(id)
     return { ok: true }
   }
 
   /**
-   * 从磁盘重载 manifest / main.ts / meta，刷新 hooks（无需重启 Ackem）。
-   * 扩展中心「启用」前会自动调用。
+   * 浠庣鐩橀噸杞?manifest / main.ts / meta锛屽埛鏂?hooks锛堟棤闇€閲嶅惎 Ackem锛夈€?
+   * 鎵╁睍涓績銆屽惎鐢ㄣ€嶅墠浼氳嚜鍔ㄨ皟鐢ㄣ€?
    */
   async reloadUpluginFromDisk(id: string): Promise<ExtensionOpResult & { mode?: 'worker' | 'inject' }> {
     let instance = this.uplugins.get(id)
@@ -636,12 +636,12 @@ export class OpenForULoader {
       await this.scanUplugins()
       instance = this.uplugins.get(id)
     }
-    if (!instance) return { ok: false, error: `uplugin '${id}' 未安装` }
+    if (!instance) return { ok: false, error: `uplugin '${id}' 鏈畨瑁卄 }
 
     const pluginDir = instance.dirPath
     const manifestPath = join(pluginDir, 'manifest.json')
     if (!existsSync(manifestPath)) {
-      return { ok: false, error: 'manifest.json 缺失' }
+      return { ok: false, error: 'manifest.json 缂哄け' }
     }
 
     const manifest: PluginManifest = JSON.parse(readFileSync(manifestPath, 'utf-8'))
@@ -695,13 +695,13 @@ export class OpenForULoader {
     return { ok: true, mode: hookResolution.mode }
   }
 
-  /** 启用 uplugin（先重载磁盘再激活） */
+  /** 鍚敤 uplugin锛堝厛閲嶈浇纾佺洏鍐嶆縺娲伙級 */
   async activateUplugin(id: string): Promise<ExtensionOpResult> {
     const reload = await this.reloadUpluginFromDisk(id)
     if (!reload.ok) return reload
 
     const instance = this.uplugins.get(id)
-    if (!instance) return { ok: false, error: `uplugin '${id}' 未安装` }
+    if (!instance) return { ok: false, error: `uplugin '${id}' 鏈畨瑁卄 }
 
     if (this.hasPendingPermissions(instance)) {
       const { pending } = this.resolveGrantedForManifest(instance.manifest, instance.meta)
@@ -713,17 +713,17 @@ export class OpenForULoader {
     return result
   }
 
-  /** 禁用 uplugin */
+  /** 绂佺敤 uplugin */
   async deactivateUplugin(id: string): Promise<ExtensionOpResult> {
     const instance = this.uplugins.get(id)
-    if (!instance) return { ok: false, error: `uplugin '${id}' 未安装` }
+    if (!instance) return { ok: false, error: `uplugin '${id}' 鏈畨瑁卄 }
 
     const result = await this.pluginRegistry.deactivate(id)
     if (result.ok) instance.status = 'disabled'
     return result
   }
 
-  /** 删除 uplugin（删除目录 + 从注册表移除） */
+  /** 鍒犻櫎 uplugin锛堝垹闄ょ洰褰?+ 浠庢敞鍐岃〃绉婚櫎锛?*/
   async removeUplugin(id: string): Promise<ExtensionOpResult> {
     if (!this.uplugins.get(id)) {
       await this.scanUplugins()
@@ -737,18 +737,18 @@ export class OpenForULoader {
     try {
       const { rmSync } = await import('node:fs')
       rmSync(dirPath, { recursive: true, force: true })
-    } catch { /* 目录可能已删除 */ }
+    } catch { /* 鐩綍鍙兘宸插垹闄?*/ }
     this.uplugins.delete(id)
     return { ok: true }
   }
 
-  /** 审批 uplugin 的升级权限 */
+  /** 瀹℃壒 uplugin 鐨勫崌绾ф潈闄?*/
   async approvePermission(pluginId: string, permission: PluginPermission): Promise<ExtensionOpResult> {
     const instance = this.uplugins.get(pluginId)
-    if (!instance) return { ok: false, error: `uplugin '${pluginId}' 未安装` }
+    if (!instance) return { ok: false, error: `uplugin '${pluginId}' 鏈畨瑁卄 }
 
     if (!instance.manifest.permissions.includes(permission)) {
-      return { ok: false, error: `uplugin 未请求 ${permission} 权限` }
+      return { ok: false, error: `uplugin 鏈姹?${permission} 鏉冮檺` }
     }
 
     if (instance.grantedPermissions.includes(permission)) {
@@ -766,14 +766,14 @@ export class OpenForULoader {
     return { ok: true }
   }
 
-  /** 扩展中心：批准全部 pending 并重载激活 */
+  /** 鎵╁睍涓績锛氭壒鍑嗗叏閮?pending 骞堕噸杞芥縺娲?*/
   async approveAllPendingAndActivate(pluginId: string): Promise<ExtensionOpResult> {
     let instance = this.uplugins.get(pluginId)
     if (!instance) {
       await this.scanUplugins()
       instance = this.uplugins.get(pluginId)
     }
-    if (!instance) return { ok: false, error: `uplugin '${pluginId}' 未安装` }
+    if (!instance) return { ok: false, error: `uplugin '${pluginId}' 鏈畨瑁卄 }
 
     const { pending } = this.resolveGrantedForManifest(instance.manifest, instance.meta)
     for (const p of pending) {
@@ -786,7 +786,7 @@ export class OpenForULoader {
   getUskillsDir(): string { return this.uskillsDir }
   getUpluginsDir(): string { return this.upluginsDir }
 
-  /** 写入 uskill 文件并注册 + 激活（OF-04 部署） */
+  /** 鍐欏叆 uskill 鏂囦欢骞舵敞鍐?+ 婵€娲伙紙OF-04 閮ㄧ讲锛?*/
   async deployUskill(
     dirName: string,
     manifest: SkillManifest,
@@ -834,7 +834,7 @@ export class OpenForULoader {
     return { ok: true, id: manifest.id }
   }
 
-  /** 写入 uplugin 文件并注册 + 激活（OF-06 部署） */
+  /** 鍐欏叆 uplugin 鏂囦欢骞舵敞鍐?+ 婵€娲伙紙OF-06 閮ㄧ讲锛?*/
   async deployUplugin(
     dirName: string,
     manifest: PluginManifest,
@@ -861,7 +861,7 @@ export class OpenForULoader {
     )
 
     if (forbidden.length > 0) {
-      const err = `禁止申请的权限：${forbidden.join('、')}`
+      const err = `绂佹鐢宠鐨勬潈闄愶細${forbidden.join('銆?)}`
       const instance: UpluginInstance = {
         manifest,
         meta: workingMeta,

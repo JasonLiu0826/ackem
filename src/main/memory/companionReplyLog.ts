@@ -1,33 +1,33 @@
-import type { EmotionState, L1State } from '../engine/types'
+﻿import type { EmotionState, L1State } from '../engine/types'
 import type { KnowledgeGraph } from './knowledgeGraph'
 import type { FactStore } from './factStore'
 import { writeFactRows } from './factLanding'
 import type { ExtractedFactRow } from './lightExtract/types'
 import type { AdultMemoryPrivacyLevel } from '../prompt/adult-mode'
 
-const COMPANION_REPLY_SUBJECT_PREFIX = 'Ackem回复'
+const COMPANION_REPLY_SUBJECT_PREFIX = 'Ackem鍥炲'
 const DAILY_SUMMARY_MAX_CHARS = 2400
 const REPLY_LINE_MAX_CHARS = 220
 
 function clip(text: string, max: number): string {
   const t = text.replace(/\s+/g, ' ').trim()
   if (t.length <= max) return t
-  return `${t.slice(0, max)}…`
+  return `${t.slice(0, max)}鈥
 }
 
-/** 6月22日21点30分 */
+/** 6鏈?2鏃?1鐐?0鍒?*/
 export function formatReplyTimestamp(d: Date): string {
   const month = d.getMonth() + 1
   const day = d.getDate()
   const hour = d.getHours()
   const minute = d.getMinutes()
-  if (minute === 0) return `${month}月${day}日${hour}点`
-  return `${month}月${day}日${hour}点${minute}分`
+  if (minute === 0) return `${month}鏈?{day}鏃?{hour}鐐筦
+  return `${month}鏈?{day}鏃?{hour}鐐?{minute}鍒哷
 }
 
-/** 按 session + 日历日合并伴侣回复摘要 */
+/** 鎸?session + 鏃ュ巻鏃ュ悎骞朵即渚ｅ洖澶嶆憳瑕?*/
 export function companionReplySubjectForDay(d: Date): string {
-  return `${COMPANION_REPLY_SUBJECT_PREFIX}·${d.toISOString().slice(0, 10)}`
+  return `${COMPANION_REPLY_SUBJECT_PREFIX}路${d.toISOString().slice(0, 10)}`
 }
 
 export function formatCompanionReplyLine(
@@ -37,7 +37,7 @@ export function formatCompanionReplyLine(
 ): string {
   const userQ = clip(userMsg, 48)
   const body = clip(assistantText, 160)
-  return `${formatReplyTimestamp(now)}，回复用户「${userQ}」：${body}`
+  return `${formatReplyTimestamp(now)}锛屽洖澶嶇敤鎴枫€?{userQ}銆嶏細${body}`
 }
 
 export function buildCompanionReplyRow(
@@ -55,7 +55,7 @@ export function buildCompanionReplyRow(
     summary: formatCompanionReplyLine(userMsg, reply, now),
     weight: 0.6,
     confidence: 1,
-    triggers: ['Ackem回复'],
+    triggers: ['Ackem鍥炲'],
   }
 }
 
@@ -76,7 +76,7 @@ function findDailyCompanionReply(
   return hit ? { id: hit.id, summary: hit.summary } : null
 }
 
-/** 每轮同步写入伴侣回复摘要（同 session 同日合并为一条） */
+/** 姣忚疆鍚屾鍐欏叆浼翠荆鍥炲鎽樿锛堝悓 session 鍚屾棩鍚堝苟涓轰竴鏉★級 */
 export function writeCompanionReplyLog(args: {
   dataRoot: string
   sessionId: string

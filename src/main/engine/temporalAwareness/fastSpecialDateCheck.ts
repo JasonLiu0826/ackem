@@ -1,13 +1,13 @@
-/**
- * FIX-023 — 快速特殊日检测（orchestrator moodBias 路径）
- * 与 detectSpecialDates 规则对齐：相识周年用 computeTimeDepth ±15 天窗口，非仅 MMDD 相等。
+﻿/**
+ * FIX-023 鈥?蹇€熺壒娈婃棩妫€娴嬶紙orchestrator moodBias 璺緞锛?
+ * 涓?detectSpecialDates 瑙勫垯瀵归綈锛氱浉璇嗗懆骞寸敤 computeTimeDepth 卤15 澶╃獥鍙ｏ紝闈炰粎 MMDD 鐩哥瓑銆?
  */
 import type { FactStore } from '../../memory/factStore'
 import { detectHoliday } from './holidayDetector'
 import { isAnniversaryWindowActive } from './timeDepthCalculator'
 
 export type FastSpecialDateType =
-  | 'ackem_birthday'
+  | 'Ackem_birthday'
   | 'first_met_anniversary'
   | 'birthday'
   | 'holiday_spring'
@@ -19,19 +19,19 @@ function formatTodayMMDD(today: Date): string {
 }
 
 /**
- * 快速检测今日特殊日类型（FactStore + 节假日，不查 temporal_anchors DB）
- * 供 orchestrator moodBias 使用，避免与 temporalHint 不同步。
+ * 蹇€熸娴嬩粖鏃ョ壒娈婃棩绫诲瀷锛團actStore + 鑺傚亣鏃ワ紝涓嶆煡 temporal_anchors DB锛?
+ * 渚?orchestrator moodBias 浣跨敤锛岄伩鍏嶄笌 temporalHint 涓嶅悓姝ャ€?
  */
 export function detectFastSpecialDateType(args: {
   today: Date
   firstMetDate: string | null
-  ackemBirthday?: string | null
+  AckemBirthday?: string | null
   factStore: FactStore
 }): FastSpecialDateType | null {
   const todayMMDD = formatTodayMMDD(args.today)
 
-  if (args.ackemBirthday && args.ackemBirthday.slice(5, 10) === todayMMDD) {
-    return 'ackem_birthday'
+  if (args.AckemBirthday && args.AckemBirthday.slice(5, 10) === todayMMDD) {
+    return 'Ackem_birthday'
   }
 
   if (isAnniversaryWindowActive(args.firstMetDate, args.today)) {
@@ -46,8 +46,8 @@ export function detectFastSpecialDateType(args: {
 
   const holiday = detectHoliday(args.today)
   if (holiday) {
-    if (['春节'].includes(holiday.key)) return 'holiday_spring'
-    if (['情人节', '七夕', '520', '521'].includes(holiday.key)) return 'holiday_valentine'
+    if (['鏄ヨ妭'].includes(holiday.key)) return 'holiday_spring'
+    if (['鎯呬汉鑺?, '涓冨', '520', '521'].includes(holiday.key)) return 'holiday_valentine'
     return 'holiday'
   }
 

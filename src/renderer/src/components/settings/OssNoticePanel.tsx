@@ -1,4 +1,4 @@
-import { getLocale } from '../../lib/i18n'
+﻿import { getLocale } from '../../lib/i18n'
 import { getOssNoticeContent } from '../../../../shared/compliance/ossNoticeContent'
 
 export function OssNoticePanel(): JSX.Element {
@@ -7,7 +7,7 @@ export function OssNoticePanel(): JSX.Element {
   return (
     <div className="settings-oss-notice-panel max-h-[min(62vh,520px)] overflow-y-auto rounded-xl border border-surface-inset/60 bg-black/15 px-4 py-3">
       <p className="text-[11px] text-ink-muted">
-        Ackem {content.productVersion} · {content.updated}
+        Ackem {content.productVersion} 路 {content.updated}
       </p>
       <div className="mt-3 space-y-5">
         {content.sections.map((section) => (

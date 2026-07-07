@@ -1,4 +1,4 @@
-// [knowledge-presentation/plugin] — 知识整理内置插件门面
+﻿// [knowledge-presentation/plugin] 鈥?鐭ヨ瘑鏁寸悊鍐呯疆鎻掍欢闂ㄩ潰
 
 import type { WebContents } from 'electron'
 import type { AppSettings } from '../../../../settings'
@@ -25,7 +25,7 @@ import {
   type KnowledgeAnswerInput
 } from './knowledgeAnswer'
 
-export const KNOWLEDGE_PRESENTATION_PLUGIN_ID = 'ackem/knowledge-presentation@1.0.0'
+export const KNOWLEDGE_PRESENTATION_PLUGIN_ID = 'Ackem/knowledge-presentation@1.0.0'
 
 const log = createLogger('knowledge-presentation')
 
@@ -37,7 +37,7 @@ export type KnowledgeContextResolveInput = {
 }
 
 export type KnowledgeContextResolveResult = {
-  /** 剥离显式指令后送入 LLM 的用户文本 */
+  /** 鍓ョ鏄惧紡鎸囦护鍚庨€佸叆 LLM 鐨勭敤鎴锋枃鏈?*/
   userTextForLlm: string
   knowledgeTopic?: string
 }
@@ -54,21 +54,21 @@ class KnowledgePresentationPlugin {
     return p
   }
 
-  /** context:build 阶段：决定是否生成纸面卡及主题 */
+  /** context:build 闃舵锛氬喅瀹氭槸鍚︾敓鎴愮焊闈㈠崱鍙婁富棰?*/
   resolveForContextBuild(input: KnowledgeContextResolveInput): KnowledgeContextResolveResult {
     const prefs = this.sessionPrefs(input.sessionId)
     const { stripped, turnOverride } = applyKnowledgeUserMessage(input.userText, prefs)
     const autoWants = isKnowledgeSeekingIntent(input.workIntent)
     const trimmed = input.userText.trim()
 
-    // 整理已有内容（指代上文 / 刚搜到的结果）→ 知识整理，禁止二次联网
+    // 鏁寸悊宸叉湁鍐呭锛堟寚浠ｄ笂鏂?/ 鍒氭悳鍒扮殑缁撴灉锛夆啋 鐭ヨ瘑鏁寸悊锛岀姝簩娆¤仈缃?
     if (wantsOrganizeExistingContent(trimmed, input.recentMessages)) {
       const topic = resolveOrganizeTopic(trimmed, input.recentMessages)
-      log.info('用户要求整理已有内容', { topic, userText: trimmed.slice(0, 80) })
+      log.info('鐢ㄦ埛瑕佹眰鏁寸悊宸叉湁鍐呭', { topic, userText: trimmed.slice(0, 80) })
       return { userTextForLlm: stripped, knowledgeTopic: topic }
     }
 
-    // 显式要求整理为纸面卡（"介绍一下X"、"什么是X"等）→ 优先于 web_search
+    // 鏄惧紡瑕佹眰鏁寸悊涓虹焊闈㈠崱锛?浠嬬粛涓€涓媂"銆?浠€涔堟槸X"绛夛級鈫?浼樺厛浜?web_search
     if (wantsOrganizeAsCard(trimmed)) {
       const topic =
         extractOrganizeTopicFromMessage(trimmed) ??
@@ -76,13 +76,13 @@ class KnowledgePresentationPlugin {
           input.workIntent.extractedQuery || stripped,
           input.recentMessages
         )
-      log.info('用户要求整理为纸面卡', { topic, userText: trimmed.slice(0, 80) })
+      log.info('鐢ㄦ埛瑕佹眰鏁寸悊涓虹焊闈㈠崱', { topic, userText: trimmed.slice(0, 80) })
       return { userTextForLlm: stripped, knowledgeTopic: topic }
     }
 
-    // 显式联网搜索（"帮我搜一下X"）→ web_search
+    // 鏄惧紡鑱旂綉鎼滅储锛?甯垜鎼滀竴涓媂"锛夆啋 web_search
     if (shouldPreferWebSearch(trimmed, input.recentMessages)) {
-      log.info('跳过知识整理，改走 web_search', {
+      log.info('璺宠繃鐭ヨ瘑鏁寸悊锛屾敼璧?web_search', {
         userText: trimmed.slice(0, 80),
         extractedQuery: input.workIntent.extractedQuery
       })

@@ -1,4 +1,4 @@
-import { createLlmJsonClient } from '../llmClient'
+﻿import { createLlmJsonClient } from '../llmClient'
 import { loadState } from '../engine/state-persistence'
 import { FactStore, defaultFactsPath } from '../memory/factStore'
 import type { AppSettings } from '../settings'
@@ -23,7 +23,7 @@ export type ComposeCompanionProactiveInput = {
   dataRoot: string
   settings: AppSettings
   sessionId: string
-  /** 骚扰模式：更黏人、更撒娇，间隔由调度器控制 */
+  /** 楠氭壈妯″紡锛氭洿榛忎汉銆佹洿鎾掑▏锛岄棿闅旂敱璋冨害鍣ㄦ帶鍒?*/
   harass?: boolean
 }
 
@@ -46,11 +46,12 @@ export function pickRecentFactFromRoot(dataRoot: string): string | null {
 export { pickCompanionProactiveKind }
 
 const KIND_HINT: Record<ProactiveMessageKind, string> = {
-  check_in: '随口确认对方在不在、近况如何',
-  memory_echo: '轻点提起对方之前说过的事，像真的记得',
-  time_greet: '按当前时段自然打招呼',
-  miss_you: '表达想念或想聊天，符合关系亲密度',
-  playful_nudge: '带一点人格特色的撒娇/调侃，不要客服腔'
+  check_in: '闅忓彛纭瀵规柟鍦ㄤ笉鍦ㄣ€佽繎鍐靛浣?,
+  memory_echo: '杞荤偣鎻愯捣瀵规柟涔嬪墠璇磋繃鐨勪簨锛屽儚鐪熺殑璁板緱',
+  time_greet: '鎸夊綋鍓嶆椂娈佃嚜鐒舵墦鎷涘懠',
+  miss_you: '琛ㄨ揪鎯冲康鎴栨兂鑱婂ぉ锛岀鍚堝叧绯讳翰瀵嗗害',
+  playful_nudge: '甯︿竴鐐逛汉鏍肩壒鑹茬殑鎾掑▏/璋冧緝锛屼笉瑕佸鏈嶈厰',
+  photo_share: '鍒嗕韩涓€寮犺嚜鎷嶆垨鏃ュ父鐓х墖锛岄檮涓婄畝鐭厤鏂囥€傚繀椤昏皟鐢?agnes_image 宸ュ叿鐢熸垚鍥剧墖銆?
 }
 
 async function tryLlmCompanionProactive(args: {
@@ -71,36 +72,36 @@ async function tryLlmCompanionProactive(args: {
       aff: args.emotion.aff,
       harass: args.harass
     })
-    const factLine = args.fact ? `\n可轻点提到：${args.fact}` : ''
+    const factLine = args.fact ? `\n鍙交鐐规彁鍒帮細${args.fact}` : ''
     const topics =
-      tc.topicHints.length > 0 ? `\n时段可自然聊到：${tc.topicHints.join('、')}` : ''
+      tc.topicHints.length > 0 ? `\n鏃舵鍙嚜鐒惰亰鍒帮細${tc.topicHints.join('銆?)}` : ''
     const channelLine = args.harass
-      ? '你要在桌面 Ackem 聊天里主动发消息。'
-      : '用户暂时没回，你主动发一条微信。'
+      ? '浣犺鍦ㄦ闈?Ackem 鑱婂ぉ閲屼富鍔ㄥ彂娑堟伅銆?
+      : '鐢ㄦ埛鏆傛椂娌″洖锛屼綘涓诲姩鍙戜竴鏉″井淇°€?
 
     const formatLine = args.harass
-      ? '只输出对用户直接说的 1～2 句正文，总共 ≤40 字，可用 [SPLIT] 分两条。'
-      : '只输出 1 句对用户直接说的话，≤40 字；不要用 [SPLIT] 或任何方括号标记（系统会按句自动分条发送）。'
+      ? '鍙緭鍑哄鐢ㄦ埛鐩存帴璇寸殑 1锝? 鍙ユ鏂囷紝鎬诲叡 鈮?0 瀛楋紝鍙敤 [SPLIT] 鍒嗕袱鏉°€?
+      : '鍙緭鍑?1 鍙ュ鐢ㄦ埛鐩存帴璇寸殑璇濓紝鈮?0 瀛楋紱涓嶈鐢?[SPLIT] 鎴栦换浣曟柟鎷彿鏍囪锛堢郴缁熶細鎸夊彞鑷姩鍒嗘潯鍙戦€侊級銆?
 
     const request = {
       messages: [
         {
           role: 'system' as const,
           content:
-            `你是 Ackem，用户的 AI 伴侣。${channelLine}\n\n${personalityBlock}\n\n` +
-            '禁止输出：设定说明、状态分析、任务复述、写作计划、数字指标、括号及括号内旁白、第三人称内心独白。' +
+            `浣犳槸 Ackem锛岀敤鎴风殑 AI 浼翠荆銆?{channelLine}\n\n${personalityBlock}\n\n` +
+            '绂佹杈撳嚭锛氳瀹氳鏄庛€佺姸鎬佸垎鏋愩€佷换鍔″杩般€佸啓浣滆鍒掋€佹暟瀛楁寚鏍囥€佹嫭鍙峰強鎷彿鍐呮梺鐧姐€佺涓変汉绉板唴蹇冪嫭鐧姐€? +
             `${formatLine} ` +
-            '不要客服腔，不要提 DeepSeek/GPT。'
+            '涓嶈瀹㈡湇鑵旓紝涓嶈鎻?DeepSeek/GPT銆?
         },
         {
           role: 'user' as const,
           content:
-            `（内部参考，勿复述）关系 ${args.relationship.stage}；` +
-            `信任 ${args.relationship.trust}；好感 ${args.emotion.aff}；` +
-            `安全感 ${args.emotion.sec ?? 0}；` +
-            `情绪 ${args.emotion.primaryLabel ?? '平静'}；${tc.greeting}。` +
-            `任务：${KIND_HINT[args.kind]}。${factLine}${topics}\n` +
-            '请直接写正文：'
+            `锛堝唴閮ㄥ弬鑰冿紝鍕垮杩帮級鍏崇郴 ${args.relationship.stage}锛沗 +
+            `淇′换 ${args.relationship.trust}锛涘ソ鎰?${args.emotion.aff}锛沗 +
+            `瀹夊叏鎰?${args.emotion.sec ?? 0}锛沗 +
+            `鎯呯华 ${args.emotion.primaryLabel ?? '骞抽潤'}锛?{tc.greeting}銆俙 +
+            `浠诲姟锛?{KIND_HINT[args.kind]}銆?{factLine}${topics}\n` +
+            '璇风洿鎺ュ啓姝ｆ枃锛?
         }
       ],
       temperature: args.harass ? 0.88 : 0.82,

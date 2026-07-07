@@ -1,4 +1,4 @@
-import type { AppSettings } from '../../../../settings'
+﻿import type { AppSettings } from '../../../../settings'
 import {
   buildOpenForULlmSettings,
   buildPlanDialogueExcerpt,
@@ -45,7 +45,7 @@ async function polishUskillBundle(
   abortSignal?: AbortSignal
 ): Promise<ArtifactBundle> {
   if (abortSignal?.aborted) {
-    throw new DOMException('操作已取消', 'AbortError')
+    throw new DOMException('鎿嶄綔宸插彇娑?, 'AbortError')
   }
   const ofs = buildOpenForULlmSettings(settings)
   if (!ofs) return base
@@ -57,27 +57,27 @@ async function polishUskillBundle(
       {
         role: 'system',
         content: [
-          '你是 OpenForU 扩展文案润色助手。只输出一个 JSON 对象，不要 markdown 包裹以外的说明。',
-          '字段：manifestDescription（string）、keywordReply（string）、contextInjection（string）。',
-          '禁止修改 dispatch、keywords、权限、id。语气贴近 Ackem 伴侣，落实 Plan 方案中的具体行为。',
-          '用简体中文。'
+          '浣犳槸 OpenForU 鎵╁睍鏂囨娑﹁壊鍔╂墜銆傚彧杈撳嚭涓€涓?JSON 瀵硅薄锛屼笉瑕?markdown 鍖呰９浠ュ鐨勮鏄庛€?,
+          '瀛楁锛歮anifestDescription锛坰tring锛夈€乲eywordReply锛坰tring锛夈€乧ontextInjection锛坰tring锛夈€?,
+          '绂佹淇敼 dispatch銆乲eywords銆佹潈闄愩€乮d銆傝姘旇创杩?Ackem 浼翠荆锛岃惤瀹?Plan 鏂规涓殑鍏蜂綋琛屼负銆?,
+          '鐢ㄧ畝浣撲腑鏂囥€?
         ].join('\n')
       },
       {
         role: 'user',
         content: [
-          '## 方案摘要',
+          '## 鏂规鎽樿',
           pack.dispatchSummary,
           '',
-          '## 习惯 / 场景 / 关键词',
-          `habits: ${pack.habits.join(' · ')}`,
-          `scenarios: ${pack.scenarios.join(' · ')}`,
-          `keywords: ${pack.keywords.join(' · ')}`,
+          '## 涔犳儻 / 鍦烘櫙 / 鍏抽敭璇?,
+          `habits: ${pack.habits.join(' 路 ')}`,
+          `scenarios: ${pack.scenarios.join(' 路 ')}`,
+          `keywords: ${pack.keywords.join(' 路 ')}`,
           '',
-          '## Plan 对话摘录',
+          '## Plan 瀵硅瘽鎽樺綍',
           buildPlanDialogueExcerpt(session),
           '',
-          '## 当前模板文案（请润色得更贴方案，但保持可执行）',
+          '## 褰撳墠妯℃澘鏂囨锛堣娑﹁壊寰楁洿璐存柟妗堬紝浣嗕繚鎸佸彲鎵ц锛?,
           `description: ${base.manifest.description}`,
           `reply: ${base.skillConfig.onKeyword?.reply ?? ''}`,
           `contextInjection: ${base.skillConfig.promptTemplates?.contextInjection ?? ''}`
@@ -91,7 +91,7 @@ async function polishUskillBundle(
 
   const parsed = parseJsonObject<UskillPolishJson>(raw)
   if (!parsed) {
-    base.generationLog.push('hybrid: LLM 润色解析失败，保留 deterministic 文案')
+    base.generationLog.push('hybrid: LLM 娑﹁壊瑙ｆ瀽澶辫触锛屼繚鐣?deterministic 鏂囨')
     return base
   }
 
@@ -113,7 +113,7 @@ async function polishUskillBundle(
     'skill.json': `${JSON.stringify(skillConfig, null, 2)}\n`
   }
 
-  base.generationLog.push('hybrid: LLM 已润色 manifest.description / skill.json 话术')
+  base.generationLog.push('hybrid: LLM 宸叉鼎鑹?manifest.description / skill.json 璇濇湳')
 
   return {
     ...base,
@@ -130,7 +130,7 @@ export async function polishUpluginBundle(
   abortSignal?: AbortSignal
 ): Promise<ArtifactBundle> {
   if (abortSignal?.aborted) {
-    throw new DOMException('操作已取消', 'AbortError')
+    throw new DOMException('鎿嶄綔宸插彇娑?, 'AbortError')
   }
   const ofs = buildOpenForULlmSettings(settings)
   if (!ofs) return base
@@ -142,21 +142,21 @@ export async function polishUpluginBundle(
       {
         role: 'system',
         content: [
-          '你是 OpenForU uplugin 文案润色助手。只输出 JSON：manifestDescription、injectTemplate。',
-          'injectTemplate 是注入主聊天的短提示，说明 Plugin 已触发及用户应得到的行为。',
-          'v1 仅为上下文注入，不要承诺真实系统 API。简体中文。'
+          '浣犳槸 OpenForU uplugin 鏂囨娑﹁壊鍔╂墜銆傚彧杈撳嚭 JSON锛歮anifestDescription銆乮njectTemplate銆?,
+          'injectTemplate 鏄敞鍏ヤ富鑱婂ぉ鐨勭煭鎻愮ず锛岃鏄?Plugin 宸茶Е鍙戝強鐢ㄦ埛搴斿緱鍒扮殑琛屼负銆?,
+          'v1 浠呬负涓婁笅鏂囨敞鍏ワ紝涓嶈鎵胯鐪熷疄绯荤粺 API銆傜畝浣撲腑鏂囥€?
         ].join('\n')
       },
       {
         role: 'user',
         content: [
-          '## 方案',
+          '## 鏂规',
           pack.dispatchSummary,
-          `keywords: ${pack.keywords.join(' · ')}`,
+          `keywords: ${pack.keywords.join(' 路 ')}`,
           '',
           buildPlanDialogueExcerpt(session),
           '',
-          '## 当前 injectTemplate',
+          '## 褰撳墠 injectTemplate',
           base.meta.injectTemplate
         ].join('\n')
       }
@@ -168,7 +168,7 @@ export async function polishUpluginBundle(
 
   const parsed = parseJsonObject<UpluginPolishJson>(raw)
   if (!parsed) {
-    base.generationLog.push('hybrid: LLM 润色解析失败，保留 deterministic 文案')
+    base.generationLog.push('hybrid: LLM 娑﹁壊瑙ｆ瀽澶辫触锛屼繚鐣?deterministic 鏂囨')
     return base
   }
 
@@ -188,7 +188,7 @@ export async function polishUpluginBundle(
     'plugin.meta.json': `${JSON.stringify(meta, null, 2)}\n`
   }
 
-  base.generationLog.push('hybrid: LLM 已润色 manifest.description / injectTemplate')
+  base.generationLog.push('hybrid: LLM 宸叉鼎鑹?manifest.description / injectTemplate')
 
   return {
     ...base,
@@ -221,7 +221,7 @@ export async function generateHybridBundleAuto(
 ): Promise<ArtifactBundle> {
   const kind = resolvePlanArtifactKind(session)
   if (kind !== 'uskill' && kind !== 'uplugin') {
-    throw new Error('请先在 Plan 中明确产物类型为 uskill 或 uplugin')
+    throw new Error('璇峰厛鍦?Plan 涓槑纭骇鐗╃被鍨嬩负 uskill 鎴?uplugin')
   }
   return generateHybridBundle(session, settings, kind)
 }

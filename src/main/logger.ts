@@ -1,5 +1,5 @@
-// [logger] — 轻量结构化日志
-// 支持日志级别、时间戳、模块标识，同时输出到控制台和文件
+﻿// [logger] 鈥?杞婚噺缁撴瀯鍖栨棩蹇?
+// 鏀寔鏃ュ織绾у埆銆佹椂闂存埑銆佹ā鍧楁爣璇嗭紝鍚屾椂杈撳嚭鍒版帶鍒跺彴鍜屾枃浠?
 
 import { appendFileSync, existsSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
@@ -27,7 +27,7 @@ function timestamp(): string {
 function logFilePath(): string {
   const d = new Date()
   const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-  return join(logDir, `ackem-${date}.log`)
+  return join(logDir, `Ackem-${date}.log`)
 }
 
 function writeFile(line: string): void {
@@ -35,7 +35,7 @@ function writeFile(line: string): void {
   try {
     appendFileSync(logFilePath(), line + '\n', 'utf-8')
   } catch {
-    // 日志写入失败不应影响主流程
+    // 鏃ュ織鍐欏叆澶辫触涓嶅簲褰卞搷涓绘祦绋?
   }
 }
 

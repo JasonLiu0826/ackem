@@ -1,13 +1,13 @@
-// [S-06] 喝水提醒
+﻿// [S-06] 鍠濇按鎻愰啋
 import type { SkillManifest } from '../../../types'
 import type { DispatchConfig } from '../../../../protocols'
 
 const PROD_INTERVAL_MS = 45 * 60 * 1000
 const DEV_INTERVAL_MS = 3 * 60 * 1000
 
-/** 生产 45min；开发 3min；测试/覆盖可用 ACKEM_DRINK_WATER_INTERVAL_MS */
+/** 鐢熶骇 45min锛涘紑鍙?3min锛涙祴璇?瑕嗙洊鍙敤 Ackem_DRINK_WATER_INTERVAL_MS */
 export function getDrinkWaterIntervalMs(): number {
-  const override = process.env.ACKEM_DRINK_WATER_INTERVAL_MS
+  const override = process.env.Ackem_DRINK_WATER_INTERVAL_MS
   if (override != null && override !== '') {
     const n = Number(override)
     if (Number.isFinite(n) && n > 0) return n
@@ -26,20 +26,20 @@ const DRINK_WATER_DISPATCH: DispatchConfig = {
       ruleType: 'interval_ms'
     }
   },
-  habits: ['用户长时间使用电脑', '用户可能忘记喝水'],
-  scenarios: ['办公/学习', '轻量健康提醒而非医疗建议'],
-  summary: '定时轻提醒喝水（伴侣语气，非医疗建议）。',
-  keywords: ['喝水', '口渴', '补水'],
+  habits: ['鐢ㄦ埛闀挎椂闂翠娇鐢ㄧ數鑴?, '鐢ㄦ埛鍙兘蹇樿鍠濇按'],
+  scenarios: ['鍔炲叕/瀛︿範', '杞婚噺鍋ュ悍鎻愰啋鑰岄潪鍖荤枟寤鸿'],
+  summary: '瀹氭椂杞绘彁閱掑枬姘达紙浼翠荆璇皵锛岄潪鍖荤枟寤鸿锛夈€?,
+  keywords: ['鍠濇按', '鍙ｆ复', '琛ユ按'],
   personality_hint: 'gentle_care'
 }
 
 export const DRINK_WATER_REMINDER_MANIFEST: SkillManifest = {
-  id: 'ackem/drink-water-reminder@0.0.1',
-  name: '喝水提醒',
+  id: 'Ackem/drink-water-reminder@0.0.1',
+  name: '鍠濇按鎻愰啋',
   version: '0.0.1',
   category: 'skill',
   skillType: 'proactive',
-  description: '白天按间隔轻量提醒喝水；尊重勿扰与频控。',
+  description: '鐧藉ぉ鎸夐棿闅旇交閲忔彁閱掑枬姘达紱灏婇噸鍕挎壈涓庨鎺с€?,
   author: 'JasonLiu0826',
   license: 'AGPL-3.0',
   main: 'skill.ts',

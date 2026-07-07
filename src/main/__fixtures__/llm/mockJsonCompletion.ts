@@ -1,4 +1,4 @@
-type ChatMsg = { role: 'system' | 'user' | 'assistant'; content: string }
+﻿type ChatMsg = { role: 'system' | 'user' | 'assistant'; content: string }
 
 import { extractImplicitCapabilityHint } from '../../extensions/openforu/extensionIntentClassifier'
 
@@ -10,7 +10,7 @@ function blob(messages: ChatMsg[]): string {
 export function mockJsonCompletion(messages: ChatMsg[]): string {
   const text = blob(messages)
 
-  if (text.includes('扩展调度') || text.includes('extension_id')) {
+  if (text.includes('鎵╁睍璋冨害') || text.includes('extension_id')) {
     return JSON.stringify({ matched: false, reasoning: 'mock:no_match' })
   }
 
@@ -21,9 +21,9 @@ export function mockJsonCompletion(messages: ChatMsg[]): string {
   ) {
     const userLine =
       [...messages].reverse().find((m) => m.role === 'user')?.content ?? ''
-    const quoted = userLine.match(/用户消息："(.+?)"/)?.[1] ?? userLine
+    const quoted = userLine.match(/鐢ㄦ埛娑堟伅锛?(.+?)"/)?.[1] ?? userLine
     const hint = extractImplicitCapabilityHint(quoted)
-    if (hint && !/(?:陪(?:我|你)|孤独|寂寞)/u.test(hint)) {
+    if (hint && !/(?:闄??:鎴憒浣?|瀛ょ嫭|瀵傚癁)/u.test(hint)) {
       return JSON.stringify({
         capability_gap: 0.88,
         implementable_as_skill: 0.9,
@@ -44,7 +44,7 @@ export function mockJsonCompletion(messages: ChatMsg[]): string {
   }
 
   if (
-    text.includes('抽取') ||
+    text.includes('鎶藉彇') ||
     text.includes('extract') ||
     text.includes('"facts"') ||
     text.includes('memory facts')
@@ -52,19 +52,19 @@ export function mockJsonCompletion(messages: ChatMsg[]): string {
     return JSON.stringify({ facts: [] })
   }
 
-  if (text.includes('insights') || text.includes('审视一组') || text.includes('高层洞察')) {
+  if (text.includes('insights') || text.includes('瀹¤涓€缁?) || text.includes('楂樺眰娲炲療')) {
     return JSON.stringify({ insights: [] })
   }
 
-  if (text.includes('contradiction') || text.includes('矛盾')) {
+  if (text.includes('contradiction') || text.includes('鐭涚浘')) {
     return JSON.stringify({ contradictions: [] })
   }
 
-  if (text.includes('episode') || text.includes('情节') || text.includes('episodes')) {
+  if (text.includes('episode') || text.includes('鎯呰妭') || text.includes('episodes')) {
     return JSON.stringify({ episodes: [] })
   }
 
-  if (text.includes('userSix') || text.includes('开源六维') || text.includes('心理画像')) {
+  if (text.includes('userSix') || text.includes('寮€婧愬叚缁?) || text.includes('蹇冪悊鐢诲儚')) {
     return JSON.stringify({
       userSix: {
         E: 50,
@@ -73,7 +73,7 @@ export function mockJsonCompletion(messages: ChatMsg[]): string {
         P: 50,
         N: 50,
         O: 50,
-        summary: 'mock 画像摘要'
+        summary: 'mock 鐢诲儚鎽樿'
       },
       companionSuggestion: {
         T: 70,
@@ -87,11 +87,11 @@ export function mockJsonCompletion(messages: ChatMsg[]): string {
     })
   }
 
-  if (text.includes('rerank') || text.includes('重排')) {
+  if (text.includes('rerank') || text.includes('閲嶆帓')) {
     return JSON.stringify({ ranked: [] })
   }
 
-  if (text.includes('search query') || text.includes('搜索词')) {
+  if (text.includes('search query') || text.includes('鎼滅储璇?)) {
     return JSON.stringify({ query: 'mock search', needsSearch: false })
   }
 
@@ -99,20 +99,20 @@ export function mockJsonCompletion(messages: ChatMsg[]): string {
     text.includes('manifestDescription') ||
     text.includes('keywordReply') ||
     text.includes('injectTemplate') ||
-    text.includes('扩展文案润色') ||
-    text.includes('uplugin 文案润色')
+    text.includes('鎵╁睍鏂囨娑﹁壊') ||
+    text.includes('uplugin 鏂囨娑﹁壊')
   ) {
     return JSON.stringify({
-      manifestDescription: '（mock 润色）根据 Plan 方案定制的扩展说明，语气贴近 Ackem 伴侣。',
-      keywordReply: '（mock 润色）已按你的习惯触发，我会用方案里约定的方式回应你。',
-      contextInjection: '（mock 润色）结合当前对话与 Plan 摘要，落实方案中的具体行为。',
-      injectTemplate: '（mock 润色）Plugin 已按方案注入上下文，请按约定协助用户。'
+      manifestDescription: '锛坢ock 娑﹁壊锛夋牴鎹?Plan 鏂规瀹氬埗鐨勬墿灞曡鏄庯紝璇皵璐磋繎 Ackem 浼翠荆銆?,
+      keywordReply: '锛坢ock 娑﹁壊锛夊凡鎸変綘鐨勪範鎯Е鍙戯紝鎴戜細鐢ㄦ柟妗堥噷绾﹀畾鐨勬柟寮忓洖搴斾綘銆?,
+      contextInjection: '锛坢ock 娑﹁壊锛夌粨鍚堝綋鍓嶅璇濅笌 Plan 鎽樿锛岃惤瀹炴柟妗堜腑鐨勫叿浣撹涓恒€?,
+      injectTemplate: '锛坢ock 娑﹁壊锛塒lugin 宸叉寜鏂规娉ㄥ叆涓婁笅鏂囷紝璇锋寜绾﹀畾鍗忓姪鐢ㄦ埛銆?
     })
   }
 
   if (
-    text.includes('uplugin main.ts 代码生成') ||
-    text.includes('OpenForU uplugin main.ts 代码生成助手')
+    text.includes('uplugin main.ts 浠ｇ爜鐢熸垚') ||
+    text.includes('OpenForU uplugin main.ts 浠ｇ爜鐢熸垚鍔╂墜')
   ) {
     const userLine =
       [...messages].reverse().find((m) => m.role === 'user')?.content ?? ''
@@ -123,8 +123,8 @@ export function mockJsonCompletion(messages: ChatMsg[]): string {
       '```typescript',
       'export default () => ({',
       '  beforeUserMessage: async (userMessage: string) => {',
-      '    if (!userMessage.includes("沙箱探针")) return { contextInjections: [] }',
-      '    return { contextInjections: ["【mock Worker】main.ts 执行成功"] }',
+      '    if (!userMessage.includes("娌欑鎺㈤拡")) return { contextInjections: [] }',
+      '    return { contextInjections: ["銆恗ock Worker銆憁ain.ts 鎵ц鎴愬姛"] }',
       '  }',
       '})',
       '```'
@@ -132,27 +132,27 @@ export function mockJsonCompletion(messages: ChatMsg[]): string {
   }
 
   if (
-    text.includes('扩展开发 Agent') ||
+    text.includes('鎵╁睍寮€鍙?Agent') ||
     text.includes('plan-structured') ||
     text.includes('dispatchProgress')
   ) {
     const userMsgs = messages.filter((m) => m.role === 'user')
     const turn = userMsgs.length
-    const blocks: string[] = ['（mock Plan Agent）请继续确认方案。', '', '**A.** 继续', '', '```plan-structured']
+    const blocks: string[] = ['锛坢ock Plan Agent锛夎缁х画纭鏂规銆?, '', '**A.** 缁х画', '', '```plan-structured']
     const structured: Record<string, unknown> = { artifactType: 'uskill' }
     const dp: Record<string, unknown> = {}
-    if (turn >= 1) dp.keywords = ['mock', '测试']
-    if (turn >= 2) dp.habits = ['用户说 mock 触发']
-    if (turn >= 3) dp.scenarios = ['日常']
-    if (turn >= 4) dp.summary = 'mock 专注提醒'
+    if (turn >= 1) dp.keywords = ['mock', '娴嬭瘯']
+    if (turn >= 2) dp.habits = ['鐢ㄦ埛璇?mock 瑙﹀彂']
+    if (turn >= 3) dp.scenarios = ['鏃ュ父']
+    if (turn >= 4) dp.summary = 'mock 涓撴敞鎻愰啋'
     if (turn >= 5) dp.mode = 'dispatched'
     if (Object.keys(dp).length) structured.dispatchProgress = dp
     if (turn >= 6) {
       structured.shouldConverge = true
       structured.planSummary = {
         artifactType: 'uskill',
-        trigger: '关键词 dispatched',
-        output: '系统通知',
+        trigger: '鍏抽敭璇?dispatched',
+        output: '绯荤粺閫氱煡',
         permissions: 'system_notification'
       }
     }
@@ -162,15 +162,15 @@ export function mockJsonCompletion(messages: ChatMsg[]): string {
 
   const lastUser = [...messages].reverse().find((m) => m.role === 'user')?.content?.trim()
   if (lastUser) {
-    return `（mock）收到：${lastUser.slice(0, 120)}`
+    return `锛坢ock锛夋敹鍒帮細${lastUser.slice(0, 120)}`
   }
 
-  if (text.includes('plan create ask') || text.includes('Skill 或插件')) {
+  if (text.includes('plan create ask') || text.includes('Skill 鎴栨彃浠?)) {
     const userLine =
       [...messages].reverse().find((m) => m.role === 'user')?.content ?? ''
-    const core = userLine.match(/需保留的核心意思：(.+)/)?.[1]?.trim()
-    if (core) return `（mock 口吻）${core}`
-    return '（mock）要不要我帮你做成 Skill 或插件？'
+    const core = userLine.match(/闇€淇濈暀鐨勬牳蹇冩剰鎬濓細(.+)/)?.[1]?.trim()
+    if (core) return `锛坢ock 鍙ｅ惢锛?{core}`
+    return '锛坢ock锛夎涓嶈鎴戝府浣犲仛鎴?Skill 鎴栨彃浠讹紵'
   }
 
   return '{"ok":true}'
@@ -186,6 +186,6 @@ export function mockChatStreamText(messages: unknown[]): string {
       : Array.isArray(lastUser?.content)
         ? String((lastUser.content as Array<{ text?: string }>)[0]?.text ?? '')
         : ''
-  if (!content.trim()) return '（mock）你好，我在这里。'
-  return `（mock）${content.trim().slice(0, 200)}`
+  if (!content.trim()) return '锛坢ock锛変綘濂斤紝鎴戝湪杩欓噷銆?
+  return `锛坢ock锛?{content.trim().slice(0, 200)}`
 }

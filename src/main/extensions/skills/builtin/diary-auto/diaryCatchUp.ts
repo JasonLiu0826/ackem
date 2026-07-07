@@ -1,4 +1,4 @@
-import { loadSettings } from '../../../../settings'
+﻿import { loadSettings } from '../../../../settings'
 import { loadState, defaultFullState } from '../../../../engine/state-persistence'
 import { defaultPersonalitySlice } from '../../../../personalityPresets'
 import { localDateString } from '../../../../context/localTime'
@@ -11,7 +11,7 @@ import { createLogger } from '../../../../logger'
 
 const log = createLogger('diary-catch-up')
 const GLOBAL_SESSION = '__autonomous__'
-const DIARY_SKILL_ID = 'ackem/diary-auto@0.1.0'
+const DIARY_SKILL_ID = 'Ackem/diary-auto@0.1.0'
 
 function localYesterdayString(now = new Date()): string {
   const d = new Date(now)
@@ -19,7 +19,7 @@ function localYesterdayString(now = new Date()): string {
   return localDateString(d)
 }
 
-/** 补写昨日错过的定时日记（23:30 窗口被 gate 跳过等情况） */
+/** 琛ュ啓鏄ㄦ棩閿欒繃鐨勫畾鏃舵棩璁帮紙23:30 绐楀彛琚?gate 璺宠繃绛夋儏鍐碉級 */
 export async function tryCatchUpMissedDiary(dataRoot: string, now = new Date()): Promise<boolean> {
   const yesterday = localYesterdayString(now)
   const meta = readDiaryMeta(dataRoot, yesterday)

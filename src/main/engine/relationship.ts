@@ -1,8 +1,8 @@
-// [relationship] — L1 关系层
-// 职责：FSM、信任/裂痕/动量/气氛与调制系数
-// 输入：Event、上一帧 L1State
-// 输出：L1State、Modulation
-// 引用：./ackemParams, ./types
+﻿// [relationship] 鈥?L1 鍏崇郴灞?
+// 鑱岃矗锛欶SM銆佷俊浠?瑁傜棔/鍔ㄩ噺/姘旀皼涓庤皟鍒剁郴鏁?
+// 杈撳叆锛欵vent銆佷笂涓€甯?L1State
+// 杈撳嚭锛歀1State銆丮odulation
+// 寮曠敤锛?/AckemParams, ./types
 
 import {
   ATMOSPHERE_COOL_THRESHOLD,
@@ -36,7 +36,7 @@ import {
   TRUST_VULNERABLE,
   TRUST_MOD_MAX,
   TRUST_MOD_MIN
-} from './ackemParams'
+} from './AckemParams'
 import type { Event, ExternalAtmosphere, L1State, Modulation, RelationshipStage } from './types'
 
 const POSITIVE_TYPES = new Set(['praise', 'tease', 'vulnerable', 'apology'])
@@ -133,7 +133,7 @@ export function updateRelationship(event: Event, prev: L1State): L1State {
 
   let trust = Math.max(0, Math.min(100, prev.trust + trustDelta(event)))
 
-  // P1-2: 破冰 — 低信任时的深度道歉绕过气氛压制
+  // P1-2: 鐮村啺 鈥?浣庝俊浠绘椂鐨勬繁搴﹂亾姝夌粫杩囨皵姘涘帇鍒?
   const ice = applyIceBreak(event, { ...prev, trust })
   trust = Math.max(0, Math.min(100, trust + ice.trustBonus))
 

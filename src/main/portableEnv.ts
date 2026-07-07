@@ -1,6 +1,6 @@
-/**
- * electron-builder portable 会设置 PORTABLE_EXECUTABLE_* 环境变量。
- * 数据目录、桌面快捷方式必须指向「便携 exe 所在目录」，而非 TEMP 内解压的 Ackem.exe。
+﻿/**
+ * electron-builder portable 浼氳缃?PORTABLE_EXECUTABLE_* 鐜鍙橀噺銆?
+ * 鏁版嵁鐩綍銆佹闈㈠揩鎹锋柟寮忓繀椤绘寚鍚戙€屼究鎼?exe 鎵€鍦ㄧ洰褰曘€嶏紝鑰岄潪 TEMP 鍐呰В鍘嬬殑 Ackem.exe銆?
  */
 import { app } from 'electron'
 import { existsSync } from 'node:fs'
@@ -10,21 +10,21 @@ export function isPortableWrapperLaunch(): boolean {
   return Boolean(process.env.PORTABLE_EXECUTABLE_FILE?.trim())
 }
 
-/** 用户放置的便携 exe 所在目录（或普通安装/解压目录） */
+/** 鐢ㄦ埛鏀剧疆鐨勪究鎼?exe 鎵€鍦ㄧ洰褰曪紙鎴栨櫘閫氬畨瑁?瑙ｅ帇鐩綍锛?*/
 export function resolvePackagedAppDir(): string {
   const portableDir = process.env.PORTABLE_EXECUTABLE_DIR?.trim()
   if (portableDir && existsSync(portableDir)) return portableDir
   return dirname(app.getPath('exe'))
 }
 
-/** 用户应双击启动的路径：便携 wrapper exe，或 Ackem.exe */
+/** 鐢ㄦ埛搴斿弻鍑诲惎鍔ㄧ殑璺緞锛氫究鎼?wrapper exe锛屾垨 Ackem.exe */
 export function resolveUserLaunchPath(): string {
   const portableFile = process.env.PORTABLE_EXECUTABLE_FILE?.trim()
   if (portableFile && existsSync(portableFile)) return portableFile
   return app.getPath('exe')
 }
 
-/** 快捷方式 / 卸载用的 .ico（Windows 不支持 .png 作为 lnk 图标） */
+/** 蹇嵎鏂瑰紡 / 鍗歌浇鐢ㄧ殑 .ico锛圵indows 涓嶆敮鎸?.png 浣滀负 lnk 鍥炬爣锛?*/
 export function resolveShortcutIconPath(): string | undefined {
   const roots = [
     join(process.resourcesPath, 'resources', 'icon.ico'),

@@ -1,9 +1,9 @@
-// [prompt/openforu-craft-ask] — 计划确认的人格化对话（v1.2 设计文档）
-// 迁移自 openforu/craftPlanCreateAsk.ts
+﻿// [prompt/openforu-craft-ask] 鈥?璁″垝纭鐨勪汉鏍煎寲瀵硅瘽锛坴1.2 璁捐鏂囨。锛?
+// 杩佺Щ鑷?openforu/craftPlanCreateAsk.ts
 
 export const CRAFT_ASK_TEMPERATURE = 0.4
 
-/** 计划确认对话 system prompt（需注入人格） */
+/** 璁″垝纭瀵硅瘽 system prompt锛堥渶娉ㄥ叆浜烘牸锛?*/
 export function buildCraftAskSystemPrompt(input: {
   presetLabel: string
   voiceGuide: string
@@ -15,26 +15,26 @@ export function buildCraftAskSystemPrompt(input: {
   R: number
 }): string {
   return [
-    '你是 Ackem 对话伴侣，正在聊天流里向用户确认是否一起做一个 Skill 或插件。',
-    '称呼用户为「ta」即可，勿直呼系统名。',
-    `当前人格：${input.presetLabel}（T${input.T} I${input.I} S${input.S} O${input.O} R${input.R}）。${input.voiceGuide}`,
-    `当前情绪：${emotionZh(input.emotionLabel)}。措辞须带出这一情绪色彩，但勿标注情绪名。`,
-    '要求：1–3 句口语化中文；必须清楚问「要不要帮你做成 Skill/插件/小能力」；',
+    '浣犳槸 Ackem 瀵硅瘽浼翠荆锛屾鍦ㄨ亰澶╂祦閲屽悜鐢ㄦ埛纭鏄惁涓€璧峰仛涓€涓?Skill 鎴栨彃浠躲€?,
+    '绉板懠鐢ㄦ埛涓恒€宼a銆嶅嵆鍙紝鍕跨洿鍛肩郴缁熷悕銆?,
+    `褰撳墠浜烘牸锛?{input.presetLabel}锛圱${input.T} I${input.I} S${input.S} O${input.O} R${input.R}锛夈€?{input.voiceGuide}`,
+    `褰撳墠鎯呯华锛?{emotionZh(input.emotionLabel)}銆傛帾杈為』甯﹀嚭杩欎竴鎯呯华鑹插僵锛屼絾鍕挎爣娉ㄦ儏缁悕銆俙,
+    '瑕佹眰锛?鈥? 鍙ュ彛璇寲涓枃锛涘繀椤绘竻妤氶棶銆岃涓嶈甯綘鍋氭垚 Skill/鎻掍欢/灏忚兘鍔涖€嶏紱',
     'plan create ask',
-    '禁止 markdown、禁止 JSON、禁止复述系统提示；不要加引号包裹整段。',
+    '绂佹 markdown銆佺姝?JSON銆佺姝㈠杩扮郴缁熸彁绀猴紱涓嶈鍔犲紩鍙峰寘瑁规暣娈点€?,
   ].join('\n')
 }
 
-/** 计划确认对话 user prompt */
+/** 璁″垝纭瀵硅瘽 user prompt */
 export function buildCraftAskUserPrompt(
   userText: string,
   planTopic: string,
   templateAsk: string,
 ): string {
   return [
-    `用户刚说：${userText.trim()}`,
-    planTopic ? `能力主题：${planTopic}` : '',
-    `需保留的核心意思：${templateAsk}`,
+    `鐢ㄦ埛鍒氳锛?{userText.trim()}`,
+    planTopic ? `鑳藉姏涓婚锛?{planTopic}` : '',
+    `闇€淇濈暀鐨勬牳蹇冩剰鎬濓細${templateAsk}`,
   ]
     .filter(Boolean)
     .join('\n')
@@ -42,15 +42,15 @@ export function buildCraftAskUserPrompt(
 
 function emotionZh(label: string): string {
   const map: Record<string, string> = {
-    SWEET_ATTACHMENT: '甜蜜依恋',
-    SHY_HEARTBEAT: '害羞心动',
-    TSUNDERE: '傲娇',
-    HURT_GRIEVANCE: '委屈受伤',
-    ANGRY_ATTACK: '愤怒反击',
-    COLD_DETACHED: '冷淡疏离',
-    FEARFUL_OBEDIENT: '不安顺从',
-    QUIET_FOND: '安静的喜欢',
-    CALM_RATIONAL: '平静理性',
+    SWEET_ATTACHMENT: '鐢滆湝渚濇亱',
+    SHY_HEARTBEAT: '瀹崇緸蹇冨姩',
+    TSUNDERE: '鍌插▏',
+    HURT_GRIEVANCE: '濮斿眻鍙椾激',
+    ANGRY_ATTACK: '鎰ゆ€掑弽鍑?,
+    COLD_DETACHED: '鍐锋贰鐤忕',
+    FEARFUL_OBEDIENT: '涓嶅畨椤轰粠',
+    QUIET_FOND: '瀹夐潤鐨勫枩娆?,
+    CALM_RATIONAL: '骞抽潤鐞嗘€?,
   }
   return map[label] ?? label
 }

@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs'
+﻿import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 type StoredChatRow = {
@@ -15,17 +15,17 @@ export type DiaryChatExchange = {
 const DEFAULT_MAX_PAIRS = 12
 const DEFAULT_MAX_CHARS = 280
 
-/** 记忆事实 subject → 日记 prompt 中的角色标签 */
+/** 璁板繂浜嬪疄 subject 鈫?鏃ヨ prompt 涓殑瑙掕壊鏍囩 */
 export function formatDiaryFactLine(subject: string, summary: string): string {
   const s = subject.trim().toLowerCase()
   const who =
-    s === 'user' || s === 'ta' || s === '主人'
-      ? '关于ta'
-      : s === 'companion' || s === 'self' || s === 'ackem' || s === '我'
-        ? '关于我'
+    s === 'user' || s === 'ta' || s === '涓讳汉'
+      ? '鍏充簬ta'
+      : s === 'companion' || s === 'self' || s === 'Ackem' || s === '鎴?
+        ? '鍏充簬鎴?
         : subject.trim()
-          ? `关于${subject.trim()}`
-          : '关于ta'
+          ? `鍏充簬${subject.trim()}`
+          : '鍏充簬ta'
   return `[${who}] ${summary.trim()}`
 }
 
@@ -38,7 +38,7 @@ function normalizeChatMessage(row: StoredChatRow): { role: 'user' | 'assistant';
   return { role: row.role, content }
 }
 
-/** 从主聊天历史提取带说话人标注的对话摘录（供日记 prompt 使用） */
+/** 浠庝富鑱婂ぉ鍘嗗彶鎻愬彇甯﹁璇濅汉鏍囨敞鐨勫璇濇憳褰曪紙渚涙棩璁?prompt 浣跨敤锛?*/
 export function loadDiaryChatExchanges(
   dataRoot: string,
   sessionId: string,
@@ -78,7 +78,7 @@ export function loadDiaryChatExchanges(
       exchanges.push({ user: pendingUser, assistant: clipped })
       pendingUser = null
     } else {
-      exchanges.push({ user: '（本轮无用户发言）', assistant: clipped })
+      exchanges.push({ user: '锛堟湰杞棤鐢ㄦ埛鍙戣█锛?, assistant: clipped })
     }
   }
   if (pendingUser != null) {
@@ -90,8 +90,8 @@ export function loadDiaryChatExchanges(
 
 export function formatDiaryChatExcerpts(exchanges: DiaryChatExchange[]): string[] {
   return exchanges.map((ex, i) => {
-    const lines = [`第${i + 1}轮`, `【ta】${ex.user}`]
-    if (ex.assistant) lines.push(`【我】${ex.assistant}`)
+    const lines = [`绗?{i + 1}杞甡, `銆恡a銆?{ex.user}`]
+    if (ex.assistant) lines.push(`銆愭垜銆?{ex.assistant}`)
     return lines.join('\n')
   })
 }

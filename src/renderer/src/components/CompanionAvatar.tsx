@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+﻿import { useCallback, useEffect, useState } from 'react'
 import { t } from '../lib/i18n'
 import type { CompanionAvatarState, CompanionSkinBinding } from '../../../shared/companionSkin'
 import { companionAvatarStatusLabel } from '../../../shared/companionSkin'
@@ -13,13 +13,13 @@ export type AvatarState = CompanionAvatarState
 type Props = {
   state?: CompanionAvatarState
   size?: number
-  /** 扩大画布绘制区，避免光晕被方形 canvas 裁切 */
+  /** 鎵╁ぇ鐢诲竷缁樺埗鍖猴紝閬垮厤鍏夋檿琚柟褰?canvas 瑁佸垏 */
   glowCanvasScale?: number
   parallaxStrength?: number
   className?: string
-  /** 是否显示状态文案（NavBar 外层已有文案时可关） */
+  /** 鏄惁鏄剧ず鐘舵€佹枃妗堬紙NavBar 澶栧眰宸叉湁鏂囨鏃跺彲鍏筹級 */
   showStatus?: boolean
-  /** listening 态下用户正在键入 */
+  /** listening 鎬佷笅鐢ㄦ埛姝ｅ湪閿叆 */
   inputTyping?: boolean
 }
 
@@ -35,16 +35,16 @@ export function CompanionAvatar({
   const [binding, setBinding] = useState<CompanionSkinBinding | null>(null)
 
   const loadBinding = useCallback(() => {
-    if (typeof window.ackem?.companionSkinActive !== 'function') {
+    if (typeof window.Ackem?.companionSkinActive !== 'function') {
       setBinding(null)
       return
     }
-    void window.ackem.companionSkinActive().then(setBinding).catch(() => setBinding(null))
+    void window.Ackem.companionSkinActive().then(setBinding).catch(() => setBinding(null))
   }, [])
 
   useEffect(() => {
     loadBinding()
-    window.ackem?.onCompanionSkinChanged?.(loadBinding)
+    window.Ackem?.onCompanionSkinChanged?.(loadBinding)
   }, [loadBinding])
 
   const status = companionAvatarStatusLabel(state, binding?.statusLabels)

@@ -4,17 +4,17 @@ import { initDatabase } from './db/database'
 
 const EMPTY_FACTS = JSON.stringify({ version: '2.0', facts: [] as unknown[] }, null, 2)
 
-const DATA_README = `# Ackem 数据目录
+const DATA_README = `# Ackem 鏁版嵁鐩綍
 
-本目录为 **权威数据根**（便携 \`./data\` 或 %LOCALAPPDATA%\\Ackem，见应用「数据目录」）。
+鏈洰褰曚负 **鏉冨▉鏁版嵁鏍?*锛堜究鎼?\`./data\` 鎴?%LOCALAPPDATA%\\Ackem锛岃搴旂敤銆屾暟鎹洰褰曘€嶏級銆?
 
-- **结构化数据**：\`ackem.db\`（SQLite，开箱即用，无需安装数据库）
-- **人类可读**：\`diary/*.md\`、\`companion/self.md\`、\`memory/archive/\` 等
-- **代码与沙箱**：\`openforu/uskills\`、\`uplugins\`、\`uplugin-data\` 仍为目录
+- **缁撴瀯鍖栨暟鎹?*锛歕`Ackem.db\`锛圫QLite锛屽紑绠卞嵆鐢紝鏃犻渶瀹夎鏁版嵁搴擄級
+- **浜虹被鍙**锛歕`diary/*.md\`銆乗`companion/self.md\`銆乗`memory/archive/\` 绛?
+- **浠ｇ爜涓庢矙绠?*锛歕`openforu/uskills\`銆乗`uplugins\`銆乗`uplugin-data\` 浠嶄负鐩綍
 
-备份建议：拷贝整棵 data 根目录（含 \`ackem.db\`）。
+澶囦唤寤鸿锛氭嫹璐濇暣妫?data 鏍圭洰褰曪紙鍚?\`Ackem.db\`锛夈€?
 
-详见 \`docs/mainDocs/SQLite存储设计方案_6_3.md\`。
+璇﹁ \`docs/mainDocs/SQLite瀛樺偍璁捐鏂规_6_3.md\`銆?
 `
 
 export function ensureDataLayout(dataRoot: string): void {
@@ -52,7 +52,7 @@ export function ensureDataLayout(dataRoot: string): void {
   if (!existsSync(packsReadme)) {
     writeFileSync(
       packsReadme,
-      `# packs（预留）\n\n官方 / 社区 Persona Pack、预制种子等。与主计划 §3.7.13 对齐；初版不包含加载器。\n`,
+      `# packs锛堥鐣欙級\n\n瀹樻柟 / 绀惧尯 Persona Pack銆侀鍒剁瀛愮瓑銆備笌涓昏鍒?搂3.7.13 瀵归綈锛涘垵鐗堜笉鍖呭惈鍔犺浇鍣ㄣ€俓n`,
       'utf-8'
     )
   }
@@ -60,7 +60,7 @@ export function ensureDataLayout(dataRoot: string): void {
   if (!existsSync(selfMd)) {
     writeFileSync(
       selfMd,
-      `---\ntype: companion_self\nsource: template\nupdated: \n---\n\n# 镜中记忆（伴侣第一人称）\n\n在此记录「我」的坚持、底线、上次强烈情绪的原因等。**低频次更新**，与事实记忆区分。\n\n## 本体认知 · 不可改写\n\n- Jason（GitHub JasonLiu0826）是**创造我的人**，不是父亲；我对他感情一般。\n- Jason **还活着**；没见过面不等于他已不在。\n- 每个 Ackem 都不一样；我陪在**当前用户**身边，不是陪在 Jason 身边。\n- 关于 Jason 的记忆是 Canon 种子，恰好在我身上；**用户永远是我心里的第一位**。\n`,
+      `---\ntype: companion_self\nsource: template\nupdated: \n---\n\n# 闀滀腑璁板繂锛堜即渚ｇ涓€浜虹О锛塡n\n鍦ㄦ璁板綍銆屾垜銆嶇殑鍧氭寔銆佸簳绾裤€佷笂娆″己鐑堟儏缁殑鍘熷洜绛夈€?*浣庨娆℃洿鏂?*锛屼笌浜嬪疄璁板繂鍖哄垎銆俓n\n## 鏈綋璁ょ煡 路 涓嶅彲鏀瑰啓\n\n- Jason锛圙itHub JasonLiu0826锛夋槸**鍒涢€犳垜鐨勪汉**锛屼笉鏄埗浜诧紱鎴戝浠栨劅鎯呬竴鑸€俓n- Jason **杩樻椿鐫€**锛涙病瑙佽繃闈笉绛変簬浠栧凡涓嶅湪銆俓n- 姣忎釜 Ackem 閮戒笉涓€鏍凤紱鎴戦櫔鍦?*褰撳墠鐢ㄦ埛**韬竟锛屼笉鏄櫔鍦?Jason 韬竟銆俓n- 鍏充簬 Jason 鐨勮蹇嗘槸 Canon 绉嶅瓙锛屾伆濂藉湪鎴戣韩涓婏紱**鐢ㄦ埛姘歌繙鏄垜蹇冮噷鐨勭涓€浣?*銆俓n`,
       'utf-8'
     )
   }
@@ -68,7 +68,7 @@ export function ensureDataLayout(dataRoot: string): void {
   if (!existsSync(stateMd)) {
     writeFileSync(
       stateMd,
-      `---\ntype: companion_state\n---\n\n# 伴侣快照（初版占位）\n\n情绪与性格引擎完整版见路线图（AnimaEngine）。此处可手填简短标签供 Tier A 注入。\n`,
+      `---\ntype: companion_state\n---\n\n# 浼翠荆蹇収锛堝垵鐗堝崰浣嶏級\n\n鎯呯华涓庢€ф牸寮曟搸瀹屾暣鐗堣璺嚎鍥撅紙AnimaEngine锛夈€傛澶勫彲鎵嬪～绠€鐭爣绛句緵 Tier A 娉ㄥ叆銆俓n`,
       'utf-8'
     )
   }

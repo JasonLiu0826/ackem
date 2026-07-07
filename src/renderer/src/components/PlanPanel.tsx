@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { t } from '../lib/i18n'
 
 import { LightCore } from './LightCore'
@@ -44,7 +44,7 @@ import {
   type PlanChoiceOption
 } from '../../../shared/planUi'
 
-import type { OpenForUWorkspace, PlanDispatchDraft, PlanSummary } from '../ackem'
+import type { OpenForUWorkspace, PlanDispatchDraft, PlanSummary } from '../Ackem'
 import type { PlanDesignSpec, DesignSpecGateResult } from '../../../shared/planDesignSpec'
 import { evaluateDesignSpecGate } from '../../../shared/planDesignSpec'
 import { getPlanArtifactDeployStatus } from '../../../shared/planArtifact'
@@ -257,7 +257,7 @@ export function PlanPanel(): JSX.Element | null {
       return
     }
     try {
-      const r = await window.ackem.openforu.agent.getStatus(sid)
+      const r = await window.Ackem.openforu.agent.getStatus(sid)
       if (r.ok) setAgentRun(r.run)
     } catch {
       setAgentRun(null)
@@ -270,7 +270,7 @@ export function PlanPanel(): JSX.Element | null {
       return
     }
     void refreshAgentRun(sessionId)
-    const off = window.ackem.openforu.agent.onEvent((e) => {
+    const off = window.Ackem.openforu.agent.onEvent((e) => {
       if (e.sessionId === sessionId) void refreshAgentRun(sessionId)
     })
     return off
@@ -309,7 +309,7 @@ export function PlanPanel(): JSX.Element | null {
 
   const showPlanChoices = planChoices.length >= 2 && !busy
 
-  /** 选项卡展开时：只要有 📋 摘要就显示在选项区上方（不限于「按方案开始」类 A/B） */
+  /** 閫夐」鍗″睍寮€鏃讹細鍙鏈?馃搵 鎽樿灏辨樉绀哄湪閫夐」鍖轰笂鏂癸紙涓嶉檺浜庛€屾寜鏂规寮€濮嬨€嶇被 A/B锛?*/
   const showSummaryInChoiceSheet = useMemo(
     () => showPlanChoices && isPlanSummaryReady(effectivePlanSummary),
     [showPlanChoices, effectivePlanSummary]
@@ -477,7 +477,7 @@ export function PlanPanel(): JSX.Element | null {
 
     setWsBusy(true)
 
-    void window.ackem.openforu.workspaces
+    void window.Ackem.openforu.workspaces
 
       .open()
 
@@ -500,7 +500,7 @@ export function PlanPanel(): JSX.Element | null {
   }, [open, configured, pushToast, applyWorkspacePayload, planReloadNonce])
 
   useEffect(() => {
-    const off = window.ackem.openforu.onPlanSessionUpdated?.((payload) => {
+    const off = window.Ackem.openforu.onPlanSessionUpdated?.((payload) => {
       applyWorkspacePayload(payload as Parameters<typeof applyWorkspacePayload>[0])
       if (payload.sessionId && typeof payload.sessionId === 'string') {
         void refreshAgentRun(payload.sessionId)
@@ -542,14 +542,14 @@ export function PlanPanel(): JSX.Element | null {
     void refreshAgentRun(sid)
     setBusy(true)
     try {
-      const d = await window.ackem.openforu.planDeploy(sid)
+      const d = await window.Ackem.openforu.planDeploy(sid)
       await refreshAgentRun(sid)
       if (d.ok) {
         applyPlanMeta(d)
-        pushToast(d.uskillId ? `已部署 ${d.uskillId}` : '部署完成')
+        pushToast(d.uskillId ? `宸查儴缃?${d.uskillId}` : '閮ㄧ讲瀹屾垚')
       } else {
         if (d.messages) applyPlanMeta(d)
-        pushToast(d.error ?? '部署失败')
+        pushToast(d.error ?? '閮ㄧ讲澶辫触')
       }
     } finally {
       setBusy(false)
@@ -559,15 +559,15 @@ export function PlanPanel(): JSX.Element | null {
   const cancelAgentRun = async () => {
     if (!sessionId) return
     try {
-      const r = await window.ackem.openforu.agent.cancel(sessionId)
+      const r = await window.Ackem.openforu.agent.cancel(sessionId)
       if (r.ok && r.cancelled) {
-        pushToast('已取消部署')
+        pushToast('宸插彇娑堥儴缃?)
         if (r.messages) applyPlanMeta(r)
         if ('agentRun' in r) setAgentRun(r.agentRun ?? null)
         await refreshAgentRun(sessionId)
       }
     } catch {
-      pushToast('取消失败')
+      pushToast('鍙栨秷澶辫触')
     } finally {
       setBusy(false)
     }
@@ -579,35 +579,35 @@ export function PlanPanel(): JSX.Element | null {
     planConfirmed,
     deployedUskillId,
     agentRunStatus: agentRun?.status,
-    lastAssistantHasCancelNotice: lastAssistantMsg.includes('部署已取消')
+    lastAssistantHasCancelNotice: lastAssistantMsg.includes('閮ㄧ讲宸插彇娑?)
   })
 
   const composerPlaceholder = postCancelComposer
-    ? '输入新的修改想法，或发送【重新部署】'
+    ? '杈撳叆鏂扮殑淇敼鎯虫硶锛屾垨鍙戦€併€愰噸鏂伴儴缃层€?
     : activeWorkspace
-      ? `在「${activeWorkspace.name}」描述需求或追问…`
-      : '描述需求或追问…'
+      ? `鍦ㄣ€?{activeWorkspace.name}銆嶆弿杩伴渶姹傛垨杩介棶鈥
+      : '鎻忚堪闇€姹傛垨杩介棶鈥?
 
   const confirmPlan = async () => {
     if (!sessionId || busy) return
     if (designSpecGate && !designSpecGate.ready) {
-      pushToast(`设计规格未就绪：${designSpecGate.missing[0] ?? '请继续对话'}`)
+      pushToast(`璁捐瑙勬牸鏈氨缁細${designSpecGate.missing[0] ?? '璇风户缁璇?}`)
       return
     }
     setBusy(true)
     try {
-      const r = await window.ackem.openforu.planConfirm(sessionId)
+      const r = await window.Ackem.openforu.planConfirm(sessionId)
       if (r.ok && r.messages) {
         applyPlanMeta(r)
         if (artifactStatus.canDeploy) {
           const label = artifactStatus.kind === 'uplugin' ? 'Plugin' : 'Skill'
-          pushToast(`${label} 方案已确认，正在生成…`)
+          pushToast(`${label} 鏂规宸茬‘璁わ紝姝ｅ湪鐢熸垚鈥)
           await runDeploy(sessionId)
         } else {
-          pushToast('请先与 Agent 明确产物类型：uskill 或 uplugin')
+          pushToast('璇峰厛涓?Agent 鏄庣‘浜х墿绫诲瀷锛歶skill 鎴?uplugin')
         }
       } else {
-        pushToast(r.error ?? '确认失败')
+        pushToast(r.error ?? '纭澶辫触')
       }
     } finally {
       setBusy(false)
@@ -618,12 +618,12 @@ export function PlanPanel(): JSX.Element | null {
     if (!sessionId || busy) return
     setBusy(true)
     try {
-      const r = await window.ackem.openforu.planApproveWireframe(sessionId)
+      const r = await window.Ackem.openforu.planApproveWireframe(sessionId)
       if (r.ok) {
         applyPlanMeta(r)
-        pushToast('界面方案已确认')
+        pushToast('鐣岄潰鏂规宸茬‘璁?)
       } else {
-        pushToast(r.error ?? '确认失败')
+        pushToast(r.error ?? '纭澶辫触')
       }
     } finally {
       setBusy(false)
@@ -637,24 +637,24 @@ export function PlanPanel(): JSX.Element | null {
 
     if (isPlanRedeployIntent(t)) {
       if (!planConfirmed) {
-        pushToast('请先确认方案再部署')
+        pushToast('璇峰厛纭鏂规鍐嶉儴缃?)
         return
       }
       if (agentPipelineBusy) {
-        pushToast('部署进行中，请稍候')
+        pushToast('閮ㄧ讲杩涜涓紝璇风◢鍊?)
         return
       }
       setBusy(true)
       void refreshAgentRun(sessionId)
       try {
-        const r = await window.ackem.openforu.planRedeploy(sessionId, t)
+        const r = await window.Ackem.openforu.planRedeploy(sessionId, t)
         await refreshAgentRun(sessionId)
         if (r.ok) {
           applyPlanMeta(r)
-          pushToast(r.uskillId ? `已部署 ${r.uskillId}` : '重新部署完成')
+          pushToast(r.uskillId ? `宸查儴缃?${r.uskillId}` : '閲嶆柊閮ㄧ讲瀹屾垚')
         } else {
           if (r.messages) applyPlanMeta(r)
-          pushToast(r.error ?? '重新部署失败')
+          pushToast(r.error ?? '閲嶆柊閮ㄧ讲澶辫触')
         }
       } finally {
         setBusy(false)
@@ -665,11 +665,11 @@ export function PlanPanel(): JSX.Element | null {
     setBusy(true)
     setMessages((m) => [...m, { role: 'user', content: t }])
     try {
-      const r = await window.ackem.openforu.planSend(sessionId, t)
+      const r = await window.Ackem.openforu.planSend(sessionId, t)
       if (r.ok) {
         applyPlanMeta(r)
       } else {
-        pushToast(r.error ?? 'Plan 请求失败')
+        pushToast(r.error ?? 'Plan 璇锋眰澶辫触')
         setMessages((m) => m.slice(0, -1))
       }
     } finally {
@@ -693,7 +693,7 @@ export function PlanPanel(): JSX.Element | null {
 
     try {
 
-      const r = await window.ackem.openforu.workspaces.switch(workspaceId)
+      const r = await window.Ackem.openforu.workspaces.switch(workspaceId)
 
       if (r.ok) {
 
@@ -703,7 +703,7 @@ export function PlanPanel(): JSX.Element | null {
 
       } else {
 
-        pushToast(r.error ?? '切换工作区失败')
+        pushToast(r.error ?? '鍒囨崲宸ヤ綔鍖哄け璐?)
 
       }
 
@@ -725,7 +725,7 @@ export function PlanPanel(): JSX.Element | null {
 
     try {
 
-      const r = await window.ackem.openforu.workspaces.create()
+      const r = await window.Ackem.openforu.workspaces.create()
 
       if (r.ok) {
 
@@ -735,17 +735,17 @@ export function PlanPanel(): JSX.Element | null {
 
         if (r.evicted) {
 
-          pushToast(`已达 ${workspaceMax} 个工作区上限，已移除最旧的「${r.evicted.name}」`)
+          pushToast(`宸茶揪 ${workspaceMax} 涓伐浣滃尯涓婇檺锛屽凡绉婚櫎鏈€鏃х殑銆?{r.evicted.name}銆峘)
 
         } else {
 
-          pushToast(`已新建「${r.workspace?.name ?? '工作区'}」`)
+          pushToast(`宸叉柊寤恒€?{r.workspace?.name ?? '宸ヤ綔鍖?}銆峘)
 
         }
 
       } else {
 
-        pushToast(r.error ?? '新建工作区失败')
+        pushToast(r.error ?? '鏂板缓宸ヤ綔鍖哄け璐?)
 
       }
 
@@ -763,13 +763,13 @@ export function PlanPanel(): JSX.Element | null {
 
     if (!activeWorkspaceId || wsBusy) return
 
-    if (!window.confirm(`确定删除工作区「${activeWorkspace?.name ?? ''}」？对话记录将无法恢复。`)) return
+    if (!window.confirm(`纭畾鍒犻櫎宸ヤ綔鍖恒€?{activeWorkspace?.name ?? ''}銆嶏紵瀵硅瘽璁板綍灏嗘棤娉曟仮澶嶃€俙)) return
 
     setWsBusy(true)
 
     try {
 
-      const r = await window.ackem.openforu.workspaces.delete(activeWorkspaceId)
+      const r = await window.Ackem.openforu.workspaces.delete(activeWorkspaceId)
 
       if (r.ok) {
 
@@ -779,7 +779,7 @@ export function PlanPanel(): JSX.Element | null {
 
         if (r.activeWorkspaceId) {
 
-          const opened = await window.ackem.openforu.workspaces.switch(r.activeWorkspaceId)
+          const opened = await window.Ackem.openforu.workspaces.switch(r.activeWorkspaceId)
 
           if (opened.ok) applyWorkspacePayload(opened)
 
@@ -789,11 +789,11 @@ export function PlanPanel(): JSX.Element | null {
 
         }
 
-        pushToast('工作区已删除')
+        pushToast('宸ヤ綔鍖哄凡鍒犻櫎')
 
       } else {
 
-        pushToast(r.error ?? '删除失败')
+        pushToast(r.error ?? '鍒犻櫎澶辫触')
 
       }
 
@@ -819,7 +819,7 @@ export function PlanPanel(): JSX.Element | null {
 
         className="fixed inset-0 z-[80] bg-black/15"
 
-        aria-label="关闭 Plan"
+        aria-label="鍏抽棴 Plan"
 
         onClick={() => setOpen(false)}
 
@@ -835,9 +835,9 @@ export function PlanPanel(): JSX.Element | null {
 
             <div className="min-w-0 flex-1">
 
-              <p className="font-display text-sm font-medium text-ink">Ackem Agent 正在为你工作</p>
+              <p className="font-display text-sm font-medium text-ink">Ackem Agent 姝ｅ湪涓轰綘宸ヤ綔</p>
 
-              <p className="text-[10px] text-ink-muted">Plan 模式 · 不写入主聊天记忆</p>
+              <p className="text-[10px] text-ink-muted">Plan 妯″紡 路 涓嶅啓鍏ヤ富鑱婂ぉ璁板繂</p>
 
             </div>
 
@@ -851,7 +851,7 @@ export function PlanPanel(): JSX.Element | null {
 
             >
 
-              关闭
+              鍏抽棴
 
             </button>
 
@@ -867,7 +867,7 @@ export function PlanPanel(): JSX.Element | null {
 
             <p>{OPENFORU_NOT_CONFIGURED_MSG}</p>
 
-            <p className="text-xs">保存设置后重新打开 Plan 即可。</p>
+            <p className="text-xs">淇濆瓨璁剧疆鍚庨噸鏂版墦寮€ Plan 鍗冲彲銆?/p>
 
           </div>
 
@@ -875,9 +875,9 @@ export function PlanPanel(): JSX.Element | null {
 
           <div className="flex flex-1 flex-col items-center justify-center gap-4 p-6 text-center text-sm text-ink-muted">
 
-            <p>还没有工作区。</p>
+            <p>杩樻病鏈夊伐浣滃尯銆?/p>
 
-            <p className="text-xs">新建一个工作区后，即可与 Agent 一起设计扩展。</p>
+            <p className="text-xs">鏂板缓涓€涓伐浣滃尯鍚庯紝鍗冲彲涓?Agent 涓€璧疯璁℃墿灞曘€?/p>
 
             <button
 
@@ -891,7 +891,7 @@ export function PlanPanel(): JSX.Element | null {
 
             >
 
-              + 新建工作区
+              + 鏂板缓宸ヤ綔鍖?
 
             </button>
 
@@ -907,7 +907,7 @@ export function PlanPanel(): JSX.Element | null {
 
                 <label className="text-[10px] font-medium uppercase tracking-wide text-ink-muted">
 
-                  工作区
+                  宸ヤ綔鍖?
 
                 </label>
 
@@ -921,7 +921,7 @@ export function PlanPanel(): JSX.Element | null {
 
                   onChange={(e) => void switchWorkspace(e.target.value)}
 
-                  aria-label="选择工作区"
+                  aria-label="閫夋嫨宸ヤ綔鍖?
 
                 >
 
@@ -929,7 +929,7 @@ export function PlanPanel(): JSX.Element | null {
 
                     <option key={w.id} value={w.id}>
 
-                      {w.name} · {formatWorkspaceTime(w.updatedAt)}
+                      {w.name} 路 {formatWorkspaceTime(w.updatedAt)}
 
                     </option>
 
@@ -951,7 +951,7 @@ export function PlanPanel(): JSX.Element | null {
 
                   >
 
-                    + 新建
+                    + 鏂板缓
 
                   </button>
 
@@ -969,7 +969,7 @@ export function PlanPanel(): JSX.Element | null {
 
                     >
 
-                      删除
+                      鍒犻櫎
 
                     </button>
 
@@ -979,7 +979,7 @@ export function PlanPanel(): JSX.Element | null {
 
                 <p className="text-[10px] text-ink-muted">
 
-                  {workspaces.length}/{workspaceMax} 个工作区
+                  {workspaces.length}/{workspaceMax} 涓伐浣滃尯
 
                 </p>
 
@@ -1020,7 +1020,7 @@ export function PlanPanel(): JSX.Element | null {
 
                 <p className="rounded-lg border border-surface-inset/40 bg-surface-inset/15 px-2.5 py-2 text-[11px] leading-relaxed text-ink-muted">
 
-                  已确认：{planConfirmedLine}
+                  宸茬‘璁わ細{planConfirmedLine}
 
                 </p>
 
@@ -1039,7 +1039,7 @@ export function PlanPanel(): JSX.Element | null {
 
                   <p className="text-center text-xs text-ink-muted">
 
-                    在下方描述你想做的 Skill 或 Plugin，Agent 会先帮你判断类型再整理方案。
+                    鍦ㄤ笅鏂规弿杩颁綘鎯冲仛鐨?Skill 鎴?Plugin锛孉gent 浼氬厛甯綘鍒ゆ柇绫诲瀷鍐嶆暣鐞嗘柟妗堛€?
 
                   </p>
 
@@ -1073,7 +1073,7 @@ export function PlanPanel(): JSX.Element | null {
 
                   <div className="mr-2 border-l-2 border-accent/30 pl-3 py-0.5">
 
-                    <ChatTypingIndicator label="正在思考" />
+                    <ChatTypingIndicator label="姝ｅ湪鎬濊€? />
 
                   </div>
 
@@ -1106,7 +1106,7 @@ export function PlanPanel(): JSX.Element | null {
                           canConfirm={canConfirmPlan}
                           busy={busy}
                           onConfirm={() => void confirmPlan()}
-                          onRevise={() => void send('我想修改方案，请告诉我需要调整哪一项')}
+                          onRevise={() => void send('鎴戞兂淇敼鏂规锛岃鍛婅瘔鎴戦渶瑕佽皟鏁村摢涓€椤?)}
                         />
                       </div>
                     )}
@@ -1166,7 +1166,7 @@ export function PlanPanel(): JSX.Element | null {
                       onClick={() => void cancelAgentRun()}
                       className="shrink-0 rounded-lg border border-rose-500/40 px-3 py-2 text-sm text-rose-400 hover:bg-rose-500/10 disabled:opacity-50"
                     >
-                      取消
+                      鍙栨秷
                     </button>
                   )}
 
@@ -1182,7 +1182,7 @@ export function PlanPanel(): JSX.Element | null {
 
                   >
 
-                    →
+                    鈫?
 
                   </button>
 

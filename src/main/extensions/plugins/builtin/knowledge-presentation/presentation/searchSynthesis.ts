@@ -1,4 +1,4 @@
-// [searchSynthesis] — 搜索后：纸面卡正文总结 + 伴侣口吻短评（接入 context 里的人格/情绪/记忆）
+﻿// [searchSynthesis] 鈥?鎼滅储鍚庯細绾搁潰鍗℃鏂囨€荤粨 + 浼翠荆鍙ｅ惢鐭瘎锛堟帴鍏?context 閲岀殑浜烘牸/鎯呯华/璁板繂锛?
 
 import type { WebContents } from 'electron'
 import type { AppSettings } from '../../../../../settings'
@@ -22,18 +22,18 @@ import { finalizePaperCardCompanionReply } from '../../../../../paperCard/finali
 import { resolvePaperCardDisplayTitle } from '../../../../../paperCard/resolveDisplayTitle'
 import { beginMarkdownTableSkillActivity } from '../../../../skills/builtin/tool/markdown-table/skillBridge'
 import {
-  ACKEM_PRODUCT_IDENTITY_GUARD,
+  Ackem_PRODUCT_IDENTITY_GUARD,
   buildAckemCompareCardBlock,
   sanitizeAckemIdentityInMarkdown
-} from '../../../../../paperCard/ackemProductIdentity'
+} from '../../../../../paperCard/AckemProductIdentity'
 
 export type SearchSynthesisInput = {
   query: string
   results: SearchResult[]
   error?: string
-  /** LLM 澄清后的检索意图（摘录与来源筛选已用过） */
+  /** LLM 婢勬竻鍚庣殑妫€绱㈡剰鍥撅紙鎽樺綍涓庢潵婧愮瓫閫夊凡鐢ㄨ繃锛?*/
   intentSummary?: string
-  /** L0 用户任务框（交付形态） */
+  /** L0 鐢ㄦ埛浠诲姟妗嗭紙浜や粯褰㈡€侊級 */
   taskFrame?: UserTaskFrame
 }
 
@@ -48,7 +48,7 @@ export type SearchSynthesisOutput = {
 const SOURCE_MIN = 3
 const SOURCE_MAX = 8
 
-/** 摘录正文生成上限（偏长、偏全） */
+/** 鎽樺綍姝ｆ枃鐢熸垚涓婇檺锛堝亸闀裤€佸亸鍏級 */
 const CARD_BODY_MAX_TOKENS = 3200
 
 const OFFICIAL_HOST_PATTERNS = [
@@ -69,7 +69,7 @@ const OFFICIAL_HOST_PATTERNS = [
   /infoq\.(com|cn)/i
 ]
 
-/** 官方/文档类来源优先，供摘录合成阅读 */
+/** 瀹樻柟/鏂囨。绫绘潵婧愪紭鍏堬紝渚涙憳褰曞悎鎴愰槄璇?*/
 export function prioritizeOfficialResults(results: SearchResult[]): SearchResult[] {
   const score = (r: SearchResult): number => {
     const blob = `${r.url} ${r.title} ${r.snippet}`
@@ -77,8 +77,8 @@ export function prioritizeOfficialResults(results: SearchResult[]): SearchResult
     for (const p of OFFICIAL_HOST_PATTERNS) {
       if (p.test(blob)) s += 12
     }
-    if (/docs?\.|documentation|官方|release notes|whitepaper|specification/i.test(blob)) s += 6
-    if (/blog|论坛|问答|知乎|贴吧|自媒体/i.test(blob)) s -= 3
+    if (/docs?\.|documentation|瀹樻柟|release notes|whitepaper|specification/i.test(blob)) s += 6
+    if (/blog|璁哄潧|闂瓟|鐭ヤ箮|璐村惂|鑷獟浣?i.test(blob)) s -= 3
     return s
   }
   return [...results].sort((a, b) => score(b) - score(a))
@@ -108,7 +108,7 @@ function extractLastUserQuestion(
   return last ? messageText(last.content) : ''
 }
 
-/** 同轮仅保留一条搜索任务（意图澄清后应已合并） */
+/** 鍚岃疆浠呬繚鐣欎竴鏉℃悳绱换鍔★紙鎰忓浘婢勬竻鍚庡簲宸插悎骞讹級 */
 export function consolidateSearchJobs(jobs: SearchSynthesisInput[]): SearchSynthesisInput[] {
   if (jobs.length <= 1) return jobs
   const best = jobs.reduce((a, b) =>
@@ -117,7 +117,7 @@ export function consolidateSearchJobs(jobs: SearchSynthesisInput[]): SearchSynth
   return [best]
 }
 
-/** 保留 3～8 条参考链接（结果应已通过 LLM 相关性筛选） */
+/** 淇濈暀 3锝? 鏉″弬鑰冮摼鎺ワ紙缁撴灉搴斿凡閫氳繃 LLM 鐩稿叧鎬х瓫閫夛級 */
 export function pickSourceLinks(results: SearchResult[]): WebSearchHit[] {
   const pool = results
   const seen = new Set<string>()
@@ -150,13 +150,13 @@ export function buildSearchCardCopyText(
   sources: WebSearchHit[],
   error?: string
 ): string {
-  const header = `【检索摘录】${query}\n${'─'.repeat(32)}\n`
-  if (error) return `${header}搜索失败：${error}`
+  const header = `銆愭绱㈡憳褰曘€?{query}\n${'鈹€'.repeat(32)}\n`
+  if (error) return `${header}鎼滅储澶辫触锛?{error}`
   let out = header + cardBody.trim()
   if (sources.length > 0) {
     out +=
       '\n\n' +
-      '参考来源：\n' +
+      '鍙傝€冩潵婧愶細\n' +
       sources.map((s, i) => `${i + 1}. ${s.title}\n   ${s.url}`).join('\n')
   }
   return out
@@ -178,35 +178,35 @@ async function llmText(
   ).text.trim()
 }
 
-/** 摘录正文是否像被截断（缺结论段、未闭合代码块等） */
+/** 鎽樺綍姝ｆ枃鏄惁鍍忚鎴柇锛堢己缁撹娈点€佹湭闂悎浠ｇ爜鍧楃瓑锛?*/
 function looksIncompleteCardBody(text: string): boolean {
   const t = text.trim()
   if (t.length < 120) return false
   if ((t.match(/```/g)?.length ?? 0) % 2 === 1) return true
-  if (/核心要点/u.test(t) && !/综合结论|总结/u.test(t)) return true
-  if (/[：，、—\-（(]$/.test(t)) return true
+  if (/鏍稿績瑕佺偣/u.test(t) && !/缁煎悎缁撹|鎬荤粨/u.test(t)) return true
+  if (/[锛氾紝銆佲€擻-锛?]$/.test(t)) return true
   return false
 }
 
-const CARD_BODY_INSTRUCTIONS = `请撰写「检索摘录正文」——一份可保存的检索简报，直接、完整地回答用户问题。
+const CARD_BODY_INSTRUCTIONS = `璇锋挵鍐欍€屾绱㈡憳褰曟鏂囥€嶁€斺€斾竴浠藉彲淇濆瓨鐨勬绱㈢畝鎶ワ紝鐩存帴銆佸畬鏁村湴鍥炵瓟鐢ㄦ埛闂銆?
 
-结构与篇幅（务必写足，避免一两段敷衍）：
-- 全文建议 **500～1200 字**（信息量大时可更长）；分 **3～6 个小节**，每节用简短小标题（可用 **标题** 或 ## 形式）
-- 必须包含这些板块（无相关内容则写「检索未提及」并略过）：
-  1. **概述**：2～4 句，点明主题与结论
-  2. **核心要点**：分条列出（≥4 条为宜），写清特性、原因、影响等具体信息
-  3. **版本 / 数据 / 时间线**：版本号、LTS 周期、发布年份、许可证、统计数据等可核对事实
-  4. **官方与权威说法**：优先归纳 oracle.com、openjdk、厂商文档、规范/白皮书中的表述（用「据…」概括，不编造出处）
-  5. **综合结论**：回扣用户原问（如「为何流行」「有什么区别」）
+缁撴瀯涓庣瘒骞咃紙鍔″繀鍐欒冻锛岄伩鍏嶄竴涓ゆ鏁疯锛夛細
+- 鍏ㄦ枃寤鸿 **500锝?200 瀛?*锛堜俊鎭噺澶ф椂鍙洿闀匡級锛涘垎 **3锝? 涓皬鑺?*锛屾瘡鑺傜敤绠€鐭皬鏍囬锛堝彲鐢?**鏍囬** 鎴?## 褰㈠紡锛?
+- 蹇呴』鍖呭惈杩欎簺鏉垮潡锛堟棤鐩稿叧鍐呭鍒欏啓銆屾绱㈡湭鎻愬強銆嶅苟鐣ヨ繃锛夛細
+  1. **姒傝堪**锛?锝? 鍙ワ紝鐐规槑涓婚涓庣粨璁?
+  2. **鏍稿績瑕佺偣**锛氬垎鏉″垪鍑猴紙鈮? 鏉′负瀹滐級锛屽啓娓呯壒鎬с€佸師鍥犮€佸奖鍝嶇瓑鍏蜂綋淇℃伅
+  3. **鐗堟湰 / 鏁版嵁 / 鏃堕棿绾?*锛氱増鏈彿銆丩TS 鍛ㄦ湡銆佸彂甯冨勾浠姐€佽鍙瘉銆佺粺璁℃暟鎹瓑鍙牳瀵逛簨瀹?
+  4. **瀹樻柟涓庢潈濞佽娉?*锛氫紭鍏堝綊绾?oracle.com銆乷penjdk銆佸巶鍟嗘枃妗ｃ€佽鑼?鐧界毊涔︿腑鐨勮〃杩帮紙鐢ㄣ€屾嵁鈥︺€嶆鎷紝涓嶇紪閫犲嚭澶勶級
+  5. **缁煎悎缁撹**锛氬洖鎵ｇ敤鎴峰師闂紙濡傘€屼负浣曟祦琛屻€嶃€屾湁浠€涔堝尯鍒€嶏級
 
-写作要求：
-- **以搜索结果为主要依据**，把摘要里的名词、数字、特性写进正文；可少量补常识，但不得与检索明显矛盾
-- 追求 **准确、齐全、偏官方**，少写空话（如「备受关注」「具有重要意义」）
-- 多条来源一致则合并；明显分歧可一句带过
-- **不要**罗列参考链接（链接单独展示）
-- **禁止**推脱式追问（「要不要再搜」「你主要关心哪块」等）`
+鍐欎綔瑕佹眰锛?
+- **浠ユ悳绱㈢粨鏋滀负涓昏渚濇嵁**锛屾妸鎽樿閲岀殑鍚嶈瘝銆佹暟瀛椼€佺壒鎬у啓杩涙鏂囷紱鍙皯閲忚ˉ甯歌瘑锛屼絾涓嶅緱涓庢绱㈡槑鏄剧煕鐩?
+- 杩芥眰 **鍑嗙‘銆侀綈鍏ㄣ€佸亸瀹樻柟**锛屽皯鍐欑┖璇濓紙濡傘€屽鍙楀叧娉ㄣ€嶃€屽叿鏈夐噸瑕佹剰涔夈€嶏級
+- 澶氭潯鏉ユ簮涓€鑷村垯鍚堝苟锛涙槑鏄惧垎姝у彲涓€鍙ュ甫杩?
+- **涓嶈**缃楀垪鍙傝€冮摼鎺ワ紙閾炬帴鍗曠嫭灞曠ず锛?
+- **绂佹**鎺ㄨ劚寮忚拷闂紙銆岃涓嶈鍐嶆悳銆嶃€屼綘涓昏鍏冲績鍝潡銆嶇瓑锛塦
 
-/** 纸面卡正文：检索简报（准确、齐全、偏官方） */
+/** 绾搁潰鍗℃鏂囷細妫€绱㈢畝鎶ワ紙鍑嗙‘銆侀綈鍏ㄣ€佸亸瀹樻柟锛?*/
 async function synthesizeCardBody(
   settings: AppSettings,
   systemContext: string,
@@ -217,28 +217,28 @@ async function synthesizeCardBody(
   taskFrame?: UserTaskFrame
 ): Promise<string> {
   const rawBlock = formatSearchResults(rawResults)
-  const intentLine = intentSummary ? `\n【已澄清的检索意图】${intentSummary}\n` : ''
+  const intentLine = intentSummary ? `\n銆愬凡婢勬竻鐨勬绱㈡剰鍥俱€?{intentSummary}\n` : ''
   const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
     {
       role: 'system',
       content:
         systemContext +
-        ACKEM_PRODUCT_IDENTITY_GUARD +
+        Ackem_PRODUCT_IDENTITY_GUARD +
         buildAckemCompareCardBlock(userQuestion) +
-        '\n\n【当前任务】你正在为用户撰写「检索摘录」正文。语气可略带人格色彩，但正文以 **准确、齐全、可核对** 的信息为主，像技术简报而非闲聊。'
+        '\n\n銆愬綋鍓嶄换鍔°€戜綘姝ｅ湪涓虹敤鎴锋挵鍐欍€屾绱㈡憳褰曘€嶆鏂囥€傝姘斿彲鐣ュ甫浜烘牸鑹插僵锛屼絾姝ｆ枃浠?**鍑嗙‘銆侀綈鍏ㄣ€佸彲鏍稿** 鐨勪俊鎭负涓伙紝鍍忔妧鏈畝鎶ヨ€岄潪闂茶亰銆?
     },
     { role: 'user', content: userQuestion },
     {
       role: 'user',
       content:
-        `【检索任务】你刚替用户搜索了「${query}」。${intentLine}` +
+        `銆愭绱换鍔°€戜綘鍒氭浛鐢ㄦ埛鎼滅储浜嗐€?{query}銆嶃€?{intentLine}` +
         `${recencyPromptSuffix()}\n\n` +
         (rawResults.length === 0
-          ? '【说明】联网结果与意图对不上号或未返回可用摘要，请主要依据检索意图与可靠常识撰写摘录，并在概述中简短说明参考链接已省略。\n\n'
-          : `以下是搜索引擎返回的原始摘录（仅供你阅读，不要逐条罗列网址）：\n\n${rawBlock}\n\n`) +
+          ? '銆愯鏄庛€戣仈缃戠粨鏋滀笌鎰忓浘瀵逛笉涓婂彿鎴栨湭杩斿洖鍙敤鎽樿锛岃涓昏渚濇嵁妫€绱㈡剰鍥句笌鍙潬甯歌瘑鎾板啓鎽樺綍锛屽苟鍦ㄦ杩颁腑绠€鐭鏄庡弬鑰冮摼鎺ュ凡鐪佺暐銆俓n\n'
+          : `浠ヤ笅鏄悳绱㈠紩鎿庤繑鍥炵殑鍘熷鎽樺綍锛堜粎渚涗綘闃呰锛屼笉瑕侀€愭潯缃楀垪缃戝潃锛夛細\n\n${rawBlock}\n\n`) +
         CARD_BODY_INSTRUCTIONS +
         buildCardBodyFormatBlock(taskFrame) +
-        '\n\n【格式】正文为 Markdown 纯文本；提到 HTML/JSX 标签时请用反引号包裹（如 `<title>`），不要输出未转义的尖括号标签。'
+        '\n\n銆愭牸寮忋€戞鏂囦负 Markdown 绾枃鏈紱鎻愬埌 HTML/JSX 鏍囩鏃惰鐢ㄥ弽寮曞彿鍖呰９锛堝 `<title>`锛夛紝涓嶈杈撳嚭鏈浆涔夌殑灏栨嫭鍙锋爣绛俱€?
     }
   ]
   const client = createLlmJsonClient(settings)
@@ -254,7 +254,7 @@ async function synthesizeCardBody(
     messages.push({
       role: 'user',
       content:
-        '上一段摘录未写完（可能在某条要点中途截断）。请从中断处续写至完整，补全剩余要点与「综合结论」小节；不要重复已有段落。'
+        '涓婁竴娈垫憳褰曟湭鍐欏畬锛堝彲鑳藉湪鏌愭潯瑕佺偣涓€旀埅鏂級銆傝浠庝腑鏂缁啓鑷冲畬鏁达紝琛ュ叏鍓╀綑瑕佺偣涓庛€岀患鍚堢粨璁恒€嶅皬鑺傦紱涓嶈閲嶅宸叉湁娈佃惤銆?
     })
     const cont = await client.chatCompletionJsonDetailed({
       messages,
@@ -266,10 +266,10 @@ async function synthesizeCardBody(
     }
   }
 
-  return text || '（未能生成摘录正文，请查看下方参考来源。）'
+  return text || '锛堟湭鑳界敓鎴愭憳褰曟鏂囷紝璇锋煡鐪嬩笅鏂瑰弬鑰冩潵婧愩€傦級'
 }
 
-/** 聊天气泡：伴侣对搜索主题的看法，不重复纸面卡总结 */
+/** 鑱婂ぉ姘旀场锛氫即渚ｅ鎼滅储涓婚鐨勭湅娉曪紝涓嶉噸澶嶇焊闈㈠崱鎬荤粨 */
 async function synthesizeCompanionReply(
   settings: AppSettings,
   systemContext: string,
@@ -278,35 +278,35 @@ async function synthesizeCompanionReply(
   cardBody: string,
   taskFrame?: UserTaskFrame
 ): Promise<string> {
-  const excerpt = cardBody.length > 500 ? `${cardBody.slice(0, 500)}…` : cardBody
+  const excerpt = cardBody.length > 500 ? `${cardBody.slice(0, 500)}鈥 : cardBody
   const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
     {
       role: 'system',
       content:
         systemContext +
-        ACKEM_PRODUCT_IDENTITY_GUARD +
+        Ackem_PRODUCT_IDENTITY_GUARD +
         buildAckemCompareCardBlock(userQuestion) +
         PAPER_CARD_COMPANION_SYSTEM_SUFFIX +
-        '\n\n【当前任务】用户刚让你帮忙搜索，**完整检索简报已在纸面卡**。你只需用伴侣口吻说 **一两句**，**禁止复述** LTS、许可证、特性列表、版本号等事实。'
+        '\n\n銆愬綋鍓嶄换鍔°€戠敤鎴峰垰璁╀綘甯繖鎼滅储锛?*瀹屾暣妫€绱㈢畝鎶ュ凡鍦ㄧ焊闈㈠崱**銆備綘鍙渶鐢ㄤ即渚ｅ彛鍚昏 **涓€涓ゅ彞**锛?*绂佹澶嶈堪** LTS銆佽鍙瘉銆佺壒鎬у垪琛ㄣ€佺増鏈彿绛変簨瀹炪€?
     },
     { role: 'user', content: userQuestion },
     {
       role: 'user',
       content:
-        `【背景】你刚帮用户搜了「${query}」，摘录已在上方纸面卡。\n` +
-        `（仅供把握话题，勿复述）\n${excerpt}\n` +
-        '像刚查完资料跟用户说话；例：「上面是刚查到的，有不确定的咱们再对一下」。\n' +
-        '- 严格遵守人格、情绪与记忆语境；\n' +
-        '- **不要**重复纸面卡里的任何事实、分条总结；\n' +
-        '- **不要**罗列链接或再写小百科；\n' +
-        '- 禁止推脱式追问。' +
+        `銆愯儗鏅€戜綘鍒氬府鐢ㄦ埛鎼滀簡銆?{query}銆嶏紝鎽樺綍宸插湪涓婃柟绾搁潰鍗°€俓n` +
+        `锛堜粎渚涙妸鎻¤瘽棰橈紝鍕垮杩帮級\n${excerpt}\n` +
+        '鍍忓垰鏌ュ畬璧勬枡璺熺敤鎴疯璇濓紱渚嬶細銆屼笂闈㈡槸鍒氭煡鍒扮殑锛屾湁涓嶇‘瀹氱殑鍜变滑鍐嶅涓€涓嬨€嶃€俓n' +
+        '- 涓ユ牸閬靛畧浜烘牸銆佹儏缁笌璁板繂璇锛沑n' +
+        '- **涓嶈**閲嶅绾搁潰鍗￠噷鐨勪换浣曚簨瀹炪€佸垎鏉℃€荤粨锛沑n' +
+        '- **涓嶈**缃楀垪閾炬帴鎴栧啀鍐欏皬鐧剧锛沑n' +
+        '- 绂佹鎺ㄨ劚寮忚拷闂€? +
         buildCompanionReplyFormatBlock(taskFrame) +
-        buildPaperCardCompanionUserTail('检索摘录', query)
+        buildPaperCardCompanionUserTail('妫€绱㈡憳褰?, query)
     }
   ]
   const text = await llmText(settings, messages, 320, 0.88)
   const trimmed = text.trim()
-  if (!trimmed) return defaultPaperCardCompanionFallback('检索摘录')
+  if (!trimmed) return defaultPaperCardCompanionFallback('妫€绱㈡憳褰?)
   return finalizePaperCardCompanionReply(trimmed)
 }
 
@@ -327,8 +327,8 @@ export async function synthesizeSearchExperience(
   }
 
   if (error) {
-    const cardBody = `联网搜索失败：${error}`
-    const companionReply = '这次连不上搜索，要不稍后再试或换个说法？'
+    const cardBody = `鑱旂綉鎼滅储澶辫触锛?{error}`
+    const companionReply = '杩欐杩炰笉涓婃悳绱紝瑕佷笉绋嶅悗鍐嶈瘯鎴栨崲涓娉曪紵'
     return {
       cardBody,
       companionReply,

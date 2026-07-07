@@ -1,4 +1,4 @@
-export type VoiceSettingsState = {
+﻿export type VoiceSettingsState = {
   enabled: boolean
   asrModel: 'base' | 'small'
   ttsEngine: 'auto' | 'cosyvoice' | 'edge-tts' | 'local-sapi' | 'piper' | 'gpt-sovits'
@@ -14,9 +14,9 @@ export type VoiceSettingsState = {
   inputChannel: 'dual' | 'voice-only' | 'text-only'
 }
 
-export const VOICE_SETTINGS_STORAGE_KEY = 'ackem-voice-settings'
+export const VOICE_SETTINGS_STORAGE_KEY = 'Ackem-voice-settings'
 
-/** Reserved for future release — mirrors voiceRuntimeConfig.GPT_SOVITS_VOICE_ENABLED */
+/** Reserved for future release 鈥?mirrors voiceRuntimeConfig.GPT_SOVITS_VOICE_ENABLED */
 export const GPT_SOVITS_VOICE_ENABLED = false
 
 /** TTS reply playback grayed out; mic / ASR still work. */
@@ -66,7 +66,7 @@ export async function syncVoiceSettingsToMain(
   settings: VoiceSettingsState,
   personalityPresetId?: string
 ): Promise<void> {
-  await window.ackem.voice?.applySettings?.({
+  await window.Ackem.voice?.applySettings?.({
     enabled: settings.enabled,
     ttsEnabled: TTS_BROADCAST_ENABLED ? settings.ttsEnabled : false,
     asrModel: settings.asrModel,

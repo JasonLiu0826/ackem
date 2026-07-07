@@ -1,4 +1,4 @@
-import {
+﻿import {
   detectBareFeatureCreateCandidate,
   detectExtensionDemandExplicit,
   extractBareFeatureCreateTopic
@@ -9,7 +9,7 @@ import {
 } from '../plugins/builtin/knowledge-presentation/intent'
 import { cosineSimilarity } from '../../memory/factEmbeddingCache'
 
-/** @deprecated 兼容旧测试名；请用 shouldRunCapabilityProbe */
+/** @deprecated 鍏煎鏃ф祴璇曞悕锛涜鐢?shouldRunCapabilityProbe */
 export type ExtensionIntentClass =
   | 'extension_demand'
   | 'relationship_emotional'
@@ -20,7 +20,7 @@ export type ExtensionIntentClass =
 
 export type CapabilityPersistency = 'recurring' | 'one_shot' | 'relational' | 'none'
 
-/** Jarvis 式能力探针：评估「缺口是否值得做成可部署 Skill」 */
+/** Jarvis 寮忚兘鍔涙帰閽堬細璇勪及銆岀己鍙ｆ槸鍚﹀€煎緱鍋氭垚鍙儴缃?Skill銆?*/
 export type CapabilityProbe = {
   capability_gap: number
   implementable_as_skill: number
@@ -41,31 +41,31 @@ export type ExtensionIntentClassification = {
 
 const MIN_PROBE_LEN = 8
 
-/** 用户表达流程摩擦 / 能力缺口（不写具体功能实体） */
+/** 鐢ㄦ埛琛ㄨ揪娴佺▼鎽╂摝 / 鑳藉姏缂哄彛锛堜笉鍐欏叿浣撳姛鑳藉疄浣擄級 */
 const CAPABILITY_GAP_SIGNALS: RegExp[] = [
-  /(?:要是|如果|真希望|希望|何时|什么时候).{0,24}(?:就好了|该多好)/,
-  /(?:要是能|要是可以|如果能|能不能自动|能不能帮我)/,
-  /(?:能不能有个|还缺|缺少|没(?:有)?(?:合适)?的(?:工具|办法|功能|能力))/,
-  /(?:总是|老是|每次|天天).{0,16}(?:烦|麻烦|忘|重复|手动|折腾)/,
-  /(?:好烦|太麻烦|费劲|费时间|重复劳动|一遍遍)/,
-  /(?:提醒我|通知我|帮我记|自动(?:化)?处理)/
+  /(?:瑕佹槸|濡傛灉|鐪熷笇鏈泑甯屾湜|浣曟椂|浠€涔堟椂鍊?.{0,24}(?:灏卞ソ浜唡璇ュ濂?/,
+  /(?:瑕佹槸鑳絴瑕佹槸鍙互|濡傛灉鑳絴鑳戒笉鑳借嚜鍔▅鑳戒笉鑳藉府鎴?/,
+  /(?:鑳戒笉鑳芥湁涓獆杩樼己|缂哄皯|娌??:鏈??(?:鍚堥€??鐨??:宸ュ叿|鍔炴硶|鍔熻兘|鑳藉姏))/,
+  /(?:鎬绘槸|鑰佹槸|姣忔|澶╁ぉ).{0,16}(?:鐑楹荤儲|蹇榺閲嶅|鎵嬪姩|鎶樿吘)/,
+  /(?:濂界儲|澶夯鐑璐瑰姴|璐规椂闂磡閲嶅鍔冲姩|涓€閬嶉亶)/,
+  /(?:鎻愰啋鎴憒閫氱煡鎴憒甯垜璁皘鑷姩(?:鍖??澶勭悊)/
 ]
 
 const IMPLICIT_PLAN_THRESHOLD = 0.72
 const GAP_MIN = 0.62
 const IMPLEMENTABLE_MIN = 0.68
 
-/** 解析失败降级时排除：抽象情感/陪伴诉求（不用具体人物实体词） */
-const PARSE_FAIL_RELATIONAL_RE = /(?:陪(?:我|你)|孤独|寂寞|脱单|恋爱|好孤单)/u
+/** 瑙ｆ瀽澶辫触闄嶇骇鏃舵帓闄わ細鎶借薄鎯呮劅/闄即璇夋眰锛堜笉鐢ㄥ叿浣撲汉鐗╁疄浣撹瘝锛?*/
+const PARSE_FAIL_RELATIONAL_RE = /(?:闄??:鎴憒浣?|瀛ょ嫭|瀵傚癁|鑴卞崟|鎭嬬埍|濂藉鍗?/u
 
 function isCapabilityMetaQuery(message: string): boolean {
   return (
-    /(?:Ackem|你|这边|系统).{0,12}(?:能不能|可不可以|有没有|支持)/u.test(message) &&
-    !/(?:要是|烦|麻烦|忘|自动|缺|折腾)/u.test(message)
+    /(?:Ackem|浣爘杩欒竟|绯荤粺).{0,12}(?:鑳戒笉鑳絴鍙笉鍙互|鏈夋病鏈墊鏀寔)/u.test(message) &&
+    !/(?:瑕佹槸|鐑楹荤儲|蹇榺鑷姩|缂簗鎶樿吘)/u.test(message)
   )
 }
 
-/** 快路径排除：已知走其它管线，不必调 LLM */
+/** 蹇矾寰勬帓闄わ細宸茬煡璧板叾瀹冪绾匡紝涓嶅繀璋?LLM */
 export function shouldSkipCapabilityProbe(message: string): boolean {
   const trimmed = message.trim()
   if (trimmed.length < MIN_PROBE_LEN) return true
@@ -76,7 +76,7 @@ export function shouldSkipCapabilityProbe(message: string): boolean {
   return false
 }
 
-/** 是否值得启动能力探针（宽进：裸功能名 create 或摩擦/缺口信号；严出：LLM 多维评分） */
+/** 鏄惁鍊煎緱鍚姩鑳藉姏鎺㈤拡锛堝杩涳細瑁稿姛鑳藉悕 create 鎴栨懇鎿?缂哄彛淇″彿锛涗弗鍑猴細LLM 澶氱淮璇勫垎锛?*/
 export function shouldRunCapabilityProbe(
   message: string,
   queryEmbed?: number[],
@@ -87,7 +87,7 @@ export function shouldRunCapabilityProbe(
   if (shouldSkipCapabilityProbe(message)) return false
   if (CAPABILITY_GAP_SIGNALS.some((re) => re.test(trimmed))) return true
 
-  // Embedding 兜底：语义匹配"想造工具"意图
+  // Embedding 鍏滃簳锛氳涔夊尮閰?鎯抽€犲伐鍏?鎰忓浘
   if (queryEmbed && createToolAnchor && queryEmbed.length > 0 && createToolAnchor.length > 0) {
     if (cosineSimilarity(queryEmbed, createToolAnchor) > 0.70) return true
   }
@@ -97,30 +97,30 @@ export function shouldRunCapabilityProbe(
 
 export function buildCapabilityProbePrompt(userMessage: string, recentContext: string): string {
   return [
-    '你是 Ackem 的 capability probe（类似 Jarvis 评估用户是否缺一个「可部署、可重复调用」的自动化能力）。',
-    'Companion 本体已负责：对话、情感陪伴、记忆、一次性知识整理纸面卡、调度已有 Skill。',
-    '只有「反复出现、可用代码/规则/触发器封装」的缺口，才建议进入 Plan 开发新 Skill/插件。',
-    '只返回 JSON，不要 markdown。',
+    '浣犳槸 Ackem 鐨?capability probe锛堢被浼?Jarvis 璇勪及鐢ㄦ埛鏄惁缂轰竴涓€屽彲閮ㄧ讲銆佸彲閲嶅璋冪敤銆嶇殑鑷姩鍖栬兘鍔涳級銆?,
+    'Companion 鏈綋宸茶礋璐ｏ細瀵硅瘽銆佹儏鎰熼櫔浼淬€佽蹇嗐€佷竴娆℃€х煡璇嗘暣鐞嗙焊闈㈠崱銆佽皟搴﹀凡鏈?Skill銆?,
+    '鍙湁銆屽弽澶嶅嚭鐜般€佸彲鐢ㄤ唬鐮?瑙勫垯/瑙﹀彂鍣ㄥ皝瑁呫€嶇殑缂哄彛锛屾墠寤鸿杩涘叆 Plan 寮€鍙戞柊 Skill/鎻掍欢銆?,
+    '鍙繑鍥?JSON锛屼笉瑕?markdown銆?,
     '',
-    '评估步骤（在 reasoning 里用一句话体现）：',
-    '1) 是否存在能力/流程缺口（capability_gap）',
-    '2) 缺口能否用 Skill/插件实现，而非靠聊天或真人关系满足（implementable_as_skill）',
-    '3) 需求是反复发生(recurring)、一次性(one_shot)、关系/情感(relational)、还是无(none)',
+    '璇勪及姝ラ锛堝湪 reasoning 閲岀敤涓€鍙ヨ瘽浣撶幇锛夛細',
+    '1) 鏄惁瀛樺湪鑳藉姏/娴佺▼缂哄彛锛坈apability_gap锛?,
+    '2) 缂哄彛鑳藉惁鐢?Skill/鎻掍欢瀹炵幇锛岃€岄潪闈犺亰澶╂垨鐪熶汉鍏崇郴婊¤冻锛坕mplementable_as_skill锛?,
+    '3) 闇€姹傛槸鍙嶅鍙戠敓(recurring)銆佷竴娆℃€?one_shot)銆佸叧绯?鎯呮劅(relational)銆佽繕鏄棤(none)',
     '',
-    '字段：',
+    '瀛楁锛?,
     '{',
     '  "capability_gap": number,          // 0~1',
-    '  "implementable_as_skill": number,  // 0~1；纯陪伴/情感/人际 → 接近 0',
+    '  "implementable_as_skill": number,  // 0~1锛涚函闄即/鎯呮劅/浜洪檯 鈫?鎺ヨ繎 0',
     '  "persistency": "recurring"|"one_shot"|"relational"|"none",',
-    '  "suggested_capability": string,    // 一句话，抽象描述缺口，来自用户原话',
-    '  "suggested_name": string,          // 2~8 字能力名；仅 recurring 且 implementable 高时填写',
-    '  "should_propose_plan": boolean,    // 综合建议是否反问用户做 Skill',
+    '  "suggested_capability": string,    // 涓€鍙ヨ瘽锛屾娊璞℃弿杩扮己鍙ｏ紝鏉ヨ嚜鐢ㄦ埛鍘熻瘽',
+    '  "suggested_name": string,          // 2~8 瀛楄兘鍔涘悕锛涗粎 recurring 涓?implementable 楂樻椂濉啓',
+    '  "should_propose_plan": boolean,    // 缁煎悎寤鸿鏄惁鍙嶉棶鐢ㄦ埛鍋?Skill',
     '  "reasoning": string',
     '}',
     '',
-    '原则：宁可漏判，不要误判。情感/陪伴/孤独 → relational。整理/写一份/总结 → one_shot。',
-    recentContext ? `最近对话：\n${recentContext.slice(0, 400)}` : '',
-    `用户消息："${userMessage}"`
+    '鍘熷垯锛氬畞鍙紡鍒わ紝涓嶈璇垽銆傛儏鎰?闄即/瀛ょ嫭 鈫?relational銆傛暣鐞?鍐欎竴浠?鎬荤粨 鈫?one_shot銆?,
+    recentContext ? `鏈€杩戝璇濓細\n${recentContext.slice(0, 400)}` : '',
+    `鐢ㄦ埛娑堟伅锛?${userMessage}"`
   ]
     .filter(Boolean)
     .join('\n')
@@ -152,7 +152,7 @@ export function parseCapabilityProbe(raw: string): CapabilityProbe | null {
   }
 }
 
-/** @deprecated 兼容旧 category JSON；新路径请用 parseCapabilityProbe */
+/** @deprecated 鍏煎鏃?category JSON锛涙柊璺緞璇风敤 parseCapabilityProbe */
 export function parseIntentClassification(raw: string): ExtensionIntentClassification | null {
   const probe = parseCapabilityProbe(raw)
   if (probe) return evaluateProbeForPlan(probe) ?? probeToNegativeClassification(probe)
@@ -206,7 +206,7 @@ function probeToNegativeClassification(probe: CapabilityProbe): ExtensionIntentC
   }
 }
 
-/** 严出：多维门槛 + LLM 综合 flag */
+/** 涓ュ嚭锛氬缁撮棬妲?+ LLM 缁煎悎 flag */
 export function shouldProposePlanFromProbe(probe: CapabilityProbe): boolean {
   if (probe.persistency !== 'recurring') return false
   if (probe.capability_gap < GAP_MIN) return false
@@ -232,12 +232,12 @@ export function buildPlanAskMessage(classification: ExtensionIntentClassificatio
   const name = classification.suggested_name?.trim()
   const capability = classification.probe?.suggested_capability?.trim()
   if (name) {
-    return `听起来你缺一个「${name}」能力——要不要我帮你做成 Skill 或插件？`
+    return `鍚捣鏉ヤ綘缂轰竴涓€?{name}銆嶈兘鍔涒€斺€旇涓嶈鎴戝府浣犲仛鎴?Skill 鎴栨彃浠讹紵`
   }
   if (capability) {
-    return `听起来你需要：${capability}——要不要我帮你做成 Skill 或插件？`
+    return `鍚捣鏉ヤ綘闇€瑕侊細${capability}鈥斺€旇涓嶈鎴戝府浣犲仛鎴?Skill 鎴栨彃浠讹紵`
   }
-  return '听起来你需要一个可重复用的小能力——要不要我帮你做成 Skill 或插件？'
+  return '鍚捣鏉ヤ綘闇€瑕佷竴涓彲閲嶅鐢ㄧ殑灏忚兘鍔涒€斺€旇涓嶈鎴戝府浣犲仛鎴?Skill 鎴栨彃浠讹紵'
 }
 
 export async function runCapabilityProbe(
@@ -253,18 +253,18 @@ export async function runCapabilityProbe(
   }
 }
 
-/** 从隐式缺口句式抽取能力描述（不写死功能实体词表） */
+/** 浠庨殣寮忕己鍙ｅ彞寮忔娊鍙栬兘鍔涙弿杩帮紙涓嶅啓姝诲姛鑳藉疄浣撹瘝琛級 */
 export function extractImplicitCapabilityHint(message: string): string | undefined {
   const trimmed = message.trim()
 
-  const wish = trimmed.match(/(?:要是|如果|真希望|希望)(.+?)(?:就好了|该多好)/u)
+  const wish = trimmed.match(/(?:瑕佹槸|濡傛灉|鐪熷笇鏈泑甯屾湜)(.+?)(?:灏卞ソ浜唡璇ュ濂?/u)
   if (wish?.[1]) {
     const hint = sanitizeCapabilityHint(wish[1])
     if (hint.length >= 2) return hint
   }
 
   const friction = trimmed.match(
-    /(?:总是|老是|每次|天天).{0,20}(?:要|得)?(.{2,20}?)(?:，|,|。|$|太|好)(?:烦|麻烦|忘|重复|手动|折腾)/u
+    /(?:鎬绘槸|鑰佹槸|姣忔|澶╁ぉ).{0,20}(?:瑕亅寰??(.{2,20}?)(?:锛寍,|銆倈$|澶獆濂?(?:鐑楹荤儲|蹇榺閲嶅|鎵嬪姩|鎶樿吘)/u
   )
   if (friction?.[1]) {
     const hint = sanitizeCapabilityHint(friction[1])
@@ -279,19 +279,19 @@ export function extractImplicitCapabilityHint(message: string): string | undefin
 
 function sanitizeCapabilityHint(raw: string): string {
   return raw
-    .replace(/^(?:能|可以)?(?:有)?(?:个|一个)?/u, '')
-    .replace(/[。「」""''\s，,]+$/gu, '')
+    .replace(/^(?:鑳絴鍙互)?(?:鏈??(?:涓獆涓€涓??/u, '')
+    .replace(/[銆傘€屻€?"''\s锛?]+$/gu, '')
     .trim()
 }
 
 function shortenCapabilityName(hint: string): string {
-  const s = hint.replace(/^(帮我|给我|自己|自动)/u, '').trim()
+  const s = hint.replace(/^(甯垜|缁欐垜|鑷繁|鑷姩)/u, '').trim()
   return (s.length >= 2 ? s : hint).slice(0, 8)
 }
 
 /**
- * LLM 探针 JSON 解析失败时的降级（仅结构信号 + 句式抽取，不用功能实体词表）。
- * 情感/陪伴类缺口仍优先由 LLM 的 persistency=relational 拦截；此处只做解析兜底。
+ * LLM 鎺㈤拡 JSON 瑙ｆ瀽澶辫触鏃剁殑闄嶇骇锛堜粎缁撴瀯淇″彿 + 鍙ュ紡鎶藉彇锛屼笉鐢ㄥ姛鑳藉疄浣撹瘝琛級銆?
+ * 鎯呮劅/闄即绫荤己鍙ｄ粛浼樺厛鐢?LLM 鐨?persistency=relational 鎷︽埅锛涙澶勫彧鍋氳В鏋愬厹搴曘€?
  */
 export function buildParseFailureCapabilityProbe(userMessage: string): CapabilityProbe | null {
   const trimmed = userMessage.trim()
@@ -312,7 +312,7 @@ export function buildParseFailureCapabilityProbe(userMessage: string): Capabilit
   }
 }
 
-/** LLM 已返回 JSON 但未过 composite 门槛时，若模型明确 flag 且维度达标则仍 propose */
+/** LLM 宸茶繑鍥?JSON 浣嗘湭杩?composite 闂ㄦ鏃讹紝鑻ユā鍨嬫槑纭?flag 涓旂淮搴﹁揪鏍囧垯浠?propose */
 function evaluateProbeWithLlmFlag(probe: CapabilityProbe): ExtensionIntentClassification | null {
   if (probe.persistency !== 'recurring') return null
   if (!probe.should_propose_plan) return null
@@ -345,7 +345,7 @@ export async function classifyExtensionIntent(
     }
   }
 
-  // 仅 JSON 解析失败：句式抽取兜底（不用功能实体词表）
+  // 浠?JSON 瑙ｆ瀽澶辫触锛氬彞寮忔娊鍙栧厹搴曪紙涓嶇敤鍔熻兘瀹炰綋璇嶈〃锛?
   if (!probe) {
     const fallback = buildParseFailureCapabilityProbe(userMessage)
     if (fallback) {

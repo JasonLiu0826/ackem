@@ -1,8 +1,8 @@
-// [temporalAwareness/temporalProactiveTrigger] — 时间主动触发信号产出者
-// 职责：编排 specialDateDetector + timeDepthCalculator + temporalMemoryBridge，
-//       产出 TemporalProactiveSignal，交给策略层统一决策。
-// **不直接注入 psycheBlock**
-// 设计文档：docs/plan/时间敏感主动记忆系统设计_6_11.md §3.4
+﻿// [temporalAwareness/temporalProactiveTrigger] 鈥?鏃堕棿涓诲姩瑙﹀彂淇″彿浜у嚭鑰?
+// 鑱岃矗锛氱紪鎺?specialDateDetector + timeDepthCalculator + temporalMemoryBridge锛?
+//       浜у嚭 TemporalProactiveSignal锛屼氦缁欑瓥鐣ュ眰缁熶竴鍐崇瓥銆?
+// **涓嶇洿鎺ユ敞鍏?psycheBlock**
+// 璁捐鏂囨。锛歞ocs/plan/鏃堕棿鏁忔劅涓诲姩璁板繂绯荤粺璁捐_6_11.md 搂3.4
 
 import type { SpecialDate } from './specialDateDetector'
 import type { MemoryBundle } from './temporalMemoryBridge'
@@ -22,7 +22,7 @@ export interface TemporalHint {
 }
 
 const EXPIRY_DAYS: Record<string, number> = {
-  ackem_birthday: 30,
+  Ackem_birthday: 30,
   birthday: 30,
   first_met_anniversary: 60,
   holiday: 7,
@@ -32,7 +32,7 @@ const EXPIRY_DAYS: Record<string, number> = {
 }
 
 const HINT_SORT_ORDER: Record<string, number> = {
-  ackem_birthday: 0,
+  Ackem_birthday: 0,
   first_met_anniversary: 1,
   relationship: 2,
   birthday: 3,
@@ -43,7 +43,7 @@ const HINT_SORT_ORDER: Record<string, number> = {
 
 function specialDateHintPriority(type: SpecialDate['type']): 'high' | 'normal' | 'low' {
   switch (type) {
-    case 'ackem_birthday':
+    case 'Ackem_birthday':
     case 'first_met_anniversary':
     case 'birthday':
     case 'relationship':
@@ -94,7 +94,7 @@ export function produceTemporalSignal(specialDates: SpecialDate[]): TemporalProa
     const expiryDays = EXPIRY_DAYS[primaryType] ?? 14
 
     temporalHint = {
-      dateLabel: hintParts.map((p) => p.dateLabel).join(' · '),
+      dateLabel: hintParts.map((p) => p.dateLabel).join(' 路 '),
       narrative: hintParts.map((p) => p.narrative).join(' '),
       priority: mergedPriority,
       expiresAt: new Date(Date.now() + expiryDays * 86400000).toISOString(),

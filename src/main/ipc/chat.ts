@@ -1,4 +1,4 @@
-// [ipc/chat] — 对话上下文构建、流式聊天、引擎状态、欲望栈、Trace
+﻿// [ipc/chat] 鈥?瀵硅瘽涓婁笅鏂囨瀯寤恒€佹祦寮忚亰澶┿€佸紩鎿庣姸鎬併€佹鏈涙爤銆乀race
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -20,7 +20,7 @@ import { shouldSkipTierBIngestForOrigin } from '../canon/originEscalationGuard'
 import { prepareTurnContext } from '../engine/prepareTurnContext'
 import type { DispatchResult } from '../extensions/protocols'
 
-/** 主动策略 Loop：缓存最近一轮的 intensityMod，供 chat:start 注入 */
+/** 涓诲姩绛栫暐 Loop锛氱紦瀛樻渶杩戜竴杞殑 intensityMod锛屼緵 chat:start 娉ㄥ叆 */
 let lastIntensityMod = 1.0
 import {
   runDispatchPipeline,
@@ -186,7 +186,7 @@ export function registerChatIpc(): void {
       ? []
       : (extCoordinator?.getContextInjections(args.userText) ?? [])
     if (extCoordinator && isExtensionCapabilityListingQuery(args.userText)) {
-      event.sender.send('chat:status', '在翻扩展库…')
+      event.sender.send('chat:status', '鍦ㄧ炕鎵╁睍搴撯€?)
       const listingOptions = {
         settings,
         desktopAgentSection:
@@ -230,7 +230,7 @@ export function registerChatIpc(): void {
         : null
 
     if (auditIntent) {
-      event.sender.send('chat:status', '在整理记忆档案…')
+      event.sender.send('chat:status', '鍦ㄦ暣鐞嗚蹇嗘。妗堚€?)
       const preAudit = await runPreLlmTurn({
         msg: args.userText,
         prev: state,
@@ -376,7 +376,7 @@ export function registerChatIpc(): void {
         preparedTurn,
       })
       saveState(root, preEvolve.newState, currentSessionId())
-      event.sender.send('chat:status', '正在优化扩展…')
+      event.sender.send('chat:status', '姝ｅ湪浼樺寲鎵╁睍鈥?)
       const evolved = await executeEvolveExtension(
         extCoordinator,
         dispatchResult.extensionId,
@@ -518,8 +518,8 @@ export function registerChatIpc(): void {
         preparedTurn,
       })
       saveState(root, preAsk.newState, currentSessionId())
-      const templateAsk = dispatchResult.askMessage ?? '要不要我帮你做一个 Skill 或插件？'
-      event.sender.send('chat:status', '在想怎么开口…')
+      const templateAsk = dispatchResult.askMessage ?? '瑕佷笉瑕佹垜甯綘鍋氫竴涓?Skill 鎴栨彃浠讹紵'
+      event.sender.send('chat:status', '鍦ㄦ兂鎬庝箞寮€鍙ｂ€?)
       const llm = createLlmJsonClient(settings)
       const crafted = await craftPlanCreateAsk({
         settings,
@@ -574,7 +574,7 @@ export function registerChatIpc(): void {
           extensionId: dispatchResult.extensionId,
           extensionName: entry?.name ?? dispatchResult.extensionId,
           askMessage:
-            dispatchResult.askMessage ?? `要不要启用「${entry?.name ?? '扩展'}」？`
+            dispatchResult.askMessage ?? `瑕佷笉瑕佸惎鐢ㄣ€?{entry?.name ?? '鎵╁睍'}銆嶏紵`
         },
         tracePreview: preAsk.trace,
         turnId: randomUUID(),
@@ -627,7 +627,7 @@ export function registerChatIpc(): void {
       pre.trace.ms = { ...pre.trace.ms, dispatch: dispatchMs }
     }
 
-    // 主动策略 Loop：缓存 intensityMod，供 chat:start 注入 LLM 温度
+    // 涓诲姩绛栫暐 Loop锛氱紦瀛?intensityMod锛屼緵 chat:start 娉ㄥ叆 LLM 娓╁害
     lastIntensityMod = pre.intensityMod ?? 1.0
 
     extCoordinator?.drainAllEvents()
@@ -664,12 +664,12 @@ export function registerChatIpc(): void {
       userText: args.userText,
       dispatchResult
     })
-    // 名字主动询问：STRANGER阶段 ≥3轮 || FAMILIAR阶段 → 提示LLM问名字
+    // 鍚嶅瓧涓诲姩璇㈤棶锛歋TRANGER闃舵 鈮?杞?|| FAMILIAR闃舵 鈫?鎻愮ずLLM闂悕瀛?
     const askNameStage = state.relationship.stage
     const askNameTurnOk = askNameStage === 'FAMILIAR' || (askNameStage === 'STRANGER' && (args.turnIndex ?? 0) >= 3)
     const askNameHint =
       askNameTurnOk && shouldAskUserName(store)
-        ? `\n【重要提示】你还不知道用户的名字。请用你的人格风格自然地询问ta叫什么。不要直接说"请告诉我你的名字"——用你自己的说话方式。`
+        ? `\n銆愰噸瑕佹彁绀恒€戜綘杩樹笉鐭ラ亾鐢ㄦ埛鐨勫悕瀛椼€傝鐢ㄤ綘鐨勪汉鏍奸鏍艰嚜鐒跺湴璇㈤棶ta鍙粈涔堛€備笉瑕佺洿鎺ヨ"璇峰憡璇夋垜浣犵殑鍚嶅瓧"鈥斺€旂敤浣犺嚜宸辩殑璇磋瘽鏂瑰紡銆俙
         : undefined
 
     const desktopAgentHintBase =
@@ -989,5 +989,26 @@ export function registerChatIpc(): void {
     state.desireStack = clearActiveDesires(state.desireStack)
     saveState(root, state, currentSessionId())
     return state.desireStack
+  })
+
+  // 鈹€鈹€ Agnes 鏂囩敓鍥?鈹€鈹€
+  ipcMain.handle('agnes:generateImage', async (_e, args: { prompt: string }) => {
+    const { generateAgnesImage } = await import('../agnesImage.js')
+    const s = loadSettings()
+    const root = resolveDataRoot(s)
+    ensureDataLayout(root)
+    const result = await generateAgnesImage({ prompt: args.prompt, settings: s, dataRoot: root })
+    // 灏嗘湰鍦版枃浠惰矾寰勮浆涓?Ackem-img:// 鍗忚 URL锛堟覆鏌撹繘绋嬪畨鍏ㄥ姞杞斤級
+    if (result.imagePath) {
+      const rel = result.imagePath.replace(root, '').replace(/^\\?\//, '').replace(/\\/g, '/')
+      result.imageUrl = `Ackem-img://${rel}`
+      delete result.imagePath
+    }
+    return result
+  })
+
+  ipcMain.handle('agnes:detectIntent', async (_e, args: { text: string }) => {
+    const { detectImageIntent } = await import('../agnesImage.js')
+    return detectImageIntent(args.text)
   })
 }

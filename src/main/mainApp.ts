@@ -8,6 +8,7 @@ import { ensureDataLayout } from './layout'
 import { loadSettings } from './settings'
 import { resolveDataRoot } from './paths'
 import { createLogger, setLogDir } from './logger'
+import { registerLocalImageProtocol } from './localImageProtocol'
 import {
   initDesktopCompanion,
   startDesktopCompanionProactiveTimer,
@@ -98,7 +99,7 @@ function createWindow(): void {
   win.on('close', () => {
     if ((app as { isQuitting?: boolean }).isQuitting) return
     markAppQuitting()
-    log.info('main window closed — quitting app')
+    log.info('main window closed 鈥?quitting app')
     app.quit()
   })
 
@@ -122,9 +123,9 @@ function createTray(): void {
   tray = new Tray(icon.isEmpty() ? nativeImage.createEmpty() : icon)
 
   const contextMenu = Menu.buildFromTemplate([
-    { label: '展开主面板', click: () => { mainWindow?.show(); mainWindow?.focus() } },
+    { label: '灞曞紑涓婚潰鏉?, click: () => { mainWindow?.show(); mainWindow?.focus() } },
     {
-      label: '折叠到桌宠',
+      label: '鎶樺彔鍒版瀹?,
       click: async () => {
         const { showPetWindow } = await import('./petWindow.js')
         showPetWindow()
@@ -132,10 +133,10 @@ function createTray(): void {
       }
     },
     { type: 'separator' },
-    { label: '陪伴状态', enabled: false },
+    { label: '闄即鐘舵€?, enabled: false },
     { type: 'separator' },
     {
-      label: '退出 Ackem',
+      label: '閫€鍑?Ackem',
       click: () => {
         markAppQuitting()
         app.quit()
@@ -171,6 +172,7 @@ export function runMainApplication(): void {
 
   registerIpc()
   ipcReady = true
+  registerLocalImageProtocol(dataRoot)
   registerUiIpc()
   createWindow()
   createTray()

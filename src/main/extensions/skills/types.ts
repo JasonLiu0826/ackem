@@ -1,20 +1,20 @@
-// [extensions/skills/types] — 技能专区类型定义
+﻿// [extensions/skills/types] 鈥?鎶€鑳戒笓鍖虹被鍨嬪畾涔?
 //
-// 技能 (Skill) 是 Ackem 的"能干活"单元。不同于核心引擎的 Pre-LLM 管线（负责情绪/关系/记忆），
-// Skill 负责具体的任务执行：搜索、文件整理、日程提醒、信息查询等。
+// 鎶€鑳?(Skill) 鏄?Ackem 鐨?鑳藉共娲?鍗曞厓銆備笉鍚屼簬鏍稿績寮曟搸鐨?Pre-LLM 绠＄嚎锛堣礋璐ｆ儏缁?鍏崇郴/璁板繂锛夛紝
+// Skill 璐熻矗鍏蜂綋鐨勪换鍔℃墽琛岋細鎼滅储銆佹枃浠舵暣鐞嗐€佹棩绋嬫彁閱掋€佷俊鎭煡璇㈢瓑銆?
 //
-// Skill 与核心引擎的关系：
-//   - Skill 通过 coordinator 注入工具描述到 LLM context
-//   - LLM 决定是否调用 Skill（function calling）
-//   - Skill 执行结果通过 ExtensionEvent 回传给引擎
-//   - Skill 绝不能直接读写 memory/、companion/ 等引擎目录
-//   - Skill 的副作用（如写文件）限制在 staging/ 和 skills/<id>/ 内
+// Skill 涓庢牳蹇冨紩鎿庣殑鍏崇郴锛?
+//   - Skill 閫氳繃 coordinator 娉ㄥ叆宸ュ叿鎻忚堪鍒?LLM context
+//   - LLM 鍐冲畾鏄惁璋冪敤 Skill锛坒unction calling锛?
+//   - Skill 鎵ц缁撴灉閫氳繃 ExtensionEvent 鍥炰紶缁欏紩鎿?
+//   - Skill 缁濅笉鑳界洿鎺ヨ鍐?memory/銆乧ompanion/ 绛夊紩鎿庣洰褰?
+//   - Skill 鐨勫壇浣滅敤锛堝鍐欐枃浠讹級闄愬埗鍦?staging/ 鍜?skills/<id>/ 鍐?
 //
-// Skill 类型：
-//   - rule       : 纯规则匹配，无需 LLM（如"帮我记一下"→写 memory）
-//   - tool       : LLM function calling 触发（如 web_search, file_read）
-//   - proactive  : 引擎主动触发（如定时提醒、久坐检测）
-//   - workflow   : 多步骤编排（如"整理下载文件夹"→扫描→分类→报告）
+// Skill 绫诲瀷锛?
+//   - rule       : 绾鍒欏尮閰嶏紝鏃犻渶 LLM锛堝"甯垜璁颁竴涓?鈫掑啓 memory锛?
+//   - tool       : LLM function calling 瑙﹀彂锛堝 web_search, file_read锛?
+//   - proactive  : 寮曟搸涓诲姩瑙﹀彂锛堝瀹氭椂鎻愰啋銆佷箙鍧愭娴嬶級
+//   - workflow   : 澶氭楠ょ紪鎺掞紙濡?鏁寸悊涓嬭浇鏂囦欢澶?鈫掓壂鎻忊啋鍒嗙被鈫掓姤鍛婏級
 
 import type {
   ExtensionManifestBase,
@@ -24,53 +24,53 @@ import type {
   RuntimeContext
 } from '../protocols'
 
-// ═══════════════════════════════════════════════════════════════
-// Skill 类型
-// ═══════════════════════════════════════════════════════════════
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+// Skill 绫诲瀷
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
 
 export type SkillType = 'rule' | 'tool' | 'proactive' | 'workflow'
 
 export type SkillTrigger =
-  | 'manual'              // 用户明确调用
-  | 'keyword'             // 关键词匹配
+  | 'manual'              // 鐢ㄦ埛鏄庣‘璋冪敤
+  | 'keyword'             // 鍏抽敭璇嶅尮閰?
   | 'llm_function_call'   // LLM function calling
-  | 'scheduled'           // 定时触发
-  | 'engine_event'        // 引擎事件触发（如情绪突变、信任下降）
-  | 'game_event'          // 游戏事件触发
-  | 'system_event'        // 系统事件触发（如前台切换、空闲超时）
+  | 'scheduled'           // 瀹氭椂瑙﹀彂
+  | 'engine_event'        // 寮曟搸浜嬩欢瑙﹀彂锛堝鎯呯华绐佸彉銆佷俊浠讳笅闄嶏級
+  | 'game_event'          // 娓告垙浜嬩欢瑙﹀彂
+  | 'system_event'        // 绯荤粺浜嬩欢瑙﹀彂锛堝鍓嶅彴鍒囨崲銆佺┖闂茶秴鏃讹級
 
-// ═══════════════════════════════════════════════════════════════
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
 
 export interface SkillManifest extends ExtensionManifestBase {
   category: 'skill'
-  /** Skill 类型 */
+  /** Skill 绫诲瀷 */
   skillType: SkillType
-  /** 触发方式列表 */
+  /** 瑙﹀彂鏂瑰紡鍒楄〃 */
   triggers: SkillTrigger[]
-  /** 触发关键词（当 trigger 包含 keyword 时） */
+  /** 瑙﹀彂鍏抽敭璇嶏紙褰?trigger 鍖呭惈 keyword 鏃讹級 */
   keywords?: string[]
-  /** LLM function calling 定义（当 trigger 包含 llm_function_call 时） */
+  /** LLM function calling 瀹氫箟锛堝綋 trigger 鍖呭惈 llm_function_call 鏃讹級 */
   functionDef?: SkillFunctionDef
-  /** 所需权限 */
+  /** 鎵€闇€鏉冮檺 */
   permissions: string[]
-  /** 执行超时毫秒 */
+  /** 鎵ц瓒呮椂姣 */
   timeoutMs: number
-  /** 是否可在成人模式下使用 */
+  /** 鏄惁鍙湪鎴愪汉妯″紡涓嬩娇鐢?*/
   adultModeSafe: boolean
-  /** 冲突 Skill ID 列表（不能与这些 Skill 同时执行） */
+  /** 鍐茬獊 Skill ID 鍒楄〃锛堜笉鑳戒笌杩欎簺 Skill 鍚屾椂鎵ц锛?*/
   conflicts?: string[]
 }
 
-// ═══════════════════════════════════════════════════════════════
-// Function Calling 定义 — 用于 LLM tool use
-// ═══════════════════════════════════════════════════════════════
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+// Function Calling 瀹氫箟 鈥?鐢ㄤ簬 LLM tool use
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
 
 export interface SkillFunctionDef {
-  /** 函数名（LLM 看到的工具名） */
+  /** 鍑芥暟鍚嶏紙LLM 鐪嬪埌鐨勫伐鍏峰悕锛?*/
   name: string
-  /** 一句话描述（LLM 判断何时调用） */
+  /** 涓€鍙ヨ瘽鎻忚堪锛圠LM 鍒ゆ柇浣曟椂璋冪敤锛?*/
   description: string
-  /** JSON Schema 参数定义 */
+  /** JSON Schema 鍙傛暟瀹氫箟 */
   parameters: {
     type: 'object'
     properties: Record<string, {
@@ -82,49 +82,49 @@ export interface SkillFunctionDef {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// Skill 执行
-// ═══════════════════════════════════════════════════════════════
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+// Skill 鎵ц
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
 
 export interface SkillInvocation {
-  /** 调用唯一 ID */
+  /** 璋冪敤鍞竴 ID */
   invocationId: string
   /** Skill manifest id */
   skillId: string
-  /** 触发方式 */
+  /** 瑙﹀彂鏂瑰紡 */
   trigger: SkillTrigger
-  /** 触发来源详情 */
+  /** 瑙﹀彂鏉ユ簮璇︽儏 */
   triggerDetail: string
-  /** LLM 传入的参数（仅 llm_function_call） */
+  /** LLM 浼犲叆鐨勫弬鏁帮紙浠?llm_function_call锛?*/
   args?: Record<string, unknown>
-  /** 用户消息上下文 */
+  /** 鐢ㄦ埛娑堟伅涓婁笅鏂?*/
   userMessage?: string
-  /** 引擎快照（只读） */
+  /** 寮曟搸蹇収锛堝彧璇伙級 */
   snapshot: EngineSnapshot
-  /** 运行时上下文（用户活跃、时段、陪伴在场） */
+  /** 杩愯鏃朵笂涓嬫枃锛堢敤鎴锋椿璺冦€佹椂娈点€侀櫔浼村湪鍦猴級 */
   runtime?: RuntimeContext
 }
 
 export interface SkillResult {
-  /** 是否成功 */
+  /** 鏄惁鎴愬姛 */
   ok: boolean
-  /** 返回给 LLM 的结果文本 */
+  /** 杩斿洖缁?LLM 鐨勭粨鏋滄枃鏈?*/
   output: string
-  /** 结构化数据（可选） */
+  /** 缁撴瀯鍖栨暟鎹紙鍙€夛級 */
   data?: unknown
-  /** 错误信息 */
+  /** 閿欒淇℃伅 */
   error?: string
-  /** 是否应将结果注入对话上下文 */
+  /** 鏄惁搴斿皢缁撴灉娉ㄥ叆瀵硅瘽涓婁笅鏂?*/
   injectToContext: boolean
-  /** 是否产生引擎副作用事件 */
+  /** 鏄惁浜х敓寮曟搸鍓綔鐢ㄤ簨浠?*/
   events: ExtensionEvent[]
-  /** 执行耗时毫秒 */
+  /** 鎵ц鑰楁椂姣 */
   durationMs: number
 }
 
-// ═══════════════════════════════════════════════════════════════
-// Skill 实例
-// ═══════════════════════════════════════════════════════════════
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+// Skill 瀹炰緥
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
 
 export type SkillStatus = 'planned' | 'installed' | 'active' | 'disabled' | 'error'
 
@@ -133,30 +133,30 @@ export interface SkillInstance {
   status: SkillStatus
   installedAt: string
   lastError?: string
-  /** 执行计数 */
+  /** 鎵ц璁℃暟 */
   executionCount: number
-  /** 最后执行时间 */
+  /** 鏈€鍚庢墽琛屾椂闂?*/
   lastExecutedAt?: string
   hooks: ExtensionLifecycleHooks
 }
 
-// ═══════════════════════════════════════════════════════════════
-// Skill 开发接口 — 开发者实现此接口来创建 Skill
-// ═══════════════════════════════════════════════════════════════
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+// Skill 寮€鍙戞帴鍙?鈥?寮€鍙戣€呭疄鐜版鎺ュ彛鏉ュ垱寤?Skill
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
 
 export interface SkillHandler {
-  /** Skill 清单 */
+  /** Skill 娓呭崟 */
   readonly manifest: SkillManifest
 
-  /** 执行技能 */
+  /** 鎵ц鎶€鑳?*/
   execute(invocation: SkillInvocation): Promise<SkillResult>
 
-  /** 判断是否应为此用户消息触发（rule 类 Skill 的核心方法） */
+  /** 鍒ゆ柇鏄惁搴斾负姝ょ敤鎴锋秷鎭Е鍙戯紙rule 绫?Skill 鐨勬牳蹇冩柟娉曪級 */
   shouldTrigger?(userMessage: string, snapshot: EngineSnapshot): boolean
 
-  /** 主动触发检查（proactive 类 Skill 的核心方法） */
+  /** 涓诲姩瑙﹀彂妫€鏌ワ紙proactive 绫?Skill 鐨勬牳蹇冩柟娉曪級 */
   shouldActivate?(snapshot: EngineSnapshot): Promise<boolean>
 
-  /** 获取主动触发的调用参数 */
+  /** 鑾峰彇涓诲姩瑙﹀彂鐨勮皟鐢ㄥ弬鏁?*/
   getProactiveInvocation?(snapshot: EngineSnapshot): Promise<SkillInvocation>
 }

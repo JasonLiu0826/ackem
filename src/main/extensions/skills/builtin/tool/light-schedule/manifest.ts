@@ -1,4 +1,4 @@
-// [S-12] 轻量日程
+﻿// [S-12] 杞婚噺鏃ョ▼
 import type { SkillManifest } from '../../../types'
 import type { DispatchConfig } from '../../../../protocols'
 
@@ -6,20 +6,20 @@ const LIGHT_SCHEDULE_DISPATCH: DispatchConfig = {
   mode: 'dispatched',
   subtype: 'llm_function_call',
   time: { active_hours: '00:00-23:59', cooldown_minutes: 0 },
-  habits: ['用户说帮我记一下', '用户问今天还有什么安排'],
-  scenarios: ['md 段落级轻日程', '仅今天/明天'],
-  summary: '轻量 md 日程增删查（非完整日历）。',
-  keywords: ['记一下', '安排', '日程', '提醒', '待办'],
+  habits: ['鐢ㄦ埛璇村府鎴戣涓€涓?, '鐢ㄦ埛闂粖澶╄繕鏈変粈涔堝畨鎺?],
+  scenarios: ['md 娈佃惤绾ц交鏃ョ▼', '浠呬粖澶?鏄庡ぉ'],
+  summary: '杞婚噺 md 鏃ョ▼澧炲垹鏌ワ紙闈炲畬鏁存棩鍘嗭級銆?,
+  keywords: ['璁颁竴涓?, '瀹夋帓', '鏃ョ▼', '鎻愰啋', '寰呭姙'],
   personality_hint: 'neutral'
 }
 
 export const LIGHT_SCHEDULE_MANIFEST: SkillManifest = {
-  id: 'ackem/light-schedule@0.0.1',
-  name: '轻量日程',
+  id: 'Ackem/light-schedule@0.0.1',
+  name: '杞婚噺鏃ョ▼',
   version: '0.0.1',
   category: 'skill',
   skillType: 'tool',
-  description: 'md 段落级轻日程（今天/明天），非 OS 日历。',
+  description: 'md 娈佃惤绾ц交鏃ョ▼锛堜粖澶?鏄庡ぉ锛夛紝闈?OS 鏃ュ巻銆?,
   author: 'JasonLiu0826',
   license: 'AGPL-3.0',
   main: 'skill.ts',
@@ -31,7 +31,7 @@ export const LIGHT_SCHEDULE_MANIFEST: SkillManifest = {
   functionDef: {
     name: 'light_schedule',
     description:
-      '管理轻量 md 日程：add 添加、list 列出、remove 删除。仅支持今天/明天，写入 data/schedule/schedule.md。',
+      '绠＄悊杞婚噺 md 鏃ョ▼锛歛dd 娣诲姞銆乴ist 鍒楀嚭銆乺emove 鍒犻櫎銆備粎鏀寔浠婂ぉ/鏄庡ぉ锛屽啓鍏?data/schedule/schedule.md銆?,
     parameters: {
       type: 'object',
       properties: {
@@ -42,15 +42,15 @@ export const LIGHT_SCHEDULE_MANIFEST: SkillManifest = {
         },
         content: {
           type: 'string',
-          description: '日程内容（add/remove 时使用）'
+          description: '鏃ョ▼鍐呭锛坅dd/remove 鏃朵娇鐢級'
         },
         date: {
           type: 'string',
-          description: 'YYYY-MM-DD，默认今天'
+          description: 'YYYY-MM-DD锛岄粯璁や粖澶?
         },
         time: {
           type: 'string',
-          description: 'HH:MM，可选'
+          description: 'HH:MM锛屽彲閫?
         }
       },
       required: ['action']

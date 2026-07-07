@@ -1,4 +1,4 @@
-// 与 manifest.json 同步；打包进 out/main 后不再依赖磁盘上的 json 文件
+﻿// 涓?manifest.json 鍚屾锛涙墦鍖呰繘 out/main 鍚庝笉鍐嶄緷璧栫鐩樹笂鐨?json 鏂囦欢
 import type { PluginManifest } from '../../types'
 import type { DispatchConfig } from '../../../protocols'
 
@@ -10,27 +10,27 @@ const KNOWLEDGE_DISPATCH: DispatchConfig = {
     cooldown_minutes: 10
   },
   habits: [
-    "用户说'整理一下''帮我梳理''知识卡'",
-    '用户提出需要系统性讲解或整理某个主题'
+    "鐢ㄦ埛璇?鏁寸悊涓€涓?'甯垜姊崇悊''鐭ヨ瘑鍗?",
+    '鐢ㄦ埛鎻愬嚭闇€瑕佺郴缁熸€ц瑙ｆ垨鏁寸悊鏌愪釜涓婚'
   ],
   scenarios: [
-    '用户希望 companion 整理某主题知识',
-    '学习/复习场景下的结构化输出',
-    '用户显式要求纸面卡或知识梳理'
+    '鐢ㄦ埛甯屾湜 companion 鏁寸悊鏌愪富棰樼煡璇?,
+    '瀛︿範/澶嶄範鍦烘櫙涓嬬殑缁撴瀯鍖栬緭鍑?,
+    '鐢ㄦ埛鏄惧紡瑕佹眰绾搁潰鍗℃垨鐭ヨ瘑姊崇悊'
   ],
-  summary: '大模型知识整理纸面卡 + 伴侣短评（不联网、无参考链接）。',
-  keywords: ['整理', '梳理', '知识', '讲解', '科普', '是什么', '介绍一下', '总结'],
+  summary: '澶фā鍨嬬煡璇嗘暣鐞嗙焊闈㈠崱 + 浼翠荆鐭瘎锛堜笉鑱旂綉銆佹棤鍙傝€冮摼鎺ワ級銆?,
+  keywords: ['鏁寸悊', '姊崇悊', '鐭ヨ瘑', '璁茶В', '绉戞櫘', '鏄粈涔?, '浠嬬粛涓€涓?, '鎬荤粨'],
   personality_hint: 'gentle_care'
 }
 
 export const KNOWLEDGE_PRESENTATION_MANIFEST: PluginManifest = {
-  id: 'ackem/knowledge-presentation@1.0.0',
-  name: '知识整理',
+  id: 'Ackem/knowledge-presentation@1.0.0',
+  name: '鐭ヨ瘑鏁寸悊',
   version: '1.0.0',
   category: 'plugin',
   pluginType: 'tool',
   description:
-    '大模型知识整理纸面卡 + 伴侣短评（不联网、无参考链接）；Ackem 基础能力，始终启用',
+    '澶фā鍨嬬煡璇嗘暣鐞嗙焊闈㈠崱 + 浼翠荆鐭瘎锛堜笉鑱旂綉銆佹棤鍙傝€冮摼鎺ワ級锛汢ritney 鍩虹鑳藉姏锛屽缁堝惎鐢?,
   author: 'JasonLiu0826',
   license: 'AGPL-3.0',
   main: 'plugin.ts',

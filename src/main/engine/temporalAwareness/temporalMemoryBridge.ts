@@ -1,6 +1,6 @@
-// [temporalAwareness/temporalMemoryBridge] — 时间记忆桥接器
-// 职责：以日期为线索桥接关联记忆，三级召回策略
-// 设计文档：docs/plan/时间敏感主动记忆系统设计_6_11.md §3.3
+﻿// [temporalAwareness/temporalMemoryBridge] 鈥?鏃堕棿璁板繂妗ユ帴鍣?
+// 鑱岃矗锛氫互鏃ユ湡涓虹嚎绱㈡ˉ鎺ュ叧鑱旇蹇嗭紝涓夌骇鍙洖绛栫暐
+// 璁捐鏂囨。锛歞ocs/plan/鏃堕棿鏁忔劅涓诲姩璁板繂绯荤粺璁捐_6_11.md 搂3.3
 
 import type { SpecialDate } from './specialDateDetector'
 import type { TemporalProactiveSignal } from './temporalProactiveTrigger'
@@ -9,13 +9,13 @@ import { t } from '../../i18n'
 
 export interface MemoryBundle {
   seedFacts: string[]           // linkedFactIds
-  narrative: string | null      // 合成的时间叙事
+  narrative: string | null      // 鍚堟垚鐨勬椂闂村彊浜?
 }
 
 /**
- * L1: 生日/周年/关系锚点 → 直连事实 only
- * L2: 节日/recurring → 直连事实（这里只返回linkedFactIds，扩散由调用方用AssociationIndex做）
- * L3: 普通日/"去年今天" → 全量（调用方可后续用embedding重排）
+ * L1: 鐢熸棩/鍛ㄥ勾/鍏崇郴閿氱偣 鈫?鐩磋繛浜嬪疄 only
+ * L2: 鑺傛棩/recurring 鈫?鐩磋繛浜嬪疄锛堣繖閲屽彧杩斿洖linkedFactIds锛屾墿鏁ｇ敱璋冪敤鏂圭敤AssociationIndex鍋氾級
+ * L3: 鏅€氭棩/"鍘诲勾浠婂ぉ" 鈫?鍏ㄩ噺锛堣皟鐢ㄦ柟鍙悗缁敤embedding閲嶆帓锛?
  */
 export function recallForSpecialDate(
   specialDate: SpecialDate,
@@ -25,8 +25,8 @@ export function recallForSpecialDate(
   const seedFacts = specialDate.linkedFactIds ?? []
 
   let narrative: string | null = null
-  if (specialDate.type === 'ackem_birthday') {
-    narrative = t('specialDate.ackemBirthdayNarrative')
+  if (specialDate.type === 'Ackem_birthday') {
+    narrative = t('specialDate.AckemBirthdayNarrative')
   } else if (specialDate.type === 'first_met_anniversary' && specialDate.timeDepth) {
     narrative = t('specialDate.firstMetNarrative', { label: specialDate.timeDepth.label })
   } else if (specialDate.type === 'birthday') {
@@ -45,7 +45,7 @@ export function recallForSpecialDate(
 
 function resolveLevel(type: SpecialDate['type']): 1 | 2 | 3 {
   switch (type) {
-    case 'ackem_birthday':
+    case 'Ackem_birthday':
     case 'first_met_anniversary':
     case 'birthday':
     case 'relationship':
@@ -56,11 +56,11 @@ function resolveLevel(type: SpecialDate['type']): 1 | 2 | 3 {
     case 'milestone':
       return 3
     default:
-      return 2  // 未知类型默认为 L2
+      return 2  // 鏈煡绫诲瀷榛樿涓?L2
   }
 }
 
-/** FIX-008: 特殊日 memoryBundles.seedFacts → Tier B 关联记忆块（与 retriever 行格式一致） */
+/** FIX-008: 鐗规畩鏃?memoryBundles.seedFacts 鈫?Tier B 鍏宠仈璁板繂鍧楋紙涓?retriever 琛屾牸寮忎竴鑷达級 */
 export function buildTemporalSeedTierBBlock(
   signal: TemporalProactiveSignal,
   factStore: FactStore
@@ -75,9 +75,9 @@ export function buildTemporalSeedTierBBlock(
       seen.add(id)
       const fact = factStore.getById(id)
       if (!fact || fact.status !== 'active') continue
-      lines.push(`· ${fact.subject}：${fact.summary}`)
+      lines.push(`路 ${fact.subject}锛?{fact.summary}`)
     }
   }
   if (lines.length === 0) return ''
-  return `【今日关联记忆】\n${lines.join('\n')}`
+  return `銆愪粖鏃ュ叧鑱旇蹇嗐€慭n${lines.join('\n')}`
 }

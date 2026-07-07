@@ -1,4 +1,4 @@
-import { loadSettings } from '../../../../../settings'
+﻿import { loadSettings } from '../../../../../settings'
 import { resolveDataRoot } from '../../../../../paths'
 import type { EngineSnapshot } from '../../../../protocols'
 import type { SkillHandler, SkillInvocation, SkillResult } from '../../../types'
@@ -13,7 +13,7 @@ function resolveDataRootForSkill(): string {
   try {
     return resolveDataRoot(loadSettings())
   } catch {
-    return process.env.ACKEM_TEST_DATA_ROOT ?? ''
+    return process.env.Ackem_TEST_DATA_ROOT ?? ''
   }
 }
 

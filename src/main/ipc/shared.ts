@@ -1,4 +1,4 @@
-// [ipc/shared] — IPC 域模块共享：数据根、索引缓存、引擎状态合并、扩展协调器引用
+﻿// [ipc/shared] 鈥?IPC 鍩熸ā鍧楀叡浜細鏁版嵁鏍广€佺储寮曠紦瀛樸€佸紩鎿庣姸鎬佸悎骞躲€佹墿灞曞崗璋冨櫒寮曠敤
 
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -10,7 +10,7 @@ import { deleteChatHistoryFromDb } from '../db/repos/chatHistory'
 import { ensureDataLayout } from '../layout'
 import { loadState, saveState, defaultFullState } from '../engine/state-persistence'
 import { defaultPersonalitySlice } from '../personalityPresets'
-import { STATE_JSON_VERSION } from '../engine/ackemParams'
+import { STATE_JSON_VERSION } from '../engine/AckemParams'
 import type { FullState } from '../engine/types'
 import { invalidateEngineCache } from '../engineCache'
 import type { BuildContextArgs } from '../context'
@@ -32,9 +32,9 @@ let registerExtensionsRendererPushRef: ((channel: string, payload: unknown) => v
 export type ContextBuildInvoke = Omit<BuildContextArgs, 'index' | 'settings'> & {
   sessionId?: string
   turnIndex?: number
-  /** 聊天页电脑助手模式（本会话） */
+  /** 鑱婂ぉ椤电數鑴戝姪鎵嬫ā寮忥紙鏈細璇濓級 */
   desktopAgentChatMode?: boolean
-  /** dispatch:respond 重入：用户已确认/拒绝扩展 */
+  /** dispatch:respond 閲嶅叆锛氱敤鎴峰凡纭/鎷掔粷鎵╁睍 */
   dispatchRespond?: { accepted: boolean; extensionId: string; remember?: boolean }
 }
 
@@ -140,7 +140,7 @@ export function mergeEngineState(root: string, settings: AppSettings): FullState
   return s
 }
 
-/** 删除 companion 下全部聊天记录文件（含旧版 chat-history.json） */
+/** 鍒犻櫎 companion 涓嬪叏閮ㄨ亰澶╄褰曟枃浠讹紙鍚棫鐗?chat-history.json锛?*/
 export function clearChatHistoryFiles(root: string): void {
   const companionDir = join(root, 'companion')
   if (!existsSync(companionDir)) return
@@ -185,7 +185,7 @@ export function loadSessionsFile(
     return [
       {
         id: 'default',
-        name: '默认会话',
+        name: '榛樿浼氳瘽',
         createdAt: new Date(0).toISOString(),
         lastActive: new Date().toISOString()
       }

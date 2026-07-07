@@ -1,4 +1,4 @@
-// [S-15] 网页搜索 — Bing Skill manifest
+﻿// [S-15] 缃戦〉鎼滅储 鈥?Bing Skill manifest
 
 import type { SkillManifest } from '../../../types'
 import type { DispatchConfig } from '../../../../protocols'
@@ -11,26 +11,26 @@ const WEB_SEARCH_DISPATCH: DispatchConfig = {
     cooldown_minutes: 5
   },
   habits: [
-    "用户说'帮我搜''搜索一下''查一下'",
-    '用户询问需要联网的实时信息（新闻、价格、版本；天气由 get_weather 处理）'
+    "鐢ㄦ埛璇?甯垜鎼?'鎼滅储涓€涓?'鏌ヤ竴涓?",
+    '鐢ㄦ埛璇㈤棶闇€瑕佽仈缃戠殑瀹炴椂淇℃伅锛堟柊闂汇€佷环鏍笺€佺増鏈紱澶╂皵鐢?get_weather 澶勭悊锛?
   ],
   scenarios: [
-    '用户需要实时或联网信息',
-    '新闻、文档、版本更新等查询（天气除外）',
-    'Companion 自身知识不足以回答的事实性问题'
+    '鐢ㄦ埛闇€瑕佸疄鏃舵垨鑱旂綉淇℃伅',
+    '鏂伴椈銆佹枃妗ｃ€佺増鏈洿鏂扮瓑鏌ヨ锛堝ぉ姘旈櫎澶栵級',
+    'Companion 鑷韩鐭ヨ瘑涓嶈冻浠ュ洖绛旂殑浜嬪疄鎬ч棶棰?
   ],
-  summary: '通过 Bing 搜索网页获取实时信息，供 companion 引用后回答。',
-  keywords: ['搜索', '搜一下', '查一下', '百度', 'google', 'bing', '新闻', '最新'],
+  summary: '閫氳繃 Bing 鎼滅储缃戦〉鑾峰彇瀹炴椂淇℃伅锛屼緵 companion 寮曠敤鍚庡洖绛斻€?,
+  keywords: ['鎼滅储', '鎼滀竴涓?, '鏌ヤ竴涓?, '鐧惧害', 'google', 'bing', '鏂伴椈', '鏈€鏂?],
   personality_hint: 'neutral'
 }
 
 export const WEB_SEARCH_MANIFEST: SkillManifest = {
-  id: 'ackem/web-search@1.0.0',
-  name: '网页搜索',
+  id: 'Ackem/web-search@1.0.0',
+  name: '缃戦〉鎼滅储',
   version: '1.0.0',
   category: 'skill',
   skillType: 'tool',
-  description: '通过 Bing 搜索网页，获取实时信息（新闻、文档等；天气请用 get_weather）',
+  description: '閫氳繃 Bing 鎼滅储缃戦〉锛岃幏鍙栧疄鏃朵俊鎭紙鏂伴椈銆佹枃妗ｇ瓑锛涘ぉ姘旇鐢?get_weather锛?,
   author: 'JasonLiu0826',
   license: 'AGPL-3.0',
   main: 'skill.ts',
@@ -42,13 +42,13 @@ export const WEB_SEARCH_MANIFEST: SkillManifest = {
   functionDef: {
     name: 'web_search',
     description:
-      '通过 Bing 搜索网页获取实时信息。用于新闻、价格、版本、最新事件等。**禁止**用于天气查询（天气必须用 get_weather）。',
+      '閫氳繃 Bing 鎼滅储缃戦〉鑾峰彇瀹炴椂淇℃伅銆傜敤浜庢柊闂汇€佷环鏍笺€佺増鏈€佹渶鏂颁簨浠剁瓑銆?*绂佹**鐢ㄤ簬澶╂皵鏌ヨ锛堝ぉ姘斿繀椤荤敤 get_weather锛夈€?,
     parameters: {
       type: 'object',
       properties: {
         query: {
           type: 'string',
-          description: '搜索关键词，由 LLM 从用户意图提取，尽量具体完整'
+          description: '鎼滅储鍏抽敭璇嶏紝鐢?LLM 浠庣敤鎴锋剰鍥炬彁鍙栵紝灏介噺鍏蜂綋瀹屾暣'
         }
       },
       required: ['query']

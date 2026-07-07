@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync } from 'fs'
+﻿import { existsSync, mkdirSync } from 'fs'
 import { join } from 'path'
 import { app } from 'electron'
 

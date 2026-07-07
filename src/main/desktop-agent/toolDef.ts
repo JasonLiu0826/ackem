@@ -1,4 +1,4 @@
-import type { SkillFunctionDef } from '../extensions/skills/types'
+﻿import type { SkillFunctionDef } from '../extensions/skills/types'
 
 export const USE_COMPUTER_TOOL_NAME = 'use_computer'
 
@@ -8,16 +8,16 @@ const useComputerParameters = {
     action: {
       type: 'string',
       description:
-        '动作：list_folder, search_files, stat_file, grep_text, read_text, read_document, read_image, open_folder, open_file, open_app, close_file, close_app, copy_path, move_path, mkdir, write_text, delete_path, download_file, download_and_install, run_installer, import_to_ackem, focus_app'
+        '鍔ㄤ綔锛歭ist_folder, search_files, stat_file, grep_text, read_text, read_document, read_image, open_folder, open_file, open_app, close_file, close_app, copy_path, move_path, mkdir, write_text, delete_path, download_file, download_and_install, run_installer, import_to_Ackem, focus_app'
     },
-    path: { type: 'string', description: '本机路径（绝对或相对用户目录）' },
-    path_to: { type: 'string', description: '目标路径（复制/移动）' },
-    target: { type: 'string', description: '应用名、窗口名或关闭对象' },
-    query: { type: 'string', description: '搜索关键词' },
-    url: { type: 'string', description: 'HTTPS 下载地址' },
+    path: { type: 'string', description: '鏈満璺緞锛堢粷瀵规垨鐩稿鐢ㄦ埛鐩綍锛? },
+    path_to: { type: 'string', description: '鐩爣璺緞锛堝鍒?绉诲姩锛? },
+    target: { type: 'string', description: '搴旂敤鍚嶃€佺獥鍙ｅ悕鎴栧叧闂璞? },
+    query: { type: 'string', description: '鎼滅储鍏抽敭璇? },
+    url: { type: 'string', description: 'HTTPS 涓嬭浇鍦板潃' },
     options: {
       type: 'object',
-      description: '额外选项，如 write_text 的 content',
+      description: '棰濆閫夐」锛屽 write_text 鐨?content',
       properties: {
         content: { type: 'string' }
       }
@@ -30,7 +30,7 @@ export function useComputerToolDef(): SkillFunctionDef {
   return {
     name: USE_COMPUTER_TOOL_NAME,
     description:
-      '对本机文件或应用程序执行操作（浏览/搜索/读取/打开/整理/下载/导入等，详见系统提示中的电脑助手能力清单）。每次执行前需用户在弹窗中确认。仅在电脑助手模式开启时使用。',
+      '瀵规湰鏈烘枃浠舵垨搴旂敤绋嬪簭鎵ц鎿嶄綔锛堟祻瑙?鎼滅储/璇诲彇/鎵撳紑/鏁寸悊/涓嬭浇/瀵煎叆绛夛紝璇﹁绯荤粺鎻愮ず涓殑鐢佃剳鍔╂墜鑳藉姏娓呭崟锛夈€傛瘡娆℃墽琛屽墠闇€鐢ㄦ埛鍦ㄥ脊绐椾腑纭銆備粎鍦ㄧ數鑴戝姪鎵嬫ā寮忓紑鍚椂浣跨敤銆?,
     parameters: { ...useComputerParameters, required: [...useComputerParameters.required] }
   }
 }

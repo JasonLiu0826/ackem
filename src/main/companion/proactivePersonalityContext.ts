@@ -15,6 +15,7 @@ export type ProactiveMessageKind =
   | 'time_greet'
   | 'miss_you'
   | 'playful_nudge'
+  | 'photo_share'
 
 /** 注入 LLM 的 v3 人格块（29 预设通用） */
 export function buildProactivePersonalityBlock(args: {
@@ -135,5 +136,7 @@ export function pickCompanionProactiveKind(args: {
         : ['check_in', 'memory_echo', 'time_greet']
   if (args.fact) pool.push('memory_echo', 'memory_echo')
   if (args.aff > 25 && args.stage !== 'STRANGER' && I >= 40) pool.push('miss_you', 'miss_you')
+  // 偶尔主动分享照片（低概率，需要生图耗时）
+  if (Math.random() < 0.15) pool.push('photo_share')
   return pool[Math.floor(Math.random() * pool.length)] ?? 'check_in'
 }

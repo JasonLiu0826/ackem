@@ -1,12 +1,12 @@
-// [S-05] 深夜提醒
+﻿// [S-05] 娣卞鎻愰啋
 import type { SkillManifest } from '../../../types'
 import type { DispatchConfig } from '../../../../protocols'
 
 const PROD_DAILY_AT = '23:45'
 
-/** 生产 23:45；测试/开发可用 ACKEM_LATE_NIGHT_AT=HH:MM */
+/** 鐢熶骇 23:45锛涙祴璇?寮€鍙戝彲鐢?Ackem_LATE_NIGHT_AT=HH:MM */
 export function getLateNightDailyAt(): string {
-  const override = process.env.ACKEM_LATE_NIGHT_AT?.trim()
+  const override = process.env.Ackem_LATE_NIGHT_AT?.trim()
   if (override && /^\d{1,2}:\d{2}$/.test(override)) return override
   return PROD_DAILY_AT
 }
@@ -21,10 +21,10 @@ const LATE_NIGHT_DISPATCH_BASE: Omit<DispatchConfig, 'time'> & {
   time: {
     active_hours: '22:00-02:00'
   },
-  habits: ['用户深夜仍在使用电脑', '用户可能需要休息提醒'],
-  scenarios: ['深夜窗口内关心式提醒休息', '非命令式睡眠建议'],
-  summary: '深夜轻量提醒休息/睡眠（伴侣语气，非医疗建议）。',
-  keywords: ['睡觉', '休息', '熬夜', '深夜'],
+  habits: ['鐢ㄦ埛娣卞浠嶅湪浣跨敤鐢佃剳', '鐢ㄦ埛鍙兘闇€瑕佷紤鎭彁閱?],
+  scenarios: ['娣卞绐楀彛鍐呭叧蹇冨紡鎻愰啋浼戞伅', '闈炲懡浠ゅ紡鐫＄湢寤鸿'],
+  summary: '娣卞杞婚噺鎻愰啋浼戞伅/鐫＄湢锛堜即渚ｈ姘旓紝闈炲尰鐤楀缓璁級銆?,
+  keywords: ['鐫¤', '浼戞伅', '鐔', '娣卞'],
   personality_hint: 'gentle_care'
 }
 
@@ -42,12 +42,12 @@ export function getLateNightDispatch(): DispatchConfig {
 }
 
 export const LATE_NIGHT_REMINDER_MANIFEST: SkillManifest = {
-  id: 'ackem/late-night-reminder@0.0.1',
-  name: '深夜提醒',
+  id: 'Ackem/late-night-reminder@0.0.1',
+  name: '娣卞鎻愰啋',
   version: '0.0.1',
   category: 'skill',
   skillType: 'proactive',
-  description: '深夜窗口内轻量提醒休息；对陌生人不触发。',
+  description: '娣卞绐楀彛鍐呰交閲忔彁閱掍紤鎭紱瀵归檶鐢熶汉涓嶈Е鍙戙€?,
   author: 'JasonLiu0826',
   license: 'AGPL-3.0',
   main: 'skill.ts',

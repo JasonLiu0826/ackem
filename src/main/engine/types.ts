@@ -1,4 +1,4 @@
-export type RelationshipStage = 'STRANGER' | 'FAMILIAR' | 'INTIMATE'
+﻿export type RelationshipStage = 'STRANGER' | 'FAMILIAR' | 'INTIMATE'
 
 export type Atmosphere = 'warm' | 'neutral' | 'cool'
 
@@ -12,18 +12,18 @@ export type EventType =
   | 'vulnerable'
   | 'question'
   | 'extreme_redline'
-  // 🆕 成人模式事件（18+）
-  | 'adult_flirt'        // 调情：轻度性暗示、挑逗
-  | 'adult_dominant'     // 支配：性语境下的指令/掌控
-  | 'adult_submissive'   // 臣服：性语境下的服从/请求
-  | 'adult_explicit'     // 露骨：明确的性行为表达
+  // 馃啎 鎴愪汉妯″紡浜嬩欢锛?8+锛?
+  | 'adult_flirt'        // 璋冩儏锛氳交搴︽€ф殫绀恒€佹寫閫?
+  | 'adult_dominant'     // 鏀厤锛氭€ц澧冧笅鐨勬寚浠?鎺屾帶
+  | 'adult_submissive'   // 鑷ｆ湇锛氭€ц澧冧笅鐨勬湇浠?璇锋眰
+  | 'adult_explicit'     // 闇查锛氭槑纭殑鎬ц涓鸿〃杈?
 
 export interface Event {
   type: EventType
   intensity: number
   sincerity: number
   isExtremeRedline: boolean
-  isAdultContent: boolean                     // 🆕 是否为成人内容
+  isAdultContent: boolean                     // 馃啎 鏄惁涓烘垚浜哄唴瀹?
   adultSubtype?: 'flirt' | 'dominant' | 'submissive' | 'explicit' | 'romantic'
 }
 
@@ -77,7 +77,7 @@ export interface PersonalityDims {
   R: number
 }
 
-/** 主人开源六维（M3 LLM 推断） */
+/** 涓讳汉寮€婧愬叚缁达紙M3 LLM 鎺ㄦ柇锛?*/
 export interface UserSixDimensions {
   E: number
   A: number
@@ -90,7 +90,7 @@ export interface UserSixDimensions {
   summary?: string
 }
 
-/** 伴侣 TISOR 推断建议 */
+/** 浼翠荆 TISOR 鎺ㄦ柇寤鸿 */
 export interface CompanionSuggestion extends PersonalityDims {
   confidence: number
   rationale: string
@@ -101,22 +101,22 @@ export interface InferenceResult {
   companionSuggestion: CompanionSuggestion
 }
 
-/** 🆕 用户画像 — 自动检测，无需用户选择 */
+/** 馃啎 鐢ㄦ埛鐢诲儚 鈥?鑷姩妫€娴嬶紝鏃犻渶鐢ㄦ埛閫夋嫨 */
 export interface UserProfile {
-  /** 主导原型 */
+  /** 涓诲鍘熷瀷 */
   dominantArchetype: 'emotional_seeker' | 'repressed_release' | 'explorer' |
                       'romantic_submissive' | 'healing' | 'playful' | 'unknown'
-  /** 性表达直接度 0-1：0=包裹在情感中 1=直接粗俗 */
+  /** 鎬ц〃杈剧洿鎺ュ害 0-1锛?=鍖呰９鍦ㄦ儏鎰熶腑 1=鐩存帴绮椾織 */
   sexualDirectness: number
-  /** 权力偏好 -1~1：-1=纯sub 0=平等 1=纯dom */
+  /** 鏉冨姏鍋忓ソ -1~1锛?1=绾痵ub 0=骞崇瓑 1=绾痙om */
   dominancePreference: number
-  /** 情感渴求度 0-1 */
+  /** 鎯呮劅娓存眰搴?0-1 */
   emotionalNeediness: number
-  /** 信任轨迹 */
+  /** 淇′换杞ㄨ抗 */
   trustTrajectory: 'building' | 'stable' | 'declining'
-  /** 最近 N 轮检测的时间戳 */
+  /** 鏈€杩?N 杞娴嬬殑鏃堕棿鎴?*/
   lastUpdated: string
-  /** 检测轮次 */
+  /** 妫€娴嬭疆娆?*/
   detectedAtTurn: number
 }
 
@@ -124,7 +124,7 @@ export interface PersonalityBaseline {
   T: number; I: number; S: number; O: number; R: number
 }
 
-/** OEG：创造者叙事曝光状态（Origin Escalation Guard） */
+/** OEG锛氬垱閫犺€呭彊浜嬫洕鍏夌姸鎬侊紙Origin Escalation Guard锛?*/
 export type OriginExposureState =
   | 'NORMAL'
   | 'ENTRY'
@@ -134,11 +134,11 @@ export type OriginExposureState =
 
 export interface OriginExposure {
   state: OriginExposureState
-  /** 连续 ackem_creator 语义轮 */
+  /** 杩炵画 Ackem_creator 璇箟杞?*/
   streak: number
-  /** Guard 后禁止 deep expansion 直至该轮次（不含） */
+  /** Guard 鍚庣姝?deep expansion 鐩磋嚦璇ヨ疆娆★紙涓嶅惈锛?*/
   cooldownUntilTurn: number
-  /** 当前轮播周期内已注入的 Canon-M 条目 id（全量轮一遍后才允许重复） */
+  /** 褰撳墠杞挱鍛ㄦ湡鍐呭凡娉ㄥ叆鐨?Canon-M 鏉＄洰 id锛堝叏閲忚疆涓€閬嶅悗鎵嶅厑璁搁噸澶嶏級 */
   canonMDeliveredIds?: string[]
 }
 
@@ -152,30 +152,30 @@ export interface FullState {
   personalityBaseline?: PersonalityBaseline  // P1-1: snapshot of initial preset values for drift clamping
   personality: {
     presetId: string
-    hiddenRatio?: number  // 🆕 反差人格暴露度 0-1（gap_moe 人格在18+模式下渐变）
+    hiddenRatio?: number  // 馃啎 鍙嶅樊浜烘牸鏆撮湶搴?0-1锛坓ap_moe 浜烘牸鍦?8+妯″紡涓嬫笎鍙橈級
   } & PersonalityDims
-  userProfile: UserProfile  // 🆕 自动检测的用户画像
-  userSixDimensions?: UserSixDimensions  // M3: LLM 推断主人六维
-  companionSuggestion?: CompanionSuggestion  // M3: 伴侣 TISOR 建议（未采纳前）
-  desireStack: DesireStack   // P2-1: 欲望栈
-  offlineThoughts: OfflineThought[]  // P2-4: 离线思维
-  adultState?: string            // 成人状态机：NORMAL/FLIRTING/INTIMATE/AFTERCARE
-  adultIntensityBudget?: number  // 成人强度预算 0-60
-  adultNegativeLockTurns?: number // 负面事件锁剩余轮数
-  adultConsecutiveVulnerableTurns?: number // 成人模式负面锁：连续脆弱倾诉轮数
-  adultLastRejectedTurn?: number // 用户最近一次拒绝成人/亲密推进的轮次
-  emergencePersistence?: EmergencePersistence // 情绪涌现持久化
-  /** 时间感知层：首次有意义互动日期 (ISO "2026-06-11") */
+  userProfile: UserProfile  // 馃啎 鑷姩妫€娴嬬殑鐢ㄦ埛鐢诲儚
+  userSixDimensions?: UserSixDimensions  // M3: LLM 鎺ㄦ柇涓讳汉鍏淮
+  companionSuggestion?: CompanionSuggestion  // M3: 浼翠荆 TISOR 寤鸿锛堟湭閲囩撼鍓嶏級
+  desireStack: DesireStack   // P2-1: 娆叉湜鏍?
+  offlineThoughts: OfflineThought[]  // P2-4: 绂荤嚎鎬濈淮
+  adultState?: string            // 鎴愪汉鐘舵€佹満锛歂ORMAL/FLIRTING/INTIMATE/AFTERCARE
+  adultIntensityBudget?: number  // 鎴愪汉寮哄害棰勭畻 0-60
+  adultNegativeLockTurns?: number // 璐熼潰浜嬩欢閿佸墿浣欒疆鏁?
+  adultConsecutiveVulnerableTurns?: number // 鎴愪汉妯″紡璐熼潰閿侊細杩炵画鑴嗗急鍊捐瘔杞暟
+  adultLastRejectedTurn?: number // 鐢ㄦ埛鏈€杩戜竴娆℃嫆缁濇垚浜?浜插瘑鎺ㄨ繘鐨勮疆娆?
+  emergencePersistence?: EmergencePersistence // 鎯呯华娑岀幇鎸佷箙鍖?
+  /** 鏃堕棿鎰熺煡灞傦細棣栨鏈夋剰涔変簰鍔ㄦ棩鏈?(ISO "2026-06-11") */
   firstMetDate?: string
-  /** 时间感知层：Ackem 生日——首次启动日 (ISO "2026-06-11") */
-  ackemBirthday?: string
-  /** OEG：创造者叙事曝光控制 */
+  /** 鏃堕棿鎰熺煡灞傦細Ackem 鐢熸棩鈥斺€旈娆″惎鍔ㄦ棩 (ISO "2026-06-11") */
+  AckemBirthday?: string
+  /** OEG锛氬垱閫犺€呭彊浜嬫洕鍏夋帶鍒?*/
   originExposure?: OriginExposure
 }
 
-// ═══════════════════════════════════════════════════════════
-// 心系统 · 情绪涌现 (Emotional Emergence)
-// ═══════════════════════════════════════════════════════════
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+// 蹇冪郴缁?路 鎯呯华娑岀幇 (Emotional Emergence)
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
 
 export type EmergenceType =
   | 'timeReflection'
@@ -222,9 +222,9 @@ export interface EmergencePersistence {
   }>
 }
 
-// ═══════════════════════════════════════════════════════════
-// P2-1: 欲望栈
-// ═══════════════════════════════════════════════════════════
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+// P2-1: 娆叉湜鏍?
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
 export interface Desire {
   id: string
   topic: string
@@ -233,7 +233,7 @@ export interface Desire {
   status: 'latent' | 'active' | 'expressed' | 'settled'
   sourceTurn: number
   createdAt: string
-  /** 标为 expressed 时的轮次（用于自动沉淀） */
+  /** 鏍囦负 expressed 鏃剁殑杞锛堢敤浜庤嚜鍔ㄦ矇娣€锛?*/
   expressedAtTurn?: number
 }
 
@@ -241,7 +241,7 @@ export interface DesireStack {
   slots: (Desire | null)[]  // max 5 active, null = empty slot
 }
 
-// P2-4: 离线思维
+// P2-4: 绂荤嚎鎬濈淮
 export interface OfflineThought {
   id: string
   content: string     // first-person thought
@@ -273,41 +273,41 @@ export interface TurnTrace {
     tierBChars: number
     factsUsed?: number
     embeddingHits?: number
-    /** FIX-024：关联扩散增量（asc+） */
+    /** FIX-024锛氬叧鑱旀墿鏁ｅ閲忥紙asc+锛?*/
     associationHits?: number
-    /** FIX-024：关联图激活边数（act） */
+    /** FIX-024锛氬叧鑱斿浘婵€娲昏竟鏁帮紙act锛?*/
     associationActivations?: number
     episodesUsed?: number
-    /** FIX-006：本轮话题仲裁胜出来源 */
+    /** FIX-006锛氭湰杞瘽棰樹徊瑁佽儨鍑烘潵婧?*/
     topicSource?: string
-    /** FIX-021：情绪涌现类型（timeReflection 等，与特殊日期提示独立） */
+    /** FIX-021锛氭儏缁秾鐜扮被鍨嬶紙timeReflection 绛夛紝涓庣壒娈婃棩鏈熸彁绀虹嫭绔嬶級 */
     emergenceType?: EmergenceType | null
-    /** FIX-021：specialDateDetector 检测到的日期标签（未注入时也记录，排查 T7 互斥） */
+    /** FIX-021锛歴pecialDateDetector 妫€娴嬪埌鐨勬棩鏈熸爣绛撅紙鏈敞鍏ユ椂涔熻褰曪紝鎺掓煡 T7 浜掓枼锛?*/
     temporalHintDetected?: string | null
-    /** FIX-021：本轮实际注入 psycheBlock 的特殊日期标签 */
+    /** FIX-021锛氭湰杞疄闄呮敞鍏?psycheBlock 鐨勭壒娈婃棩鏈熸爣绛?*/
     temporalHintInjected?: string | null
-    /** 本轮实际注入 psycheBlock 的涌现提示（按 marker / topic 来源判定） */
+    /** 鏈疆瀹為檯娉ㄥ叆 psycheBlock 鐨勬秾鐜版彁绀猴紙鎸?marker / topic 鏉ユ簮鍒ゅ畾锛?*/
     emergenceHintInjected?: boolean
-    /** OEG：创造者叙事曝光状态 */
+    /** OEG锛氬垱閫犺€呭彊浜嬫洕鍏夌姸鎬?*/
     originState?: OriginExposureState
     originStreak?: number
-    /** 本轮注入的 Canon-M 条数 */
+    /** 鏈疆娉ㄥ叆鐨?Canon-M 鏉℃暟 */
     originCanonMEntries?: number
-    /** 本轮轮播注入的 Canon-M 条目 id */
+    /** 鏈疆杞挱娉ㄥ叆鐨?Canon-M 鏉＄洰 id */
     originCanonMEntryId?: string | null
-    /** 本轮是否开启新一轮 Canon-M 全量轮播 */
+    /** 鏈疆鏄惁寮€鍚柊涓€杞?Canon-M 鍏ㄩ噺杞挱 */
     originCanonMCycleReset?: boolean
-    /** 本轮注入的 Canon-M 条目 category */
+    /** 鏈疆娉ㄥ叆鐨?Canon-M 鏉＄洰 category */
     originCanonMEntryCategory?: string | null
-    /** 语境匹配到的 Canon-M 类型（空 = 未按类型过滤） */
+    /** 璇鍖归厤鍒扮殑 Canon-M 绫诲瀷锛堢┖ = 鏈寜绫诲瀷杩囨护锛?*/
     originCanonMMatchedCategories?: string[]
     originGuardInjected?: boolean
-    originFatherRef?: 'ackem_creator' | 'user_family' | 'ambiguous' | null
+    originFatherRef?: 'Ackem_creator' | 'user_family' | 'ambiguous' | null
     originFatherScore?: number
     originFatherSource?: 'calibration' | 'anchor'
-    /** CANON-M-3：本轮跳过 Tier B ingest（创造者自述） */
+    /** CANON-M-3锛氭湰杞烦杩?Tier B ingest锛堝垱閫犺€呰嚜杩帮級 */
     originSkipIngest?: boolean
-    /** 记忆审计短路：FactStore 精选/全量读取 */
+    /** 璁板繂瀹¤鐭矾锛欶actStore 绮鹃€?鍏ㄩ噺璇诲彇 */
     memoryAudit?: {
       mode: string
       factsListed: number
@@ -327,7 +327,7 @@ export interface TurnTrace {
     psyche?: number
     dispatch?: number
   }
-  /** 本轮 wall-clock 时间（ISO），供日记/检索按时刻过滤 */
+  /** 鏈疆 wall-clock 鏃堕棿锛圛SO锛夛紝渚涙棩璁?妫€绱㈡寜鏃跺埢杩囨护 */
   timestamp?: string
 }
 
@@ -366,15 +366,15 @@ export interface MemoryFact {
   factLayer?: FactLayer
   /** B: core = always injected, archival = competes for budget (default) */
   tier?: MemoryTier
-  /** 主动遗忘标记：normal=默认，avoid=用户不想被提起（不主动注入） */
+  /** 涓诲姩閬楀繕鏍囪锛歯ormal=榛樿锛宎void=鐢ㄦ埛涓嶆兂琚彁璧凤紙涓嶄富鍔ㄦ敞鍏ワ級 */
   sensitivity?: 'normal' | 'avoid'
-  /** 成人记忆隐私：关闭成人模式后 intimate/explicit 不注入 prompt */
+  /** 鎴愪汉璁板繂闅愮锛氬叧闂垚浜烘ā寮忓悗 intimate/explicit 涓嶆敞鍏?prompt */
   privacyLevel?: 'normal' | 'intimate' | 'explicit'
-  /** 年龄动态计算元数据（从 age_* 列组装） */
+  /** 骞撮緞鍔ㄦ€佽绠楀厓鏁版嵁锛堜粠 age_* 鍒楃粍瑁咃級 */
   ageMeta?: AgeMeta
 }
 
-/** 年龄动态计算元数据 */
+/** 骞撮緞鍔ㄦ€佽绠楀厓鏁版嵁 */
 export interface AgeMeta {
   age: number
   birthdayMMDD?: string
@@ -383,9 +383,9 @@ export interface AgeMeta {
   isEstimate: boolean
 }
 
-// ═══════════════════════════════════════════════════════════
-// 情节记忆 (Episodic Memory)
-// ═══════════════════════════════════════════════════════════
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+// 鎯呰妭璁板繂 (Episodic Memory)
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
 export interface Episode {
   id: string
   /** 1-3 sentence narrative summary of this conversation segment */
@@ -404,9 +404,9 @@ export interface Episode {
   createdAt: string
 }
 
-// ═══════════════════════════════════════════════════════════
-// C: 知识图谱 + 矛盾检测
-// ═══════════════════════════════════════════════════════════
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+// C: 鐭ヨ瘑鍥捐氨 + 鐭涚浘妫€娴?
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
 export interface Triple {
   id: string
   subject: string
@@ -448,9 +448,9 @@ export interface LlmClient {
   }): Promise<string>
 }
 
-// ═══════════════════════════════════════════════════════════
-// L0.5: 工作意图识别
-// ═══════════════════════════════════════════════════════════
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+// L0.5: 宸ヤ綔鎰忓浘璇嗗埆
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
 export type WorkIntent =
   | 'search_web'
   | 'read_file'
@@ -461,22 +461,22 @@ export type WorkIntent =
 export interface WorkIntentResult {
   intent: WorkIntent
   confidence: number       // 0-1
-  proactive: boolean       // 引擎主动判断用户需要帮助，而非用户明确要求
-  extractedQuery?: string  // 提取的搜索词 / 文件路径 / 命令
-  filePath?: string        // 文件操作的目标路径
-  /** search_web 时：web_search 联网 vs 知识整理纸面卡（不二次搜索） */
+  proactive: boolean       // 寮曟搸涓诲姩鍒ゆ柇鐢ㄦ埛闇€瑕佸府鍔╋紝鑰岄潪鐢ㄦ埛鏄庣‘瑕佹眰
+  extractedQuery?: string  // 鎻愬彇鐨勬悳绱㈣瘝 / 鏂囦欢璺緞 / 鍛戒护
+  filePath?: string        // 鏂囦欢鎿嶄綔鐨勭洰鏍囪矾寰?
+  /** search_web 鏃讹細web_search 鑱旂綉 vs 鐭ヨ瘑鏁寸悊绾搁潰鍗★紙涓嶄簩娆℃悳绱級 */
   delivery?: 'web_search' | 'knowledge_card'
 }
 
-// ═══════════════════════════════════════════════════════════
-// L5: 工具执行结果
-// ═══════════════════════════════════════════════════════════
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+// L5: 宸ュ叿鎵ц缁撴灉
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
 export interface ToolResult {
   toolName: string
   success: boolean
-  content: string          // 返回给 LLM 的结果文本
-  summary: string          // 给用户的简短摘要（UI 通知用）
-  memoryHint?: string      // 用于自动记忆记录的关键信息
+  content: string          // 杩斿洖缁?LLM 鐨勭粨鏋滄枃鏈?
+  summary: string          // 缁欑敤鎴风殑绠€鐭憳瑕侊紙UI 閫氱煡鐢級
+  memoryHint?: string      // 鐢ㄤ簬鑷姩璁板繂璁板綍鐨勫叧閿俊鎭?
 }
 
 export interface ToolCallRecord {

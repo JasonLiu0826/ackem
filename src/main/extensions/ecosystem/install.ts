@@ -1,4 +1,4 @@
-// [ecosystem/install] — 社区扩展包安装
+﻿// [ecosystem/install] 鈥?绀惧尯鎵╁睍鍖呭畨瑁?
 
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -41,7 +41,7 @@ export function installCommunityPackage(
   }
 
   const parsed = parseExtensionId(pkg.manifest.id)
-  if (!parsed) return { ok: false, error: `无效扩展 id: ${pkg.manifest.id}` }
+  if (!parsed) return { ok: false, error: `鏃犳晥鎵╁睍 id: ${pkg.manifest.id}` }
 
   const category = pkg.manifest.category
   const baseDir =
@@ -51,7 +51,7 @@ export function installCommunityPackage(
         ? communityPluginsDir(dataRoot)
         : null
   if (!baseDir) {
-    return { ok: false, error: `不支持的 category: ${String(category)}` }
+    return { ok: false, error: `涓嶆敮鎸佺殑 category: ${String(category)}` }
   }
 
   const targetDir = join(baseDir, parsed.slug)
@@ -60,7 +60,7 @@ export function installCommunityPackage(
   for (const [relPath, content] of Object.entries(pkg.files)) {
     const normalized = relPath.replace(/\\/g, '/').replace(/^\/+/, '')
     if (normalized.includes('..')) {
-      return { ok: false, error: `非法文件路径: ${relPath}` }
+      return { ok: false, error: `闈炴硶鏂囦欢璺緞: ${relPath}` }
     }
     const outPath = join(targetDir, normalized)
     mkdirSync(join(outPath, '..'), { recursive: true })
@@ -81,13 +81,13 @@ export function installCommunityPackageFromFile(
   filePath: string
 ): ExtensionOpResult<{ id: string; dirPath: string }> {
   if (!existsSync(filePath)) {
-    return { ok: false, error: `文件不存在: ${filePath}` }
+    return { ok: false, error: `鏂囦欢涓嶅瓨鍦? ${filePath}` }
   }
   try {
     const raw = JSON.parse(readFileSync(filePath, 'utf-8'))
     return installCommunityPackage(dataRoot, raw)
   } catch (err) {
-    return { ok: false, error: `解析 .ackem-ext 失败: ${String(err)}` }
+    return { ok: false, error: `瑙ｆ瀽 .Ackem-ext 澶辫触: ${String(err)}` }
   }
 }
 

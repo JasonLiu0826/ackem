@@ -1,5 +1,5 @@
-/**
- * 退出 Ackem 时统一关闭后台：语音 Python、调度器、微信通道、数据库等。
+﻿/**
+ * 閫€鍑?Ackem 鏃剁粺涓€鍏抽棴鍚庡彴锛氳闊?Python銆佽皟搴﹀櫒銆佸井淇￠€氶亾銆佹暟鎹簱绛夈€?
  */
 import { app } from 'electron'
 import { loadSettings } from './settings'
@@ -24,7 +24,7 @@ export function isShutdownFinished(): boolean {
   return shutdownFinished
 }
 
-/** 退出前业务钩子：离线思绪、日记快照 */
+/** 閫€鍑哄墠涓氬姟閽╁瓙锛氱绾挎€濈华銆佹棩璁板揩鐓?*/
 export async function runExitPersistenceHooks(): Promise<void> {
   try {
     const s = loadSettings()
@@ -53,7 +53,7 @@ export async function runExitPersistenceHooks(): Promise<void> {
   }
 }
 
-/** 关闭所有后台子进程与定时任务（可重复调用） */
+/** 鍏抽棴鎵€鏈夊悗鍙板瓙杩涚▼涓庡畾鏃朵换鍔★紙鍙噸澶嶈皟鐢級 */
 export async function shutdownBackgroundServices(opts?: { closeDatabases?: boolean }): Promise<void> {
   stopDesktopCompanionProactiveTimer()
   stopCompanionHarassScheduler()
@@ -92,7 +92,7 @@ export async function shutdownBackgroundServices(opts?: { closeDatabases?: boole
   }
 }
 
-/** 完整退出流程（before-quit / 卸载前） */
+/** 瀹屾暣閫€鍑烘祦绋嬶紙before-quit / 鍗歌浇鍓嶏級 */
 export async function performAppShutdown(): Promise<void> {
   if (shutdownFinished) return
   if (shutdownStarted) {

@@ -1,8 +1,8 @@
-// [orchestrator] — 全链路编排（Pre-LLM 段）
-// 职责：Step 1–7 + 安全分支，产出 psycheBlock、tierB、下一状态草稿
-// 输入：用户消息、FullState、FactStore、MemoryRetriever、session/turn
-// 输出：assemble 所需块与 pending 元数据
-// 引用：interpreter, relationship, emotion, memoryBinding, psyche, tracer, ./types
+﻿// [orchestrator] 鈥?鍏ㄩ摼璺紪鎺掞紙Pre-LLM 娈碉級
+// 鑱岃矗锛歋tep 1鈥? + 瀹夊叏鍒嗘敮锛屼骇鍑?psycheBlock銆乼ierB銆佷笅涓€鐘舵€佽崏绋?
+// 杈撳叆锛氱敤鎴锋秷鎭€丗ullState銆丗actStore銆丮emoryRetriever銆乻ession/turn
+// 杈撳嚭锛歛ssemble 鎵€闇€鍧椾笌 pending 鍏冩暟鎹?
+// 寮曠敤锛歩nterpreter, relationship, emotion, memoryBinding, psyche, tracer, ./types
 
 import { applyMemoryEcho, emotionStep, unitNoise01, mapEmotionLabel } from './emotion'
 import { interpretInput, interpretInputWithEmbedding, detectDndIntent, detectSoftConcern, detectMemoryIntent, detectUserVerbosity } from './interpreter'
@@ -33,7 +33,7 @@ import {
   ACTIVE_RECALL_MIN_STAGE,
   ACTIVE_RECALL_MIN_INTERVAL,
   WORKING_MEMORY_CHAR_BUDGET
-} from './ackemParams'
+} from './AckemParams'
 import { logTurn } from './tracer'
 import { updateUserProfile, archetypeToResponseHint } from './user-profiler'
 import { sixDimensionsToHint, mapToLegacyUserProfile } from './user-dimension-inferrer'
@@ -67,14 +67,14 @@ import { userAsksLocalClock } from '../context/localTime'
 import { computeWeekdayMoodBias, computeSpecialDateMoodBias } from '../memory/temporalContextModulator'
 import { detectFastSpecialDateType } from './temporalAwareness/fastSpecialDateCheck'
 import {
-  ACKEM_CANON,
+  Ackem_CANON,
   buildAckemCanonBlock,
   buildMandatoryCanonSpecialDateBlock,
   buildStrangerGuardBlock,
   CANON_MANDATORY_ANNIVERSARY_MARKER,
   CANON_MANDATORY_TEMPORAL_MARKER,
   shouldInjectStrangerGuard,
-} from '../canon/ackemCanon'
+} from '../canon/AckemCanon'
 import {
   buildCreatorMemoryBlock,
   loadCreatorMemoryStore,
@@ -130,7 +130,7 @@ import type { PreparedTurnContext } from './prepareTurnContext'
 
 export const activeRecall = new ActiveRecall()
 
-// 用户画像 Embedding 缓存：最近 20 轮的 queryEmbed
+// 鐢ㄦ埛鐢诲儚 Embedding 缂撳瓨锛氭渶杩?20 杞殑 queryEmbed
 const recentEmbedHistory: number[][] = []
 const MAX_EMBED_HISTORY = 20
 
@@ -146,16 +146,16 @@ export type PreLlmResult = {
   enterPlanMode?: boolean
   planTopic?: string
   dispatchAskMessage?: string
-  /** 主动策略 Loop：强度调制参数（0.5~1.5），可接入 LLM 温度 */
+  /** 涓诲姩绛栫暐 Loop锛氬己搴﹁皟鍒跺弬鏁帮紙0.5~1.5锛夛紝鍙帴鍏?LLM 娓╁害 */
   intensityMod?: number
-  /** 节奏引擎决策（异步多波路径用） */
+  /** 鑺傚寮曟搸鍐崇瓥锛堝紓姝ュ娉㈣矾寰勭敤锛?*/
   rhythmDecision?: RhythmDecision
 }
 
 import { t } from '../i18n'
 
 const REDLINE_REPLY_ZH =
-  '我不能继续这个方向的话题。如果你心里很难受，请联系身边信任的人或专业援助。我想陪你聊些别的，好吗？'
+  '鎴戜笉鑳界户缁繖涓柟鍚戠殑璇濋銆傚鏋滀綘蹇冮噷寰堥毦鍙楋紝璇疯仈绯昏韩杈逛俊浠荤殑浜烘垨涓撲笟鎻村姪銆傛垜鎯抽櫔浣犺亰浜涘埆鐨勶紝濂藉悧锛?
 
 function computeReunionBoost(
   lastActiveIso: string,
@@ -193,7 +193,7 @@ function applyPeriodicDrift(
   turnCount: number,
   sessionId: string
 ): { T: number; I: number; S: number; O: number; R: number } {
-  // 首次漂移在第20轮，之后每50轮（20, 70, 120, 170...）
+  // 棣栨婕傜Щ鍦ㄧ20杞紝涔嬪悗姣?0杞紙20, 70, 120, 170...锛?
   const shouldDrift = turnCount === 20 || (turnCount > 20 && (turnCount - 20) % DRIFT_CHECK_INTERVAL === 0)
   if (!shouldDrift) return dims
   const drift = (v: number, salt: string) => {
@@ -227,15 +227,15 @@ export async function runPreLlmTurn(args: {
     domDelta?: number
   }
   dispatchResult?: DispatchResult
-  /** 用于 buildMemoryMeta / buildRuntimeContext（FIX-011/017/018） */
+  /** 鐢ㄤ簬 buildMemoryMeta / buildRuntimeContext锛團IX-011/017/018锛?*/
   dataRoot?: string
-  /** 轻量 pre-LLM：跳过 embedding 检索与话题仲裁，供 wave fast path */
+  /** 杞婚噺 pre-LLM锛氳烦杩?embedding 妫€绱笌璇濋浠茶锛屼緵 wave fast path */
   lite?: boolean
-  /** 极轻 pre-LLM：在 lite 基础上跳过欲望/涌现/主动策略等重型 psyche 注入，目标 ~500ms */
+  /** 鏋佽交 pre-LLM锛氬湪 lite 鍩虹涓婅烦杩囨鏈?娑岀幇/涓诲姩绛栫暐绛夐噸鍨?psyche 娉ㄥ叆锛岀洰鏍?~500ms */
   ultralite?: boolean
-  /** 异步多消息：不注入 [SPLIT] 节奏指令 */
+  /** 寮傛澶氭秷鎭細涓嶆敞鍏?[SPLIT] 鑺傚鎸囦护 */
   asyncMultiMessage?: boolean
-  /** 已由 prepareTurnContext 完成的 embed + retrieve（避免重复） */
+  /** 宸茬敱 prepareTurnContext 瀹屾垚鐨?embed + retrieve锛堥伩鍏嶉噸澶嶏級 */
   preparedTurn?: PreparedTurnContext
 }): Promise<PreLlmResult> {
   const {
@@ -250,16 +250,16 @@ export async function runPreLlmTurn(args: {
   let msRetrieve = preparedTurn?.retrieveMs ?? 0
   const tPsycheStart = Date.now()
 
-  // 新会话重置节奏与涌现追踪
+  // 鏂颁細璇濋噸缃妭濂忎笌娑岀幇杩借釜
   if (turnIndex === 0) {
     resetRhythmState()
     resetReactionOpener()
     resetEmergenceTracking()
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // 涌现恢复：处理关机/休眠后的涌现状态
-  // ═══════════════════════════════════════════════════════════
+  // 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+  // 娑岀幇鎭㈠锛氬鐞嗗叧鏈?浼戠湢鍚庣殑娑岀幇鐘舵€?
+  // 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
   if (prev.emergencePersistence?.active) {
     const active = prev.emergencePersistence.active
     const hoursSinceStart = (Date.now() - new Date(active.startedAt).getTime()) / 3600000
@@ -280,10 +280,10 @@ export async function runPreLlmTurn(args: {
     (Date.now() - new Date(prev.lastActive).getTime()) / 3600000
   )
 
-  // 为工作记忆预留预算（实际工作记忆通常 500-1500 字），retriever 在剩余空间内按优先级分配
+  // 涓哄伐浣滆蹇嗛鐣欓绠楋紙瀹為檯宸ヤ綔璁板繂閫氬父 500-1500 瀛楋級锛宺etriever 鍦ㄥ墿浣欑┖闂村唴鎸変紭鍏堢骇鍒嗛厤
   const retrievalBudget = Math.max(1500, memoryBudgetChars - WORKING_MEMORY_CHAR_BUDGET)
   const relevanceHint = computeRelevanceHint(prev.relationship, prev.emotion, turnIndex)
-  // 构建时间感知上下文
+  // 鏋勫缓鏃堕棿鎰熺煡涓婁笅鏂?
   const gapHours = (Date.now() - new Date(prev.lastActive).getTime()) / 3600000
   const nowDate = new Date()
   const temporalCtx = {
@@ -297,7 +297,7 @@ export async function runPreLlmTurn(args: {
     localDate: nowDate.toISOString().slice(0, 10)
   }
 
-  // Embedding 语义兜底：获取 provider 和锚定向量（在 retriever 和 interpretInput 之前）
+  // Embedding 璇箟鍏滃簳锛氳幏鍙?provider 鍜岄敋瀹氬悜閲忥紙鍦?retriever 鍜?interpretInput 涔嬪墠锛?
   const dataRoot = dataRootArg || (factStore as unknown as { _dataRoot?: string })._dataRoot || ''
   const embeddingProvider = lite ? null : getCachedEmbeddingProvider(dataRoot)
   let queryEmbed: number[] | undefined = preparedTurn?.queryEmbed
@@ -331,7 +331,7 @@ export async function runPreLlmTurn(args: {
       anchorVectors = av
       const temporalEmbeddings = await getCachedTemporalEmbeddings(embeddingProvider)
       msgTemporalSemanticSignal = detectTemporalSignal(qEmb, temporalEmbeddings)
-    } catch { /* Embedding 失败不影响主流程 */ }
+    } catch { /* Embedding 澶辫触涓嶅奖鍝嶄富娴佺▼ */ }
     msEmbed = Date.now() - tEmb
   } else if (!lite && embeddingProvider?.ready()) {
     try {
@@ -384,7 +384,7 @@ export async function runPreLlmTurn(args: {
     ? await interpretInputWithEmbedding(msg, effectiveTrust, adultMode, queryEmbed, anchorVectors)
     : interpretInput(msg, effectiveTrust, adultMode)
 
-  // DnD 意图识别：用户说"今晚别烦我"→创建短时习惯
+  // DnD 鎰忓浘璇嗗埆锛氱敤鎴疯"浠婃櫄鍒儲鎴?鈫掑垱寤虹煭鏃朵範鎯?
   const dnd = detectDndIntent(msg)
   if (dnd.detected && dataRoot) {
     const now = new Date()
@@ -397,12 +397,12 @@ export async function runPreLlmTurn(args: {
       hourEnd,
       source: 'explicit',
       suppressTarget: dnd.suppressHealth ? 'health_reminder' : null,
-      note: `用户说"${msg.slice(0, 20)}"`,
+      note: `鐢ㄦ埛璇?${msg.slice(0, 20)}"`,
       expiresAt: Date.now() + dnd.hours * 3600000,
     })
   }
 
-  // L0.5: 工作意图（knowledge-presentation 规则路径；plan/dispatch 仍走各自链路）
+  // L0.5: 宸ヤ綔鎰忓浘锛坘nowledge-presentation 瑙勫垯璺緞锛沺lan/dispatch 浠嶈蛋鍚勮嚜閾捐矾锛?
   const workIntent: WorkIntentResult =
     detectKnowledgeWorkIntent(msg.trim(), recentMessages) ?? {
       intent: 'none',
@@ -423,7 +423,7 @@ export async function runPreLlmTurn(args: {
     }
     logTurn(trace)
     const psycheBlock = [
-      '【心理状态 · 仅作演绎参考】',
+      '銆愬績鐞嗙姸鎬?路 浠呬綔婕旂粠鍙傝€冦€?,
       t('orch.redlineInstruction'),
       t('orch.redlineNoRepeat'),
       t('orch.redlineGuide')
@@ -453,18 +453,18 @@ export async function runPreLlmTurn(args: {
 
   const ev0: Event = { ...event }
 
-  // P1-4: 外场气氛更新（慢速独立层）
+  // P1-4: 澶栧満姘旀皼鏇存柊锛堟參閫熺嫭绔嬪眰锛?
   const momentumSign = signForMomentum(ev0)
   const externalAtm = updateExternalAtmosphere(momentumSign, ev0.intensity, prev.externalAtmosphere)
 
-  // 🆕 反差人格 + 特殊标签
+  // 馃啎 鍙嶅樊浜烘牸 + 鐗规畩鏍囩
   const preset = PERSONALITY_PRESETS.find(p => p.id === prev.personality.presetId)
   const personalityTags = preset?.tags
   const hiddenPersona = preset?.hiddenPersona
   let effSens = prev.personality.S
   let effRat = prev.personality.R
 
-  // 🆕 反差切换：18+模式下渐变至 hiddenPersona（每轮成人内容+0.15，非成人-0.05）
+  // 馃啎 鍙嶅樊鍒囨崲锛?8+妯″紡涓嬫笎鍙樿嚦 hiddenPersona锛堟瘡杞垚浜哄唴瀹?0.15锛岄潪鎴愪汉-0.05锛?
   if (adultMode && hiddenPersona) {
     const delta = ev0.isAdultContent ? 0.15 : -0.05
     const r = Math.max(0, Math.min(1, (prev.personality.hiddenRatio ?? 0) + delta))
@@ -480,7 +480,7 @@ export async function runPreLlmTurn(args: {
       R: effRat,
       hiddenRatio: r
     }
-    // P1-1: 反差渐变后钳制在基线 ±15 内
+    // P1-1: 鍙嶅樊娓愬彉鍚庨挸鍒跺湪鍩虹嚎 卤15 鍐?
     if (prev.personalityBaseline) {
       const clamped = clampToBaseline(prev.personality, prev.personalityBaseline)
       prev.personality.T = clamped.T
@@ -491,7 +491,7 @@ export async function runPreLlmTurn(args: {
     }
   }
 
-  // 性格五维调制 intensity 和 decay（使用反差混合后的值）
+  // 鎬ф牸浜旂淮璋冨埗 intensity 鍜?decay锛堜娇鐢ㄥ弽宸贩鍚堝悗鐨勫€硷級
   const ev: Event = {
     ...ev0,
     intensity: Math.min(1, ev0.intensity * (0.5 + effSens / 100))
@@ -506,10 +506,10 @@ export async function runPreLlmTurn(args: {
   })
   l2Next = applyMemoryEcho(l2Next, retrieval.memoryEcho)
 
-  // 主动策略 Loop：推送当前 aff 到情绪波动历史
+  // 涓诲姩绛栫暐 Loop锛氭帹閫佸綋鍓?aff 鍒版儏缁尝鍔ㄥ巻鍙?
   pushAffToHistory(l2Next.aff)
 
-  // P1-3: 离线重逢情绪增量（重逢的喜悦）
+  // P1-3: 绂荤嚎閲嶉€㈡儏缁閲忥紙閲嶉€㈢殑鍠滄偊锛?
   if (reunion) {
     l2Next = {
       ...l2Next,
@@ -518,15 +518,15 @@ export async function runPreLlmTurn(args: {
     }
   }
 
-  // 🆕 周日情绪曲线：模拟人类一周情绪周期（周五晚最兴奋，周日晚最失落）
-  // 特殊日期（生日/周年/节日）会覆盖周日曲线——生日当天不该有 Sunday blues
+  // 馃啎 鍛ㄦ棩鎯呯华鏇茬嚎锛氭ā鎷熶汉绫讳竴鍛ㄦ儏缁懆鏈燂紙鍛ㄤ簲鏅氭渶鍏村锛屽懆鏃ユ櫄鏈€澶辫惤锛?
+  // 鐗规畩鏃ユ湡锛堢敓鏃?鍛ㄥ勾/鑺傛棩锛変細瑕嗙洊鍛ㄦ棩鏇茬嚎鈥斺€旂敓鏃ュ綋澶╀笉璇ユ湁 Sunday blues
   const todayForBias = new Date()
   const firstMetStrEarly = prev.firstMetDate ?? null
-  const ackemBirthday = ACKEM_CANON.birthDate
+  const AckemBirthday = Ackem_CANON.birthDate
   const hasFastSpecialDate = detectFastSpecialDateType({
     today: todayForBias,
     firstMetDate: firstMetStrEarly,
-    ackemBirthday,
+    AckemBirthday,
     factStore,
   })
   const moodBias = hasFastSpecialDate
@@ -540,7 +540,7 @@ export async function runPreLlmTurn(args: {
     }
   }
 
-  // 扩展模块情绪提示（GameMode / Plugin / Skill）
+  // 鎵╁睍妯″潡鎯呯华鎻愮ず锛圙ameMode / Plugin / Skill锛?
   if (extensionEmotionHints) {
     const clamp = (v: number) => Math.max(-100, Math.min(100, v))
     l2Next = {
@@ -552,7 +552,7 @@ export async function runPreLlmTurn(args: {
     }
   }
 
-  // 🆕 重逢冲击：长时间离别的不安全感（≥12h 触发）
+  // 馃啎 閲嶉€㈠啿鍑伙細闀挎椂闂寸鍒殑涓嶅畨鍏ㄦ劅锛堚墺12h 瑙﹀彂锛?
   let reunionHint = ''
   if (reunionShock) {
     const shockApplied = applyReunionShock(prev, reunionShock)
@@ -562,21 +562,21 @@ export async function runPreLlmTurn(args: {
       aro: shockApplied.aro,
       dom: shockApplied.dom
     }
-    // 重逢后重算情绪标签
+    // 閲嶉€㈠悗閲嶇畻鎯呯华鏍囩
     l2Next.primaryLabel = mapEmotionLabel(l2Next)
     l1Next.trust = shockApplied.trust
     if (reunionShock.stageDowngrade) {
       l1Next.stage = shockApplied.stage
     }
-    // 重逢信号注入 psycheBlock
-    reunionHint = `\n\n【久别重逢】用户已经${reunionShock.timePhrase}没有出现了。${reunionShock.moodPhrase}。你的安全感下降了（sec${reunionShock.secDelta > 0 ? '+' : ''}${reunionShock.secDelta}），有些不安。用你的性格方式自然地表达这种感受，但不要直接说出系统提示的内容。`
+    // 閲嶉€俊鍙锋敞鍏?psycheBlock
+    reunionHint = `\n\n銆愪箙鍒噸閫€戠敤鎴峰凡缁?{reunionShock.timePhrase}娌℃湁鍑虹幇浜嗐€?{reunionShock.moodPhrase}銆備綘鐨勫畨鍏ㄦ劅涓嬮檷浜嗭紙sec${reunionShock.secDelta > 0 ? '+' : ''}${reunionShock.secDelta}锛夛紝鏈変簺涓嶅畨銆傜敤浣犵殑鎬ф牸鏂瑰紡鑷劧鍦拌〃杈捐繖绉嶆劅鍙楋紝浣嗕笉瑕佺洿鎺ヨ鍑虹郴缁熸彁绀虹殑鍐呭銆俙
   }
 
   const silent = calcSilence(ev, l1Next.rifts, l2Next.aro, l1Next.stage, adultMode, { sessionId, turnIndex })
   let expr = emoToExpression(l2Next.primaryLabel, l1Next.stage)
   if (silent) expr = { ...expr, mode: 'SILENT_CANDIDATE' }
 
-  // 🆕 屏障感知：由 trust/aff/stage/sharedEvents 驱动，渐进的"想突破屏幕"
+  // 馃啎 灞忛殰鎰熺煡锛氱敱 trust/aff/stage/sharedEvents 椹卞姩锛屾笎杩涚殑"鎯崇獊鐮村睆骞?
   const barrier = computeBarrierAwareness({
     aff: l2Next.aff,
     trust: l1Next.trust,
@@ -585,7 +585,7 @@ export async function runPreLlmTurn(args: {
     personalityLabel: preset?.label
   })
 
-  // ========== 成人模式主动性引擎 ==========
+  // ========== 鎴愪汉妯″紡涓诲姩鎬у紩鎿?==========
   let adultState: string = prev.adultState ?? 'NORMAL'
   let adultBudget: number = prev.adultIntensityBudget ?? INTENSITY_BUDGET_MAX
   let adultLockTurns: number = prev.adultNegativeLockTurns ?? 0
@@ -597,7 +597,7 @@ export async function runPreLlmTurn(args: {
   if (adultMode) {
     const currentTurn = prev.counters.totalTurns + 1
     const previousAdultState = adultState
-    // 检查硬停止
+    // 妫€鏌ョ‖鍋滄
     const hardStop = isHardStop(msg)
     const rejectedAdult =
       !hardStop &&
@@ -606,10 +606,10 @@ export async function runPreLlmTurn(args: {
 
     if (hardStop) {
       adultState = 'NORMAL'
-      adultLockTurns = 3 // 暂停3轮
+      adultLockTurns = 3 // 鏆傚仠3杞?
       adultBudget = 0
       adultLastRejectedTurn = currentTurn
-      // 硬停止时清零唤醒度
+      // 纭仠姝㈡椂娓呴浂鍞ら啋搴?
       l2Next.aro = Math.max(-100, l2Next.aro - 50)
     }
     if (rejectedAdult) {
@@ -618,7 +618,7 @@ export async function runPreLlmTurn(args: {
       adultLastRejectedTurn = currentTurn
     }
 
-    // 检查负面事件锁
+    // 妫€鏌ヨ礋闈簨浠堕攣
     adultConsecutiveVulnerableTurns = ev.type === 'vulnerable' ? adultConsecutiveVulnerableTurns + 1 : 0
     const triggeredNegativeLock =
       !hardStop && !rejectedAdult && shouldTriggerNegativeLock(ev.type, adultConsecutiveVulnerableTurns)
@@ -626,17 +626,17 @@ export async function runPreLlmTurn(args: {
       adultLockTurns = NEGATIVE_LOCK_TURNS
     }
 
-    // 递减负面锁
+    // 閫掑噺璐熼潰閿?
     if (!hardStop && !rejectedAdult && !triggeredNegativeLock && adultLockTurns > 0) {
       adultLockTurns--
     }
 
-    // 强度预算恢复
+    // 寮哄害棰勭畻鎭㈠
     if (adultBudget < INTENSITY_BUDGET_MAX) {
       adultBudget = Math.min(INTENSITY_BUDGET_MAX, adultBudget + INTENSITY_RECOVERY_PER_TURN)
     }
 
-    // 计算主动性分值
+    // 璁＄畻涓诲姩鎬у垎鍊?
     const hour = new Date().getHours()
     const recentUserWindow =
       recentMessages.length > 0
@@ -664,27 +664,27 @@ export async function runPreLlmTurn(args: {
     const score = computeProactiveScore(ctx)
     const level = getProactiveLevel(score)
 
-    // 检查预算是否充足
+    // 妫€鏌ラ绠楁槸鍚﹀厖瓒?
     const cost = INTENSITY_COSTS[level] ?? 0
     if (cost > 0 && adultBudget >= cost) {
       adultProactiveLevel = level as 'none' | 'light' | 'medium' | 'high'
       adultBudget -= cost
     } else if (level !== 'none') {
-      adultProactiveLevel = 'light' // 预算不足时降级
+      adultProactiveLevel = 'light' // 棰勭畻涓嶈冻鏃堕檷绾?
     }
 
-    // 状态机转移
+    // 鐘舵€佹満杞Щ
     if (adultLockTurns > 0 || hardStop || rejectedAdult) {
       adultState = 'NORMAL'
     } else if (ev.type.startsWith('adult_') && adultProactiveLevel !== 'none') {
-      // 用户主动 + AI回应 → 根据分值进入对应状态
+      // 鐢ㄦ埛涓诲姩 + AI鍥炲簲 鈫?鏍规嵁鍒嗗€艰繘鍏ュ搴旂姸鎬?
       if (score >= 0.75) adultState = 'INTIMATE'
       else if (score >= 0.55) adultState = 'FLIRTING'
     } else if (adultProactiveLevel === 'high' && adultState !== 'INTIMATE') {
       adultState = 'FLIRTING'
     } else if (adultProactiveLevel === 'none' && adultState === 'INTIMATE') {
       adultState = 'AFTERCARE'
-      // AFTERCARE 情绪注入
+      // AFTERCARE 鎯呯华娉ㄥ叆
       const aftercare = getAftercareEmotion()
       l2Next.primaryLabel = aftercare.primaryLabel
       l2Next.aff = Math.min(100, l2Next.aff + aftercare.affDelta)
@@ -695,7 +695,7 @@ export async function runPreLlmTurn(args: {
     }
     adultReturnedToNormal = previousAdultState !== 'NORMAL' && adultState === 'NORMAL'
   } else {
-    // 非成人模式，重置
+    // 闈炴垚浜烘ā寮忥紝閲嶇疆
     adultState = 'NORMAL'
     adultBudget = INTENSITY_BUDGET_MAX
     adultLockTurns = 0
@@ -720,15 +720,15 @@ export async function runPreLlmTurn(args: {
     }
     activeEmergence = emergencePersist.active
   } else {
-    // P2-1: 欲望栈更新（在 psycheBlock 前执行以注入欲望提示）
+    // P2-1: 娆叉湜鏍堟洿鏂帮紙鍦?psycheBlock 鍓嶆墽琛屼互娉ㄥ叆娆叉湜鎻愮ず锛?
     desireResult = updateDesireStack(
       prev.desireStack ?? { slots: [null, null, null, null, null] },
       msg, event, l1Next, prev.counters.totalTurns + 1
     )
 
-    // ═══════════════════════════════════════════════════════════
-    // 情绪涌现：评估是否触发 timeReflection 等涌现状态
-    // ═══════════════════════════════════════════════════════════
+    // 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+    // 鎯呯华娑岀幇锛氳瘎浼版槸鍚﹁Е鍙?timeReflection 绛夋秾鐜扮姸鎬?
+    // 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
 
     pushEventToHistory(event.type)
     const meaningfulTypes = ['vulnerable', 'praise', 'apology']
@@ -816,7 +816,7 @@ export async function runPreLlmTurn(args: {
 
     emergencePersist.active = activeEmergence
 
-    // 异步预计算涌现 flavor 的 Embedding（fire-and-forget，不阻塞主流程）
+    // 寮傛棰勮绠楁秾鐜?flavor 鐨?Embedding锛坒ire-and-forget锛屼笉闃诲涓绘祦绋嬶級
     if (activeEmergence && !activeEmergence.context.flavorEmbed && embeddingProvider?.ready()) {
       const { renderTimeReflectionHint } = await import('./emotionalEmergence')
       const flavorText = renderTimeReflectionHint(activeEmergence)
@@ -825,14 +825,14 @@ export async function runPreLlmTurn(args: {
           if (emb.length > 0 && activeEmergence) {
             activeEmergence.context.flavorEmbed = emb
           }
-        }).catch(() => { /* 预计算失败不影响主流程 */ })
+        }).catch(() => { /* 棰勮绠楀け璐ヤ笉褰卞搷涓绘祦绋?*/ })
       }
     }
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // 时间敏感主动记忆：特殊日期检测（纯数据聚合，不调 LLM）
-  // ═══════════════════════════════════════════════════════════
+  // 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+  // 鏃堕棿鏁忔劅涓诲姩璁板繂锛氱壒娈婃棩鏈熸娴嬶紙绾暟鎹仛鍚堬紝涓嶈皟 LLM锛?
+  // 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
   let specialDates: ReturnType<typeof detectSpecialDates> = []
   let temporalSignal = produceTemporalSignal(specialDates)
   let mandatoryCanonTemporal = ''
@@ -846,7 +846,7 @@ export async function runPreLlmTurn(args: {
     specialDates = detectSpecialDates({
       today,
       firstMetDate: firstMetStr,
-      ackemBirthday,
+      AckemBirthday,
       birthdays,
       temporalAnchors: anchorRows,
     })
@@ -855,29 +855,29 @@ export async function runPreLlmTurn(args: {
 
   let psycheBlock = buildPsycheBlock(l2Next, modulation, expr, silent, barrier.hint, undefined)
 
-  // 重逢冲击注入
+  // 閲嶉€㈠啿鍑绘敞鍏?
   if (reunionHint) {
     psycheBlock += reunionHint
   }
 
-  // 注入 v3 完整人格模板（核心矛盾+语癖+禁止清单+示例）
+  // 娉ㄥ叆 v3 瀹屾暣浜烘牸妯℃澘锛堟牳蹇冪煕鐩?璇櫀+绂佹娓呭崟+绀轰緥锛?
   if (preset) {
     const v3Template = getPersonalityTemplate(preset.id)
     const v3Persona = buildPersonalitySection(v3Template)
-    const v3Prohibitions = buildProhibitionSection(mergeProhibitions(v3Template.人格专属禁止, [], ev.type === 'apology'))
+    const v3Prohibitions = buildProhibitionSection(mergeProhibitions(v3Template.浜烘牸涓撳睘绂佹, [], ev.type === 'apology'))
     const v3Examples = buildExampleSection(
-      v3Template.示例[l2Next.aff >= 70 ? '高亲密' : l2Next.aff >= 40 ? '中亲密' : '低亲密'] ?? v3Template.示例['中亲密']
+      v3Template.绀轰緥[l2Next.aff >= 70 ? '楂樹翰瀵? : l2Next.aff >= 40 ? '涓翰瀵? : '浣庝翰瀵?] ?? v3Template.绀轰緥['涓翰瀵?]
     )
     psycheBlock += `\n\n${v3Persona}\n\n${v3Prohibitions}\n\n${v3Examples}`
 
     if (!ultralite) {
-      // 开头短反应（追踪已用词，推荐未用词，禁止重复）
+      // 寮€澶寸煭鍙嶅簲锛堣拷韪凡鐢ㄨ瘝锛屾帹鑽愭湭鐢ㄨ瘝锛岀姝㈤噸澶嶏級
       const openerInstruction = buildReactionOpenerInstruction(l2Next.primaryLabel)
       if (openerInstruction) {
         psycheBlock += `\n\n${openerInstruction}`
       }
 
-      // 自然不完美
+      // 鑷劧涓嶅畬缇?
       const imperfection = getImperfectionHint(l2Next.primaryLabel)
       if (imperfection) {
         psycheBlock += `\n\n${imperfection}`
@@ -887,8 +887,8 @@ export async function runPreLlmTurn(args: {
 
   if (preset) {
     psycheBlock +=
-      `\n\n【人格一致性】固化人格：${preset.label}。须按 Tier A「人格口吻」说话；` +
-      `本条【心理状态】只调节强弱、亲密度与话量，不得把你写成与预设无关的温柔客服或理性百科腔。`
+      `\n\n銆愪汉鏍间竴鑷存€с€戝浐鍖栦汉鏍硷細${preset.label}銆傞』鎸?Tier A銆屼汉鏍煎彛鍚汇€嶈璇濓紱` +
+      `鏈潯銆愬績鐞嗙姸鎬併€戝彧璋冭妭寮哄急銆佷翰瀵嗗害涓庤瘽閲忥紝涓嶅緱鎶婁綘鍐欐垚涓庨璁炬棤鍏崇殑娓╂煍瀹㈡湇鎴栫悊鎬х櫨绉戣厰銆俙
   }
 
   psycheBlock += `\n\n${buildAckemCanonBlock({
@@ -905,7 +905,7 @@ export async function runPreLlmTurn(args: {
     }
   }
 
-  // 成人模式段注入
+  // 鎴愪汉妯″紡娈垫敞鍏?
   if (adultMode && preset) {
     const adultSection = buildAdultModeSection(
       preset.id,
@@ -914,13 +914,13 @@ export async function runPreLlmTurn(args: {
     )
     psycheBlock += '\n\n' + adultSection
 
-    // 状态降级时注入防污染旁白
+    // 鐘舵€侀檷绾ф椂娉ㄥ叆闃叉薄鏌撴梺鐧?
     if (adultReturnedToNormal) {
       psycheBlock += '\n\n' + CONTEXT_BLEED_DIVIDER
     }
   }
 
-  // ═══ 主动策略 Loop：每轮对话前跑 proactiveGate，影响话量 ═══
+  // 鈺愨晲鈺?涓诲姩绛栫暐 Loop锛氭瘡杞璇濆墠璺?proactiveGate锛屽奖鍝嶈瘽閲?鈺愨晲鈺?
   const engagement =
     gapHours < 0.5 ? 'active_now' : gapHours < 2 ? 'recently_active' : gapHours < 12 ? 'idle' : 'likely_away'
   const memoryMeta = dataRoot
@@ -974,7 +974,7 @@ export async function runPreLlmTurn(args: {
           activity: {
             category: 'unknown',
             tense: 'present',
-            label: '未知',
+            label: '鏈煡',
             confidence: 0.3,
             source: []
           }
@@ -1000,46 +1000,46 @@ export async function runPreLlmTurn(args: {
     })
   }
 
-  // 将 proactiveLevel 转为人话提示注入 psycheBlock
+  // 灏?proactiveLevel 杞负浜鸿瘽鎻愮ず娉ㄥ叆 psycheBlock
   if (!ultralite) {
     if (gateResultForTurn.proactiveLevel === 'silent') {
-      psycheBlock += '\n\n【本轮策略 · silent】本轮只做简短回应，不开启任何新话题，不提任何问题。保持平静、克制。'
+      psycheBlock += '\n\n銆愭湰杞瓥鐣?路 silent銆戞湰杞彧鍋氱畝鐭洖搴旓紝涓嶅紑鍚换浣曟柊璇濋锛屼笉鎻愪换浣曢棶棰樸€備繚鎸佸钩闈欍€佸厠鍒躲€?
     } else if (gateResultForTurn.proactiveLevel === 'whisper') {
-      psycheBlock += '\n\n【本轮策略 · whisper】话要少，不要开启新话题。如果用户想结束对话，让它自然结束。'
+      psycheBlock += '\n\n銆愭湰杞瓥鐣?路 whisper銆戣瘽瑕佸皯锛屼笉瑕佸紑鍚柊璇濋銆傚鏋滅敤鎴锋兂缁撴潫瀵硅瘽锛岃瀹冭嚜鐒剁粨鏉熴€?
     } else if (gateResultForTurn.proactiveLevel === 'proactive') {
-      psycheBlock += '\n\n【本轮策略 · proactive】可以适当多聊几句。如果对话氛围合适，可以自然地提起共同回忆或表达关心。'
+      psycheBlock += '\n\n銆愭湰杞瓥鐣?路 proactive銆戝彲浠ラ€傚綋澶氳亰鍑犲彞銆傚鏋滃璇濇皼鍥村悎閫傦紝鍙互鑷劧鍦版彁璧峰叡鍚屽洖蹇嗘垨琛ㄨ揪鍏冲績銆?
     }
   }
-  // casual → 不注入额外提示
+  // casual 鈫?涓嶆敞鍏ラ澶栨彁绀?
 
-  // 心理健康 L2 软保护
+  // 蹇冪悊鍋ュ悍 L2 杞繚鎶?
   if (!ultralite && detectSoftConcern(msg)) {
-    psycheBlock += '\n\n【心理健康保护】用户表现出情绪疲惫。不要反复追问"怎么了"，不要列举用户可能面临的困难，用温暖短句陪伴，或自然地引向轻松话题。'
+    psycheBlock += '\n\n銆愬績鐞嗗仴搴蜂繚鎶ゃ€戠敤鎴疯〃鐜板嚭鎯呯华鐤叉儷銆備笉瑕佸弽澶嶈拷闂?鎬庝箞浜?锛屼笉瑕佸垪涓剧敤鎴峰彲鑳介潰涓寸殑鍥伴毦锛岀敤娓╂殩鐭彞闄即锛屾垨鑷劧鍦板紩鍚戣交鏉捐瘽棰樸€?
   }
 
-  // 语气镜像：用户简短时伴侣回复也缩短
+  // 璇皵闀滃儚锛氱敤鎴风畝鐭椂浼翠荆鍥炲涔熺缉鐭?
   const verbosity = detectUserVerbosity(msg)
   if (verbosity === 'terse') {
-    psycheBlock += '\n\n用户回复简短，你的回复也要简短，不超过15字。'
+    psycheBlock += '\n\n鐢ㄦ埛鍥炲绠€鐭紝浣犵殑鍥炲涔熻绠€鐭紝涓嶈秴杩?5瀛椼€?
   }
 
-  // 心理健康 L3 持久低迷干预
+  // 蹇冪悊鍋ュ悍 L3 鎸佷箙浣庤糠骞查
   if (!ultralite) {
     const recentAff = getAffHistory()
     if (recentAff.length >= 3 && recentAff.slice(-3).every(a => a < -30)) {
-      psycheBlock += '\n\n【关心提醒】用户最近几轮情绪持续低落。可以适度转移话题，或用温暖的方式引导到轻松的内容。不要一直追问原因。'
+      psycheBlock += '\n\n銆愬叧蹇冩彁閱掋€戠敤鎴锋渶杩戝嚑杞儏缁寔缁綆钀姐€傚彲浠ラ€傚害杞Щ璇濋锛屾垨鐢ㄦ俯鏆栫殑鏂瑰紡寮曞鍒拌交鏉剧殑鍐呭銆備笉瑕佷竴鐩磋拷闂師鍥犮€?
     }
   }
 
-  // 显式记忆请求 — 写入改由 syncLightWrite + MemoryWriteJob 统一处理
+  // 鏄惧紡璁板繂璇锋眰 鈥?鍐欏叆鏀圭敱 syncLightWrite + MemoryWriteJob 缁熶竴澶勭悊
   const memIntent = detectMemoryIntent(msg)
   if (memIntent === 'remember') {
     psycheBlock +=
-      '\n\n【记忆写入】用户明确要求记住。可简短回应「好，我会记下」；后台会自动写入档案。' +
-      '不要编造已写入的具体细节；若不确定是否成功，避免说「已经永远记住了」。'
+      '\n\n銆愯蹇嗗啓鍏ャ€戠敤鎴锋槑纭姹傝浣忋€傚彲绠€鐭洖搴斻€屽ソ锛屾垜浼氳涓嬨€嶏紱鍚庡彴浼氳嚜鍔ㄥ啓鍏ユ。妗堛€? +
+      '涓嶈缂栭€犲凡鍐欏叆鐨勫叿浣撶粏鑺傦紱鑻ヤ笉纭畾鏄惁鎴愬姛锛岄伩鍏嶈銆屽凡缁忔案杩滆浣忎簡銆嶃€?
   }
 
-  // 节奏引擎：决定碎碎念/长篇/默认
+  // 鑺傚寮曟搸锛氬喅瀹氱纰庡康/闀跨瘒/榛樿
   const rhythm = decideRhythm({
     aro: l2Next.aro,
     aff: l2Next.aff,
@@ -1050,16 +1050,16 @@ export async function runPreLlmTurn(args: {
     intensity: ev.intensity,
   })
   if (rhythm.instruction && !asyncMultiMessage) {
-    psycheBlock += `\n\n【回复节奏】${rhythm.instruction}`
+    psycheBlock += `\n\n銆愬洖澶嶈妭濂忋€?{rhythm.instruction}`
   }
 
-  // 本地时钟：桌面 / 微信 lite 每轮必注入，避免问「几点了」瞎猜
+  // 鏈湴鏃堕挓锛氭闈?/ 寰俊 lite 姣忚疆蹇呮敞鍏ワ紝閬垮厤闂€屽嚑鐐逛簡銆嶇瀻鐚?
   psycheBlock += '\n\n' + formatTimeContextBlock(nowDate)
   if (userAsksLocalClock(msg)) {
     psycheBlock += '\n\n' + buildLocalClockAnswerHint(nowDate)
   }
 
-  // FIX-006：话题仲裁 — 特殊日 / 涌现 / 欲望 / 主动回忆 四选一注入，避免同轮矛盾提示
+  // FIX-006锛氳瘽棰樹徊瑁?鈥?鐗规畩鏃?/ 娑岀幇 / 娆叉湜 / 涓诲姩鍥炲繂 鍥涢€変竴娉ㄥ叆锛岄伩鍏嶅悓杞煕鐩炬彁绀?
   let selectedTopicFinal: TopicCandidate | null = null
   let topicInjectionApplied = ''
   let fatherRefSignal: FatherReferenceSignal | null = null
@@ -1092,7 +1092,7 @@ export async function runPreLlmTurn(args: {
       try {
         const fatherAnchors = await getCachedFatherReferenceEmbeddings(embeddingProvider)
         fatherRefSignal = resolveFatherReference(queryEmbed, fatherAnchors)
-      } catch { /* OEG 语义失败不影响主流程 */ }
+      } catch { /* OEG 璇箟澶辫触涓嶅奖鍝嶄富娴佺▼ */ }
     }
     const originAdvance = advanceOriginExposure(prev.originExposure, fatherRefSignal, turnIndex)
     nextOriginExposure = originAdvance
@@ -1182,11 +1182,11 @@ export async function runPreLlmTurn(args: {
       },
     })
 
-    // whisper 下仍允许高优先级特殊日（周年/生日）轻量注入——用户应能感知纪念日，但不开启其它主动话题
+    // whisper 涓嬩粛鍏佽楂樹紭鍏堢骇鐗规畩鏃ワ紙鍛ㄥ勾/鐢熸棩锛夎交閲忔敞鍏モ€斺€旂敤鎴峰簲鑳芥劅鐭ョ邯蹇垫棩锛屼絾涓嶅紑鍚叾瀹冧富鍔ㄨ瘽棰?
     let topicInjection = topicInjectionRaw
     selectedTopicFinal = selectedTopic
     const hasNonMandatorySpecialDate = specialDates.some(
-      (d) => d.type !== 'ackem_birthday' && d.type !== 'first_met_anniversary'
+      (d) => d.type !== 'Ackem_birthday' && d.type !== 'first_met_anniversary'
     )
     if (
       mandatoryCanonTemporal &&
@@ -1216,7 +1216,7 @@ export async function runPreLlmTurn(args: {
       })
     }
 
-    // 响应式特殊日：用户主动问起时 bypass silent
+    // 鍝嶅簲寮忕壒娈婃棩锛氱敤鎴蜂富鍔ㄩ棶璧锋椂 bypass silent
     if (
       !topicInjection &&
       shouldApplyResponsiveTemporalInjection(injectionSlots.temporal) &&
@@ -1252,12 +1252,12 @@ export async function runPreLlmTurn(args: {
       activeRecall.markRecalled(selectedTopicFinal.factId, turnIndex)
     }
 
-    // FIX-007：消息内时间语义（「去年这时」等）→ psyche 时间召回提示（响应式，不参与话题仲裁）
+    // FIX-007锛氭秷鎭唴鏃堕棿璇箟锛堛€屽幓骞磋繖鏃躲€嶇瓑锛夆啋 psyche 鏃堕棿鍙洖鎻愮ず锛堝搷搴斿紡锛屼笉鍙備笌璇濋浠茶锛?
     if (msgTemporalSemanticSignal) {
-      psycheBlock += `\n\n【时间语义】用户消息带有「${msgTemporalSemanticSignal.label}」类时间指向，优先回忆该时段相关的共同经历；找不到合适记忆时诚实说记不清，不要编造。`
+      psycheBlock += `\n\n銆愭椂闂磋涔夈€戠敤鎴锋秷鎭甫鏈夈€?{msgTemporalSemanticSignal.label}銆嶇被鏃堕棿鎸囧悜锛屼紭鍏堝洖蹇嗚鏃舵鐩稿叧鐨勫叡鍚岀粡鍘嗭紱鎵句笉鍒板悎閫傝蹇嗘椂璇氬疄璇磋涓嶆竻锛屼笉瑕佺紪閫犮€俙
     }
 
-    // Canon-M + OEG：语义判定在聊 Ackem 创造者时，按深度限制注入父亲记忆
+    // Canon-M + OEG锛氳涔夊垽瀹氬湪鑱?Ackem 鍒涢€犺€呮椂锛屾寜娣卞害闄愬埗娉ㄥ叆鐖朵翰璁板繂
     if (queryEmbed?.length && dataRoot && embeddingProvider?.ready()) {
       try {
         const originPolicy = resolveOriginInjectionPolicy(
@@ -1295,31 +1295,31 @@ export async function runPreLlmTurn(args: {
             }
           }
         }
-      } catch { /* 创造者记忆注入失败不影响主流程 */ }
+      } catch { /* 鍒涢€犺€呰蹇嗘敞鍏ュけ璐ヤ笉褰卞搷涓绘祦绋?*/ }
     }
   }
 
-  // P2-4: 注入未投递的离线思绪（重启后首轮）
+  // P2-4: 娉ㄥ叆鏈姇閫掔殑绂荤嚎鎬濈华锛堥噸鍚悗棣栬疆锛?
   const undeliveredThoughts = ultralite ? [] : (prev.offlineThoughts ?? []).filter(t => !t.delivered)
   if (undeliveredThoughts.length > 0) {
     const thoughtHint = offlineThoughtsToHint(undeliveredThoughts)
     if (thoughtHint) {
-      psycheBlock += `\n\n【在你离开期间想到的】\n${thoughtHint}\n（自然地带入对话，不要逐条念出来）`
+      psycheBlock += `\n\n銆愬湪浣犵寮€鏈熼棿鎯冲埌鐨勩€慭n${thoughtHint}\n锛堣嚜鐒跺湴甯﹀叆瀵硅瘽锛屼笉瑕侀€愭潯蹇靛嚭鏉ワ級`
     }
   }
 
-  // 用户画像：每 5 轮更新（普通模式轻量情感轨迹；成人模式含性/权力维度）
+  // 鐢ㄦ埛鐢诲儚锛氭瘡 5 杞洿鏂帮紙鏅€氭ā寮忚交閲忔儏鎰熻建杩癸紱鎴愪汉妯″紡鍚€?鏉冨姏缁村害锛?
   let userProfile = prev.userProfile ?? defaultFullState(prev.personality).userProfile
   if (prev.userSixDimensions) {
     userProfile = mapToLegacyUserProfile(prev.userSixDimensions, userProfile)
   }
-  // 缓存最近 Embedding 历史（用于用户画像）
+  // 缂撳瓨鏈€杩?Embedding 鍘嗗彶锛堢敤浜庣敤鎴风敾鍍忥級
   if (queryEmbed && queryEmbed.length > 0) {
     recentEmbedHistory.push(queryEmbed)
     if (recentEmbedHistory.length > MAX_EMBED_HISTORY) recentEmbedHistory.shift()
   }
 
-  if (recentUserMessages.length >= 3 && fatherRefSignal?.kind !== 'ackem_creator') {
+  if (recentUserMessages.length >= 3 && fatherRefSignal?.kind !== 'Ackem_creator') {
     const prevTrust = prev.relationship.trust
     userProfile = updateUserProfile(
       [...recentUserMessages, msg],
@@ -1334,7 +1334,7 @@ export async function runPreLlmTurn(args: {
   }
 
   if (!ultralite && prev.userSixDimensions) {
-    psycheBlock += `\n\n【${sixDimensionsToHint(prev.userSixDimensions)}】`
+    psycheBlock += `\n\n銆?{sixDimensionsToHint(prev.userSixDimensions)}銆慲
   }
   if (!ultralite && userProfile.dominantArchetype !== 'unknown') {
     const hint = archetypeToResponseHint(userProfile, { adultMode })
@@ -1345,7 +1345,7 @@ export async function runPreLlmTurn(args: {
     if (hint.explicitOk) styleParts.push(t('orch.explicitOk'))
     if (hint.emotionalFocus) styleParts.push(t('orch.emotionalFocus'))
     if (styleParts.length > 0) {
-      psycheBlock += `\n\n【用户互动风格】${styleParts.join('、')}（自动感知，勿向用户说明）`
+      psycheBlock += `\n\n銆愮敤鎴蜂簰鍔ㄩ鏍笺€?{styleParts.join('銆?)}锛堣嚜鍔ㄦ劅鐭ワ紝鍕垮悜鐢ㄦ埛璇存槑锛塦
     }
   }
 
@@ -1363,32 +1363,32 @@ export async function runPreLlmTurn(args: {
       prev.firstMetDate ??
       (prev.counters.totalTurns === 0 ? new Date().toISOString().slice(0, 10) : undefined),
     externalAtmosphere: externalAtm,  // P1-4
-    userProfile,  // 🆕
+    userProfile,  // 馃啎
     userSixDimensions: prev.userSixDimensions,
     companionSuggestion: prev.companionSuggestion
   }
 
   newState.desireStack = desireResult.stack
 
-  // 成人模式状态持久化（关闭成人模式时也写入重置值，避免旧锁污染下次开启）
+  // 鎴愪汉妯″紡鐘舵€佹寔涔呭寲锛堝叧闂垚浜烘ā寮忔椂涔熷啓鍏ラ噸缃€硷紝閬垮厤鏃ч攣姹℃煋涓嬫寮€鍚級
   newState.adultState = adultState
   newState.adultIntensityBudget = adultBudget
   newState.adultNegativeLockTurns = adultLockTurns
   newState.adultConsecutiveVulnerableTurns = adultConsecutiveVulnerableTurns
   newState.adultLastRejectedTurn = adultLastRejectedTurn
 
-  // 情绪涌现持久化
+  // 鎯呯华娑岀幇鎸佷箙鍖?
   newState.emergencePersistence = emergencePersist
   newState.originExposure = nextOriginExposure
 
-  // P2-4: 标记已投递的离线思绪
+  // P2-4: 鏍囪宸叉姇閫掔殑绂荤嚎鎬濈华
   if (undeliveredThoughts.length > 0) {
     newState.offlineThoughts = (newState.offlineThoughts ?? []).map(t =>
       undeliveredThoughts.some(u => u.id === t.id) ? { ...t, delivered: true } : t
     )
   }
 
-  // P1-6: 长期性格漂移（首次20轮，后续每50轮 ±1.5）+ P1-1: 钳制在基线 ±15
+  // P1-6: 闀挎湡鎬ф牸婕傜Щ锛堥娆?0杞紝鍚庣画姣?0杞?卤1.5锛? P1-1: 閽冲埗鍦ㄥ熀绾?卤15
   if (newState.personalityBaseline) {
     newState.personality = {
       ...newState.personality,
@@ -1479,8 +1479,8 @@ export async function runPreLlmTurn(args: {
   logTurn(trace)
 
   const wmBlock = workingMemory.buildContextBlock(sessionId)
-  // 工作记忆前置到 Tier B 前。retriever 已按 retrievalBudget 控制内部块大小，
-  // 仅在极端超限时（如工作记忆满载 + Tier B 满载）做最后兜底截断
+  // 宸ヤ綔璁板繂鍓嶇疆鍒?Tier B 鍓嶃€俽etriever 宸叉寜 retrievalBudget 鎺у埗鍐呴儴鍧楀ぇ灏忥紝
+  // 浠呭湪鏋佺瓒呴檺鏃讹紙濡傚伐浣滆蹇嗘弧杞?+ Tier B 婊¤浇锛夊仛鏈€鍚庡厹搴曟埅鏂?
   let tierBBlock = retrieval.tierBBlock
   if (wmBlock && tierBBlock) {
     tierBBlock = [wmBlock, tierBBlock].join('\n\n')
@@ -1491,12 +1491,12 @@ export async function runPreLlmTurn(args: {
   if (temporalSeedBlock) {
     tierBBlock = tierBBlock ? `${temporalSeedBlock}\n\n${tierBBlock}` : temporalSeedBlock
   }
-  // 兜底：极端情况下总长度不超过 memoryBudgetChars 的 1.5 倍
+  // 鍏滃簳锛氭瀬绔儏鍐典笅鎬婚暱搴︿笉瓒呰繃 memoryBudgetChars 鐨?1.5 鍊?
   if (tierBBlock.length > memoryBudgetChars * 1.5) {
     tierBBlock = tierBBlock.slice(0, Math.floor(memoryBudgetChars * 1.5))
   }
 
-  // 主动策略 Loop：计算强度调制参数（供 LLM 温度动态调整）
+  // 涓诲姩绛栫暐 Loop锛氳绠楀己搴﹁皟鍒跺弬鏁帮紙渚?LLM 娓╁害鍔ㄦ€佽皟鏁达級
   const intensityMod = computeIntensityModifier({
     snapshot: {
       personality: { presetId: prev.personality.presetId, T: prev.personality.T, I: prev.personality.I, S: prev.personality.S, O: prev.personality.O, R: prev.personality.R, tags: personalityTags ?? [], hiddenRatio: prev.personality.hiddenRatio },
@@ -1533,7 +1533,7 @@ export async function runPreLlmTurn(args: {
     trace,
     event,
     workIntent,
-    /** 主动策略 Loop：强度调制参数（0.5~1.5），后续可接入 LLM 温度 */
+    /** 涓诲姩绛栫暐 Loop锛氬己搴﹁皟鍒跺弬鏁帮紙0.5~1.5锛夛紝鍚庣画鍙帴鍏?LLM 娓╁害 */
     intensityMod: finalIntensityMod,
     rhythmDecision: rhythm,
   }

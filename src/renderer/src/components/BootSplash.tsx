@@ -17,7 +17,7 @@ function initialStatus(): string {
   return BOOT_CONNECTING_ZH
 }
 
-/** 开屏：几何光球 + 进度条；强制 3～5s 跑满，主界面绘制完成后再淡出 */
+/** 寮€灞忥細鍑犱綍鍏夌悆 + 杩涘害鏉★紱寮哄埗 3锝?s 璺戞弧锛屼富鐣岄潰缁樺埗瀹屾垚鍚庡啀娣″嚭 */
 export function BootSplash(): JSX.Element {
   const minDurationMs = useRef(pickBootSplashMinDurationMs())
   const progressRef = useRef(0)

@@ -1,4 +1,4 @@
-import type { ExtensionLifecycleHooks } from '../protocols'
+﻿import type { ExtensionLifecycleHooks } from '../protocols'
 import type { PluginManifest } from '../plugins/types'
 import type { ExtensionSurfaceConfig } from '../../../shared/extensionSurface'
 
@@ -15,7 +15,7 @@ export function buildUpluginInjectTemplate(
   behavior: string
 ): string {
   const text = behavior.trim() || manifest.description || ''
-  return `【${manifest.name ?? 'uPlugin'} 已触发】${text}。用 Ackem 伴侣的自然语气回应，并落实该 Plugin 方案描述的行为（v1：上下文注入，非真系统钩子）。`
+  return `銆?{manifest.name ?? 'uPlugin'} 宸茶Е鍙戙€?{text}銆傜敤 Ackem 浼翠荆鐨勮嚜鐒惰姘斿洖搴旓紝骞惰惤瀹炶 Plugin 鏂规鎻忚堪鐨勮涓猴紙v1锛氫笂涓嬫枃娉ㄥ叆锛岄潪鐪熺郴缁熼挬瀛愶級銆俙
 }
 
 export function createUpluginLifecycleHooks(

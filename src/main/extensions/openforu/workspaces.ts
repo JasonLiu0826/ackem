@@ -1,4 +1,4 @@
-import {
+﻿import {
   existsSync,
   mkdirSync,
   readFileSync,
@@ -11,7 +11,7 @@ import { randomUUID } from 'node:crypto'
 export const MAX_OPENFORU_WORKSPACES = 6
 
 export const PLAN_WELCOME_MESSAGE =
-  '我是 Ackem Agent。请描述你想做的能力：用途、触发方式、需要的权限。\n\n我会先帮你判断适合 **Skill（uskill）** 还是 **Plugin（uplugin）**，再整理 dispatch 方案。\n- **Skill**：主聊天触发后注入行为 — **可部署**\n- **Plugin**：系统/界面钩子 — **可部署**（v1：上下文注入，非真系统钩子）'
+  '鎴戞槸 Ackem Agent銆傝鎻忚堪浣犳兂鍋氱殑鑳藉姏锛氱敤閫斻€佽Е鍙戞柟寮忋€侀渶瑕佺殑鏉冮檺銆俓n\n鎴戜細鍏堝府浣犲垽鏂€傚悎 **Skill锛坲skill锛?* 杩樻槸 **Plugin锛坲plugin锛?*锛屽啀鏁寸悊 dispatch 鏂规銆俓n- **Skill**锛氫富鑱婂ぉ瑙﹀彂鍚庢敞鍏ヨ涓?鈥?**鍙儴缃?*\n- **Plugin**锛氱郴缁?鐣岄潰閽╁瓙 鈥?**鍙儴缃?*锛坴1锛氫笂涓嬫枃娉ㄥ叆锛岄潪鐪熺郴缁熼挬瀛愶級'
 
 export type OpenForUWorkspace = {
   id: string
@@ -19,7 +19,7 @@ export type OpenForUWorkspace = {
   sessionId: string
   createdAt: string
   updatedAt: string
-  /** 用户点击「新建工作区」时为 true */
+  /** 鐢ㄦ埛鐐瑰嚮銆屾柊寤哄伐浣滃尯銆嶆椂涓?true */
   userCreated?: boolean
 }
 
@@ -52,13 +52,13 @@ function stagingPath(dataRoot: string, sessionId: string): string {
 function nextWorkspaceName(workspaces: OpenForUWorkspace[]): string {
   const used = new Set(
     workspaces
-      .map((w) => w.name.match(/^工作区\s*(\d+)$/)?.[1])
+      .map((w) => w.name.match(/^宸ヤ綔鍖篭s*(\d+)$/)?.[1])
       .filter(Boolean)
       .map((n) => Number(n))
   )
   let n = 1
   while (used.has(n)) n++
-  return `工作区 ${n}`
+  return `宸ヤ綔鍖?${n}`
 }
 
 function deleteSessionArtifacts(dataRoot: string, sessionId: string): void {
@@ -83,7 +83,7 @@ function sessionHasUserMessages(dataRoot: string, sessionId: string): boolean {
 
 function shouldKeepWorkspace(dataRoot: string, w: OpenForUWorkspace): boolean {
   if (w.userCreated === true) return true
-  // 旧数据：仅保留用户真正聊过的 session，空的自动 session 不展示
+  // 鏃ф暟鎹細浠呬繚鐣欑敤鎴风湡姝ｈ亰杩囩殑 session锛岀┖鐨勮嚜鍔?session 涓嶅睍绀?
   return sessionHasUserMessages(dataRoot, w.sessionId)
 }
 
@@ -219,7 +219,7 @@ export class OpenForUWorkspaceStore {
   switchActive(workspaceId: string): OpenForUWorkspace {
     const index = this.readIndex()
     const ws = index.workspaces.find((w) => w.id === workspaceId)
-    if (!ws) throw new Error('工作区不存在')
+    if (!ws) throw new Error('宸ヤ綔鍖轰笉瀛樺湪')
     index.activeWorkspaceId = workspaceId
     this.writeIndex(index)
     return ws
@@ -236,7 +236,7 @@ export class OpenForUWorkspaceStore {
   deleteWorkspace(workspaceId: string): OpenForUWorkspace {
     const index = this.readIndex()
     const ws = index.workspaces.find((w) => w.id === workspaceId)
-    if (!ws) throw new Error('工作区不存在')
+    if (!ws) throw new Error('宸ヤ綔鍖轰笉瀛樺湪')
     index.workspaces = index.workspaces.filter((w) => w.id !== workspaceId)
     if (index.activeWorkspaceId === workspaceId) {
       index.activeWorkspaceId = index.workspaces[0]?.id ?? null

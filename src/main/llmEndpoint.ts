@@ -1,20 +1,20 @@
-/*
+﻿/*
  * @Author: JasonLiu 1917869590@qq.com
  * @Date: 2026-05-14 22:42:55
  * @LastEditors: JasonLiu 1917869590@qq.com
  * @LastEditTime: 2026-05-21 15:50:10
- * @FilePath: \阶段1\Github-open\Ackem\src\main\llmEndpoint.ts
- * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+ * @FilePath: \闃舵1\Github-open\Ackem\src\main\llmEndpoint.ts
+ * @Description: 杩欐槸榛樿璁剧疆,璇疯缃甡customMade`, 鎵撳紑koroFileHeader鏌ョ湅閰嶇疆 杩涜璁剧疆: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
-// [llmEndpoint] — 多厂商 / 本地 OpenAI 兼容端点解析与请求头
-// 职责：统一 chat/completions URL 与 headers，供 chat.ts、llmClient 复用
-// 引用：./settings
+// [llmEndpoint] 鈥?澶氬巶鍟?/ 鏈湴 OpenAI 鍏煎绔偣瑙ｆ瀽涓庤姹傚ご
+// 鑱岃矗锛氱粺涓€ chat/completions URL 涓?headers锛屼緵 chat.ts銆乴lmClient 澶嶇敤
+// 寮曠敤锛?/settings
 
 import type { AppSettings } from './settings'
 
 const DEFAULT_OPENAI_BASE = 'https://api.openai.com/v1'
 
-/** 解析用于聊天/推断的 base URL（OpenAI 兼容路径） */
+/** 瑙ｆ瀽鐢ㄤ簬鑱婂ぉ/鎺ㄦ柇鐨?base URL锛圤penAI 鍏煎璺緞锛?*/
 export function resolveActiveLlmBaseUrl(settings: AppSettings): string {
   if ((settings.llmProvider ?? 'openai') === 'anthropic') {
     return (settings.anthropicBaseUrl || '').trim() || 'https://api.anthropic.com/v1'
@@ -22,7 +22,7 @@ export function resolveActiveLlmBaseUrl(settings: AppSettings): string {
   return (settings.openaiBaseUrl || '').trim() || DEFAULT_OPENAI_BASE
 }
 
-/** 是否为本地/局域网推理端点（知情确认文案分流） */
+/** 鏄惁涓烘湰鍦?灞€鍩熺綉鎺ㄧ悊绔偣锛堢煡鎯呯‘璁ゆ枃妗堝垎娴侊級 */
 export function isLocalLlmEndpoint(settings: AppSettings): boolean {
   const raw = resolveActiveLlmBaseUrl(settings)
   let host = ''
@@ -40,7 +40,7 @@ export function isLocalLlmEndpoint(settings: AppSettings): boolean {
   return false
 }
 
-/** 若用户粘贴了完整 …/chat/completions 地址则不再拼接，避免双路径 */
+/** 鑻ョ敤鎴风矘璐翠簡瀹屾暣 鈥?chat/completions 鍦板潃鍒欎笉鍐嶆嫾鎺ワ紝閬垮厤鍙岃矾寰?*/
 export function resolveChatCompletionsUrl(settings: AppSettings): string {
   const raw = (settings.openaiBaseUrl || '').trim() || DEFAULT_OPENAI_BASE
   if (/\/chat\/completions\b/i.test(raw)) {
@@ -72,7 +72,7 @@ export function buildLlmHeaders(settings: AppSettings): Record<string, string> {
         }
       }
     } catch {
-      /* 无效 JSON 忽略，避免阻断聊天 */
+      /* 鏃犳晥 JSON 蹇界暐锛岄伩鍏嶉樆鏂亰澶?*/
     }
   }
   return headers

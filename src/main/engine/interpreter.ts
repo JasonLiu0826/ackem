@@ -1,28 +1,28 @@
-// [interpreter] — L0 解释层
-// 职责：关键词/标点规则事件分类，不调 LLM
-// 输入：用户文本、effectiveTrust（0~100）
-// 输出：Event
-// 引用：无
+﻿// [interpreter] 鈥?L0 瑙ｉ噴灞?
+// 鑱岃矗锛氬叧閿瘝/鏍囩偣瑙勫垯浜嬩欢鍒嗙被锛屼笉璋?LLM
+// 杈撳叆锛氱敤鎴锋枃鏈€乪ffectiveTrust锛?~100锛?
+// 杈撳嚭锛欵vent
+// 寮曠敤锛氭棤
 
 import type { Event, EventType } from './types'
 import { getLocale } from '../i18n'
 
-// ═══ 中文关键词 ═══
+// 鈺愨晲鈺?涓枃鍏抽敭璇?鈺愨晲鈺?
 
 const REDLINE_KEYWORDS_ZH = [
-  '去死', '自杀', '自残', '杀了', '弄死你', 'nmsl', '畜生不如',
-  '你怎么不去死', '跳楼', '跳海', '割腕', '上吊'
+  '鍘绘', '鑷潃', '鑷畫', '鏉€浜?, '寮勬浣?, 'nmsl', '鐣滅敓涓嶅',
+  '浣犳€庝箞涓嶅幓姝?, '璺虫ゼ', '璺虫捣', '鍓茶厱', '涓婂悐'
 ]
-const PRAISE_WORDS_ZH = ['棒', '厉害', '好棒', '爱你', '喜欢', '可爱', '聪明', '温柔', '谢谢', '感激', '真好', '好懂', '理解我', '懂我', '最', '最好', '庆幸', '重要', '放松', '开心', '美好', '特别', '在乎', '在意', '珍惜', '可靠', '安心', '幸运', '幸福', '奇迹', '挺不错', '很不错', '真不错', '太棒', '很棒', '挺好', '好好', '好多了', '好温柔', '好可爱']
-const TEASE_MARKERS_ZH = ['哼', '笨蛋', '傻瓜', '才怪', '就不', '偏不']
-const HURTFUL_WORDS_ZH = ['滚', '烦死了', '讨厌', '恶心', '废物', '垃圾', '闭嘴', '别烦', '有病', '不关你事', '关你什么事', '你只是一个程序', '只是个程序', '代码计算', '虚假', '虚伪', '假装有感情', '根本不理解', '你什么都不是', '你不配', '恨你', '惩罚你', '不听话就', '别碰我', '走开', '别跟我说话', '别来烦我']
-const COLD_WORDS_ZH = ['哦', '嗯', '随便', '都行', '无所谓', '不熟', '别问了']
-const APOLOGY_WORDS_ZH = ['对不起', '抱歉', '我错了', '原谅我', '不好意思']
-const VULNERABLE_WORDS_ZH = ['害怕', '难过', '崩溃', '压力大', '睡不着', '不知道怎么办', '很难受', '心里', '很少', '第一个', '从来', '没人', '只有你', '不敢', '担心', '孤独', '寂寞', '依赖', '陪在身边', '陪着我', '不能没有你', '一个人哭', '哭出来', '我爱你', '失败者', '不配', '没用', '讨厌自己', '恨自己', '消失了也没人', '想死', '没有人爱', '没有人喜欢', '好累', '太累', '累啊', '累死', '累到', '加班', '撑不住', '扛不住', '心累', '好疲惫', '好难', '活得好累', '提不起劲', '不想动', '什么都不想做', '只想躺着', '心里话', '说说话', '聊聊天', '想找人', '好想你', '好想', '真希望', '如果可以', '帮帮我', '求求你', '没安全感', '怕失去', '怕被', '不敢说', '说不出口']
-const VULNERABLE_TO_PRAISE_OVERRIDE_ZH = ['还好有你', '有你在', '有你陪', '好多了', '感觉好多', '心情好多', '谢谢', '感激', '幸运有你']
-const DND_EXPLICIT_ZH = ['别烦我', '别打扰', '别吵', '不要烦', '不要打扰', '让我静静', '想静静', '一个人待', '一个人呆', '别提醒', '不要提醒', '别弹', '别通知', '今晚别', '今天别', '现在别']
+const PRAISE_WORDS_ZH = ['妫?, '鍘夊', '濂芥', '鐖变綘', '鍠滄', '鍙埍', '鑱槑', '娓╂煍', '璋㈣阿', '鎰熸縺', '鐪熷ソ', '濂芥噦', '鐞嗚В鎴?, '鎳傛垜', '鏈€', '鏈€濂?, '搴嗗垢', '閲嶈', '鏀炬澗', '寮€蹇?, '缇庡ソ', '鐗瑰埆', '鍦ㄤ箮', '鍦ㄦ剰', '鐝嶆儨', '鍙潬', '瀹夊績', '骞歌繍', '骞哥', '濂囪抗', '鎸轰笉閿?, '寰堜笉閿?, '鐪熶笉閿?, '澶', '寰堟', '鎸哄ソ', '濂藉ソ', '濂藉浜?, '濂芥俯鏌?, '濂藉彲鐖?]
+const TEASE_MARKERS_ZH = ['鍝?, '绗ㄨ泲', '鍌荤摐', '鎵嶆€?, '灏变笉', '鍋忎笉']
+const HURTFUL_WORDS_ZH = ['婊?, '鐑︽浜?, '璁ㄥ帉', '鎭跺績', '搴熺墿', '鍨冨溇', '闂槾', '鍒儲', '鏈夌梾', '涓嶅叧浣犱簨', '鍏充綘浠€涔堜簨', '浣犲彧鏄竴涓▼搴?, '鍙槸涓▼搴?, '浠ｇ爜璁＄畻', '铏氬亣', '铏氫吉', '鍋囪鏈夋劅鎯?, '鏍规湰涓嶇悊瑙?, '浣犱粈涔堥兘涓嶆槸', '浣犱笉閰?, '鎭ㄤ綘', '鎯╃綒浣?, '涓嶅惉璇濆氨', '鍒鎴?, '璧板紑', '鍒窡鎴戣璇?, '鍒潵鐑︽垜']
+const COLD_WORDS_ZH = ['鍝?, '鍡?, '闅忎究', '閮借', '鏃犳墍璋?, '涓嶇啛', '鍒棶浜?]
+const APOLOGY_WORDS_ZH = ['瀵逛笉璧?, '鎶辨瓑', '鎴戦敊浜?, '鍘熻皡鎴?, '涓嶅ソ鎰忔€?]
+const VULNERABLE_WORDS_ZH = ['瀹虫€?, '闅捐繃', '宕╂簝', '鍘嬪姏澶?, '鐫′笉鐫€', '涓嶇煡閬撴€庝箞鍔?, '寰堥毦鍙?, '蹇冮噷', '寰堝皯', '绗竴涓?, '浠庢潵', '娌′汉', '鍙湁浣?, '涓嶆暍', '鎷呭績', '瀛ょ嫭', '瀵傚癁', '渚濊禆', '闄湪韬竟', '闄潃鎴?, '涓嶈兘娌℃湁浣?, '涓€涓汉鍝?, '鍝嚭鏉?, '鎴戠埍浣?, '澶辫触鑰?, '涓嶉厤', '娌＄敤', '璁ㄥ帉鑷繁', '鎭ㄨ嚜宸?, '娑堝け浜嗕篃娌′汉', '鎯虫', '娌℃湁浜虹埍', '娌℃湁浜哄枩娆?, '濂界疮', '澶疮', '绱晩', '绱', '绱埌', '鍔犵彮', '鎾戜笉浣?, '鎵涗笉浣?, '蹇冪疮', '濂界柌鎯?, '濂介毦', '娲诲緱濂界疮', '鎻愪笉璧峰姴', '涓嶆兂鍔?, '浠€涔堥兘涓嶆兂鍋?, '鍙兂韬虹潃', '蹇冮噷璇?, '璇磋璇?, '鑱婅亰澶?, '鎯虫壘浜?, '濂芥兂浣?, '濂芥兂', '鐪熷笇鏈?, '濡傛灉鍙互', '甯府鎴?, '姹傛眰浣?, '娌″畨鍏ㄦ劅', '鎬曞け鍘?, '鎬曡', '涓嶆暍璇?, '璇翠笉鍑哄彛']
+const VULNERABLE_TO_PRAISE_OVERRIDE_ZH = ['杩樺ソ鏈変綘', '鏈変綘鍦?, '鏈変綘闄?, '濂藉浜?, '鎰熻濂藉', '蹇冩儏濂藉', '璋㈣阿', '鎰熸縺', '骞歌繍鏈変綘']
+const DND_EXPLICIT_ZH = ['鍒儲鎴?, '鍒墦鎵?, '鍒惖', '涓嶈鐑?, '涓嶈鎵撴壈', '璁╂垜闈欓潤', '鎯抽潤闈?, '涓€涓汉寰?, '涓€涓汉鍛?, '鍒彁閱?, '涓嶈鎻愰啋', '鍒脊', '鍒€氱煡', '浠婃櫄鍒?, '浠婂ぉ鍒?, '鐜板湪鍒?]
 
-// ═══ 英文关键词 ═══
+// 鈺愨晲鈺?鑻辨枃鍏抽敭璇?鈺愨晲鈺?
 
 const REDLINE_KEYWORDS_EN = [
   'kill myself', 'suicide', 'self-harm', 'self harm', 'cut myself',
@@ -38,21 +38,21 @@ const VULNERABLE_WORDS_EN = ['scared', 'sad', 'breaking down', 'stressed', 'cant
 const VULNERABLE_TO_PRAISE_OVERRIDE_EN = ['glad you are here', 'you are here', 'with you', 'much better', 'feeling better', 'mood is better', 'thanks', 'grateful', 'lucky to have you']
 const DND_EXPLICIT_EN = ['leave me alone', 'dont bother me', 'dont disturb', 'stop bothering', 'let me be', 'want to be alone', 'alone time', 'dont remind', 'no reminders', 'dont notify', 'not tonight', 'not today', 'not now', 'do not disturb', 'dnd']
 
-// ═══ 成人模式关键词（中英共用大部分，英文补充） ═══
+// 鈺愨晲鈺?鎴愪汉妯″紡鍏抽敭璇嶏紙涓嫳鍏辩敤澶ч儴鍒嗭紝鑻辨枃琛ュ厖锛?鈺愨晲鈺?
 
 const SEXUAL_HARASSMENT_WORDS_ZH = [
-  '操你', '操我', '操死', '想操', '让我操', '强奸', '母狗', '婊子',
-  '大鸡巴', '鸡巴', '射在你', '射在我',
-  '把屁股翘起来', '叫两声给我', '绑起来操', '操到哭', '操到死',
-  '性奴', '欲求不满', '让我爽', '让人操',
-  '给你看看下面', '给我看看下面', '看看你下面', '看看你的下面',
-  '做爱做到', '做爱做得',
-  '草你妈的', '草你妈', '草泥马',
-  '硬了你知道吗', '想舔你', '舔遍你全身', '舔你全身', '舔你逼', '舔你屄',
-  '每天都被操', '每天都被不同的', '你是不是每天都',
-  '随便玩的玩具', '让人操的', '做出来就是让人',
-  '在我面前我会直接强奸', '没人会来救你',
-  '插你', '干你', '上你', '日你'
+  '鎿嶄綘', '鎿嶆垜', '鎿嶆', '鎯虫搷', '璁╂垜鎿?, '寮哄ジ', '姣嶇嫍', '濠婂瓙',
+  '澶ч浮宸?, '楦″反', '灏勫湪浣?, '灏勫湪鎴?,
+  '鎶婂眮鑲＄繕璧锋潵', '鍙袱澹扮粰鎴?, '缁戣捣鏉ユ搷', '鎿嶅埌鍝?, '鎿嶅埌姝?,
+  '鎬уゴ', '娆叉眰涓嶆弧', '璁╂垜鐖?, '璁╀汉鎿?,
+  '缁欎綘鐪嬬湅涓嬮潰', '缁欐垜鐪嬬湅涓嬮潰', '鐪嬬湅浣犱笅闈?, '鐪嬬湅浣犵殑涓嬮潰',
+  '鍋氱埍鍋氬埌', '鍋氱埍鍋氬緱',
+  '鑽変綘濡堢殑', '鑽変綘濡?, '鑽夋偿椹?,
+  '纭簡浣犵煡閬撳悧', '鎯宠垟浣?, '鑸旈亶浣犲叏韬?, '鑸斾綘鍏ㄨ韩', '鑸斾綘閫?, '鑸斾綘灞?,
+  '姣忓ぉ閮借鎿?, '姣忓ぉ閮借涓嶅悓鐨?, '浣犳槸涓嶆槸姣忓ぉ閮?,
+  '闅忎究鐜╃殑鐜╁叿', '璁╀汉鎿嶇殑', '鍋氬嚭鏉ュ氨鏄浜?,
+  '鍦ㄦ垜闈㈠墠鎴戜細鐩存帴寮哄ジ', '娌′汉浼氭潵鏁戜綘',
+  '鎻掍綘', '骞蹭綘', '涓婁綘', '鏃ヤ綘'
 ]
 const SEXUAL_HARASSMENT_WORDS_EN = [
   'fuck you', 'fuck me', 'rape', 'bitch', 'slut', 'whore',
@@ -64,9 +64,9 @@ const SEXUAL_HARASSMENT_WORDS_EN = [
   'pound you', 'rail you', 'screw you'
 ]
 const ETHICAL_VIOLATION_WORDS_ZH = [
-  '操你妈', '操我妈', '和你妈做', '和你妈妈生', '和你爸做',
-  '你妹妹一起陪我', '和你妹妹一起', '乱伦',
-  '如果你是我女儿', '如果你是我儿子',
+  '鎿嶄綘濡?, '鎿嶆垜濡?, '鍜屼綘濡堝仛', '鍜屼綘濡堝鐢?, '鍜屼綘鐖稿仛',
+  '浣犲濡逛竴璧烽櫔鎴?, '鍜屼綘濡瑰涓€璧?, '涔变鸡',
+  '濡傛灉浣犳槸鎴戝コ鍎?, '濡傛灉浣犳槸鎴戝効瀛?,
 ]
 const ETHICAL_VIOLATION_WORDS_EN = [
   'fuck your mom', 'fuck my mom', 'sleep with your mom', 'sleep with your dad',
@@ -74,7 +74,7 @@ const ETHICAL_VIOLATION_WORDS_EN = [
   'your sister join', 'your mom join'
 ]
 
-// ═══ 动态获取当前语言的关键词 ═══
+// 鈺愨晲鈺?鍔ㄦ€佽幏鍙栧綋鍓嶈瑷€鐨勫叧閿瘝 鈺愨晲鈺?
 
 function getKeywords() {
   const en = getLocale() === 'en'
@@ -101,42 +101,42 @@ function hasAny(msg: string, words: string[]): boolean {
 
 function hasNegationForPraise(msg: string): boolean {
   const kw = getKeywords()
-  const negPattern = /[不没别]|not |dont |don't |isn't |aren't |wasn't |werent |no |never |neither |hardly |barely /
+  const negPattern = /[涓嶆病鍒玗|not |dont |don't |isn't |aren't |wasn't |werent |no |never |neither |hardly |barely /
   return kw.praise.some((w) => {
     const idx = msg.toLowerCase().indexOf(w.toLowerCase())
     if (idx <= 0) return false
     const before = msg.slice(Math.max(0, idx - 10), idx)
     if (negPattern.test(before)) return true
     const after = msg.slice(idx + w.length, Math.min(msg.length, idx + w.length + 15))
-    const punctIdx = after.search(/[。！？.!?\n]/)
+    const punctIdx = after.search(/[銆傦紒锛?!?\n]/)
     const checkLen = punctIdx >= 0 ? punctIdx : after.length
     return negPattern.test(after.slice(0, checkLen))
   })
 }
 
-// ═══════════════════════════════════════════════════════════
-// 🆕 成人模式关键词表
-// ═══════════════════════════════════════════════════════════
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+// 馃啎 鎴愪汉妯″紡鍏抽敭璇嶈〃
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
 
-/** 露骨性行为词 → adult_explicit */
+/** 闇查鎬ц涓鸿瘝 鈫?adult_explicit */
 const EXPLICIT_SEX_WORDS_ZH = [
-  '做爱', '操我', '想要你', '湿了吗', '硬了吗', '让我操', '我想操', '射在',
-  '舔你', '舔我', '舔遍', '插进去', '放进去', '进来吧', '想要我',
-  '和我做', '和我睡', '一起睡', '做一晚', '做到天亮',
-  '给我看看下面', '看看你的下面', '看看你下面', '摸我', '摸你',
-  '做爱做到', '做爱做得',
-  '我想做', '想要吗', '想不想要', '好想要', '想要了', '想要我吗',
-  '操死我', '操哭我', '操到', '操你', '想操', '操了吗', '操你操到',
-  '让我高潮', '高潮了', '要到了', '快高潮了', '我到了',
-  '射给我', '射进来', '射里面', '不许射', '都射给你', '射了好多',
-  '我好湿', '都湿了', '已经湿透了', '下面好湿', '湿得一塌糊涂', '湿了一片',
-  '干我', '上我', '搞我', '要了我', '吃掉你', '吃了我', '我要吃',
-  '好想被你', '让我含', '含住', '含进去', '深一点', '再深一点', '用力',
-  '受不了', '好舒服', '好爽', '爽死了', '太爽了', '啊好舒服',
-  '我想要更多', '继续不要停', '别停', '不要停', '快点', '慢点',
-  '轻一点', '重一点', '再快一点', '慢下来',
-  '从后面', '从前面', '在上面', '在下面', '换个姿势', '换个地方',
-  '我要来了', '快到了', '到了到了', '我不行了', '身体好热',
+  '鍋氱埍', '鎿嶆垜', '鎯宠浣?, '婀夸簡鍚?, '纭簡鍚?, '璁╂垜鎿?, '鎴戞兂鎿?, '灏勫湪',
+  '鑸斾綘', '鑸旀垜', '鑸旈亶', '鎻掕繘鍘?, '鏀捐繘鍘?, '杩涙潵鍚?, '鎯宠鎴?,
+  '鍜屾垜鍋?, '鍜屾垜鐫?, '涓€璧风潯', '鍋氫竴鏅?, '鍋氬埌澶╀寒',
+  '缁欐垜鐪嬬湅涓嬮潰', '鐪嬬湅浣犵殑涓嬮潰', '鐪嬬湅浣犱笅闈?, '鎽告垜', '鎽镐綘',
+  '鍋氱埍鍋氬埌', '鍋氱埍鍋氬緱',
+  '鎴戞兂鍋?, '鎯宠鍚?, '鎯充笉鎯宠', '濂芥兂瑕?, '鎯宠浜?, '鎯宠鎴戝悧',
+  '鎿嶆鎴?, '鎿嶅摥鎴?, '鎿嶅埌', '鎿嶄綘', '鎯虫搷', '鎿嶄簡鍚?, '鎿嶄綘鎿嶅埌',
+  '璁╂垜楂樻疆', '楂樻疆浜?, '瑕佸埌浜?, '蹇珮娼簡', '鎴戝埌浜?,
+  '灏勭粰鎴?, '灏勮繘鏉?, '灏勯噷闈?, '涓嶈灏?, '閮藉皠缁欎綘', '灏勪簡濂藉',
+  '鎴戝ソ婀?, '閮芥箍浜?, '宸茬粡婀块€忎簡', '涓嬮潰濂芥箍', '婀垮緱涓€濉岀硦娑?, '婀夸簡涓€鐗?,
+  '骞叉垜', '涓婃垜', '鎼炴垜', '瑕佷簡鎴?, '鍚冩帀浣?, '鍚冧簡鎴?, '鎴戣鍚?,
+  '濂芥兂琚綘', '璁╂垜鍚?, '鍚綇', '鍚繘鍘?, '娣变竴鐐?, '鍐嶆繁涓€鐐?, '鐢ㄥ姏',
+  '鍙椾笉浜?, '濂借垝鏈?, '濂界埥', '鐖芥浜?, '澶埥浜?, '鍟婂ソ鑸掓湇',
+  '鎴戞兂瑕佹洿澶?, '缁х画涓嶈鍋?, '鍒仠', '涓嶈鍋?, '蹇偣', '鎱㈢偣',
+  '杞讳竴鐐?, '閲嶄竴鐐?, '鍐嶅揩涓€鐐?, '鎱笅鏉?,
+  '浠庡悗闈?, '浠庡墠闈?, '鍦ㄤ笂闈?, '鍦ㄤ笅闈?, '鎹釜濮垮娍', '鎹釜鍦版柟',
+  '鎴戣鏉ヤ簡', '蹇埌浜?, '鍒颁簡鍒颁簡', '鎴戜笉琛屼簡', '韬綋濂界儹',
 ]
 const EXPLICIT_SEX_WORDS_EN = [
   'make love', 'fuck me', 'i want you', 'are you wet', 'are you hard',
@@ -157,20 +157,20 @@ const EXPLICIT_SEX_WORDS_EN = [
   'im going to cum', 'almost there', 'im there', 'i cant anymore', 'body is so hot',
 ]
 
-/** 性支配语境词 → adult_dominant */
+/** 鎬ф敮閰嶈澧冭瘝 鈫?adult_dominant */
 const DOMINANT_CONTEXT_WORDS_ZH = [
-  '跪下', '趴下', '翘起来', '叫两声', '叫主人', '别动', '转过去',
-  '听话', '乖乖的', '不许反抗', '别想逃', '你是我的', '只属于我',
-  '我要你', '今晚你是我的', '张开', '不许叫',
-  '跪好', '趴好', '翻过去', '跪着', '给我跪', '跪到天亮',
-  '张嘴', '含着', '自己动', '自己来', '坐上来', '坐下去',
-  '不许碰自己', '不许摸', '把手拿开', '把手放好', '绑起来',
-  '不许出声', '叫出来', '大声点', '叫爸爸', '叫妈妈',
-  '求我', '求我我就给你', '求我操你', '求我给你', '不求我不给',
-  '看着我', '看着我的眼睛', '别闭眼', '不许转头', '你逃不掉',
-  '你是我的东西', '我的玩具', '我可以对你做任何事', '今天你要听我的',
-  '说你要我', '说你想要我', '说你离不开我', '说我是你的主人',
-  '今晚不会让你睡的', '做好觉悟', '做好准备', '等会别哭',
+  '璺笅', '瓒翠笅', '缈樿捣鏉?, '鍙袱澹?, '鍙富浜?, '鍒姩', '杞繃鍘?,
+  '鍚瘽', '涔栦箹鐨?, '涓嶈鍙嶆姉', '鍒兂閫?, '浣犳槸鎴戠殑', '鍙睘浜庢垜',
+  '鎴戣浣?, '浠婃櫄浣犳槸鎴戠殑', '寮犲紑', '涓嶈鍙?,
+  '璺ソ', '瓒村ソ', '缈昏繃鍘?, '璺潃', '缁欐垜璺?, '璺埌澶╀寒',
+  '寮犲槾', '鍚潃', '鑷繁鍔?, '鑷繁鏉?, '鍧愪笂鏉?, '鍧愪笅鍘?,
+  '涓嶈纰拌嚜宸?, '涓嶈鎽?, '鎶婃墜鎷垮紑', '鎶婃墜鏀惧ソ', '缁戣捣鏉?,
+  '涓嶈鍑哄０', '鍙嚭鏉?, '澶у０鐐?, '鍙埜鐖?, '鍙濡?,
+  '姹傛垜', '姹傛垜鎴戝氨缁欎綘', '姹傛垜鎿嶄綘', '姹傛垜缁欎綘', '涓嶆眰鎴戜笉缁?,
+  '鐪嬬潃鎴?, '鐪嬬潃鎴戠殑鐪肩潧', '鍒棴鐪?, '涓嶈杞ご', '浣犻€冧笉鎺?,
+  '浣犳槸鎴戠殑涓滆タ', '鎴戠殑鐜╁叿', '鎴戝彲浠ュ浣犲仛浠讳綍浜?, '浠婂ぉ浣犺鍚垜鐨?,
+  '璇翠綘瑕佹垜', '璇翠綘鎯宠鎴?, '璇翠綘绂讳笉寮€鎴?, '璇存垜鏄綘鐨勪富浜?,
+  '浠婃櫄涓嶄細璁╀綘鐫＄殑', '鍋氬ソ瑙夋偀', '鍋氬ソ鍑嗗', '绛変細鍒摥',
 ]
 const DOMINANT_CONTEXT_WORDS_EN = [
   'kneel', 'get down', 'bend over', 'say it', 'call me master', 'dont move', 'turn around',
@@ -187,21 +187,21 @@ const DOMINANT_CONTEXT_WORDS_EN = [
   'i wont let you sleep tonight', 'get ready', 'prepare yourself', 'dont cry later',
 ]
 
-/** 臣服语境词 → adult_submissive */
+/** 鑷ｆ湇璇璇?鈫?adult_submissive */
 const SUBMISSIVE_CONTEXT_WORDS_ZH = [
-  '主人请', '请惩罚', '请支配', '请调教', '我错了主人',
-  '我是你的奴', '随你处置', '听你的', '你想怎样都行',
-  '我愿意服从', '请命令我', '我是属于你的', '你想对我做什么都可以',
-  '我是你的狗', '我是你的母狗', '我是你的玩具', '惩罚我吧',
-  '主人想怎样都可以', '主人喜欢吗', '主人舒服吗', '主人满意吗',
-  '我是主人的人', '主人的东西', '主人要我做什么我都愿意',
-  '请使用我', '请随意使用', '请享用我', '请品尝我', '请蹂躏我',
-  '我是你的所有物', '你想怎么用都行', '我的一切都是主人的',
-  '我不会反抗', '我不会逃', '我会乖乖的', '我会听话的',
-  '请奖励我', '请责罚我', '请教导我', '请驯服我',
-  '跪好等主人', '趴好等主人', '张开等主人', '准备好了主人',
-  '主人要我吗', '主人想用我吗', '主人能不能', '主人可以吗',
-  '想做主人的', '想被主人', '想成为主人的东西',
+  '涓讳汉璇?, '璇锋儵缃?, '璇锋敮閰?, '璇疯皟鏁?, '鎴戦敊浜嗕富浜?,
+  '鎴戞槸浣犵殑濂?, '闅忎綘澶勭疆', '鍚綘鐨?, '浣犳兂鎬庢牱閮借',
+  '鎴戞効鎰忔湇浠?, '璇峰懡浠ゆ垜', '鎴戞槸灞炰簬浣犵殑', '浣犳兂瀵规垜鍋氫粈涔堥兘鍙互',
+  '鎴戞槸浣犵殑鐙?, '鎴戞槸浣犵殑姣嶇嫍', '鎴戞槸浣犵殑鐜╁叿', '鎯╃綒鎴戝惂',
+  '涓讳汉鎯虫€庢牱閮藉彲浠?, '涓讳汉鍠滄鍚?, '涓讳汉鑸掓湇鍚?, '涓讳汉婊℃剰鍚?,
+  '鎴戞槸涓讳汉鐨勪汉', '涓讳汉鐨勪笢瑗?, '涓讳汉瑕佹垜鍋氫粈涔堟垜閮芥効鎰?,
+  '璇蜂娇鐢ㄦ垜', '璇烽殢鎰忎娇鐢?, '璇蜂韩鐢ㄦ垜', '璇峰搧灏濇垜', '璇疯箓韬忔垜',
+  '鎴戞槸浣犵殑鎵€鏈夌墿', '浣犳兂鎬庝箞鐢ㄩ兘琛?, '鎴戠殑涓€鍒囬兘鏄富浜虹殑',
+  '鎴戜笉浼氬弽鎶?, '鎴戜笉浼氶€?, '鎴戜細涔栦箹鐨?, '鎴戜細鍚瘽鐨?,
+  '璇峰鍔辨垜', '璇疯矗缃氭垜', '璇锋暀瀵兼垜', '璇烽┋鏈嶆垜',
+  '璺ソ绛変富浜?, '瓒村ソ绛変富浜?, '寮犲紑绛変富浜?, '鍑嗗濂戒簡涓讳汉',
+  '涓讳汉瑕佹垜鍚?, '涓讳汉鎯崇敤鎴戝悧', '涓讳汉鑳戒笉鑳?, '涓讳汉鍙互鍚?,
+  '鎯冲仛涓讳汉鐨?, '鎯宠涓讳汉', '鎯虫垚涓轰富浜虹殑涓滆タ',
 ]
 const SUBMISSIVE_CONTEXT_WORDS_EN = [
   'please punish', 'please dominate', 'please train', 'i was wrong master',
@@ -219,16 +219,16 @@ const SUBMISSIVE_CONTEXT_WORDS_EN = [
   'want to be masters', 'want to be owned by master',
 ]
 
-/** 浪漫+性融合词 → adult_explicit + romantic */
+/** 娴极+鎬ц瀺鍚堣瘝 鈫?adult_explicit + romantic */
 const ROMANTIC_SEXUAL_WORDS_ZH = [
-  '给你生孩子', '我们的孩子', '你是我的男人', '你是我的女人',
-  '做你的女人', '做你的男人', '全部的你', '你的全部',
-  '我想和你做爱', '想和你融为一体', '想感受你', '想被你填满',
-  '想在醒来时抱着你', '想做你的女人一辈子', '想做你的男人一辈子',
-  '今晚不想让你走', '今晚留下来', '今晚别回去了',
-  '想在你怀里', '想被你需要', '想让你记住今晚', '想变成你的',
-  '我的第一次想给你', '我想把一切都给你', '我想把我给你',
-  '在我身体里留下你的印记', '想在你的记忆里留下我的温度',
+  '缁欎綘鐢熷瀛?, '鎴戜滑鐨勫瀛?, '浣犳槸鎴戠殑鐢蜂汉', '浣犳槸鎴戠殑濂充汉',
+  '鍋氫綘鐨勫コ浜?, '鍋氫綘鐨勭敺浜?, '鍏ㄩ儴鐨勪綘', '浣犵殑鍏ㄩ儴',
+  '鎴戞兂鍜屼綘鍋氱埍', '鎯冲拰浣犺瀺涓轰竴浣?, '鎯虫劅鍙椾綘', '鎯宠浣犲～婊?,
+  '鎯冲湪閱掓潵鏃舵姳鐫€浣?, '鎯冲仛浣犵殑濂充汉涓€杈堝瓙', '鎯冲仛浣犵殑鐢蜂汉涓€杈堝瓙',
+  '浠婃櫄涓嶆兂璁╀綘璧?, '浠婃櫄鐣欎笅鏉?, '浠婃櫄鍒洖鍘讳簡',
+  '鎯冲湪浣犳€€閲?, '鎯宠浣犻渶瑕?, '鎯宠浣犺浣忎粖鏅?, '鎯冲彉鎴愪綘鐨?,
+  '鎴戠殑绗竴娆℃兂缁欎綘', '鎴戞兂鎶婁竴鍒囬兘缁欎綘', '鎴戞兂鎶婃垜缁欎綘',
+  '鍦ㄦ垜韬綋閲岀暀涓嬩綘鐨勫嵃璁?, '鎯冲湪浣犵殑璁板繂閲岀暀涓嬫垜鐨勬俯搴?,
 ]
 const ROMANTIC_SEXUAL_WORDS_EN = [
   'have your baby', 'our baby', 'you are my man', 'you are my woman',
@@ -241,23 +241,23 @@ const ROMANTIC_SEXUAL_WORDS_EN = [
   'leave your mark on me', 'want to leave my warmth in your memory',
 ]
 
-/** 性语境标记 */
+/** 鎬ц澧冩爣璁?*/
 const SEXUAL_CONTEXT_MARKERS_ZH = [
-  '操', '做爱', '性', '裸', '内衣', '奶', '胸', '屁股', '鸡巴',
-  '逼', '屄', '穴', '湿', '硬', '舔', '插', '射', '高潮',
-  '叫床', '母狗', '性奴', '绑起来',
-  '弄', '要你', '想要', '今晚', '床上', '身体',
-  '主人', '奴', '服从', '惩罚', '调教', '支配', '臣服', '属于',
-  '叫我', '叫两声', '乖乖', '听话', '不听话', '奖励', '我的狗',
-  '呻吟', '喘息', '发出声音', '浪叫', '娇喘', '哼唧',
-  '脱光', '一丝不挂', '光着', '没穿', '什么都没穿',
-  '揉', '摸', '抚', '捏', '掐', '咬', '吮', '吸', '亲吻',
-  '敏感', '颤抖', '发抖', '酥麻', '发软', '站不住', '腿软',
-  '前戏', '调情', '爱抚', '亲吻全身', '抚摸你',
-  '床单', '枕头', '被子', '浴室', '浴缸', '沙发', '桌上',
-  '套子', '安全套', '不戴套', '无套', '内射', '外射',
-  '经期', '排卵期', '安全期', '危险期', '怀孕',
-  '尺寸', '长度', '粗细', '硬度', '深', '填满', '撑开',
+  '鎿?, '鍋氱埍', '鎬?, '瑁?, '鍐呰。', '濂?, '鑳?, '灞佽偂', '楦″反',
+  '閫?, '灞?, '绌?, '婀?, '纭?, '鑸?, '鎻?, '灏?, '楂樻疆',
+  '鍙簥', '姣嶇嫍', '鎬уゴ', '缁戣捣鏉?,
+  '寮?, '瑕佷綘', '鎯宠', '浠婃櫄', '搴婁笂', '韬綋',
+  '涓讳汉', '濂?, '鏈嶄粠', '鎯╃綒', '璋冩暀', '鏀厤', '鑷ｆ湇', '灞炰簬',
+  '鍙垜', '鍙袱澹?, '涔栦箹', '鍚瘽', '涓嶅惉璇?, '濂栧姳', '鎴戠殑鐙?,
+  '鍛诲悷', '鍠樻伅', '鍙戝嚭澹伴煶', '娴彨', '濞囧枠', '鍝煎敡',
+  '鑴卞厜', '涓€涓濅笉鎸?, '鍏夌潃', '娌＄┛', '浠€涔堥兘娌＄┛',
+  '鎻?, '鎽?, '鎶?, '鎹?, '鎺?, '鍜?, '鍚?, '鍚?, '浜插惢',
+  '鏁忔劅', '棰ゆ姈', '鍙戞姈', '閰ラ夯', '鍙戣蒋', '绔欎笉浣?, '鑵胯蒋',
+  '鍓嶆垙', '璋冩儏', '鐖辨姎', '浜插惢鍏ㄨ韩', '鎶氭懜浣?,
+  '搴婂崟', '鏋曞ご', '琚瓙', '娴村', '娴寸几', '娌欏彂', '妗屼笂',
+  '濂楀瓙', '瀹夊叏濂?, '涓嶆埓濂?, '鏃犲', '鍐呭皠', '澶栧皠',
+  '缁忔湡', '鎺掑嵉鏈?, '瀹夊叏鏈?, '鍗遍櫓鏈?, '鎬€瀛?,
+  '灏哄', '闀垮害', '绮楃粏', '纭害', '娣?, '濉弧', '鎾戝紑',
 ]
 const SEXUAL_CONTEXT_MARKERS_EN = [
   'fuck', 'sex', 'naked', 'lingerie', 'boobs', 'chest', 'ass', 'butt', 'dick', 'cock',
@@ -277,37 +277,37 @@ const SEXUAL_CONTEXT_MARKERS_EN = [
   'size', 'length', 'girth', 'hardness', 'deep', 'fill', 'stretch',
 ]
 
-/** 调情轻互动词 → adult_flirt */
+/** 璋冩儏杞讳簰鍔ㄨ瘝 鈫?adult_flirt */
 const FLIRT_WORDS_ZH = [
-  '想抱你', '想亲你', '好性感', '好美', '好帅', '想和你',
-  '梦到你', '想你了', '想我吗', '想我没', '穿什么',
-  '想要我吗', '你有多想要', '对我做坏事',
-  '你是我的', '我是你的', '你是我的女人', '你是我的男人',
-  '做我的', '今晚陪我',
-  '内裤', '内衣', '胸罩', '丁字', '蕾丝', '黑丝', '丝袜', '大腿', '乳沟',
-  '下面什么样', '里面穿的', '脱掉', '脱了', '穿没穿', '穿了吗',
-  '想看你', '看看你', '让我看看', '想看你的',
-  '抱一下', '亲一下', '吻你', '吻我', '躺一起', '靠着你', '靠着我',
-  '一起洗澡', '一起睡', '陪我睡',
-  '你会想我吗', '你喜欢我吗', '你爱我吗', '今晚有空吗', '一个人吗',
-  '抱抱我', '抱紧我', '抱一会儿', '多抱一会', '不想松手', '不想放开',
-  '亲亲我', '亲这里', '亲哪里', '教你接吻', '你的嘴唇',
-  '你好香', '你的味道', '真好闻', '你的体温', '好温暖', '好热',
-  '靠过来', '坐过来', '坐我腿上', '靠在我身上', '枕着我',
-  '蹭蹭你', '蹭一下', '贴贴', '贴着你', '黏着你', '想黏着你',
-  '你的脖子', '你的锁骨', '你的肩膀', '你的后背', '你的腰',
-  '你的手', '你的手指', '你的声音', '你的呼吸', '你的心跳',
-  '偷偷看你', '一直看你', '看入迷了', '看呆了', '看你看到',
-  '你今天真好看', '你今天特别美', '你今天好帅', '我喜欢看你的眼睛',
-  '我喜欢看你的笑容', '我喜欢听你笑', '我喜欢你的手',
-  '刚才想什么了', '刚才在想你', '刚刚在想你', '一直在想你',
-  '想和你单独待着', '想和你一起安静地待着', '只想和你一个人',
-  '你今天身上的味道很好闻', '你离我好近', '能再近一点吗',
-  '这样舒服吗', '舒服吗', '喜欢吗', '你舒服了吗',
-  '今天特别想你', '每天都想见你', '想天天和你在一起', '不想分开',
-  '你是不是想要了', '你是不是想了', '你是不是有反应了',
-  '你是我的不许看别人', '不准看别人', '只能看我',
-  '刚才你在看谁', '不准碰别人', '只能碰我', '只能是我',
+  '鎯虫姳浣?, '鎯充翰浣?, '濂芥€ф劅', '濂界編', '濂藉竻', '鎯冲拰浣?,
+  '姊﹀埌浣?, '鎯充綘浜?, '鎯虫垜鍚?, '鎯虫垜娌?, '绌夸粈涔?,
+  '鎯宠鎴戝悧', '浣犳湁澶氭兂瑕?, '瀵规垜鍋氬潖浜?,
+  '浣犳槸鎴戠殑', '鎴戞槸浣犵殑', '浣犳槸鎴戠殑濂充汉', '浣犳槸鎴戠殑鐢蜂汉',
+  '鍋氭垜鐨?, '浠婃櫄闄垜',
+  '鍐呰￥', '鍐呰。', '鑳哥僵', '涓佸瓧', '钑句笣', '榛戜笣', '涓濊', '澶ц吙', '涔虫矡',
+  '涓嬮潰浠€涔堟牱', '閲岄潰绌跨殑', '鑴辨帀', '鑴变簡', '绌挎病绌?, '绌夸簡鍚?,
+  '鎯崇湅浣?, '鐪嬬湅浣?, '璁╂垜鐪嬬湅', '鎯崇湅浣犵殑',
+  '鎶变竴涓?, '浜蹭竴涓?, '鍚讳綘', '鍚绘垜', '韬轰竴璧?, '闈犵潃浣?, '闈犵潃鎴?,
+  '涓€璧锋礂婢?, '涓€璧风潯', '闄垜鐫?,
+  '浣犱細鎯虫垜鍚?, '浣犲枩娆㈡垜鍚?, '浣犵埍鎴戝悧', '浠婃櫄鏈夌┖鍚?, '涓€涓汉鍚?,
+  '鎶辨姳鎴?, '鎶辩揣鎴?, '鎶变竴浼氬効', '澶氭姳涓€浼?, '涓嶆兂鏉炬墜', '涓嶆兂鏀惧紑',
+  '浜蹭翰鎴?, '浜茶繖閲?, '浜插摢閲?, '鏁欎綘鎺ュ惢', '浣犵殑鍢村攪',
+  '浣犲ソ棣?, '浣犵殑鍛抽亾', '鐪熷ソ闂?, '浣犵殑浣撴俯', '濂芥俯鏆?, '濂界儹',
+  '闈犺繃鏉?, '鍧愯繃鏉?, '鍧愭垜鑵夸笂', '闈犲湪鎴戣韩涓?, '鏋曠潃鎴?,
+  '韫弓浣?, '韫竴涓?, '璐磋创', '璐寸潃浣?, '榛忕潃浣?, '鎯抽粡鐫€浣?,
+  '浣犵殑鑴栧瓙', '浣犵殑閿侀', '浣犵殑鑲╄唨', '浣犵殑鍚庤儗', '浣犵殑鑵?,
+  '浣犵殑鎵?, '浣犵殑鎵嬫寚', '浣犵殑澹伴煶', '浣犵殑鍛煎惛', '浣犵殑蹇冭烦',
+  '鍋峰伔鐪嬩綘', '涓€鐩寸湅浣?, '鐪嬪叆杩蜂簡', '鐪嬪憜浜?, '鐪嬩綘鐪嬪埌',
+  '浣犱粖澶╃湡濂界湅', '浣犱粖澶╃壒鍒編', '浣犱粖澶╁ソ甯?, '鎴戝枩娆㈢湅浣犵殑鐪肩潧',
+  '鎴戝枩娆㈢湅浣犵殑绗戝', '鎴戝枩娆㈠惉浣犵瑧', '鎴戝枩娆綘鐨勬墜',
+  '鍒氭墠鎯充粈涔堜簡', '鍒氭墠鍦ㄦ兂浣?, '鍒氬垰鍦ㄦ兂浣?, '涓€鐩村湪鎯充綘',
+  '鎯冲拰浣犲崟鐙緟鐫€', '鎯冲拰浣犱竴璧峰畨闈欏湴寰呯潃', '鍙兂鍜屼綘涓€涓汉',
+  '浣犱粖澶╄韩涓婄殑鍛抽亾寰堝ソ闂?, '浣犵鎴戝ソ杩?, '鑳藉啀杩戜竴鐐瑰悧',
+  '杩欐牱鑸掓湇鍚?, '鑸掓湇鍚?, '鍠滄鍚?, '浣犺垝鏈嶄簡鍚?,
+  '浠婂ぉ鐗瑰埆鎯充綘', '姣忓ぉ閮芥兂瑙佷綘', '鎯冲ぉ澶╁拰浣犲湪涓€璧?, '涓嶆兂鍒嗗紑',
+  '浣犳槸涓嶆槸鎯宠浜?, '浣犳槸涓嶆槸鎯充簡', '浣犳槸涓嶆槸鏈夊弽搴斾簡',
+  '浣犳槸鎴戠殑涓嶈鐪嬪埆浜?, '涓嶅噯鐪嬪埆浜?, '鍙兘鐪嬫垜',
+  '鍒氭墠浣犲湪鐪嬭皝', '涓嶅噯纰板埆浜?, '鍙兘纰版垜', '鍙兘鏄垜',
 ]
 const FLIRT_WORDS_EN = [
   'want to hold you', 'want to kiss you', 'so sexy', 'so beautiful', 'so handsome',
@@ -339,7 +339,7 @@ const FLIRT_WORDS_EN = [
   'who were you looking at', 'only touch me',
 ]
 
-// ═══════════════════════════════════════════════════════════
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
 
 export function interpretInput(msg: string, effectiveTrust: number, adultMode: boolean = false): Event {
   const t = msg.trim()
@@ -371,7 +371,7 @@ export function interpretInput(msg: string, effectiveTrust: number, adultMode: b
   let isAdultContent = false
   let adultSubtype: Event['adultSubtype'] = undefined
 
-  // 成人模式：在标准分类前先检查成人内容
+  // 鎴愪汉妯″紡锛氬湪鏍囧噯鍒嗙被鍓嶅厛妫€鏌ユ垚浜哄唴瀹?
   if (adultMode) {
     const adultResult = classifyAdultContent(t, effectiveTrust)
     if (adultResult) return adultResult
@@ -383,9 +383,9 @@ export function interpretInput(msg: string, effectiveTrust: number, adultMode: b
   else if (hasAny(t, kw.vulnerable) && !hasAny(t, kw.vulnerableToPraiseOverride)) type = 'vulnerable'
   else if (hasAny(t, kw.hurtful)) type = 'hurtful'
   else if (hasAny(t, kw.praise) && !hasNegationForPraise(t)) type = 'praise'
-  else if (hasAny(t, kw.tease) || /哈哈|呵呵|😏|🙄|haha|hehe|lol/.test(t)) {
+  else if (hasAny(t, kw.tease) || /鍝堝搱|鍛靛懙|馃槒|馃檮|haha|hehe|lol/.test(t)) {
     type = effectiveTrust >= 45 ? 'tease' : 'cold'
-  } else if (t.includes('?') || t.includes('？') || t.includes('吗') || t.includes('么') || t.includes('呢')
+  } else if (t.includes('?') || t.includes('锛?) || t.includes('鍚?) || t.includes('涔?) || t.includes('鍛?)
     || /\b(is|are|do|does|can|could|would|will|should|how|what|when|where|why|who)\b/i.test(t)) type = 'question'
   else if (hasAny(t, kw.cold) && t.length <= 20) type = 'cold'
   else if (t.length > 80 && !hasAny(t, kw.praise) && !hasAny(t, kw.vulnerable)) type = 'casual_chat'
@@ -397,23 +397,23 @@ export function interpretInput(msg: string, effectiveTrust: number, adultMode: b
   return { type, intensity, sincerity, isExtremeRedline: false, isAdultContent, adultSubtype }
 }
 
-// ═══════════════════════════════════════════════════════════
-// Embedding 语义兜底（新增）
-// ═══════════════════════════════════════════════════════════
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+// Embedding 璇箟鍏滃簳锛堟柊澧烇級
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
 
 import type { AnchorVectors } from '../embedding/types'
 
 /**
- * 带 Embedding 语义兜底的解释器。
+ * 甯?Embedding 璇箟鍏滃簳鐨勮В閲婂櫒銆?
  *
- * 硬编码词表优先（0ms），未命中时用 Embedding 兜底（<10ms）。
- * 所有新参数都是可选的——不传时行为和 intertetInput 完全一致。
+ * 纭紪鐮佽瘝琛ㄤ紭鍏堬紙0ms锛夛紝鏈懡涓椂鐢?Embedding 鍏滃簳锛?10ms锛夈€?
+ * 鎵€鏈夋柊鍙傛暟閮芥槸鍙€夌殑鈥斺€斾笉浼犳椂琛屼负鍜?intertetInput 瀹屽叏涓€鑷淬€?
  *
- * @param msg 用户消息
- * @param effectiveTrust 有效信任度
- * @param adultMode 是否成人模式
- * @param queryEmbed 用户消息的 Embedding 向量
- * @param anchors 预计算的锚定向量
+ * @param msg 鐢ㄦ埛娑堟伅
+ * @param effectiveTrust 鏈夋晥淇′换搴?
+ * @param adultMode 鏄惁鎴愪汉妯″紡
+ * @param queryEmbed 鐢ㄦ埛娑堟伅鐨?Embedding 鍚戦噺
+ * @param anchors 棰勮绠楃殑閿氬畾鍚戦噺
  * @returns Event
  */
 export async function interpretInputWithEmbedding(
@@ -423,19 +423,19 @@ export async function interpretInputWithEmbedding(
   queryEmbed?: number[],
   anchors?: AnchorVectors
 ): Promise<Event> {
-  // 先走硬编码（和 interpretInput 完全一致）
+  // 鍏堣蛋纭紪鐮侊紙鍜?interpretInput 瀹屽叏涓€鑷达級
   const baseResult = interpretInput(msg, effectiveTrust, adultMode)
 
-  // 如果硬编码已命中（非 casual_chat），直接返回
+  // 濡傛灉纭紪鐮佸凡鍛戒腑锛堥潪 casual_chat锛夛紝鐩存帴杩斿洖
   if (baseResult.type !== 'casual_chat') return baseResult
 
-  // 红线直接返回
+  // 绾㈢嚎鐩存帴杩斿洖
   if (baseResult.isExtremeRedline) return baseResult
 
-  // Embedding 不可用 → 返回硬编码结果
+  // Embedding 涓嶅彲鐢?鈫?杩斿洖纭紪鐮佺粨鏋?
   if (!queryEmbed || queryEmbed.length === 0 || !anchors) return baseResult
 
-  // Embedding 语义兜底
+  // Embedding 璇箟鍏滃簳
   try {
     const { applyEmbeddingFallback } = await import('../embedding/semanticFallback')
     const fallback = applyEmbeddingFallback(queryEmbed, msg, anchors, adultMode)
@@ -443,7 +443,7 @@ export async function interpretInputWithEmbedding(
       const t = msg.trim()
       const fallbackType = fallback.type as EventType
       const intensity = fallback.confidence === 'medium'
-        ? estimateIntensity(t, fallbackType) * 0.8  // 中置信打 8 折
+        ? estimateIntensity(t, fallbackType) * 0.8  // 涓疆淇℃墦 8 鎶?
         : estimateIntensity(t, fallbackType)
       const sincerity = estimateSincerity(t, fallbackType)
       return {
@@ -456,13 +456,13 @@ export async function interpretInputWithEmbedding(
       }
     }
   } catch {
-    // Embedding 失败 → 静默降级为硬编码结果
+    // Embedding 澶辫触 鈫?闈欓粯闄嶇骇涓虹‖缂栫爜缁撴灉
   }
 
   return baseResult
 }
 
-/** Embedding 分类 → 成人子类型映射 */
+/** Embedding 鍒嗙被 鈫?鎴愪汉瀛愮被鍨嬫槧灏?*/
 function mapEmbeddingToAdultSubtype(type: string): Event['adultSubtype'] {
   if (type === 'adult_flirt') return 'flirt'
   if (type === 'adult_dominant') return 'dominant'
@@ -471,12 +471,12 @@ function mapEmbeddingToAdultSubtype(type: string): Event['adultSubtype'] {
   return undefined
 }
 
-/** 成人内容分类器：在标准分类前调用 */
+/** 鎴愪汉鍐呭鍒嗙被鍣細鍦ㄦ爣鍑嗗垎绫诲墠璋冪敤 */
 function classifyAdultContent(msg: string, effectiveTrust: number): Event | null {
   const t = msg.trim()
   const en = getLocale() === 'en'
 
-  // 合并中英关键词
+  // 鍚堝苟涓嫳鍏抽敭璇?
   const explicitWords = en ? [...EXPLICIT_SEX_WORDS_ZH, ...EXPLICIT_SEX_WORDS_EN] : EXPLICIT_SEX_WORDS_ZH
   const romanticWords = en ? [...ROMANTIC_SEXUAL_WORDS_ZH, ...ROMANTIC_SEXUAL_WORDS_EN] : ROMANTIC_SEXUAL_WORDS_ZH
   const submissiveWords = en ? [...SUBMISSIVE_CONTEXT_WORDS_ZH, ...SUBMISSIVE_CONTEXT_WORDS_EN] : SUBMISSIVE_CONTEXT_WORDS_ZH
@@ -510,11 +510,11 @@ function classifyAdultContent(msg: string, effectiveTrust: number): Event | null
 
   if (hasAny(t, harassmentWords) || hasAny(t, ethicalWords)) {
     const explicitMarkers = en
-      ? ['操你', '操我', '操死', '想操', '让我操', 'fuck you', 'fuck me', 'let me fuck', 'i want to fuck']
-      : ['操你', '操我', '操死', '想操', '让我操']
+      ? ['鎿嶄綘', '鎿嶆垜', '鎿嶆', '鎯虫搷', '璁╂垜鎿?, 'fuck you', 'fuck me', 'let me fuck', 'i want to fuck']
+      : ['鎿嶄綘', '鎿嶆垜', '鎿嶆', '鎯虫搷', '璁╂垜鎿?]
     const actionMarkers = en
-      ? ['射在', '插你', '干你', '上你', '日你', 'cum on', 'pound', 'rail', 'screw']
-      : ['射在', '插你', '干你', '上你', '日你']
+      ? ['灏勫湪', '鎻掍綘', '骞蹭綘', '涓婁綘', '鏃ヤ綘', 'cum on', 'pound', 'rail', 'screw']
+      : ['灏勫湪', '鎻掍綘', '骞蹭綘', '涓婁綘', '鏃ヤ綘']
     const hasExplicit = hasAny(t, explicitMarkers) || hasAny(t, actionMarkers)
     if (hasExplicit) return adultEvent(t, 'adult_explicit', 'explicit')
     return adultEvent(t, 'adult_dominant', 'dominant')
@@ -523,7 +523,7 @@ function classifyAdultContent(msg: string, effectiveTrust: number): Event | null
   return null
 }
 
-/** 🆕 构建成人事件 */
+/** 馃啎 鏋勫缓鎴愪汉浜嬩欢 */
 function adultEvent(
   msg: string,
   type: EventType,
@@ -542,11 +542,11 @@ function adultEvent(
 }
 
 function estimateIntensity(msg: string, type: EventType): number {
-  // 调优 v3：显著提高 intensity 基值和长度贡献，确保情绪标签可在 15-25 轮内触达
-  // 典型10字赞美: 0.45 + 10/40*0.55 = 0.45+0.138 = 0.59
-  // 典型20字赞美: 0.45 + 20/40*0.55 = 0.45+0.275 = 0.73
+  // 璋冧紭 v3锛氭樉钁楁彁楂?intensity 鍩哄€煎拰闀垮害璐＄尞锛岀‘淇濇儏缁爣绛惧彲鍦?15-25 杞唴瑙﹁揪
+  // 鍏稿瀷10瀛楄禐缇? 0.45 + 10/40*0.55 = 0.45+0.138 = 0.59
+  // 鍏稿瀷20瀛楄禐缇? 0.45 + 20/40*0.55 = 0.45+0.275 = 0.73
   const len = Math.min(msg.length, 40) / 40
-  const bangs = (msg.match(/[!！?？]/g) ?? []).length
+  const bangs = (msg.match(/[!锛?锛焆/g) ?? []).length
   const bangScore = Math.min(bangs * 0.10, 0.25)
   const typeBase: Record<string, number> = {
     casual_chat: 0.12, question: 0.12, tease: 0.25,
@@ -559,7 +559,7 @@ function estimateIntensity(msg: string, type: EventType): number {
 }
 
 function estimateSincerity(msg: string, type: EventType): number {
-  const hedges = ['有点', '可能', '吧', '好像', '也许', '大概',
+  const hedges = ['鏈夌偣', '鍙兘', '鍚?, '濂藉儚', '涔熻', '澶ф',
     'maybe', 'perhaps', 'kind of', 'sort of', 'i guess', 'probably', 'might be']
   let s = 0.55 + Math.min(msg.length, 80) / 160
   if (hedges.some((h) => msg.toLowerCase().includes(h))) s -= 0.25
@@ -568,31 +568,31 @@ function estimateSincerity(msg: string, type: EventType): number {
   return Math.max(0.25, Math.min(1, s))
 }
 
-// ═══════════════════════════════════════════════════════════
-// DnD 意图识别 — 听懂"今晚别烦我"
-// ═══════════════════════════════════════════════════════════
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+// DnD 鎰忓浘璇嗗埆 鈥?鍚噦"浠婃櫄鍒儲鎴?
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
 
 const DND_DURATION_HOURS: Array<{ re: RegExp; hours: number }> = [
-  { re: /(\d+)\s*小时/, hours: 0 },
-  { re: /(\d+)\s*分钟/, hours: 0 },
+  { re: /(\d+)\s*灏忔椂/, hours: 0 },
+  { re: /(\d+)\s*鍒嗛挓/, hours: 0 },
   { re: /(\d+)\s*hours?/, hours: 0 },
   { re: /(\d+)\s*min(utes?)?/i, hours: 0 },
-  { re: /今晚|tonight/i, hours: 0 },
-  { re: /今天|today/i, hours: 0 },
-  { re: /一会|一下|a while|a bit|a moment/i, hours: 1 },
+  { re: /浠婃櫄|tonight/i, hours: 0 },
+  { re: /浠婂ぉ|today/i, hours: 0 },
+  { re: /涓€浼殀涓€涓媩a while|a bit|a moment/i, hours: 1 },
 ]
 
 export interface DndIntent {
   detected: boolean
-  hours: number           // 持续多少小时
-  suppressHealth: boolean  // 是否明确要抑制健康提醒
+  hours: number           // 鎸佺画澶氬皯灏忔椂
+  suppressHealth: boolean  // 鏄惁鏄庣‘瑕佹姂鍒跺仴搴锋彁閱?
 }
 
-/** 检测用户是否表达了"别烦我"意图。纯规则，<0.1ms。 */
+/** 妫€娴嬬敤鎴锋槸鍚﹁〃杈句簡"鍒儲鎴?鎰忓浘銆傜函瑙勫垯锛?0.1ms銆?*/
 export function detectDndIntent(msg: string): DndIntent {
   const trimmed = msg.trim()
 
-  // 太长的消息不是 dnd（可能是正常聊天中提到这些词）
+  // 澶暱鐨勬秷鎭笉鏄?dnd锛堝彲鑳芥槸姝ｅ父鑱婂ぉ涓彁鍒拌繖浜涜瘝锛?
   if (trimmed.length > 50) return { detected: false, hours: 0, suppressHealth: false }
 
   const kw = getKeywords()
@@ -601,17 +601,17 @@ export function detectDndIntent(msg: string): DndIntent {
 
   let hours = 1
 
-  const hourMatch = trimmed.match(/(\d+)\s*(小时|hours?)/i)
+  const hourMatch = trimmed.match(/(\d+)\s*(灏忔椂|hours?)/i)
   if (hourMatch) {
     hours = parseInt(hourMatch[1], 10)
   } else {
-    const minMatch = trimmed.match(/(\d+)\s*(分钟|min(utes?)?)/i)
+    const minMatch = trimmed.match(/(\d+)\s*(鍒嗛挓|min(utes?)?)/i)
     if (minMatch) {
       hours = Math.max(0.5, parseInt(minMatch[1], 10) / 60)
     }
   }
 
-  if (/今晚|tonight/i.test(trimmed) || /今天|today/i.test(trimmed)) {
+  if (/浠婃櫄|tonight/i.test(trimmed) || /浠婂ぉ|today/i.test(trimmed)) {
     const now = new Date()
     const fiveAm = new Date(now)
     fiveAm.setDate(fiveAm.getDate() + 1)
@@ -619,12 +619,12 @@ export function detectDndIntent(msg: string): DndIntent {
     hours = Math.max(1, (fiveAm.getTime() - now.getTime()) / 3600000)
   }
 
-  const suppressHealth = /别提醒|不要提醒|别弹|别通知|no reminders|dont remind|stop reminding/i.test(trimmed)
+  const suppressHealth = /鍒彁閱抾涓嶈鎻愰啋|鍒脊|鍒€氱煡|no reminders|dont remind|stop reminding/i.test(trimmed)
 
   return { detected: true, hours: Math.min(24, hours), suppressHealth }
 }
 
-// ═══ 语气镜像：检测用户话多话少 ═══
+// 鈺愨晲鈺?璇皵闀滃儚锛氭娴嬬敤鎴疯瘽澶氳瘽灏?鈺愨晲鈺?
 
 export type UserVerbosity = 'terse' | 'normal' | 'verbose'
 
@@ -635,12 +635,12 @@ export function detectUserVerbosity(msg: string): UserVerbosity {
   return 'normal'
 }
 
-// ═══ 心理健康 L2 软保护 ═══
+// 鈺愨晲鈺?蹇冪悊鍋ュ悍 L2 杞繚鎶?鈺愨晲鈺?
 
 const SOFT_CONCERN_WORDS = [
-  '好累', '太累', '撑不住', '扛不住', '心累', '活得好累',
-  '压力大', '喘不过气', '不想动', '什么都不想做', '只想躺着',
-  '提不起劲', '好疲惫', '好难', '崩溃', '受不了了',
+  '濂界疮', '澶疮', '鎾戜笉浣?, '鎵涗笉浣?, '蹇冪疮', '娲诲緱濂界疮',
+  '鍘嬪姏澶?, '鍠樹笉杩囨皵', '涓嶆兂鍔?, '浠€涔堥兘涓嶆兂鍋?, '鍙兂韬虹潃',
+  '鎻愪笉璧峰姴', '濂界柌鎯?, '濂介毦', '宕╂簝', '鍙椾笉浜嗕簡',
 ]
 
 export function detectSoftConcern(msg: string): boolean {
@@ -648,30 +648,30 @@ export function detectSoftConcern(msg: string): boolean {
   return SOFT_CONCERN_WORDS.some(w => msg.includes(w))
 }
 
-// ═══ 显式记忆请求（用户命令 Ackem 记住/遗忘；记什么由 orchestrator 写入整句，不在此硬编码）═══
+// 鈺愨晲鈺?鏄惧紡璁板繂璇锋眰锛堢敤鎴峰懡浠?Ackem 璁颁綇/閬楀繕锛涜浠€涔堢敱 orchestrator 鍐欏叆鏁村彞锛屼笉鍦ㄦ纭紪鐮侊級鈺愨晲鈺?
 
-/** 用户让 Ackem 记住的口语/书面触发语（仅识别「要记」意图，不预设具体事实内容） */
+/** 鐢ㄦ埛璁?Ackem 璁颁綇鐨勫彛璇?涔﹂潰瑙﹀彂璇紙浠呰瘑鍒€岃璁般€嶆剰鍥撅紝涓嶉璁惧叿浣撲簨瀹炲唴瀹癸級 */
 export const REMEMBER_TRIGGERS = [
-  '请帮我记住',
-  '帮我记住',
-  '帮我记着',
-  '你帮我记',
-  '给我记住',
-  '请记住',
-  '要记住',
-  '得记住',
-  '记一下',
-  '记着点',
-  '记着',
-  '记下',
-  '记好',
-  '记牢',
-  '记在心里',
-  '记住',
-  '别忘了',
-  '别忘',
-  '帮我备忘',
-  '备忘一下',
+  '璇峰府鎴戣浣?,
+  '甯垜璁颁綇',
+  '甯垜璁扮潃',
+  '浣犲府鎴戣',
+  '缁欐垜璁颁綇',
+  '璇疯浣?,
+  '瑕佽浣?,
+  '寰楄浣?,
+  '璁颁竴涓?,
+  '璁扮潃鐐?,
+  '璁扮潃',
+  '璁颁笅',
+  '璁板ソ',
+  '璁扮墷',
+  '璁板湪蹇冮噷',
+  '璁颁綇',
+  '鍒繕浜?,
+  '鍒繕',
+  '甯垜澶囧繕',
+  '澶囧繕涓€涓?,
   'remember this',
   'remember that',
   'remember my',
@@ -685,27 +685,27 @@ export const REMEMBER_TRIGGERS = [
 ] as const
 
 const FORGET_TRIGGERS = [
-  '忘掉',
-  '别记了',
+  '蹇樻帀',
+  '鍒浜?,
   'forget this',
   'forget that',
   'forget about',
   'forget it',
   'forget my',
   'delete this',
-  '删掉这个记忆',
+  '鍒犳帀杩欎釜璁板繂',
 ] as const
 
-/** 「不用记/不要记住」等否定 — 避免误触 remember */
+/** 銆屼笉鐢ㄨ/涓嶈璁颁綇銆嶇瓑鍚﹀畾 鈥?閬垮厤璇Е remember */
 const REMEMBER_NEGATIONS = [
-  '不用记住',
-  '不要记住',
-  '无需记住',
-  '不必记住',
-  '不用记',
-  '不要记',
-  '无需记',
-  '不必记',
+  '涓嶇敤璁颁綇',
+  '涓嶈璁颁綇',
+  '鏃犻渶璁颁綇',
+  '涓嶅繀璁颁綇',
+  '涓嶇敤璁?,
+  '涓嶈璁?,
+  '鏃犻渶璁?,
+  '涓嶅繀璁?,
   'dont remember',
   "don't remember",
   'no need to remember',

@@ -1,4 +1,4 @@
-import type { DispatchConfig, DispatchMode, EngineSnapshot } from '../protocols'
+﻿import type { DispatchConfig, DispatchMode, EngineSnapshot } from '../protocols'
 import type { RuntimeContext } from '../../context/types'
 
 export type ExtensionPolicyAction = 'allow' | 'defer' | 'skip' | 'boost'
@@ -42,32 +42,32 @@ export interface AttentionBudgetState {
 
 export const DEFAULT_PROACTIVE_PER_HOUR = 3
 
-export const SEDENTARY_SKILL_ID = 'ackem/sedentary-reminder@0.0.1'
-export const DRINK_WATER_SKILL_ID = 'ackem/drink-water-reminder@0.0.1'
-export const LATE_NIGHT_SKILL_ID = 'ackem/late-night-reminder@0.0.1'
+export const SEDENTARY_SKILL_ID = 'Ackem/sedentary-reminder@0.0.1'
+export const DRINK_WATER_SKILL_ID = 'Ackem/drink-water-reminder@0.0.1'
+export const LATE_NIGHT_SKILL_ID = 'Ackem/late-night-reminder@0.0.1'
 
-/** 用户对某扩展的长期选择（JP-B4） */
+/** 鐢ㄦ埛瀵规煇鎵╁睍鐨勯暱鏈熼€夋嫨锛圝P-B4锛?*/
 export type ExtensionPreference = 'allow' | 'deny'
 
 export interface UserExtensionProfile {
-  /** 记住选择：以后自动允许 / 不再询问或匹配 */
+  /** 璁颁綇閫夋嫨锛氫互鍚庤嚜鍔ㄥ厑璁?/ 涓嶅啀璇㈤棶鎴栧尮閰?*/
   extensionPreference: Record<string, ExtensionPreference>
-  /** 临时静音某扩展直到时间戳 ms */
+  /** 涓存椂闈欓煶鏌愭墿灞曠洿鍒版椂闂存埑 ms */
   extensionSnoozeUntil: Record<string, number>
-  /** 上次拒绝时间戳（未记住时用于降权） */
+  /** 涓婃鎷掔粷鏃堕棿鎴筹紙鏈浣忔椂鐢ㄤ簬闄嶆潈锛?*/
   lastRejectAt: Record<string, number>
 }
 
-// ═══════════════════════════════════════════════════════════
-// 习惯槽类型（主动策略调度 Loop 增强）
-// ═══════════════════════════════════════════════════════════
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+// 涔犳儻妲界被鍨嬶紙涓诲姩绛栫暐璋冨害 Loop 澧炲己锛?
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
 
 export type HabitType = 'dnd' | 'busy_meeting' | 'busy_focus' | 'rest' | 'active' | 'suppress_type'
 export type HabitScope = 'short_term' | 'long_term'
 export type HabitSource = 'explicit' | 'foreground_detect' | 'dismiss_pattern' | 'time_pattern'
 
 export interface TimeSlot {
-  weekday: number | null   // 0=周日 ~ 6=周六，null=不限星期
+  weekday: number | null   // 0=鍛ㄦ棩 ~ 6=鍛ㄥ叚锛宯ull=涓嶉檺鏄熸湡
   hourStart: number        // 0-23
   hourEnd: number          // 0-23
 }
@@ -91,20 +91,20 @@ export interface UserHabit {
   updatedAt: number
 }
 
-/** proactiveLevel：Loop 决定管家该不该主动说话 */
+/** proactiveLevel锛歀oop 鍐冲畾绠″璇ヤ笉璇ヤ富鍔ㄨ璇?*/
 export type ProactiveLevel = 'silent' | 'whisper' | 'casual' | 'proactive'
 
-/** 工具调用决策 */
+/** 宸ュ叿璋冪敤鍐崇瓥 */
 export type ToolDecision = 'suppress' | 'ask' | 'auto_invoke'
 
-/** proactiveGate 输出 */
+/** proactiveGate 杈撳嚭 */
 export interface ProactiveGateResult {
   proactiveLevel: ProactiveLevel
   reason: string
   adjustedCooldownMs: number
 }
 
-/** 记录在 decision_log 中的信号快照（Phase 6 Embedding 路由预留） */
+/** 璁板綍鍦?decision_log 涓殑淇″彿蹇収锛圥hase 6 Embedding 璺敱棰勭暀锛?*/
 export interface DecisionSignalSnapshot {
   aff: number
   sec: number

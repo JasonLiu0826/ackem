@@ -1,13 +1,13 @@
-// [state-persistence] — companion/state.json
-// 职责：FullState 读写
-// 输入：dataRoot
-// 输出：FullState | null
-// 引用：./types, ./ackemParams, node:fs
+﻿// [state-persistence] 鈥?companion/state.json
+// 鑱岃矗锛欶ullState 璇诲啓
+// 杈撳叆锛歞ataRoot
+// 杈撳嚭锛欶ullState | null
+// 寮曠敤锛?/types, ./AckemParams, node:fs
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { loadCompanionStateFromDb, saveCompanionStateToDb } from '../db/repos/companionState'
-import { INITIAL_TRUST, STATE_JSON_VERSION } from './ackemParams'
+import { INITIAL_TRUST, STATE_JSON_VERSION } from './AckemParams'
 import type { FullState, L1State } from './types'
 
 const FILE = 'state.json'
@@ -28,9 +28,9 @@ function defaultL1(): L1State {
 function defaultUserProfile(): FullState['userProfile'] {
   return {
     dominantArchetype: 'unknown',
-    sexualDirectness: 0.3,    // 保守默认，随对话逐渐升高
+    sexualDirectness: 0.3,    // 淇濆畧榛樿锛岄殢瀵硅瘽閫愭笎鍗囬珮
     dominancePreference: 0,
-    emotionalNeediness: 0.3,  // 保守默认，随对话逐渐升高
+    emotionalNeediness: 0.3,  // 淇濆畧榛樿锛岄殢瀵硅瘽閫愭笎鍗囬珮
     trustTrajectory: 'building',
     lastUpdated: new Date().toISOString(),
     detectedAtTurn: 0

@@ -1,4 +1,4 @@
-import { PERMISSION_LABELS } from '../../../shared/openforuPermissions'
+﻿import { PERMISSION_LABELS } from '../../../shared/openforuPermissions'
 import { t } from '../lib/i18n'
 import { renderMarkdown } from './md'
 import {
@@ -44,8 +44,8 @@ export function ExtensionDetailPanel({
         <div>
           <h3 className="font-display text-base font-semibold text-ink">{item.name}</h3>
           <p className="extension-detail-meta mt-1 text-xs text-ink-muted">
-            {item.id} · v{item.version} · {extensionStatusLabel(item)}
-            {needsGrant ? ' · 待授权' : ''}
+            {item.id} 路 v{item.version} 路 {extensionStatusLabel(item)}
+            {needsGrant ? ' 路 寰呮巿鏉? : ''}
           </p>
         </div>
         <div className="flex shrink-0 gap-2">
@@ -55,17 +55,17 @@ export function ExtensionDetailPanel({
               onClick={() => void onGrantPermissions(item)}
               className="chat-send-btn px-3 py-1.5 text-xs"
             >
-              授予并启用
+              鎺堜簣骞跺惎鐢?
             </button>
           ) : isCore ? (
             <span className="rounded-lg bg-accent/15 px-3 py-1.5 text-xs text-accent">
-              基础功能 · 始终启用
+              鍩虹鍔熻兘 路 濮嬬粓鍚敤
             </span>
           ) : (
             <button
               type="button"
               disabled={!canToggle}
-              title={canToggle ? undefined : '该扩展尚在规划中，尚未实装'}
+              title={canToggle ? undefined : '璇ユ墿灞曞皻鍦ㄨ鍒掍腑锛屽皻鏈疄瑁?}
               onClick={() => {
                 if (canToggle) void onToggle(item.id, !isActive)
               }}
@@ -74,7 +74,7 @@ export function ExtensionDetailPanel({
                 !canToggle ? 'cursor-not-allowed opacity-40' : ''
               ].join(' ')}
             >
-              {isActive ? '关闭' : '启用'}
+              {isActive ? '鍏抽棴' : '鍚敤'}
             </button>
           )}
           {canRefine && onRefine ? (
@@ -83,7 +83,7 @@ export function ExtensionDetailPanel({
               onClick={() => onRefine(item)}
               className="rounded-lg border border-accent/40 px-3 py-1.5 text-xs text-accent hover:bg-accent/10"
             >
-              继续优化
+              缁х画浼樺寲
             </button>
           ) : null}
           {canRemove && onRemove ? (
@@ -92,24 +92,24 @@ export function ExtensionDetailPanel({
               onClick={() => void onRemove(item)}
               className="rounded-lg border border-red-500/30 px-3 py-1.5 text-xs text-red-300 hover:border-red-400/50 hover:bg-red-500/10"
             >
-              删除
+              鍒犻櫎
             </button>
           ) : null}
           {item.hasSurface && item.origin === 'uplugin' && isActive ? (
             <button
               type="button"
               onClick={() => {
-                void window.ackem.openforu.openSurfaceWindow(item.id).then((r) => {
+                void window.Ackem.openforu.openSurfaceWindow(item.id).then((r) => {
                   if (!r.ok) window.alert(r.message)
                 })
               }}
               className="rounded-lg border border-accent/40 px-3 py-1.5 text-xs text-accent hover:bg-accent/10"
             >
-              打开窗口
+              鎵撳紑绐楀彛
             </button>
           ) : null}
           <button type="button" onClick={onClose} className="text-xs text-ink-muted hover:text-ink">
-            收起
+            鏀惰捣
           </button>
         </div>
       </div>
@@ -131,7 +131,7 @@ export function ExtensionDetailPanel({
 
       {isCore && (
         <p className="mt-3 rounded-lg bg-accent/10 px-3 py-2 text-xs text-accent/90">
-          此为 Ackem 内置基础能力，默认开启且不可在扩展中心关闭。
+          姝や负 Ackem 鍐呯疆鍩虹鑳藉姏锛岄粯璁ゅ紑鍚笖涓嶅彲鍦ㄦ墿灞曚腑蹇冨叧闂€?
         </p>
       )}
 
@@ -143,51 +143,51 @@ export function ExtensionDetailPanel({
         item.status !== 'deprecated' &&
         item.implementationStatus !== 'deprecated' && (
         <p className="mt-3 rounded-lg bg-surface-inset/50 px-3 py-2 text-xs text-ink-muted">
-          此扩展仍在开发规划中，当前版本无法启用。实装后将出现在「可启用」状态。
+          姝ゆ墿灞曚粛鍦ㄥ紑鍙戣鍒掍腑锛屽綋鍓嶇増鏈棤娉曞惎鐢ㄣ€傚疄瑁呭悗灏嗗嚭鐜板湪銆屽彲鍚敤銆嶇姸鎬併€?
         </p>
       )}
 
       {(item.status === 'planned' || item.implementationStatus === 'planned') && (
         <p className="mt-3 rounded-lg border border-surface-inset/80 bg-surface-inset/40 px-3 py-2 text-xs text-ink-muted">
-          目录占位项：源码骨架已存在，但尚未接入运行时。扩展中心以「规划中」灰显，无法启用。
+          鐩綍鍗犱綅椤癸細婧愮爜楠ㄦ灦宸插瓨鍦紝浣嗗皻鏈帴鍏ヨ繍琛屾椂銆傛墿灞曚腑蹇冧互銆岃鍒掍腑銆嶇伆鏄撅紝鏃犳硶鍚敤銆?
         </p>
       )}
 
       {(item.status === 'deprecated' || item.implementationStatus === 'deprecated') && (
         <p className="mt-3 rounded-lg border border-surface-inset/80 bg-surface-inset/40 px-3 py-2 text-xs text-ink-muted">
-          此扩展已于 2026-06-06 下线：不再注册运行时，扩展中心以「已下线」灰显，无法启用。底层源码仍保留供其他能力复用。
+          姝ゆ墿灞曞凡浜?2026-06-06 涓嬬嚎锛氫笉鍐嶆敞鍐岃繍琛屾椂锛屾墿灞曚腑蹇冧互銆屽凡涓嬬嚎銆嶇伆鏄撅紝鏃犳硶鍚敤銆傚簳灞傛簮鐮佷粛淇濈暀渚涘叾浠栬兘鍔涘鐢ㄣ€?
         </p>
       )}
 
       {(item.implementationStatus === 'stub' || item.implementationStatus === 'preview') && (
         <p className="exp-callout mt-3 rounded-lg px-3 py-2 text-xs">
           {item.implementationStatus === 'preview'
-            ? '此条目为预览实装：部分能力已可用（如 Windows SMTC 读标题、几何桌宠壳），完整体验将在后续版本加深。'
-            : '此扩展为 Stub 预览：当前能力有限（如仅系统通知），完整功能将在后续版本实装。启用不会播放真语音或完整特效。'}
+            ? '姝ゆ潯鐩负棰勮瀹炶锛氶儴鍒嗚兘鍔涘凡鍙敤锛堝 Windows SMTC 璇绘爣棰樸€佸嚑浣曟瀹犲３锛夛紝瀹屾暣浣撻獙灏嗗湪鍚庣画鐗堟湰鍔犳繁銆?
+            : '姝ゆ墿灞曚负 Stub 棰勮锛氬綋鍓嶈兘鍔涙湁闄愶紙濡備粎绯荤粺閫氱煡锛夛紝瀹屾暣鍔熻兘灏嗗湪鍚庣画鐗堟湰瀹炶銆傚惎鐢ㄤ笉浼氭挱鏀剧湡璇煶鎴栧畬鏁寸壒鏁堛€?}
         </p>
       )}
 
       {item.status === 'error' && item.lastError && (
         <p className="mt-3 rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-200">
-          上次运行异常：{item.lastError}
+          涓婃杩愯寮傚父锛歿item.lastError}
           <br />
-          可点击「启用」从磁盘重载并重试（无需重启 Ackem）。
+          鍙偣鍑汇€屽惎鐢ㄣ€嶄粠纾佺洏閲嶈浇骞堕噸璇曪紙鏃犻渶閲嶅惎 Ackem锛夈€?
         </p>
       )}
 
       {(item.origin === 'uskill' || item.origin === 'uplugin') && (
         <p className="extension-openforu-meta mt-3 truncate rounded-lg px-3 py-2 text-[10px]">
-          OpenForU · {item.origin}
-          {item.dirPath ? ` · ${item.dirPath}` : ''}
+          OpenForU 路 {item.origin}
+          {item.dirPath ? ` 路 ${item.dirPath}` : ''}
         </p>
       )}
 
       {item.dispatch && (
         <div className="mt-4 rounded-xl border border-surface-inset/60 bg-surface-inset/20 p-3 text-xs">
-          <div className="mb-2 font-medium text-ink">调度配置</div>
+          <div className="mb-2 font-medium text-ink">璋冨害閰嶇疆</div>
           <dl className="space-y-1.5 text-ink-muted">
             <div className="flex gap-2">
-              <dt className="shrink-0 text-ink-muted/80">模式</dt>
+              <dt className="shrink-0 text-ink-muted/80">妯″紡</dt>
               <dd>{dispatchModeLabel(item.dispatch.mode)}</dd>
             </div>
             <div>
@@ -206,11 +206,11 @@ export function ExtensionDetailPanel({
       )}
       {canRemove && (
         <p className="mt-3 text-[11px] text-ink-muted">
-          删除会移除 `data/openforu/` 下对应目录，且不可恢复。
+          鍒犻櫎浼氱Щ闄?`data/openforu/` 涓嬪搴旂洰褰曪紝涓斾笉鍙仮澶嶃€?
         </p>
       )}
       {item.builtin && canToggle && (
-        <p className="mt-3 text-[11px] text-ink-muted">内置资源不可删除。</p>
+        <p className="mt-3 text-[11px] text-ink-muted">鍐呯疆璧勬簮涓嶅彲鍒犻櫎銆?/p>
       )}
     </div>
   )

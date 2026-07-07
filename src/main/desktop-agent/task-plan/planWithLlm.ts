@@ -1,4 +1,4 @@
-import type { AppSettings } from '../../settings'
+﻿import type { AppSettings } from '../../settings'
 import { buildLlmHeaders, resolveChatCompletionsUrl } from '../../llmEndpoint'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
@@ -12,15 +12,15 @@ const log = createLogger('task-plan.llm')
 
 function buildPlannerSystem(desktopPath: string): string {
   return [
-    '你是 Ackem 电脑助手的任务规划器。只输出一个 JSON 对象，禁止 markdown 与任何解释文字。',
-    '字段：',
-    '- goalSummary: string，一句话说明用户要什么',
-    '- steps: array，按顺序的步骤；每步含 id, label, action, path, options(可选)',
-    `用户桌面绝对路径：${desktopPath}`,
-    'path 用绝对路径或 ${DESKTOP}/相对路径。',
-    'action 仅允许：mkdir, write_text, read_text, open_file, open_folder, delete_path, list_folder, search_files, copy_path, move_path, open_app',
-    '删除文件夹前必须先 delete_path 删除内部文件。',
-    '「打开看看/查看」优先 read_text，也可 open_file。'
+    '浣犳槸 Ackem 鐢佃剳鍔╂墜鐨勪换鍔¤鍒掑櫒銆傚彧杈撳嚭涓€涓?JSON 瀵硅薄锛岀姝?markdown 涓庝换浣曡В閲婃枃瀛椼€?,
+    '瀛楁锛?,
+    '- goalSummary: string锛屼竴鍙ヨ瘽璇存槑鐢ㄦ埛瑕佷粈涔?,
+    '- steps: array锛屾寜椤哄簭鐨勬楠わ紱姣忔鍚?id, label, action, path, options(鍙€?',
+    `鐢ㄦ埛妗岄潰缁濆璺緞锛?{desktopPath}`,
+    'path 鐢ㄧ粷瀵硅矾寰勬垨 ${DESKTOP}/鐩稿璺緞銆?,
+    'action 浠呭厑璁革細mkdir, write_text, read_text, open_file, open_folder, delete_path, list_folder, search_files, copy_path, move_path, open_app',
+    '鍒犻櫎鏂囦欢澶瑰墠蹇呴』鍏?delete_path 鍒犻櫎鍐呴儴鏂囦欢銆?,
+    '銆屾墦寮€鐪嬬湅/鏌ョ湅銆嶄紭鍏?read_text锛屼篃鍙?open_file銆?
   ].join('\n')
 }
 

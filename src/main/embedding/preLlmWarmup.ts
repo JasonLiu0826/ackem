@@ -1,5 +1,5 @@
-/**
- * Pre-LLM Embedding 预热与模块级缓存（锚点 / 时间语义 / profile / createTool）
+﻿/**
+ * Pre-LLM Embedding 棰勭儹涓庢ā鍧楃骇缂撳瓨锛堥敋鐐?/ 鏃堕棿璇箟 / profile / createTool锛?
  */
 
 import type { EmbeddingProvider } from '../memory/embedding'
@@ -83,10 +83,10 @@ export async function getCachedFatherReferenceEmbeddings(
 ): Promise<Map<string, { cluster: FatherReferenceCluster; vector: number[] }>> {
   const sig = provider.name()
   const anchorSig = [
-    ...FATHER_REFERENCE_ANCHORS.ackem_creator,
+    ...FATHER_REFERENCE_ANCHORS.Ackem_creator,
     ...FATHER_REFERENCE_ANCHORS.user_family,
     ...FATHER_REFERENCE_NEUTRAL_ANCHORS,
-    ...FATHER_REFERENCE_CALIBRATION.ackem_creator,
+    ...FATHER_REFERENCE_CALIBRATION.Ackem_creator,
     ...FATHER_REFERENCE_CALIBRATION.user_family,
     ...FATHER_REFERENCE_CALIBRATION.neutral,
   ].join('\n')
@@ -103,7 +103,7 @@ export async function getCachedFatherReferenceEmbeddings(
   return cachedFatherReferenceEmbeddings
 }
 
-/** 创造者记忆条目 embedding（按 dataRoot + store 版本缓存） */
+/** 鍒涢€犺€呰蹇嗘潯鐩?embedding锛堟寜 dataRoot + store 鐗堟湰缂撳瓨锛?*/
 export async function getCachedCreatorEntryEmbeddings(
   provider: EmbeddingProvider,
   dataRoot: string
@@ -139,7 +139,7 @@ export async function getCachedCreatorEntryEmbeddings(
   return map
 }
 
-/** 启动时预热：锚点 + 时间锚点 + 父亲指称 + Canon-M 条目 embedding（幂等） */
+/** 鍚姩鏃堕鐑細閿氱偣 + 鏃堕棿閿氱偣 + 鐖朵翰鎸囩О + Canon-M 鏉＄洰 embedding锛堝箓绛夛級 */
 export async function warmupPreLlmEmbeddings(
   provider: EmbeddingProvider,
   dataRoot?: string

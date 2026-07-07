@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import type { AppSettings, LlmProvider, PresetGender } from '../ackem'
+﻿import { useCallback, useEffect, useRef, useState } from 'react'
+import type { AppSettings, LlmProvider, PresetGender } from '../Ackem'
 import { t, getLocale, setLocale, refreshI18n } from '../lib/i18n'
 import { ConfirmDialog } from './ConfirmDialog'
 import { CompanionSkinSection } from './CompanionSkinSection'
@@ -35,7 +35,7 @@ import {
 
 function companionSubjectPronoun(gender: PresetGender): string {
   if (getLocale() === 'en') return gender === 'male' ? 'He' : 'She'
-  return gender === 'male' ? '他' : '她'
+  return gender === 'male' ? '浠? : '濂?
 }
 
 export function SettingsPage(): JSX.Element {
@@ -94,11 +94,11 @@ export function SettingsPage(): JSX.Element {
   }, [])
 
   useEffect(() => {
-    void window.ackem.getCanon().then((c) => setCanonInfo({ birthDate: c.birthDate }))
-    void window.ackem.getAppVersion().then(setAppVersion)
+    void window.Ackem.getCanon().then((c) => setCanonInfo({ birthDate: c.birthDate }))
+    void window.Ackem.getAppVersion().then(setAppVersion)
   }, [])
 
-  /** 磁盘已持久化 → 同步全局 store + 本地 form（勿用 settings 变化盲目覆盖 form） */
+  /** 纾佺洏宸叉寔涔呭寲 鈫?鍚屾鍏ㄥ眬 store + 鏈湴 form锛堝嬁鐢?settings 鍙樺寲鐩茬洰瑕嗙洊 form锛?*/
   const applyPersisted = useCallback(
     (next: AppSettings) => {
       setSettings(next)
@@ -107,12 +107,12 @@ export function SettingsPage(): JSX.Element {
     [setSettings]
   )
 
-  /** 合并当前 form 与 patch 后写入磁盘，并同步 store */
+  /** 鍚堝苟褰撳墠 form 涓?patch 鍚庡啓鍏ョ鐩橈紝骞跺悓姝?store */
   const persistPatch = useCallback(
     async (patch: Partial<AppSettings>, toast?: string) => {
       if (!form) return
       const merged = mergeSettingsDraft(form, patch)
-      const next = await window.ackem.setSettings(merged)
+      const next = await window.Ackem.setSettings(merged)
       applyPersisted(next)
       if (toast) pushToast(toast)
       return next
@@ -121,14 +121,14 @@ export function SettingsPage(): JSX.Element {
   )
 
   useEffect(() => {
-    void window.ackem.getSettings().then((s) => {
+    void window.Ackem.getSettings().then((s) => {
       applyPersisted(s)
     })
   }, [applyPersisted])
 
   useEffect(() => {
     if (!form) return
-    void window.ackem.personalityList(form.companionGender).then((list) => {
+    void window.Ackem.personalityList(form.companionGender).then((list) => {
       setPresets(
         list.map((p) => ({
           id: p.id,
@@ -141,7 +141,7 @@ export function SettingsPage(): JSX.Element {
 
   useEffect(() => {
     void (async () => {
-      const r = await window.ackem.getDataRoot()
+      const r = await window.Ackem.getDataRoot()
       setRootInfo(r)
     })()
   }, [settings?.dataRootMode])
@@ -150,7 +150,7 @@ export function SettingsPage(): JSX.Element {
 
   useEffect(() => {
     if (activeId !== 'settings-uninstall') return
-    void window.ackem.uninstallInfo().then(setUninstallInfo)
+    void window.Ackem.uninstallInfo().then(setUninstallInfo)
   }, [activeId])
   const settingsDeepLink = useAppStore((s) => s.settingsDeepLink)
   const clearSettingsDeepLink = useAppStore((s) => s.clearSettingsDeepLink)
@@ -182,7 +182,7 @@ export function SettingsPage(): JSX.Element {
     label: string
     requiresAdult18?: boolean
   }) => {
-    const saved = await window.ackem.personalitySet(p.id)
+    const saved = await window.Ackem.personalitySet(p.id)
     setSettings(saved)
     setForm((f) =>
       f
@@ -215,7 +215,7 @@ export function SettingsPage(): JSX.Element {
         form.personalityPresetId &&
         form.personalityPresetId !== p.id
       ) {
-        const st = (await window.ackem.getState()) as { counters?: { totalTurns?: number } }
+        const st = (await window.Ackem.getState()) as { counters?: { totalTurns?: number } }
         if ((st?.counters?.totalTurns ?? 0) > 0) {
           pendingPersonality.current = p
           setShowPersonalityConfirm(true)
@@ -243,13 +243,13 @@ export function SettingsPage(): JSX.Element {
       return
     }
     const prev = settings ?? form
-    const next = await window.ackem.setSettings(prepareSettingsForSave(form))
+    const next = await window.Ackem.setSettings(prepareSettingsForSave(form))
     applyPersisted(next)
-    await window.ackem.ensureLayout()
+    await window.Ackem.ensureLayout()
     if (!onlyDesktopAgentSettingsChanged(prev, next)) {
-      await window.ackem.rebuildIndex()
+      await window.Ackem.rebuildIndex()
     }
-    setRootInfo(await window.ackem.getDataRoot())
+    setRootInfo(await window.Ackem.getDataRoot())
     pushToast(t('settings.saved'))
   }
 
@@ -264,10 +264,10 @@ export function SettingsPage(): JSX.Element {
     setShowArchiveConfirm(false)
     setArchiveBusy(true)
     try {
-      await window.ackem.memoryClearAll()
+      await window.Ackem.memoryClearAll()
       resetChat()
-      await window.ackem.saveChatHistory([])
-      await window.ackem.rebuildIndex()
+      await window.Ackem.saveChatHistory([])
+      await window.Ackem.rebuildIndex()
       setTab('chat')
       requestChatInputFocus()
       pushToast(t('settings.archived'))
@@ -337,12 +337,12 @@ export function SettingsPage(): JSX.Element {
                 actionLabel={t("settings.toggle")}
                 onAction={async () => {
                   try {
-                    const level = await window.ackem.ui.getLevel()
+                    const level = await window.Ackem.ui.getLevel()
                     if (level.petVisible) {
-                      await window.ackem.ui.hidePet()
+                      await window.Ackem.ui.hidePet()
                       pushToast(t('settings.petHidden'))
                     } else {
-                      await window.ackem.ui.showPet()
+                      await window.Ackem.ui.showPet()
                       pushToast(t('settings.petShown'))
                     }
                   } catch {
@@ -356,7 +356,7 @@ export function SettingsPage(): JSX.Element {
                 actionLabel={t("settings.refresh")}
                 onAction={async () => {
                   try {
-                    const s = await window.ackem.mediaStatus()
+                    const s = await window.Ackem.mediaStatus()
                     setMediaStatus(s.formatted || t('settings.noMedia'))
                   } catch {
                     setMediaStatus(t('settings.mediaDetectFailed'))
@@ -460,7 +460,7 @@ export function SettingsPage(): JSX.Element {
         >
           <SettingsBlock title={t("settings.chatModel")} hint={t("settings.chatModelHint")}>
             <details className="settings-details">
-              <summary>{t("settings.protocolNote")}（{t("settings.openaiCompatible")} / Anthropic）</summary>
+              <summary>{t("settings.protocolNote")}锛坽t("settings.openaiCompatible")} / Anthropic锛?/summary>
               <p className="text-[11px] leading-relaxed text-ink-muted">
                 {t("settings.protocolDesc")}
                 
@@ -640,7 +640,7 @@ export function SettingsPage(): JSX.Element {
               <SettingsField label="Model ID">
                 <input
                   className="field-input w-full"
-                  placeholder="o3 / deepseek-v4-pro …"
+                  placeholder="o3 / deepseek-v4-pro 鈥?
                   value={form.openforuModel ?? ''}
                   onChange={(e) => setForm({ ...form, openforuModel: e.target.value })}
                 />
@@ -661,6 +661,53 @@ export function SettingsPage(): JSX.Element {
                   }
                 />
               </SettingsField>
+            </SettingsBlock>
+          </SettingsGroup>
+        )}
+
+        {activeId === 'settings-agnes' && (
+          <SettingsGroup
+            id="settings-agnes"
+            title={t('settings.agnesImage')}
+            description={t('settings.agnesImageDesc')}
+          >
+            <SettingsBlock
+              title={t('settings.agnesImage')}
+              hint={t('settings.agnesImageHint')}
+              badge={
+                <SettingsStatusBadge tone={form.agnesApiKey ? 'ok' : 'warn'}>
+                  {form.agnesApiKey ? t('settings.configured') : t('settings.notConfigured')}
+                </SettingsStatusBadge>
+              }
+            >
+              <SettingsField label="Base URL">
+                <input
+                  className="field-input w-full"
+                  placeholder="https://apihub.agnes-ai.com/v1"
+                  value={form.agnesBaseUrl ?? ''}
+                  onChange={(e) => setForm({ ...form, agnesBaseUrl: e.target.value })}
+                />
+              </SettingsField>
+              <SettingsField label="API Key">
+                <input
+                  type="password"
+                  className="field-input w-full"
+                  placeholder="杈撳叆 Agnes API Key"
+                  value={form.agnesApiKey ?? ''}
+                  onChange={(e) => setForm({ ...form, agnesApiKey: e.target.value })}
+                />
+              </SettingsField>
+              <SettingsField label="Model ID">
+                <input
+                  className="field-input w-full"
+                  placeholder="agnes-image-2.1-flash"
+                  value={form.agnesImageModel ?? ''}
+                  onChange={(e) => setForm({ ...form, agnesImageModel: e.target.value })}
+                />
+              </SettingsField>
+              <div className="mt-3 rounded-xl bg-surface-inset/30 px-3.5 py-2.5 text-xs text-ink-muted">
+                馃挕 鍦ㄨ亰澶╂杈撳叆銆岀敾涓€寮?..銆嶆垨銆岀敓鎴愬浘鐗?..銆嶅嵆鍙嚜鍔ㄧ敓鎴愬浘鐗?
+              </div>
             </SettingsBlock>
           </SettingsGroup>
         )}
@@ -686,7 +733,7 @@ export function SettingsPage(): JSX.Element {
             <SettingsRow>
               <button
                 type="button"
-                onClick={() => void window.ackem.openDataFolder()}
+                onClick={() => void window.Ackem.openDataFolder()}
                 className="field-btn-secondary px-3 py-2 text-xs"
               >
                 {t("settings.openDataDir")}
@@ -694,7 +741,7 @@ export function SettingsPage(): JSX.Element {
               <button
                 type="button"
                 onClick={async () => {
-                  await window.ackem.rebuildIndex()
+                  await window.Ackem.rebuildIndex()
                   pushToast(t('settings.indexRebuilt'))
                 }}
                 className="field-btn-secondary px-3 py-2 text-xs"
@@ -737,7 +784,7 @@ export function SettingsPage(): JSX.Element {
                 setDiaryBusy(true)
                 setDiaryResult(null)
                 try {
-                  const r = await window.ackem.diaryGenerate()
+                  const r = await window.Ackem.diaryGenerate()
                   if (r.ok) {
                     setDiaryResult(t('settings.diaryGenerated', { path: r.path ?? '' }))
                     pushToast(t('settings.diaryGeneratedToast'))
@@ -761,7 +808,7 @@ export function SettingsPage(): JSX.Element {
                 setThoughtBusy(true)
                 setThoughtResult(null)
                 try {
-                  const r = await window.ackem.thoughtGenerate()
+                  const r = await window.Ackem.thoughtGenerate()
                   setThoughtResult(t('settings.thoughtGenerated', { count: r.thoughts.length }))
                   pushToast(t('settings.thoughtGeneratedToast'))
                 } catch (e) {
@@ -781,7 +828,7 @@ export function SettingsPage(): JSX.Element {
                 setConsolidateBusy(true)
                 setConsolidateResult(null)
                 try {
-                  const r = await window.ackem.memoryConsolidate()
+                  const r = await window.Ackem.memoryConsolidate()
                   setConsolidateResult(t('settings.consolidateResult', { count: r.added }))
                   pushToast(t('settings.consolidateToast'))
                 } catch (e) {
@@ -801,12 +848,12 @@ export function SettingsPage(): JSX.Element {
                 setMirrorBusy(true)
                 setMirrorResult(null)
                 try {
-                  const r = await window.ackem.mirrorCheck()
+                  const r = await window.Ackem.mirrorCheck()
                   if (r.contradictions.length === 0) {
                     setMirrorResult('{t("settings.noContradiction")}')
                   } else {
                     setMirrorResult(
-                      `${r.contradictions.length} 处：${r.contradictions.map((c) => c.description).join('；')}`
+                      `${r.contradictions.length} 澶勶細${r.contradictions.map((c) => c.description).join('锛?)}`
                     )
                   }
                 } catch (e) {
@@ -883,7 +930,7 @@ export function SettingsPage(): JSX.Element {
         {showAdultConfirm && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
             <div className="bg-surface-raised rounded-2xl border border-surface-inset shadow-xl max-w-md w-full mx-4 p-6">
-              <h3 className="text-base font-semibold text-ink">⚠️ {t("settings.adultModeConfirm")}</h3>
+              <h3 className="text-base font-semibold text-ink">鈿狅笍 {t("settings.adultModeConfirm")}</h3>
               <div className="mt-4 space-y-3 text-sm text-ink-muted leading-relaxed">
                 <p>
                   {t('settings.adultModeDesc')}
@@ -995,10 +1042,10 @@ export function SettingsPage(): JSX.Element {
                 await refreshI18n()
                 // Force re-render
                 setForm({ ...form })
-                pushToast(v === 'en' ? 'Language switched to English' : '已切换为中文')
+                pushToast(v === 'en' ? 'Language switched to English' : '宸插垏鎹负涓枃')
               }}
               options={[
-                { value: 'zh', label: '中文' },
+                { value: 'zh', label: '涓枃' },
                 { value: 'en', label: 'English' }
               ]}
             />
@@ -1130,7 +1177,7 @@ export function SettingsPage(): JSX.Element {
         void (async () => {
           setUninstallBusy(true)
           try {
-            await window.ackem.uninstallAckem({
+            await window.Ackem.uninstallAckem({
               deleteData: uninstallDeleteData,
               removeApp: uninstallRemoveApp
             })

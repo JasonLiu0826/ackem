@@ -1,4 +1,4 @@
-import { loadSettings } from '../../../../../settings'
+﻿import { loadSettings } from '../../../../../settings'
 import { resolveDataRoot } from '../../../../../paths'
 import type { SkillHandler, SkillInvocation, SkillResult } from '../../../types'
 import { LIGHT_SCHEDULE_MANIFEST } from './manifest'
@@ -16,7 +16,7 @@ function resolveDataRootForSkill(): string {
   try {
     return resolveDataRoot(loadSettings())
   } catch {
-    return process.env.ACKEM_TEST_DATA_ROOT ?? ''
+    return process.env.Ackem_TEST_DATA_ROOT ?? ''
   }
 }
 
@@ -34,7 +34,7 @@ async function execute(invocation: SkillInvocation): Promise<SkillResult> {
     return {
       ok: false,
       output: '',
-      error: '仅支持今天或明天的日程',
+      error: '浠呮敮鎸佷粖澶╂垨鏄庡ぉ鐨勬棩绋?,
       injectToContext: false,
       events: [],
       durationMs: Date.now() - start
@@ -55,7 +55,7 @@ async function execute(invocation: SkillInvocation): Promise<SkillResult> {
     const line = addScheduleItem(dataRoot, date, time, content)
     return {
       ok: true,
-      output: `已记下：${line.replace(/^- \[ \] /, '')}`,
+      output: `宸茶涓嬶細${line.replace(/^- \[ \] /, '')}`,
       injectToContext: true,
       events: [],
       data: { action, date, line },
@@ -67,7 +67,7 @@ async function execute(invocation: SkillInvocation): Promise<SkillResult> {
     const removed = removeScheduleItem(dataRoot, date, content || invocation.userMessage || '')
     return {
       ok: removed,
-      output: removed ? '已从日程中移除该项。' : '未找到匹配的日程项。',
+      output: removed ? '宸蹭粠鏃ョ▼涓Щ闄よ椤广€? : '鏈壘鍒板尮閰嶇殑鏃ョ▼椤广€?,
       injectToContext: true,
       events: [],
       durationMs: Date.now() - start

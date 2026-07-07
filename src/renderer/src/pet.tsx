@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+﻿import React, { useEffect, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import { CompactView } from './components/CompactView'
 import { ErrorBoundary } from './ErrorBoundary'
@@ -16,13 +16,13 @@ function PetRoot(): JSX.Element {
   useEffect(() => {
     void (async () => {
       try {
-        if (typeof window.ackem === 'undefined') {
-          setErr('未检测到主进程桥接')
+        if (typeof window.Ackem === 'undefined') {
+          setErr('鏈娴嬪埌涓昏繘绋嬫ˉ鎺?)
           return
         }
-        const s = await window.ackem.getSettings()
+        const s = await window.Ackem.getSettings()
         setSettings(s)
-        const h = await window.ackem.loadChatHistory()
+        const h = await window.Ackem.loadChatHistory()
         if (h?.length) {
           const rows = h.map(normalizeChatRow).filter((r): r is ChatRow => r != null)
           if (rows.length) useAppStore.getState().setChatRows(rows)
@@ -40,7 +40,7 @@ function PetRoot(): JSX.Element {
   }
   if (!ready) {
     return (
-      <div className="flex h-screen items-center justify-center text-xs text-ink-muted">连接中…</div>
+      <div className="flex h-screen items-center justify-center text-xs text-ink-muted">杩炴帴涓€?/div>
     )
   }
   return <CompactView />

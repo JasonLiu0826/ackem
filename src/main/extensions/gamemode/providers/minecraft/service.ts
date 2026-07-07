@@ -1,4 +1,4 @@
-// [extensions/gamemode/providers/minecraft/service] — MC 子系统统一服务层
+﻿// [extensions/gamemode/providers/minecraft/service] 鈥?MC 瀛愮郴缁熺粺涓€鏈嶅姟灞?
 
 import { createLogger } from '../../../../logger'
 import type { GameModeHostBridge, GameModeInvokeResult } from '../../types'
@@ -114,7 +114,7 @@ export class MinecraftGameService {
       },
       onEvent: (event, reaction) => {
         if (reaction) {
-          // 游戏内台词已由 mc-bot emitMcGameEvent 发送；此处只推 UI / 引擎，避免重复刷屏
+          // 娓告垙鍐呭彴璇嶅凡鐢?mc-bot emitMcGameEvent 鍙戦€侊紱姝ゅ鍙帹 UI / 寮曟搸锛岄伩鍏嶉噸澶嶅埛灞?
           void (async () => {
             const { pushMcEventToRenderer } = await import('./mc-ws-server.js')
             pushMcEventToRenderer(event?.type ?? 'mc:bot_event', reaction)
@@ -135,7 +135,7 @@ export class MinecraftGameService {
       port: cfg.port ?? 25565,
       username: cfg.username,
       password: cfg.password,
-      ackemWsUrl: `ws://localhost:${this.wsPort}`,
+      AckemWsUrl: `ws://localhost:${this.wsPort}`,
       tickIntervalMs: 500,
       autoCombat: true,
       autoFollow: true,
@@ -192,18 +192,18 @@ export class MinecraftGameService {
       }
 
       if (isMcGameplayMessage(message)) {
-        botSendChat('没听懂要哪种物品，说具体点，比如「给我钻石」或「你背包有什么」。')
+        botSendChat('娌″惉鎳傝鍝鐗╁搧锛岃鍏蜂綋鐐癸紝姣斿銆岀粰鎴戦捇鐭炽€嶆垨銆屼綘鑳屽寘鏈変粈涔堛€嶃€?)
         return
       }
 
       const invCtx = formatInventoryContext(inventory, heldItemName)
-      const userText = `${username} 在游戏里对你说：${message}\n【你当前携带】${invCtx}\n请用简短中文在游戏聊天里回复（不超过60字）。不要写英文物品ID；背包里没有的东西就说没有，不要编造。`
+      const userText = `${username} 鍦ㄦ父鎴忛噷瀵逛綘璇达細${message}\n銆愪綘褰撳墠鎼哄甫銆?{invCtx}\n璇风敤绠€鐭腑鏂囧湪娓告垙鑱婂ぉ閲屽洖澶嶏紙涓嶈秴杩?0瀛楋級銆備笉瑕佸啓鑻辨枃鐗╁搧ID锛涜儗鍖呴噷娌℃湁鐨勪笢瑗垮氨璇存病鏈夛紝涓嶈缂栭€犮€俙
 
       const replyText = await this.bridge.runIngameChat(userText, [message])
       if (replyText) botSendChat(replyText)
     } catch (err) {
       log.error('mc-bot chat callback error', err)
-      try { botSendChat('（暂时没法好好说话…）') } catch { /* ignore */ }
+      try { botSendChat('锛堟殏鏃舵病娉曞ソ濂借璇濃€︼級') } catch { /* ignore */ }
     }
   }
 

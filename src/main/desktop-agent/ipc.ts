@@ -1,4 +1,4 @@
-import { ipcMain } from 'electron'
+﻿import { ipcMain } from 'electron'
 import { broadcastToRenderers } from '../rendererBroadcast'
 import {
   cancelAllDesktopAgentConfirms,
@@ -77,13 +77,13 @@ export function registerDesktopAgentIpc(): void {
 
   ipcMain.handle('desktop-agent:sessionMode:set', (_e, args: { sessionId: string; enabled: boolean }) => {
     if (!isDesktopAgentPipelineOpen()) {
-      return { ok: false, error: '电脑助手功能尚未开放，敬请期待' }
+      return { ok: false, error: '鐢佃剳鍔╂墜鍔熻兘灏氭湭寮€鏀撅紝鏁鏈熷緟' }
     }
     const root = currentDataRoot()
     ensureDataLayout(root)
     const settings = loadSettings()
     if (!isDesktopAgentSettingsReady(settings)) {
-      return { ok: false, error: '请先在设置中启用电脑助手并确认风险' }
+      return { ok: false, error: '璇峰厛鍦ㄨ缃腑鍚敤鐢佃剳鍔╂墜骞剁‘璁ら闄? }
     }
     if (!args.enabled) {
       cancelAllDesktopAgentConfirms('denied')
@@ -98,7 +98,7 @@ export function registerDesktopAgentIpc(): void {
   ipcMain.handle('desktop-agent:opening', async () => {
     const settings = loadSettings()
     if (!isDesktopAgentSettingsReady(settings)) {
-      return { ok: false, error: '电脑助手未启用' }
+      return { ok: false, error: '鐢佃剳鍔╂墜鏈惎鐢? }
     }
     const root = currentDataRoot()
     const state = mergeEngineState(root, settings)

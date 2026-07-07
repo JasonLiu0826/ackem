@@ -1,11 +1,11 @@
-// @ackem-extension-stub-not-runtime — 见 src/main/extensions/STUB_FILES.md
-// 此文件不是运行时入口；manifest.json 的 main 仅满足 schema。实装后注册 register.ts / skill.ts / bootstrap.ts。
-// [P-13] 截图/快照 — 占位入口
-// 实装后：实现 plugin.ts + register.ts，并在 plugins/builtin/register-placeholders.ts 中启用
+﻿// @Ackem-extension-stub-not-runtime 鈥?瑙?src/main/extensions/STUB_FILES.md
+// 姝ゆ枃浠朵笉鏄繍琛屾椂鍏ュ彛锛沵anifest.json 鐨?main 浠呮弧瓒?schema銆傚疄瑁呭悗娉ㄥ唽 register.ts / skill.ts / bootstrap.ts銆?
+// [P-13] 鎴浘/蹇収 鈥?鍗犱綅鍏ュ彛
+// 瀹炶鍚庯細瀹炵幇 plugin.ts + register.ts锛屽苟鍦?plugins/builtin/register-placeholders.ts 涓惎鐢?
 
 import { MANIFEST, PLUGIN_ID, SPEC_ID } from './manifest'
 
-/** 未实装；不参与运行时注册 */
+/** 鏈疄瑁咃紱涓嶅弬涓庤繍琛屾椂娉ㄥ唽 */
 export const PLACEHOLDER = true as const
 
 export { MANIFEST, PLUGIN_ID, SPEC_ID }

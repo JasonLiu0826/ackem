@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+﻿import { useEffect, useMemo, useRef, useState } from 'react'
 import { t } from '../lib/i18n'
 import { applyTheme, toggleTheme, resolveInitialTheme, type ThemeMode } from '../lib/theme'
 import { useAppStore } from '../store/appStore'
@@ -15,10 +15,10 @@ import { MarkdownContent } from './MarkdownContent'
 import { SearchPaperCard } from './SearchPaperCard'
 import { isVisibleSearchRow } from '../lib/chatStreamRows'
 
-/** 剧院光球显示尺寸（与 glowCanvasScale 配合，勿把 canvas 缩到 size 以免整体变小） */
+/** 鍓ч櫌鍏夌悆鏄剧ず灏哄锛堜笌 glowCanvasScale 閰嶅悎锛屽嬁鎶?canvas 缂╁埌 size 浠ュ厤鏁翠綋鍙樺皬锛?*/
 const THEATER_ORB_SIZE = 280
 
-const MIC_STATE_KEY = 'ackem-theater-mic-active'
+const MIC_STATE_KEY = 'Ackem-theater-mic-active'
 
 function readDocumentTheme(): ThemeMode {
   return document.documentElement.classList.contains('theme-dark') ? 'dark' : 'light'
@@ -73,26 +73,26 @@ export function TheaterView(): JSX.Element | null {
     }
   }, [open])
 
-  // 剧院会话：同步语音设置；TTS 关闭时仍保留 ASR / 麦克风路径
+  // 鍓ч櫌浼氳瘽锛氬悓姝ヨ闊宠缃紱TTS 鍏抽棴鏃朵粛淇濈暀 ASR / 楹﹀厠椋庤矾寰?
   useEffect(() => {
     if (!open) {
-      void window.ackem.voice?.setTheaterSession?.(false)
+      void window.Ackem.voice?.setTheaterSession?.(false)
       return
     }
     const s = loadVoiceSettings()
     if (!s.enabled || textOnly) {
-      void window.ackem.voice?.setTheaterSession?.(false)
+      void window.Ackem.voice?.setTheaterSession?.(false)
       return
     }
     void syncVoiceSettingsToMain(s)
-    void window.ackem.voice?.setTheaterSession?.(true)
+    void window.Ackem.voice?.setTheaterSession?.(true)
     voice.unlockAudio()
     return () => {
-      void window.ackem.voice?.setTheaterSession?.(false)
+      void window.Ackem.voice?.setTheaterSession?.(false)
     }
   }, [open, textOnly, voice.unlockAudio])
 
-  // Auto-hide UI — paused when voice is active
+  // Auto-hide UI 鈥?paused when voice is active
   useEffect(() => {
     if (!open) return
     let idleTimer = window.setTimeout(() => {
@@ -127,7 +127,7 @@ export function TheaterView(): JSX.Element | null {
 
   // Fetch emotion state
   useEffect(() => {
-    void window.ackem.getState().then((raw) => {
+    void window.Ackem.getState().then((raw) => {
       const s = raw as { emotion?: { aro?: number; aff?: number } }
       if (s.emotion?.aro != null) setAro(s.emotion.aro)
       if (s.emotion?.aff != null) setAff(s.emotion.aff)
@@ -146,9 +146,9 @@ export function TheaterView(): JSX.Element | null {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, textOnly])
 
-  // Handle ASR transcript → send or prefill input (dual channel)
+  // Handle ASR transcript 鈫?send or prefill input (dual channel)
   useEffect(() => {
-    const unsub = window.ackem.voice?.onTranscript?.((result) => {
+    const unsub = window.Ackem.voice?.onTranscript?.((result) => {
       const text = result.text.trim()
       if (!text) return
       const channel = loadVoiceSettings().inputChannel
@@ -229,7 +229,7 @@ export function TheaterView(): JSX.Element | null {
         aro={aro}
       />
 
-      {/* 全屏聊天区 */}
+      {/* 鍏ㄥ睆鑱婂ぉ鍖?*/}
       <div className="theater-chat relative z-10 flex min-h-0 flex-1 flex-col">
         <div
           ref={scrollAreaRef}
@@ -270,7 +270,7 @@ export function TheaterView(): JSX.Element | null {
                           ) : null}
                         </>
                       ) : chatBusy && i === lastAssistantIdx ? (
-                        <span className="text-ink-muted/60 animate-pulse">…</span>
+                        <span className="text-ink-muted/60 animate-pulse">鈥?/span>
                       ) : null
                     ) : (
                       <span className="whitespace-pre-wrap">{m.content}</span>
@@ -279,7 +279,7 @@ export function TheaterView(): JSX.Element | null {
                 )
               })
             ) : (
-              <p className="pt-[min(200px,28vh)] text-center text-sm text-ink-muted">说点什么，开始对话…</p>
+              <p className="pt-[min(200px,28vh)] text-center text-sm text-ink-muted">璇寸偣浠€涔堬紝寮€濮嬪璇濃€?/p>
             )}
             <div ref={chatEndRef} className="h-px shrink-0" aria-hidden />
           </div>
@@ -309,7 +309,7 @@ export function TheaterView(): JSX.Element | null {
                       }
                     }
                   })}
-                  placeholder="说点什么…"
+                  placeholder="璇寸偣浠€涔堚€?
                   className="flex-1 border-0 bg-transparent px-3 py-2 text-sm outline-none"
                   autoFocus
                 />
@@ -325,7 +325,7 @@ export function TheaterView(): JSX.Element | null {
                     }
                   }}
                 >
-                  →
+                  鈫?
                 </button>
               </div>
             </div>
@@ -335,18 +335,18 @@ export function TheaterView(): JSX.Element | null {
             <LightCore />
             <button
               type="button"
-              title="切换主题"
+              title="鍒囨崲涓婚"
               className="glass-nav-bead pointer-events-auto"
               onClick={() => setTheme(toggleTheme(theme))}
             >
               <span className="nav-bead-icon" aria-hidden>
-                ◐
+                鈼?
               </span>
             </button>
             {!textOnly && (
               <button
                 type="button"
-                title={voice.micActive ? '关闭麦克风' : '开启麦克风'}
+                title={voice.micActive ? '鍏抽棴楹﹀厠椋? : '寮€鍚害鍏嬮'}
                 className={[
                   'glass-nav-bead pointer-events-auto transition-all select-none',
                   voice.micActive ? 'ring-2 ring-cyan-400/60' : '',
@@ -372,25 +372,25 @@ export function TheaterView(): JSX.Element | null {
                 }}
               >
                 <span className="nav-bead-icon" aria-hidden>
-                  {voice.micActive ? '🎤' : '🎙️'}
+                  {voice.micActive ? '馃帳' : '馃帣锔?}
                 </span>
               </button>
             )}
             {!voiceOnly && (
               <button
                 type="button"
-                title="文字输入"
+                title="鏂囧瓧杈撳叆"
                 className="glass-nav-bead pointer-events-auto"
                 onClick={() => setShowInput((v) => !v)}
               >
                 <span className="nav-bead-icon" aria-hidden>
-                  ⌨
+                  鈱?
                 </span>
               </button>
             )}
             <button
               type="button"
-              title="退出剧院"
+              title="閫€鍑哄墽闄?
               className="glass-nav-bead pointer-events-auto text-xs"
               onClick={() => setOpen(false)}
             >
@@ -402,7 +402,7 @@ export function TheaterView(): JSX.Element | null {
         </div>
       </div>
 
-      {/* 光球悬浮层 */}
+      {/* 鍏夌悆鎮诞灞?*/}
       <div className="theater-orb-layer pointer-events-none absolute inset-x-0 top-0 z-20 flex justify-center overflow-visible">
         <div className="theater-orb-hit pointer-events-auto overflow-visible">
           <CompanionAvatar

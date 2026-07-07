@@ -1,5 +1,5 @@
-/**
- * [voice-pipeline] Plugin bootstrap — Python service lifecycle + IPC registration.
+﻿/**
+ * [voice-pipeline] Plugin bootstrap 鈥?Python service lifecycle + IPC registration.
  *
  * Starts the Python voice service on plugin load, stops on unload.
  * Registers voiceManager IPC handlers for renderer communication.
@@ -41,7 +41,7 @@ export function getVoiceServiceState(): ServiceState {
 }
 
 /**
- * Backward-compatible entry — delegates to voiceManager when pipeline is active.
+ * Backward-compatible entry 鈥?delegates to voiceManager when pipeline is active.
  */
 export function speakViaNotification(text: string): {
   ok: boolean
@@ -63,7 +63,7 @@ export function speakViaNotification(text: string): {
     return { ok: false, mode: 'none', implementationStatus: 'dev', error: 'notifications_unsupported' }
   }
   const n = new Notification({
-    title: 'Ackem · 语音',
+    title: 'Ackem 路 璇煶',
     body: body.slice(0, 200),
     silent: false
   })

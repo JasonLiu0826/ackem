@@ -1,4 +1,4 @@
-// [ecosystem/communityLoader] — community/ 签名扩展扫描与注册
+﻿// [ecosystem/communityLoader] 鈥?community/ 绛惧悕鎵╁睍鎵弿涓庢敞鍐?
 
 import { existsSync, mkdirSync, readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
@@ -74,13 +74,13 @@ export function verifyInstalledCommunityBundle(
 ): { ok: true; sidecar: AckemSignatureSidecar } | { ok: false; error: string } {
   const sidecarPath = join(dirPath, SIGNATURE_SIDECAR_FILENAME)
   if (!existsSync(sidecarPath)) {
-    return { ok: false, error: `缺少签名文件 ${SIGNATURE_SIDECAR_FILENAME}` }
+    return { ok: false, error: `缂哄皯绛惧悕鏂囦欢 ${SIGNATURE_SIDECAR_FILENAME}` }
   }
   let sidecar: AckemSignatureSidecar
   try {
     sidecar = JSON.parse(readFileSync(sidecarPath, 'utf-8')) as AckemSignatureSidecar
   } catch {
-    return { ok: false, error: '签名文件 JSON 无效' }
+    return { ok: false, error: '绛惧悕鏂囦欢 JSON 鏃犳晥' }
   }
 
   const files = listBundleFiles(dirPath)
@@ -89,25 +89,25 @@ export function verifyInstalledCommunityBundle(
 
   const publisher = resolvePublisherPublicKey(dataRoot, sidecar.publisherId)
   if (!publisher) {
-    return { ok: false, error: `未信任的发布者: ${sidecar.publisherId}` }
+    return { ok: false, error: `鏈俊浠荤殑鍙戝竷鑰? ${sidecar.publisherId}` }
   }
   if (!publisherScopeAllowed(publisher, sidecar.manifestId)) {
-    return { ok: false, error: `发布者无权提供 ${sidecar.manifestId}` }
+    return { ok: false, error: `鍙戝竷鑰呮棤鏉冩彁渚?${sidecar.manifestId}` }
   }
   const sigCheck = verifySignatureSidecar(sidecar, publisher.publicKey)
   if (!sigCheck.ok) return { ok: false, error: sigCheck.error }
 
   const manifestPath = join(dirPath, 'manifest.json')
-  if (!existsSync(manifestPath)) return { ok: false, error: '缺少 manifest.json' }
+  if (!existsSync(manifestPath)) return { ok: false, error: '缂哄皯 manifest.json' }
   const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8')) as { id?: string }
   if (manifest.id !== sidecar.manifestId) {
-    return { ok: false, error: 'manifest.id 与签名 manifestId 不一致' }
+    return { ok: false, error: 'manifest.id 涓庣鍚?manifestId 涓嶄竴鑷? }
   }
 
-  // 二次校验 manifest.json 摘要
+  // 浜屾鏍￠獙 manifest.json 鎽樿
   const manifestDigest = sha256Digest(readFileSync(manifestPath, 'utf-8'))
   if (sidecar.fileDigests['manifest.json'] && sidecar.fileDigests['manifest.json'] !== manifestDigest) {
-    return { ok: false, error: 'manifest.json 已被篡改' }
+    return { ok: false, error: 'manifest.json 宸茶绡℃敼' }
   }
 
   return { ok: true, sidecar }
@@ -239,7 +239,7 @@ export class CommunityExtensionLoader {
       }
       this.skills.set(manifest.id, instance)
     } catch (err) {
-      console.error('[community] 加载 skill 失败:', err)
+      console.error('[community] 鍔犺浇 skill 澶辫触:', err)
     }
   }
 
@@ -329,7 +329,7 @@ export class CommunityExtensionLoader {
       }
       this.plugins.set(manifest.id, instance)
     } catch (err) {
-      console.error('[community] 加载 plugin 失败:', err)
+      console.error('[community] 鍔犺浇 plugin 澶辫触:', err)
     }
   }
 

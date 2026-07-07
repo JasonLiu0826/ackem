@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import type { AppSettings } from '../ackem'
+﻿import { useEffect, useState } from 'react'
+import type { AppSettings } from '../Ackem'
 import type { MachineMapProgressPayload, MachineMapStatus } from '../../../shared/machineMap'
 import { isDesktopAgentSettingsReady } from '../../../shared/desktopAgent'
 import {
@@ -29,11 +29,11 @@ export function DesktopAgentSettings({ form, setForm }: Props): JSX.Element {
       return
     }
 
-    void window.ackem.machineMap.status().then(setMapStatus)
-    window.ackem.machineMap.onProgress((payload) => {
+    void window.Ackem.machineMap.status().then(setMapStatus)
+    window.Ackem.machineMap.onProgress((payload) => {
       setMapProgress(payload)
       if (payload?.status === 'complete' || payload?.status === 'error') {
-        void window.ackem.machineMap.status().then(setMapStatus)
+        void window.Ackem.machineMap.status().then(setMapStatus)
       }
     })
   }, [settingsReady])
@@ -43,15 +43,15 @@ export function DesktopAgentSettings({ form, setForm }: Props): JSX.Element {
   const mapLabel =
     mapProgress?.label ??
     (mapStatus?.status === 'complete'
-      ? `本机地图已就绪 · ${mapStatus.gameCount} 款游戏 · ${mapStatus.documentCount} 个文档`
+      ? `鏈満鍦板浘宸插氨缁?路 ${mapStatus.gameCount} 娆炬父鎴?路 ${mapStatus.documentCount} 涓枃妗
       : indexing
-        ? '正在努力理解你的电脑中…'
+        ? '姝ｅ湪鍔姏鐞嗚В浣犵殑鐢佃剳涓€?
         : null)
 
   return (
     <div className="exp-panel space-y-3 rounded-xl p-4">
       <div className="exp-title text-xs font-medium">
-        {previewOnly ? '暂未开放 · 电脑助手' : '实验功能 · 电脑助手'}
+        {previewOnly ? '鏆傛湭寮€鏀?路 鐢佃剳鍔╂墜' : '瀹為獙鍔熻兘 路 鐢佃剳鍔╂墜'}
       </div>
       {previewOnly ? (
         <p className="settings-callout-warn rounded-lg px-3 py-2 text-xs leading-relaxed">
@@ -79,9 +79,9 @@ export function DesktopAgentSettings({ form, setForm }: Props): JSX.Element {
           }
         />
         <span>
-          启用电脑助手（实验）
+          鍚敤鐢佃剳鍔╂墜锛堝疄楠岋級
           <span className="mt-1 block text-xs text-ink-muted">
-            开启后，可在聊天页进入电脑助手模式，让 Ackem 根据对话操作本机文件与应用。每次操作前都会弹窗确认。
+            寮€鍚悗锛屽彲鍦ㄨ亰澶╅〉杩涘叆鐢佃剳鍔╂墜妯″紡锛岃 Ackem 鏍规嵁瀵硅瘽鎿嶄綔鏈満鏂囦欢涓庡簲鐢ㄣ€傛瘡娆℃搷浣滃墠閮戒細寮圭獥纭銆?
           </span>
         </span>
       </label>
@@ -94,7 +94,7 @@ export function DesktopAgentSettings({ form, setForm }: Props): JSX.Element {
               checked={form.desktopAgentAllowAppControl === true}
               onChange={(e) => setForm({ desktopAgentAllowAppControl: e.target.checked })}
             />
-            允许打开 / 关闭 / 聚焦应用程序
+            鍏佽鎵撳紑 / 鍏抽棴 / 鑱氱劍搴旂敤绋嬪簭
           </label>
           <label className="flex cursor-pointer items-center gap-2 text-sm text-ink">
             <input
@@ -102,7 +102,7 @@ export function DesktopAgentSettings({ form, setForm }: Props): JSX.Element {
               checked={form.desktopAgentAllowFileWrite === true}
               onChange={(e) => setForm({ desktopAgentAllowFileWrite: e.target.checked })}
             />
-            允许复制、移动、写入文件
+            鍏佽澶嶅埗銆佺Щ鍔ㄣ€佸啓鍏ユ枃浠?
           </label>
           <label className="flex cursor-pointer items-center gap-2 text-sm text-ink">
             <input
@@ -110,7 +110,7 @@ export function DesktopAgentSettings({ form, setForm }: Props): JSX.Element {
               checked={form.desktopAgentAllowDelete === true}
               onChange={(e) => setForm({ desktopAgentAllowDelete: e.target.checked })}
             />
-            允许删除文件（仍每次确认；优先进回收站）
+            鍏佽鍒犻櫎鏂囦欢锛堜粛姣忔纭锛涗紭鍏堣繘鍥炴敹绔欙級
           </label>
           <label className="flex cursor-pointer items-center gap-2 text-sm text-ink">
             <input
@@ -118,7 +118,7 @@ export function DesktopAgentSettings({ form, setForm }: Props): JSX.Element {
               checked={form.desktopAgentAllowDownload === true}
               onChange={(e) => setForm({ desktopAgentAllowDownload: e.target.checked })}
             />
-            允许从 HTTPS 下载文件
+            鍏佽浠?HTTPS 涓嬭浇鏂囦欢
           </label>
           <label className="flex cursor-pointer items-center gap-2 text-sm text-ink">
             <input
@@ -126,7 +126,7 @@ export function DesktopAgentSettings({ form, setForm }: Props): JSX.Element {
               checked={form.desktopAgentAllowInstall === true}
               onChange={(e) => setForm({ desktopAgentAllowInstall: e.target.checked })}
             />
-            允许下载后运行安装包（非静默）
+            鍏佽涓嬭浇鍚庤繍琛屽畨瑁呭寘锛堥潪闈欓粯锛?
           </label>
           <label className="flex cursor-pointer items-center gap-2 text-sm text-ink">
             <input
@@ -134,15 +134,15 @@ export function DesktopAgentSettings({ form, setForm }: Props): JSX.Element {
               checked={form.desktopAgentAllowDocumentRead === true}
               onChange={(e) => setForm({ desktopAgentAllowDocumentRead: e.target.checked })}
             />
-            允许读取文档 / 图片（实验）
+            鍏佽璇诲彇鏂囨。 / 鍥剧墖锛堝疄楠岋級
           </label>
           <label className="block text-xs font-medium text-ink-muted">
-            默认下载目录（留空则使用「下载/AckemDownloads」）
+            榛樿涓嬭浇鐩綍锛堢暀绌哄垯浣跨敤銆屼笅杞?AckemDownloads銆嶏級
             <input
               className="field-input mt-1"
               value={form.desktopAgentDownloadDir ?? ''}
               onChange={(e) => setForm({ desktopAgentDownloadDir: e.target.value })}
-              placeholder="例如 D:\Downloads\AckemDownloads"
+              placeholder="渚嬪 D:\Downloads\AckemDownloads"
             />
           </label>
         </div>
@@ -157,25 +157,25 @@ export function DesktopAgentSettings({ form, setForm }: Props): JSX.Element {
           onChange={(e) => setForm({ desktopAgentRiskAccepted: e.target.checked })}
         />
         <span className={!masterOn ? 'opacity-50' : undefined}>
-          我已阅读并理解：电脑助手可访问本机路径；请勿对不明操作点「允许」。
+          鎴戝凡闃呰骞剁悊瑙ｏ細鐢佃剳鍔╂墜鍙闂湰鏈鸿矾寰勶紱璇峰嬁瀵逛笉鏄庢搷浣滅偣銆屽厑璁搞€嶃€?
         </span>
       </label>
 
       {!canSaveMaster && masterOn && (
-        <p className="exp-body text-xs">保存前请勾选风险确认。</p>
+        <p className="exp-body text-xs">淇濆瓨鍓嶈鍕鹃€夐闄╃‘璁ゃ€?/p>
       )}
 
       {settingsReady && (
         <div className="space-y-2 rounded-lg border border-surface-inset/40 bg-surface/30 px-3 py-2">
-          <div className="text-xs font-medium text-ink-muted">聊天页开启「电脑助手」后，本会话规则：</div>
+          <div className="text-xs font-medium text-ink-muted">鑱婂ぉ椤靛紑鍚€岀數鑴戝姪鎵嬨€嶅悗锛屾湰浼氳瘽瑙勫垯锛?/div>
           <ul className="list-inside list-disc space-y-1 text-xs text-ink-muted">
             {listDesktopAgentModeRules('zh').map((rule) => (
               <li key={rule.id}>
-                <span className="text-ink">{rule.title}</span>：{rule.detail}
+                <span className="text-ink">{rule.title}</span>锛歿rule.detail}
               </li>
             ))}
           </ul>
-          <div className="text-xs font-medium text-ink-muted">能力清单（Embedding 匹配 → 大模型执行）：</div>
+          <div className="text-xs font-medium text-ink-muted">鑳藉姏娓呭崟锛圗mbedding 鍖归厤 鈫?澶фā鍨嬫墽琛岋級锛?/div>
           {groupDesktopAgentCapabilitiesByUi(form).map((section) => (
             <div key={section.group} className="space-y-1">
               <div className="text-xs text-ink">{section.group}</div>
@@ -183,13 +183,13 @@ export function DesktopAgentSettings({ form, setForm }: Props): JSX.Element {
                 {section.items.map((item) => (
                   <li key={item.label}>
                     <span className={item.enabled ? 'text-ink' : 'opacity-60'}>{item.label}</span>
-                    {item.enabled ? '' : '（未开）'} — {item.detail}
+                    {item.enabled ? '' : '锛堟湭寮€锛?} 鈥?{item.detail}
                   </li>
                 ))}
               </ul>
             </div>
           ))}
-          <div className="text-xs text-ink-muted">聊天页可开启「电脑助手」模式使用。</div>
+          <div className="text-xs text-ink-muted">鑱婂ぉ椤靛彲寮€鍚€岀數鑴戝姪鎵嬨€嶆ā寮忎娇鐢ㄣ€?/div>
           {mapLabel && (
             <div className="exp-body text-xs">
               {indexing && mapProgress ? (
@@ -205,7 +205,7 @@ export function DesktopAgentSettings({ form, setForm }: Props): JSX.Element {
             </div>
           )}
           {mapStatus?.isStale && mapStatus.status === 'complete' && (
-            <p className="text-xs text-ink-muted">本机地图已超过 24 小时，将在下次使用时后台更新。</p>
+            <p className="text-xs text-ink-muted">鏈満鍦板浘宸茶秴杩?24 灏忔椂锛屽皢鍦ㄤ笅娆′娇鐢ㄦ椂鍚庡彴鏇存柊銆?/p>
           )}
         </div>
       )}
@@ -226,12 +226,12 @@ export function desktopAgentSettingsSaveBlocked(form: AppSettings): string | nul
       form.desktopAgentAllowDocumentRead ||
       form.desktopAgentAllowDelete
     ) {
-      return '电脑助手尚未开放，请保持默认关闭'
+      return '鐢佃剳鍔╂墜灏氭湭寮€鏀撅紝璇蜂繚鎸侀粯璁ゅ叧闂?
     }
     return null
   }
   if (form.desktopAgentEnabled && !form.desktopAgentRiskAccepted) {
-    return '启用电脑助手前请勾选风险确认'
+    return '鍚敤鐢佃剳鍔╂墜鍓嶈鍕鹃€夐闄╃‘璁?
   }
   return null
 }

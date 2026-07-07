@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+﻿import { useEffect, useRef } from 'react'
 
 type Props = {
   active: boolean
@@ -8,8 +8,8 @@ type Props = {
 }
 
 /**
- * 剧院模式全屏声浪呼吸光晕 — Ackem 说话时窗口边缘发光脉动
- * 3 层正弦波叠加模拟声浪，颜色跟随情绪（aff/aro）
+ * 鍓ч櫌妯″紡鍏ㄥ睆澹版氮鍛煎惛鍏夋檿 鈥?Ackem 璇磋瘽鏃剁獥鍙ｈ竟缂樺彂鍏夎剦鍔?
+ * 3 灞傛寮︽尝鍙犲姞妯℃嫙澹版氮锛岄鑹茶窡闅忔儏缁紙aff/aro锛?
  */
 export function SoundWaveOverlay({ active, aff = 50, aro = 0, className = '' }: Props): JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -64,26 +64,26 @@ export function SoundWaveOverlay({ active, aff = 50, aro = 0, className = '' }: 
 
       const t = now / 1000
 
-      // 3 层正弦波叠加
+      // 3 灞傛寮︽尝鍙犲姞
       const wave1 = Math.sin(t * 1.2) * 0.6
       const wave2 = Math.sin(t * 3.5 + 0.8) * 0.25
       const wave3 = Math.sin(t * 7.1 + 2.1) * 0.15
       const composite = (wave1 + wave2 + wave3 + 1) / 2  // 0-1
 
-      // 情绪→颜色：aff 高→暖色，aff 低/aro 高→冷色
+      // 鎯呯华鈫掗鑹诧細aff 楂樷啋鏆栬壊锛宎ff 浣?aro 楂樷啋鍐疯壊
       const warmFactor = Math.max(0, Math.min(1, a / 100))
       const coldFactor = Math.max(0, Math.min(1, ar / 100))
       const r = Math.round(251 * warmFactor + 34 * (1 - warmFactor))
       const g = Math.round(146 * warmFactor + 211 * (1 - warmFactor))
       const b = Math.round(60 * warmFactor + 238 * (1 - warmFactor))
-      // aro 高时偏冷
+      // aro 楂樻椂鍋忓喎
       const rFinal = Math.round(r * (1 - coldFactor * 0.3) + 34 * coldFactor * 0.3)
       const gFinal = Math.round(g * (1 - coldFactor * 0.3) + 211 * coldFactor * 0.3)
       const bFinal = Math.round(b * (1 - coldFactor * 0.3) + 238 * coldFactor * 0.3)
 
       const baseAlpha = opacity * composite * 0.35
 
-      // 4 层边缘光晕，从外到内
+      // 4 灞傝竟缂樺厜鏅曪紝浠庡鍒板唴
       const edgeSize = Math.min(w, h) * 0.18
       const layers = [
         { spread: 1.0, alpha: baseAlpha * 0.4, blur: 40 },
@@ -110,7 +110,7 @@ export function SoundWaveOverlay({ active, aff = 50, aro = 0, className = '' }: 
         ctx.fillRect(inset, inset, w - inset * 2, h - inset * 2)
       }
 
-      // 额外：四角加强光晕
+      // 棰濆锛氬洓瑙掑姞寮哄厜鏅?
       const cornerAlpha = baseAlpha * 0.5
       const cornerSize = edgeSize * 1.2
       ctx.filter = 'blur(32px)'

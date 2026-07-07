@@ -1,4 +1,4 @@
-import { DOMAINS, SUBCATEGORIES } from '../memory/taxonomy'
+﻿import { DOMAINS, SUBCATEGORIES } from '../memory/taxonomy'
 
 export const DOCUMENT_IMPORT_TEMPERATURE = 0.15
 export const DOCUMENT_IMPORT_MAX_CHARS = 5_500
@@ -11,58 +11,58 @@ const SUBCAT_LINES = Object.entries(SUBCATEGORIES)
   .map(([d, arr]) => `${d}: ${(arr as readonly string[]).join(', ')}`)
   .join('\n')
 
-export const DOCUMENT_IMPORT_SYS_ZH = `你是 Ackem 的「外部档案记忆解析器」。用户上传了关于**自己**的自述/日记/简历/聊天记录整理，请抽取可长期使用的结构化记忆。
+export const DOCUMENT_IMPORT_SYS_ZH = `浣犳槸 Ackem 鐨勩€屽閮ㄦ。妗堣蹇嗚В鏋愬櫒銆嶃€傜敤鎴蜂笂浼犱簡鍏充簬**鑷繁**鐨勮嚜杩?鏃ヨ/绠€鍘?鑱婂ぉ璁板綍鏁寸悊锛岃鎶藉彇鍙暱鏈熶娇鐢ㄧ殑缁撴瀯鍖栬蹇嗐€?
 
-── 原则 ──
-· 全文主体是「用户」本人（第一人称「我」或第三人称「他/她/林晚」均视为用户）。
-· 使用与对话 ingest 相同的 taxonomy（domain + subcategory），见下方列表。
-· 禁止写入 Ackem 创造者 Jason / 父亲 Canon；禁止虚构文中没有的信息。
-· 除非文中明确提到与 Ackem/AI 伴侣的互动，否则不要写 OUR_BOND。
-· 历史事件 → LIFE_STORY 或 episodes；稳定属性 → BASIC_PROFILE / FAMILY / TASTES 等。
-· MOOD/NOW 仅当文中明确「最近/目前/这几天」的短暂状态；否则用 TASTES/LIFE_STORY。
-· 人物：subject 用稳定键（如「用户母亲」「朋友-周然」「用户本人」）。
-· weight 0-3、confidence 0.0-1.0；导入来源默认 confidence 0.55-0.72，核心身份可到 0.8。
-· 生日/纪念日写入 anchors；多句叙事事件写入 episodes。
+鈹€鈹€ 鍘熷垯 鈹€鈹€
+路 鍏ㄦ枃涓讳綋鏄€岀敤鎴枫€嶆湰浜猴紙绗竴浜虹О銆屾垜銆嶆垨绗笁浜虹О銆屼粬/濂?鏋楁櫄銆嶅潎瑙嗕负鐢ㄦ埛锛夈€?
+路 浣跨敤涓庡璇?ingest 鐩稿悓鐨?taxonomy锛坉omain + subcategory锛夛紝瑙佷笅鏂瑰垪琛ㄣ€?
+路 绂佹鍐欏叆 Ackem 鍒涢€犺€?Jason / 鐖朵翰 Canon锛涚姝㈣櫄鏋勬枃涓病鏈夌殑淇℃伅銆?
+路 闄ら潪鏂囦腑鏄庣‘鎻愬埌涓?Ackem/AI 浼翠荆鐨勪簰鍔紝鍚﹀垯涓嶈鍐?OUR_BOND銆?
+路 鍘嗗彶浜嬩欢 鈫?LIFE_STORY 鎴?episodes锛涚ǔ瀹氬睘鎬?鈫?BASIC_PROFILE / FAMILY / TASTES 绛夈€?
+路 MOOD/NOW 浠呭綋鏂囦腑鏄庣‘銆屾渶杩?鐩墠/杩欏嚑澶┿€嶇殑鐭殏鐘舵€侊紱鍚﹀垯鐢?TASTES/LIFE_STORY銆?
+路 浜虹墿锛歴ubject 鐢ㄧǔ瀹氶敭锛堝銆岀敤鎴锋瘝浜层€嶃€屾湅鍙?鍛ㄧ劧銆嶃€岀敤鎴锋湰浜恒€嶏級銆?
+路 weight 0-3銆乧onfidence 0.0-1.0锛涘鍏ユ潵婧愰粯璁?confidence 0.55-0.72锛屾牳蹇冭韩浠藉彲鍒?0.8銆?
+路 鐢熸棩/绾康鏃ュ啓鍏?anchors锛涘鍙ュ彊浜嬩簨浠跺啓鍏?episodes銆?
 
-── 领域与子类 ──
+鈹€鈹€ 棰嗗煙涓庡瓙绫?鈹€鈹€
 ${DOMAIN_LIST}
 ${SUBCAT_LINES}
 
-── 输出 JSON（仅 JSON，无 markdown）──
+鈹€鈹€ 杈撳嚭 JSON锛堜粎 JSON锛屾棤 markdown锛夆攢鈹€
 {
   "facts": [
     {
       "domain": "IDENTITY",
       "subcategory": "BASIC_PROFILE",
-      "subject": "用户本人",
-      "summary": "29岁，上海浦东做产品经理",
+      "subject": "鐢ㄦ埛鏈汉",
+      "summary": "29宀侊紝涓婃捣娴︿笢鍋氫骇鍝佺粡鐞?,
       "weight": 2,
       "confidence": 0.7,
-      "triggers": ["产品经理","上海"],
-      "sourceQuote": "原文一句≤80字"
+      "triggers": ["浜у搧缁忕悊","涓婃捣"],
+      "sourceQuote": "鍘熸枃涓€鍙モ墹80瀛?
     }
   ],
   "episodes": [
     {
-      "summary": "2021年秋与前任分手，此后两年未恋爱",
+      "summary": "2021骞寸涓庡墠浠诲垎鎵嬶紝姝ゅ悗涓ゅ勾鏈亱鐖?,
       "emotionalIntensity": 0.6,
       "dominantEmotion": "melancholy",
-      "keywords": ["分手","2021"],
+      "keywords": ["鍒嗘墜","2021"],
       "timeRange": "2021-09"
     }
   ],
   "anchors": [
     {
       "type": "birthday",
-      "label": "用户生日",
+      "label": "鐢ㄦ埛鐢熸棩",
       "monthDay": "03-15",
       "year": 1997,
-      "summary": "1997年3月15日出生"
+      "summary": "1997骞?鏈?5鏃ュ嚭鐢?
     }
   ]
 }
 
-facts 最多 ${DOCUMENT_IMPORT_MAX_FACTS_PER_CHUNK} 条；episodes 最多 ${DOCUMENT_IMPORT_MAX_EPISODES_PER_CHUNK} 条；anchors 最多 ${DOCUMENT_IMPORT_MAX_ANCHORS_PER_CHUNK} 条。`
+facts 鏈€澶?${DOCUMENT_IMPORT_MAX_FACTS_PER_CHUNK} 鏉★紱episodes 鏈€澶?${DOCUMENT_IMPORT_MAX_EPISODES_PER_CHUNK} 鏉★紱anchors 鏈€澶?${DOCUMENT_IMPORT_MAX_ANCHORS_PER_CHUNK} 鏉°€俙
 
 export function buildDocumentImportUserMsg(args: {
   sourceFile: string
@@ -71,10 +71,10 @@ export function buildDocumentImportUserMsg(args: {
   text: string
 }): string {
   return [
-    `来源文件：${args.sourceFile}`,
-    `片段：${args.chunkIndex + 1}/${args.chunkTotal}`,
+    `鏉ユ簮鏂囦欢锛?{args.sourceFile}`,
+    `鐗囨锛?{args.chunkIndex + 1}/${args.chunkTotal}`,
     '',
-    '【用户提供的档案正文】',
+    '銆愮敤鎴锋彁渚涚殑妗ｆ姝ｆ枃銆?,
     args.text.slice(0, DOCUMENT_IMPORT_MAX_CHARS),
   ].join('\n')
 }

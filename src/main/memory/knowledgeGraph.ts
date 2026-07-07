@@ -1,12 +1,12 @@
-// [knowledgeGraph] — 轻量知识图谱
-// 职责：实体-关系-实体三元组存储、实体索引、一跳查询
-// 对标 LangGraph knowledge graph memory
-// 引用：../engine/types, ../engine/ackemParams
+﻿// [knowledgeGraph] 鈥?杞婚噺鐭ヨ瘑鍥捐氨
+// 鑱岃矗锛氬疄浣?鍏崇郴-瀹炰綋涓夊厓缁勫瓨鍌ㄣ€佸疄浣撶储寮曘€佷竴璺虫煡璇?
+// 瀵规爣 LangGraph knowledge graph memory
+// 寮曠敤锛?./engine/types, ../engine/AckemParams
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { randomUUID } from 'node:crypto'
-import { KG_CHAR_BUDGET, KG_CJK_CHAR_MATCH_WEIGHT, KG_ENTITY_MATCH_WEIGHT, KG_KEYWORD_MATCH_WEIGHT, KG_MIN_SCORE, KG_QUERY_MAX_TRIPLES } from '../engine/ackemParams'
+import { KG_CHAR_BUDGET, KG_CJK_CHAR_MATCH_WEIGHT, KG_ENTITY_MATCH_WEIGHT, KG_KEYWORD_MATCH_WEIGHT, KG_MIN_SCORE, KG_QUERY_MAX_TRIPLES } from '../engine/AckemParams'
 import {
   countTriplesInDb,
   loadTriplesFromDb,
@@ -27,7 +27,7 @@ export class KnowledgeGraph {
   private triples: Triple[] = []
   private entityIndex = new Map<string, Set<number>>()
   private readonly path: string
-  /** Phase 3: DB 可用时走增量写入 */
+  /** Phase 3: DB 鍙敤鏃惰蛋澧為噺鍐欏叆 */
   private useDb = false
 
   constructor(filePath: string) {
@@ -63,7 +63,7 @@ export class KnowledgeGraph {
     }
   }
 
-  /** Phase 3: 仅用于 JSON 回退模式 */
+  /** Phase 3: 浠呯敤浜?JSON 鍥為€€妯″紡 */
   private persist(): void {
     if (this.useDb) return
     mkdirSync(dirname(this.path), { recursive: true })
@@ -137,7 +137,7 @@ export class KnowledgeGraph {
     return this.findByEntity(entity)
   }
 
-  /** 按实体名查找所有关联三元组 */
+  /** 鎸夊疄浣撳悕鏌ユ壘鎵€鏈夊叧鑱斾笁鍏冪粍 */
   findByEntity(entity: string): Triple[] {
     const key = entity.toLowerCase()
     const indices = this.entityIndex.get(key)
@@ -145,7 +145,7 @@ export class KnowledgeGraph {
     return [...indices].map(i => this.triples[i]).filter(Boolean)
   }
 
-  /** 按查询文本做关键词匹配，返回相关三元组 */
+  /** 鎸夋煡璇㈡枃鏈仛鍏抽敭璇嶅尮閰嶏紝杩斿洖鐩稿叧涓夊厓缁?*/
   query(text: string, maxResults: number = KG_QUERY_MAX_TRIPLES): Triple[] {
     const queryLower = text.toLowerCase()
     const scored = this.triples.map(t => {
@@ -156,7 +156,7 @@ export class KnowledgeGraph {
         if (queryLower.includes(entity)) score += KG_ENTITY_MATCH_WEIGHT
       }
       // Partial keyword match (>= 2 chars) or single CJK char match
-      const qWords = queryLower.split(/[\s,，。！？、；]+/).filter(w => w.length >= 2)
+      const qWords = queryLower.split(/[\s,锛屻€傦紒锛熴€侊紱]+/).filter(w => w.length >= 2)
       for (const w of qWords) {
         if (text.includes(w)) score += KG_KEYWORD_MATCH_WEIGHT
       }
@@ -179,10 +179,10 @@ export class KnowledgeGraph {
   buildContextBlock(text: string, charBudget: number = KG_CHAR_BUDGET): string {
     const hits = this.query(text)
     if (hits.length === 0) return ''
-    const lines = ['【知识图谱】']
+    const lines = ['銆愮煡璇嗗浘璋便€?]
     let chars = 0
     for (const t of hits) {
-      const line = `- ${t.subject} —${t.predicate}→ ${t.object}`
+      const line = `- ${t.subject} 鈥?{t.predicate}鈫?${t.object}`
       if (chars + line.length > charBudget) break
       lines.push(line)
       chars += line.length

@@ -1,6 +1,6 @@
-import type { DesktopAgentAction } from './desktopAgent'
+﻿import type { DesktopAgentAction } from './desktopAgent'
 
-/** 单步验收规则（文件系统 + 审计日志） */
+/** 鍗曟楠屾敹瑙勫垯锛堟枃浠剁郴缁?+ 瀹¤鏃ュ織锛?*/
 export type TaskPlanVerification =
   | { type: 'path_exists'; path: string }
   | { type: 'path_absent'; path: string }
@@ -34,15 +34,15 @@ export type TaskPlanPhase =
   | 'incomplete'
   | 'done'
 
-/** 多步骤任务计划 — Agent 闭环状态机 */
+/** 澶氭楠や换鍔¤鍒?鈥?Agent 闂幆鐘舵€佹満 */
 export type DesktopAgentTaskPlan = {
   id: string
   sourceText: string
-  /** LLM 归纳的用户目标（展示用） */
+  /** LLM 褰掔撼鐨勭敤鎴风洰鏍囷紙灞曠ず鐢級 */
   goalSummary: string
   steps: TaskPlanStep[]
   createdAt: string
-  /** 规划来源 */
+  /** 瑙勫垝鏉ユ簮 */
   planner: 'llm' | 'regex'
 }
 
@@ -54,7 +54,7 @@ export type TaskPlanProgress = {
   allPassed: boolean
 }
 
-/** UI / IPC 进度（对标 Investigation 进度条） */
+/** UI / IPC 杩涘害锛堝鏍?Investigation 杩涘害鏉★級 */
 export type TaskPlanProgressPayload = {
   phase: TaskPlanPhase
   goalSummary: string
@@ -66,17 +66,17 @@ export type TaskPlanProgressPayload = {
 }
 
 const ACTION_VERBS =
-  /建|写|创建|写入|新建|打开|删|删除|移除|复制|移动|下载|导入|整理|清理|列出|搜索|读取|看看/u
+  /寤簗鍐檤鍒涘缓|鍐欏叆|鏂板缓|鎵撳紑|鍒爘鍒犻櫎|绉婚櫎|澶嶅埗|绉诲姩|涓嬭浇|瀵煎叆|鏁寸悊|娓呯悊|鍒楀嚭|鎼滅储|璇诲彇|鐪嬬湅/u
 
 export function isMultiStepDesktopAgentTask(text: string): boolean {
   const t = text.trim()
   if (!t) return false
-  if (/(然后|再|最后|接着|，并|里面|之后|并且)/u.test(t)) return true
-  const verbs = t.match(/建|写|打开|删|创建|写入|新建|删除|复制|移动/gu)
+  if (/(鐒跺悗|鍐峾鏈€鍚巪鎺ョ潃|锛屽苟|閲岄潰|涔嬪悗|骞朵笖)/u.test(t)) return true
+  const verbs = t.match(/寤簗鍐檤鎵撳紑|鍒爘鍒涘缓|鍐欏叆|鏂板缓|鍒犻櫎|澶嶅埗|绉诲姩/gu)
   return (verbs?.length ?? 0) >= 2
 }
 
-/** 是否像「要在电脑上动手」的任务（值得走 TaskPlan） */
+/** 鏄惁鍍忋€岃鍦ㄧ數鑴戜笂鍔ㄦ墜銆嶇殑浠诲姟锛堝€煎緱璧?TaskPlan锛?*/
 export function isActionableDesktopAgentTask(text: string): boolean {
   const t = text.trim()
   if (!t) return false
@@ -99,6 +99,6 @@ export const DESKTOP_AGENT_TASK_ACTIONS: DesktopAgentAction[] = [
   'copy_path',
   'move_path',
   'delete_path',
-  'import_to_ackem',
+  'import_to_Ackem',
   'download_file'
 ]

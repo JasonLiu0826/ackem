@@ -1,4 +1,4 @@
-import { userRefersToAckemSelf } from './ackemProductIdentity'
+﻿import { userRefersToAckemSelf } from './AckemProductIdentity'
 import { createLlmJsonClient } from '../llmClient'
 import {
   defaultPaperCardTitle,
@@ -8,13 +8,13 @@ import {
 } from '../../shared/paperCardTitle'
 
 const KIND_LABEL: Record<PaperCardKind, string> = {
-  plan: '计划书',
-  knowledge: '知识整理',
-  search: '检索摘录',
-  table: '对比表'
+  plan: '璁″垝涔?,
+  knowledge: '鐭ヨ瘑鏁寸悊',
+  search: '妫€绱㈡憳褰?,
+  table: '瀵规瘮琛?
 }
 
-/** 解析纸面卡 UI 展示标题：正文标题 > 规则主题 > LLM 推断 > 类型默认 */
+/** 瑙ｆ瀽绾搁潰鍗?UI 灞曠ず鏍囬锛氭鏂囨爣棰?> 瑙勫垯涓婚 > LLM 鎺ㄦ柇 > 绫诲瀷榛樿 */
 export async function resolvePaperCardDisplayTitle(
   settings: AppSettings,
   kind: PaperCardKind,
@@ -36,17 +36,17 @@ export async function resolvePaperCardDisplayTitle(
           {
             role: 'system',
             content:
-              `你是标题助手。为这份「${KIND_LABEL[kind]}」起一个 **6～16 字**的中文主题名。\n` +
-              '只输出标题本身：不要引号、不要问号、不要复述用户抱怨或整句原话、不要「计划书/整理卡」等类型词。' +
+              `浣犳槸鏍囬鍔╂墜銆備负杩欎唤銆?{KIND_LABEL[kind]}銆嶈捣涓€涓?**6锝?6 瀛?*鐨勪腑鏂囦富棰樺悕銆俓n` +
+              '鍙緭鍑烘爣棰樻湰韬細涓嶈寮曞彿銆佷笉瑕侀棶鍙枫€佷笉瑕佸杩扮敤鎴锋姳鎬ㄦ垨鏁村彞鍘熻瘽銆佷笉瑕併€岃鍒掍功/鏁寸悊鍗°€嶇瓑绫诲瀷璇嶃€? +
               (userRefersToAckemSelf(userQuestion)
-                ? '\n用户在与 Ackem（你）对比时：标题须体现 Ackem，**禁止**用 DeepSeek/GPT/Claude 等模型名代替 Ackem。'
+                ? '\n鐢ㄦ埛鍦ㄤ笌 Ackem锛堜綘锛夊姣旀椂锛氭爣棰橀』浣撶幇 Ackem锛?*绂佹**鐢?DeepSeek/GPT/Claude 绛夋ā鍨嬪悕浠ｆ浛 Ackem銆?
                 : '')
           },
           {
             role: 'user',
             content:
-              `用户原话：${userQuestion.slice(0, 240)}\n\n` +
-              `正文开头：\n${cardBody.slice(0, 420)}`
+              `鐢ㄦ埛鍘熻瘽锛?{userQuestion.slice(0, 240)}\n\n` +
+              `姝ｆ枃寮€澶达細\n${cardBody.slice(0, 420)}`
           }
         ],
         temperature: 0.25,
@@ -55,8 +55,8 @@ export async function resolvePaperCardDisplayTitle(
     ).trim()
 
     const cleaned = text
-      .replace(/^["「『]|["」』]$/gu, '')
-      .replace(/[。！？?!.…]+$/u, '')
+      .replace(/^["銆屻€嶿|["銆嶃€廬$/gu, '')
+      .replace(/[銆傦紒锛?!.鈥+$/u, '')
       .trim()
       .slice(0, 28)
 

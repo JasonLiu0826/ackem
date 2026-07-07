@@ -1,4 +1,4 @@
-import { loadSettings } from '../../settings'
+﻿import { loadSettings } from '../../settings'
 import { loadState, saveState } from '../../engine/state-persistence'
 import { createLogger } from '../../logger'
 import {

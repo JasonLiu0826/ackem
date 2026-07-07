@@ -1,4 +1,4 @@
-/** 电脑助手（实验）— 主进程与渲染进程共享类型 */
+﻿/** 鐢佃剳鍔╂墜锛堝疄楠岋級鈥?涓昏繘绋嬩笌娓叉煋杩涚▼鍏变韩绫诲瀷 */
 
 import { isDesktopAgentPipelineOpen } from './desktopAgentFeature'
 
@@ -23,7 +23,7 @@ export type DesktopAgentAction =
   | 'download_file'
   | 'download_and_install'
   | 'run_installer'
-  | 'import_to_ackem'
+  | 'import_to_Ackem'
   | 'focus_app'
 
 export type UseComputerArgs = {
@@ -50,9 +50,9 @@ export type DesktopAgentConfirmRequest = {
   sensitiveWarning?: string
   pathMissing?: boolean
   hardBlockReason?: string
-  /** 关联 TaskPlan，用于「本任务内删除均允许」 */
+  /** 鍏宠仈 TaskPlan锛岀敤浜庛€屾湰浠诲姟鍐呭垹闄ゅ潎鍏佽銆?*/
   taskPlanId?: string
-  /** 是否展示「本任务内删除均允许」按钮 */
+  /** 鏄惁灞曠ず銆屾湰浠诲姟鍐呭垹闄ゅ潎鍏佽銆嶆寜閽?*/
   showTaskDeleteBatch?: boolean
 }
 

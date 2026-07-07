@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { t } from '../lib/i18n'
 import { useAppStore } from '../store/appStore'
 import { McPage } from './McPage'
@@ -16,11 +16,11 @@ type GameProviderManifest = {
 }
 
 const GAME_ICONS: Record<string, string> = {
-  minecraft: '⛏️'
+  minecraft: '鉀忥笍'
 }
 
 function gameIcon(gameId: string): string {
-  return GAME_ICONS[gameId] ?? '🎮'
+  return GAME_ICONS[gameId] ?? '馃幃'
 }
 
 function GameListPage(props: {
@@ -34,18 +34,18 @@ function GameListPage(props: {
   return (
     <div className="h-full overflow-y-auto bg-surface">
       <header className="glass-panel border-b border-surface-inset/60 px-6 py-4">
-        <h1 className="font-display text-base font-semibold text-ink">游戏陪伴</h1>
+        <h1 className="font-display text-base font-semibold text-ink">娓告垙闄即</h1>
         <p className="mt-0.5 text-xs text-ink-muted">
-          选择一款游戏，配置 AI 伴侣如何进入游戏、感知事件并与你互动。
+          閫夋嫨涓€娆炬父鎴忥紝閰嶇疆 AI 浼翠荆濡備綍杩涘叆娓告垙銆佹劅鐭ヤ簨浠跺苟涓庝綘浜掑姩銆?
         </p>
       </header>
 
       <div className="mx-auto max-w-3xl px-6 py-6">
         {loading ? (
-          <p className="text-sm text-ink-muted">正在加载游戏列表…</p>
+          <p className="text-sm text-ink-muted">姝ｅ湪鍔犺浇娓告垙鍒楄〃鈥?/p>
         ) : games.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-surface-inset bg-surface-raised p-8 text-center">
-            <p className="text-sm text-ink-muted">暂无可用游戏模式，请检查扩展是否已加载。</p>
+            <p className="text-sm text-ink-muted">鏆傛棤鍙敤娓告垙妯″紡锛岃妫€鏌ユ墿灞曟槸鍚﹀凡鍔犺浇銆?/p>
           </div>
         ) : (
           <>
@@ -58,7 +58,7 @@ function GameListPage(props: {
                   version: '1.0',
                   status: 'installed',
                   readme: game.recommendedPersonalityTags?.length
-                    ? `推荐人格标签：${game.recommendedPersonalityTags.join('、')}`
+                    ? `鎺ㄨ崘浜烘牸鏍囩锛?{game.recommendedPersonalityTags.join('銆?)}`
                     : undefined
                 }
                 return (
@@ -73,7 +73,7 @@ function GameListPage(props: {
                       onClick={() => onSelect(game.gameId)}
                       className="w-full text-center text-xs text-accent hover:underline"
                     >
-                      进入设置 →
+                      杩涘叆璁剧疆 鈫?
                     </button>
                   </div>
                 )
@@ -104,10 +104,10 @@ function UnknownGamePage(props: { gameId: string; onBack: () => void }): JSX.Ele
           onClick={props.onBack}
           className="mb-2 text-xs text-ink-muted hover:text-ink transition"
         >
-          ← 返回游戏列表
+          鈫?杩斿洖娓告垙鍒楄〃
         </button>
         <h1 className="text-base font-semibold text-ink">{props.gameId}</h1>
-        <p className="mt-0.5 text-xs text-ink-muted">该游戏的设置页面尚未接入。</p>
+        <p className="mt-0.5 text-xs text-ink-muted">璇ユ父鎴忕殑璁剧疆椤甸潰灏氭湭鎺ュ叆銆?/p>
       </header>
     </div>
   )
@@ -132,7 +132,7 @@ export function GameModePage(): JSX.Element {
     let cancelled = false
     void (async () => {
       try {
-        const list = (await window.ackem.ext.gamemode.list()) as GameProviderManifest[]
+        const list = (await window.Ackem.ext.gamemode.list()) as GameProviderManifest[]
         if (!cancelled) setGames(list)
       } catch {
         if (!cancelled) setGames([])

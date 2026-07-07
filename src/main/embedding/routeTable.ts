@@ -1,12 +1,12 @@
-/**
- * [embedding/routeTable] — Embedding 路由表
+﻿/**
+ * [embedding/routeTable] 鈥?Embedding 璺敱琛?
  *
- * 职责：
- *   1. 定义官方扩展的 exampleQueries
- *   2. 构建 Embedding 路由索引（启动时批量计算）
- *   3. 查询匹配（用户消息 vs 路由表）
+ * 鑱岃矗锛?
+ *   1. 瀹氫箟瀹樻柟鎵╁睍鐨?exampleQueries
+ *   2. 鏋勫缓 Embedding 璺敱绱㈠紩锛堝惎鍔ㄦ椂鎵归噺璁＄畻锛?
+ *   3. 鏌ヨ鍖归厤锛堢敤鎴锋秷鎭?vs 璺敱琛級
  *
- * 设计文档：docs/system/Embedding意图路由设计_6_8_已实现.md
+ * 璁捐鏂囨。锛歞ocs/system/Embedding鎰忓浘璺敱璁捐_6_8_宸插疄鐜?md
  */
 
 import type { EmbeddingProvider } from '../memory/embedding'
@@ -19,115 +19,115 @@ import {
   type RouteMatchResult,
 } from './types'
 
-// ═══════════════════════════════════════════════════════════
-// 官方扩展路由表（硬编码）
-// ═══════════════════════════════════════════════════════════
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+// 瀹樻柟鎵╁睍璺敱琛紙纭紪鐮侊級
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
 
 /**
- * 官方扩展的 exampleQueries。
- * 每个扩展 5-10 条用户实际会说的话。
- * 启动时自动计算 Embedding 并加入路由索引。
+ * 瀹樻柟鎵╁睍鐨?exampleQueries銆?
+ * 姣忎釜鎵╁睍 5-10 鏉＄敤鎴峰疄闄呬細璇寸殑璇濄€?
+ * 鍚姩鏃惰嚜鍔ㄨ绠?Embedding 骞跺姞鍏ヨ矾鐢辩储寮曘€?
  */
 export const BUILTIN_ROUTE_TABLE: Record<string, string[]> = {
-  // 天气
-  'ackem/weather-sense@0.0.1': [
-    '帮我查天气', '明天会下雨吗', '需要带伞吗',
-    '杭州天气怎么样', '今天冷不冷', '气温多少度',
-    '今天会不会下雨', '出门需要带伞吗',
+  // 澶╂皵
+  'Ackem/weather-sense@0.0.1': [
+    '甯垜鏌ュぉ姘?, '鏄庡ぉ浼氫笅闆ㄥ悧', '闇€瑕佸甫浼炲悧',
+    '鏉窞澶╂皵鎬庝箞鏍?, '浠婂ぉ鍐蜂笉鍐?, '姘旀俯澶氬皯搴?,
+    '浠婂ぉ浼氫笉浼氫笅闆?, '鍑洪棬闇€瑕佸甫浼炲悧',
   ],
 
-  // 搜索
-  'ackem/web-search@1.0.0': [
-    '帮我搜一下天气', '查一下明天天气',
-    '帮我查一下这个什么意思', '搜索一下这个词',
-    '帮我找找相关资料', '这个东西是什么',
-    '帮我上网查查', '搜一下最近有什么新闻',
+  // 鎼滅储
+  'Ackem/web-search@1.0.0': [
+    '甯垜鎼滀竴涓嬪ぉ姘?, '鏌ヤ竴涓嬫槑澶╁ぉ姘?,
+    '甯垜鏌ヤ竴涓嬭繖涓粈涔堟剰鎬?, '鎼滅储涓€涓嬭繖涓瘝',
+    '甯垜鎵炬壘鐩稿叧璧勬枡', '杩欎釜涓滆タ鏄粈涔?,
+    '甯垜涓婄綉鏌ユ煡', '鎼滀竴涓嬫渶杩戞湁浠€涔堟柊闂?,
   ],
 
-  // 提醒
-  'ackem/sedentary-reminder@0.0.1': [
-    '坐得腰疼', '坐太久了', '该站起来了吧',
-    '起来活动一下', '脖子好酸', '腰不舒服',
-    '坐久了不舒服', '该活动活动了',
+  // 鎻愰啋
+  'Ackem/sedentary-reminder@0.0.1': [
+    '鍧愬緱鑵扮柤', '鍧愬お涔呬簡', '璇ョ珯璧锋潵浜嗗惂',
+    '璧锋潵娲诲姩涓€涓?, '鑴栧瓙濂介吀', '鑵颁笉鑸掓湇',
+    '鍧愪箙浜嗕笉鑸掓湇', '璇ユ椿鍔ㄦ椿鍔ㄤ簡',
   ],
-  'ackem/drink-water-reminder@0.0.1': [
-    '我想喝水', '该喝水了', '好渴',
-    '补充水分', '倒杯水', '提醒我喝水',
-    '口渴了',
+  'Ackem/drink-water-reminder@0.0.1': [
+    '鎴戞兂鍠濇按', '璇ュ枬姘翠簡', '濂芥复',
+    '琛ュ厖姘村垎', '鍊掓澂姘?, '鎻愰啋鎴戝枬姘?,
+    '鍙ｆ复浜?,
   ],
-  'ackem/late-night-reminder@0.0.1': [
-    '熬夜好伤身', '该睡觉了', '怎么这么晚了',
-    '已经是凌晨了', '该休息了',
-  ],
-
-  // 陪伴
-  'ackem/emergency-companion@1.0.0': [
-    '我心情不好', '好难受', '想哭',
-    '我好难过', '心里不舒服', '感觉撑不下去了',
-    '想找人说说话', '今天特别难过',
+  'Ackem/late-night-reminder@0.0.1': [
+    '鐔濂戒激韬?, '璇ョ潯瑙変簡', '鎬庝箞杩欎箞鏅氫簡',
+    '宸茬粡鏄噷鏅ㄤ簡', '璇ヤ紤鎭簡',
   ],
 
-  // 表格
-  'ackem/markdown-table@1.0.0': [
-    '帮我做个表格', '整理成表格形式', '做个对比表',
-    '帮我列个清单', '做个对比', '列个表',
+  // 闄即
+  'Ackem/emergency-companion@1.0.0': [
+    '鎴戝績鎯呬笉濂?, '濂介毦鍙?, '鎯冲摥',
+    '鎴戝ソ闅捐繃', '蹇冮噷涓嶈垝鏈?, '鎰熻鎾戜笉涓嬪幓浜?,
+    '鎯虫壘浜鸿璇磋瘽', '浠婂ぉ鐗瑰埆闅捐繃',
   ],
 
-  // 日程提醒
-  'ackem/light-schedule@0.0.1': [
-    '提醒我下午3点开会', '明天9点叫我', '设个闹钟',
-    '帮我记一下日程', '下午有个会别让我忘了',
-    '帮我设置提醒', '记一下这个时间',
+  // 琛ㄦ牸
+  'Ackem/markdown-table@1.0.0': [
+    '甯垜鍋氫釜琛ㄦ牸', '鏁寸悊鎴愯〃鏍煎舰寮?, '鍋氫釜瀵规瘮琛?,
+    '甯垜鍒椾釜娓呭崟', '鍋氫釜瀵规瘮', '鍒椾釜琛?,
   ],
 
-  // 日记
-  'ackem/diary-auto@0.1.0': [
-    '写日记', '今天发生了什么', '帮我记录今天',
-    '今天的日记', '帮我写日记',
+  // 鏃ョ▼鎻愰啋
+  'Ackem/light-schedule@0.0.1': [
+    '鎻愰啋鎴戜笅鍗?鐐瑰紑浼?, '鏄庡ぉ9鐐瑰彨鎴?, '璁句釜闂归挓',
+    '甯垜璁颁竴涓嬫棩绋?, '涓嬪崍鏈変釜浼氬埆璁╂垜蹇樹簡',
+    '甯垜璁剧疆鎻愰啋', '璁颁竴涓嬭繖涓椂闂?,
   ],
 
-  // 计划书
-  'ackem/plan-document@1.0.0': [
-    '做个计划', '帮我规划一下', '排个日程',
-    '帮我安排一下行程', '做一份计划书',
-    '帮我规划旅行', '接下来该做什么',
+  // 鏃ヨ
+  'Ackem/diary-auto@0.1.0': [
+    '鍐欐棩璁?, '浠婂ぉ鍙戠敓浜嗕粈涔?, '甯垜璁板綍浠婂ぉ',
+    '浠婂ぉ鐨勬棩璁?, '甯垜鍐欐棩璁?,
   ],
 
-  // 知识呈现
-  'ackem/knowledge-presentation@1.0.0': [
-    '这是什么', '解释一下', '帮我科普一下',
-    '介绍一下', '我想了解', '量子计算是什么',
+  // 璁″垝涔?
+  'Ackem/plan-document@1.0.0': [
+    '鍋氫釜璁″垝', '甯垜瑙勫垝涓€涓?, '鎺掍釜鏃ョ▼',
+    '甯垜瀹夋帓涓€涓嬭绋?, '鍋氫竴浠借鍒掍功',
+    '甯垜瑙勫垝鏃呰', '鎺ヤ笅鏉ヨ鍋氫粈涔?,
   ],
 
-  // 趣味档案
-  'ackem/fun-profile@0.0.1': [
-    '我今天是什么状态', '给我做个分析', '我最近怎么样',
-    '看看我的情绪', '分析一下我',
+  // 鐭ヨ瘑鍛堢幇
+  'Ackem/knowledge-presentation@1.0.0': [
+    '杩欐槸浠€涔?, '瑙ｉ噴涓€涓?, '甯垜绉戞櫘涓€涓?,
+    '浠嬬粛涓€涓?, '鎴戞兂浜嗚В', '閲忓瓙璁＄畻鏄粈涔?,
   ],
 
-  // 桌面陪伴
-  'ackem/desktop-companion@0.0.1': [
-    '打开桌面陪伴', '显示桌面', '隐藏陪伴',
-    '开启桌面模式',
+  // 瓒ｅ懗妗ｆ
+  'Ackem/fun-profile@0.0.1': [
+    '鎴戜粖澶╂槸浠€涔堢姸鎬?, '缁欐垜鍋氫釜鍒嗘瀽', '鎴戞渶杩戞€庝箞鏍?,
+    '鐪嬬湅鎴戠殑鎯呯华', '鍒嗘瀽涓€涓嬫垜',
+  ],
+
+  // 妗岄潰闄即
+  'Ackem/desktop-companion@0.0.1': [
+    '鎵撳紑妗岄潰闄即', '鏄剧ず妗岄潰', '闅愯棌闄即',
+    '寮€鍚闈㈡ā寮?,
   ],
 }
 
-// ═══════════════════════════════════════════════════════════
-// 路由表构建
-// ═══════════════════════════════════════════════════════════
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+// 璺敱琛ㄦ瀯寤?
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
 
 /**
- * 启动时调用：构建 Embedding 路由索引。
+ * 鍚姩鏃惰皟鐢細鏋勫缓 Embedding 璺敱绱㈠紩銆?
  *
- * @param provider EmbeddingProvider 实例
- * @param extraEntries 额外的路由条目（uplugin/uskills/自动学习）
- * @returns 路由索引
+ * @param provider EmbeddingProvider 瀹炰緥
+ * @param extraEntries 棰濆鐨勮矾鐢辨潯鐩紙uplugin/uskills/鑷姩瀛︿範锛?
+ * @returns 璺敱绱㈠紩
  */
 export async function buildRouteIndex(
   provider: EmbeddingProvider,
   extraEntries: Array<{ extensionId: string; query: string }> = []
 ): Promise<RouteIndex> {
-  // 收集所有路由条目
+  // 鏀堕泦鎵€鏈夎矾鐢辨潯鐩?
   const allQueries: Array<{ extId: string; query: string }> = []
 
   for (const [extId, queries] of Object.entries(BUILTIN_ROUTE_TABLE)) {
@@ -139,7 +139,7 @@ export async function buildRouteIndex(
     allQueries.push({ extId: e.extensionId, query: e.query })
   }
 
-  // 去重（同一 query 可能对应多个扩展）
+  // 鍘婚噸锛堝悓涓€ query 鍙兘瀵瑰簲澶氫釜鎵╁睍锛?
   const seen = new Set<string>()
   const unique = allQueries.filter((q) => {
     const key = `${q.extId}||${q.query}`
@@ -148,10 +148,10 @@ export async function buildRouteIndex(
     return true
   })
 
-  // 批量计算 Embedding
+  // 鎵归噺璁＄畻 Embedding
   const embeddings = await provider.embedBatch(unique.map((q) => q.query))
 
-  // 组装索引
+  // 缁勮绱㈠紩
   const entries: RouteIndexEntry[] = unique.map((q, i) => ({
     extensionId: q.extId,
     query: q.query,
@@ -162,7 +162,7 @@ export async function buildRouteIndex(
 }
 
 /**
- * 新扩展注册时：增量更新路由索引（只算新 queries 的 Embedding）。
+ * 鏂版墿灞曟敞鍐屾椂锛氬閲忔洿鏂拌矾鐢辩储寮曪紙鍙畻鏂?queries 鐨?Embedding锛夈€?
  */
 export async function addToRouteIndex(
   index: RouteIndex,
@@ -182,17 +182,17 @@ export async function addToRouteIndex(
   }
 }
 
-// ═══════════════════════════════════════════════════════════
-// 路由匹配
-// ═══════════════════════════════════════════════════════════
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+// 璺敱鍖归厤
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
 
 /**
- * 每条消息调用：Embedding 匹配路由表。
+ * 姣忔潯娑堟伅璋冪敤锛欵mbedding 鍖归厤璺敱琛ㄣ€?
  *
- * @param queryEmbed 用户消息的 Embedding 向量
- * @param index 路由索引
- * @param topK 返回 top-K 匹配结果
- * @returns 排序后的匹配结果列表
+ * @param queryEmbed 鐢ㄦ埛娑堟伅鐨?Embedding 鍚戦噺
+ * @param index 璺敱绱㈠紩
+ * @param topK 杩斿洖 top-K 鍖归厤缁撴灉
+ * @returns 鎺掑簭鍚庣殑鍖归厤缁撴灉鍒楄〃
  */
 export function matchAgainstRouteTable(
   queryEmbed: number[],
@@ -210,9 +210,9 @@ export function matchAgainstRouteTable(
     .slice(0, topK)
 }
 
-// ═══════════════════════════════════════════════════════════
-// 规则检查（第二层）
-// ═══════════════════════════════════════════════════════════
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+// 瑙勫垯妫€鏌ワ紙绗簩灞傦級
+// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
 
 export type RuleResult = {
   action: 'allow' | 'block' | 'uncertain'
@@ -220,25 +220,25 @@ export type RuleResult = {
 }
 
 /**
- * 第二层：中置信时的规则检查。
+ * 绗簩灞傦細涓疆淇℃椂鐨勮鍒欐鏌ャ€?
  *
- * @param message 用户消息
- * @returns 规则判断结果
+ * @param message 鐢ㄦ埛娑堟伅
+ * @returns 瑙勫垯鍒ゆ柇缁撴灉
  */
 export function applyQuickRules(message: string): RuleResult {
-  // 规则 1：否定词 → 不触发
-  if (/不要|别|不想|停止|取消|关闭|算了/.test(message)) {
+  // 瑙勫垯 1锛氬惁瀹氳瘝 鈫?涓嶈Е鍙?
+  if (/涓嶈|鍒珅涓嶆兂|鍋滄|鍙栨秷|鍏抽棴|绠椾簡/.test(message)) {
     return { action: 'block', reason: 'negation_detected' }
   }
 
-  // 规则 2：疑问句（不是请求）→ 不触发
-  if (/好不好|是什么|怎么样|可以吗/.test(message)
-      && !/打开|启动|帮我|我要|请/.test(message)) {
+  // 瑙勫垯 2锛氱枒闂彞锛堜笉鏄姹傦級鈫?涓嶈Е鍙?
+  if (/濂戒笉濂絴鏄粈涔坾鎬庝箞鏍穦鍙互鍚?.test(message)
+      && !/鎵撳紑|鍚姩|甯垜|鎴戣|璇?.test(message)) {
     return { action: 'block', reason: 'question_not_request' }
   }
 
-  // 规则 3：时间相关 + 非 dispatched 扩展 → 不触发
-  if (/提醒我|几点|到时候/.test(message)) {
+  // 瑙勫垯 3锛氭椂闂寸浉鍏?+ 闈?dispatched 鎵╁睍 鈫?涓嶈Е鍙?
+  if (/鎻愰啋鎴憒鍑犵偣|鍒版椂鍊?.test(message)) {
     return { action: 'block', reason: 'schedule_no_dispatched' }
   }
 

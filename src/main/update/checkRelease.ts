@@ -1,4 +1,4 @@
-import type { ReleaseChannelInfo, UpdateCheckResult } from '../../shared/updateTypes'
+﻿import type { ReleaseChannelInfo, UpdateCheckResult } from '../../shared/updateTypes'
 import { compareSemver, isNewerVersion, parseSemver } from '../../shared/semverCompare'
 import { app } from 'electron'
 import {

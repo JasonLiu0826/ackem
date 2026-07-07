@@ -1,36 +1,36 @@
-// [prompt/memory-consolidation] — 整合反思 prompt（v1.0 设计文档）
-// 迁移自 memory/consolidator.ts
+﻿// [prompt/memory-consolidation] 鈥?鏁村悎鍙嶆€?prompt锛坴1.0 璁捐鏂囨。锛?
+// 杩佺Щ鑷?memory/consolidator.ts
 
-import { CONSOLIDATION_MAX_INSIGHTS } from '../engine/ackemParams'
+import { CONSOLIDATION_MAX_INSIGHTS } from '../engine/AckemParams'
 import { getLocale } from '../i18n'
 import { CONSOLIDATION_SYS_EN, buildConsolidationUserMsgEn } from './prompt-i18n'
 
 export const CONSOLIDATION_TEMPERATURE = 0.3
 
-export const CONSOLIDATION_SYS_ZH = `你审视一组关于用户的近期记忆事实，合成高层洞察和事实间关联。
+export const CONSOLIDATION_SYS_ZH = `浣犲瑙嗕竴缁勫叧浜庣敤鎴风殑杩戞湡璁板繂浜嬪疄锛屽悎鎴愰珮灞傛礊瀵熷拰浜嬪疄闂村叧鑱斻€?
 
-── 输入限制 ──
-- 只处理最近 50 条事实（或 weight≥1 的事实前 100 条）
-- 输入事实按时间倒序排列，每条带序号
+鈹€鈹€ 杈撳叆闄愬埗 鈹€鈹€
+- 鍙鐞嗘渶杩?50 鏉′簨瀹烇紙鎴?weight鈮? 鐨勪簨瀹炲墠 100 鏉★級
+- 杈撳叆浜嬪疄鎸夋椂闂村€掑簭鎺掑垪锛屾瘡鏉″甫搴忓彿
 
-── 洞察规则 ──
-- 从多条事实中寻找模式（反复出现的主题、价值观、性格特质、行为模式）
-- 不要总结单条事实——找出跨事实的上层洞察
-- 洞察必须是"用户未直接说但可以从多条事实推断的"
-- 每条洞察用一句简洁的话陈述
-- 洞察 subcategory 只能从以下选择：VALUES_BELIEFS, SELF_PERCEPTION, LIFESTYLE, MOOD, TASTES, GOALS, VULNERABILITIES, OUR_BOND
+鈹€鈹€ 娲炲療瑙勫垯 鈹€鈹€
+- 浠庡鏉′簨瀹炰腑瀵绘壘妯″紡锛堝弽澶嶅嚭鐜扮殑涓婚銆佷环鍊艰銆佹€ф牸鐗硅川銆佽涓烘ā寮忥級
+- 涓嶈鎬荤粨鍗曟潯浜嬪疄鈥斺€旀壘鍑鸿法浜嬪疄鐨勪笂灞傛礊瀵?
+- 娲炲療蹇呴』鏄?鐢ㄦ埛鏈洿鎺ヨ浣嗗彲浠ヤ粠澶氭潯浜嬪疄鎺ㄦ柇鐨?
+- 姣忔潯娲炲療鐢ㄤ竴鍙ョ畝娲佺殑璇濋檲杩?
+- 娲炲療 subcategory 鍙兘浠庝互涓嬮€夋嫨锛歏ALUES_BELIEFS, SELF_PERCEPTION, LIFESTYLE, MOOD, TASTES, GOALS, VULNERABILITIES, OUR_BOND
 
-── 关联规则 ──
-- 判断事实之间的关联关系
-- 关联类型：temporal(时间有关), entity(同一实体), event_chain(因果前后), emotion_peak(情绪相似), self_reference(自我认知), thematic(同一主题)
-- 强度用定性等级：strong(0.8) / medium(0.5) / weak(0.2)
-- 使用输入事实的序号引用
+鈹€鈹€ 鍏宠仈瑙勫垯 鈹€鈹€
+- 鍒ゆ柇浜嬪疄涔嬮棿鐨勫叧鑱斿叧绯?
+- 鍏宠仈绫诲瀷锛歵emporal(鏃堕棿鏈夊叧), entity(鍚屼竴瀹炰綋), event_chain(鍥犳灉鍓嶅悗), emotion_peak(鎯呯华鐩镐技), self_reference(鑷垜璁ょ煡), thematic(鍚屼竴涓婚)
+- 寮哄害鐢ㄥ畾鎬х瓑绾э細strong(0.8) / medium(0.5) / weak(0.2)
+- 浣跨敤杈撳叆浜嬪疄鐨勫簭鍙峰紩鐢?
 
-── 输出 ──
-{"insights":[{"subcategory":"...","subject":"标签","summary":"洞察","triggers":["关键词"]}],
+鈹€鈹€ 杈撳嚭 鈹€鈹€
+{"insights":[{"subcategory":"...","subject":"鏍囩","summary":"娲炲療","triggers":["鍏抽敭璇?]}],
  "associations":[{"fact_a_idx":0,"fact_b_idx":2,"type":"thematic","strength":"medium"}]}
 
-若找不到有意义的模式，返回 {"insights":[],"associations":[]}`
+鑻ユ壘涓嶅埌鏈夋剰涔夌殑妯″紡锛岃繑鍥?{"insights":[],"associations":[]}`
 
 export function getConsolidationSystem(): string {
   return getLocale() === 'en' ? CONSOLIDATION_SYS_EN : CONSOLIDATION_SYS_ZH
@@ -38,5 +38,5 @@ export function getConsolidationSystem(): string {
 
 export function buildConsolidationUserMsg(factLines: string[], count: number): string {
   if (getLocale() === 'en') return buildConsolidationUserMsgEn(factLines, count)
-  return `近期事实（共${count}条）：\n${factLines.join('\n')}`
+  return `杩戞湡浜嬪疄锛堝叡${count}鏉★級锛歕n${factLines.join('\n')}`
 }

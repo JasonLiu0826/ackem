@@ -1,4 +1,4 @@
-import { execFile } from 'node:child_process'
+﻿import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { updateForegroundTitle } from '../../../../../context/foregroundState'
 
@@ -18,8 +18,8 @@ const PS_SCRIPT = [
 let timer: ReturnType<typeof setInterval> | null = null
 
 export async function readForegroundWindowTitle(): Promise<string> {
-  if (process.env.ACKEM_FOREGROUND_TITLE) {
-    return process.env.ACKEM_FOREGROUND_TITLE
+  if (process.env.Ackem_FOREGROUND_TITLE) {
+    return process.env.Ackem_FOREGROUND_TITLE
   }
   if (process.platform !== 'win32') {
     return ''

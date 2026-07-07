@@ -9,6 +9,7 @@ function escapeHtml(s: string): string {
 
 export function renderInline(text: string): string {
   return escapeHtml(text)
+    .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" class="inline max-h-6 align-text-bottom rounded" />')
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
     .replace(/~~(.+?)~~/g, '<del>$1</del>')
@@ -292,6 +293,18 @@ export function renderMarkdown(md: string, options?: RenderMarkdownOptions): str
       closeList()
       html.push(
         `<h3 class="mt-3 mb-1 text-sm font-semibold text-ink">${escapeHtml(boldOnly[1])}</h3>`
+      )
+      continue
+    }
+
+    // 图片语法 ![alt](url)
+    const imgMatch = trimmed.match(/^!\[([^\]]*)\]\(([^)]+)\)$/)
+    if (imgMatch) {
+      closeList()
+      const alt = escapeHtml(imgMatch[1] || '图片')
+      const src = escapeHtml(imgMatch[2])
+      html.push(
+        `<div class="my-3"><img src="${src}" alt="${alt}" class="max-w-full rounded-xl border border-surface-inset/60" loading="lazy" /></div>`
       )
       continue
     }

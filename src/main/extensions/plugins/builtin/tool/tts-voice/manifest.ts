@@ -1,16 +1,16 @@
-import type { PluginManifest } from '../../../types'
+﻿import type { PluginManifest } from '../../../types'
 
-export const TTS_VOICE_PLUGIN_ID = 'ackem/voice-pipeline@0.1.0'
+export const TTS_VOICE_PLUGIN_ID = 'Ackem/voice-pipeline@0.1.0'
 
 export const TTS_VOICE_MANIFEST: PluginManifest = {
   id: TTS_VOICE_PLUGIN_ID,
-  name: '语音管线',
+  name: '璇煶绠＄嚎',
   version: '0.1.0',
   category: 'plugin',
   pluginType: 'tool',
   implementationStatus: 'dev',
   description:
-    '语音对话管线：ASR (faster-whisper) + TTS (CosyVoice/edge-tts) + 情绪指令映射。剧院模式下半双工语音对话。',
+    '璇煶瀵硅瘽绠＄嚎锛欰SR (faster-whisper) + TTS (CosyVoice/edge-tts) + 鎯呯华鎸囦护鏄犲皠銆傚墽闄㈡ā寮忎笅鍗婂弻宸ヨ闊冲璇濄€?,
   author: 'JasonLiu0826',
   license: 'AGPL-3.0',
   main: 'bootstrap.ts',
@@ -22,9 +22,9 @@ export const TTS_VOICE_MANIFEST: PluginManifest = {
     mode: 'manual',
     time: { manual_trigger: true },
     habits: [],
-    scenarios: ['剧院模式语音对话', 'TTS 朗读 AI 回复'],
-    summary: '语音管线：ASR 语音识别 + TTS 语音合成 + 情绪驱动',
-    keywords: ['语音', 'tts', 'asr', '朗读', '说话', 'voice']
+    scenarios: ['鍓ч櫌妯″紡璇煶瀵硅瘽', 'TTS 鏈楄 AI 鍥炲'],
+    summary: '璇煶绠＄嚎锛欰SR 璇煶璇嗗埆 + TTS 璇煶鍚堟垚 + 鎯呯华椹卞姩',
+    keywords: ['璇煶', 'tts', 'asr', '鏈楄', '璇磋瘽', 'voice']
   }
 }
 

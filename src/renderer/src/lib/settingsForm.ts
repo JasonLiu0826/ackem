@@ -1,6 +1,6 @@
-import type { AppSettings } from '../ackem'
+﻿import type { AppSettings } from '../Ackem'
 
-/** 用于 dirty 比较：trim URL/模型，忽略仅 UI 差异 */
+/** 鐢ㄤ簬 dirty 姣旇緝锛歵rim URL/妯″瀷锛屽拷鐣ヤ粎 UI 宸紓 */
 export function normalizeSettingsDraft(s: AppSettings): AppSettings {
   return {
     ...s,
@@ -25,17 +25,17 @@ export function isSettingsDirty(form: AppSettings, persisted: AppSettings | null
   return !settingsDraftEquals(form, persisted)
 }
 
-/** 保存按钮 / persistPatch：合并 patch 并 normalize（FIX-034） */
+/** 淇濆瓨鎸夐挳 / persistPatch锛氬悎骞?patch 骞?normalize锛團IX-034锛?*/
 export function mergeSettingsDraft(form: AppSettings, patch: Partial<AppSettings>): AppSettings {
   return normalizeSettingsDraft({ ...form, ...patch })
 }
 
-/** SettingsPage.save 写入磁盘前的 payload */
+/** SettingsPage.save 鍐欏叆纾佺洏鍓嶇殑 payload */
 export function prepareSettingsForSave(form: AppSettings): AppSettings {
   return normalizeSettingsDraft(form)
 }
 
-/** 保存后是否应提示「有未应用变更」（form 与磁盘一致则 false） */
+/** 淇濆瓨鍚庢槸鍚﹀簲鎻愮ず銆屾湁鏈簲鐢ㄥ彉鏇淬€嶏紙form 涓庣鐩樹竴鑷村垯 false锛?*/
 export function shouldOfferSettingsSave(form: AppSettings, persisted: AppSettings | null): boolean {
   return isSettingsDirty(form, persisted)
 }

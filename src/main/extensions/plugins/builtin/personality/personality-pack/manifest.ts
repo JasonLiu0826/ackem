@@ -1,13 +1,13 @@
-// [P-03] 人格/种子包 — 占位 manifest（未接入 coordinator.boot）
+﻿// [P-03] 浜烘牸/绉嶅瓙鍖?鈥?鍗犱綅 manifest锛堟湭鎺ュ叆 coordinator.boot锛?
 import type { PluginManifest } from '../../../types'
 
 export const MANIFEST: PluginManifest = {
-  "id": "ackem/personality-pack@0.0.1",
-  "name": "人格/种子包",
+  "id": "Ackem/personality-pack@0.0.1",
+  "name": "浜烘牸/绉嶅瓙鍖?,
   "version": "0.0.1",
   "category": "plugin",
   "pluginType": "personality",
-  "description": "[P-03] 新人格预设/角色包/种子记忆；memory/ 命名空间隔离",
+  "description": "[P-03] 鏂颁汉鏍奸璁?瑙掕壊鍖?绉嶅瓙璁板繂锛沵emory/ 鍛藉悕绌洪棿闅旂",
   "author": "JasonLiu0826",
   "license": "AGPL-3.0",
   "main": "stub.ts",
@@ -25,5 +25,5 @@ export const MANIFEST: PluginManifest = {
     "p-03"
   ]
 } as PluginManifest
-export const PLUGIN_ID = 'ackem/personality-pack@0.0.1'
+export const PLUGIN_ID = 'Ackem/personality-pack@0.0.1'
 export const SPEC_ID = 'P-03'

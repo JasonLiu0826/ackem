@@ -1,11 +1,11 @@
-// [retriever] — 记忆检索器
-// 职责：触发词、事实检索、chunk 片段、memory_echo
-// 输入：query、FactStore、IndexSnapshot
-// 输出：tierBBlock、MemoryEcho、trace
-// 引用：./factStore, ../indexer, ../engine/ackemParams
+﻿// [retriever] 鈥?璁板繂妫€绱㈠櫒
+// 鑱岃矗锛氳Е鍙戣瘝銆佷簨瀹炴绱€乧hunk 鐗囨銆乵emory_echo
+// 杈撳叆锛歲uery銆丗actStore銆両ndexSnapshot
+// 杈撳嚭锛歵ierBBlock銆丮emoryEcho銆乼race
+// 寮曠敤锛?/factStore, ../indexer, ../engine/AckemParams
 
 import { searchChunks, type IndexSnapshot } from '../indexer'
-import { CHUNK_SEARCH_MAX_RESULTS, CORE_MEMORY_CHAR_BUDGET, EPISODE_CHAR_BUDGET, EMBEDDING_MIN_SCORE, EMBEDDING_SEARCH_ENABLED, EMBEDDING_SEARCH_TOP_K, MIN_CONFIDENCE_FOR_INJECTION, SEMANTIC_SEARCH_ENABLED, SEMANTIC_SEARCH_TOP_K, TIER_B_CHAR_BUDGET, TRIGGER_MATCH_BOOST, VECTOR_SEARCH_ENABLED, VECTOR_SEARCH_TOP_K } from '../engine/ackemParams'
+import { CHUNK_SEARCH_MAX_RESULTS, CORE_MEMORY_CHAR_BUDGET, EPISODE_CHAR_BUDGET, EMBEDDING_MIN_SCORE, EMBEDDING_SEARCH_ENABLED, EMBEDDING_SEARCH_TOP_K, MIN_CONFIDENCE_FOR_INJECTION, SEMANTIC_SEARCH_ENABLED, SEMANTIC_SEARCH_TOP_K, TIER_B_CHAR_BUDGET, TRIGGER_MATCH_BOOST, VECTOR_SEARCH_ENABLED, VECTOR_SEARCH_TOP_K } from '../engine/AckemParams'
 import type { MemoryEcho, MemoryFact } from '../engine/types'
 import type { FactStore } from './factStore'
 import type { EpisodicStore } from './episodicStore'
@@ -18,7 +18,7 @@ import type { TemporalContext } from './temporalContextModulator'
 import { computeTemporalBoost } from './temporalContextModulator'
 import type { TemporalSemanticSignal } from './temporalSignalExtractor'
 import { filterFactsForSession } from './sessionFacts'
-import { normalizeAckemBrandText } from '../../shared/ackemBrand'
+import { normalizeAckemBrandText } from '../../shared/AckemBrand'
 
 export type RetrievalResult = {
   tierBBlock: string
@@ -30,19 +30,19 @@ export type RetrievalResult = {
     sharedCount: number
     episodesUsed: number
     embeddingHits: number
-    /** FIX-024：关联扩散增量事实数（linked 未在 trigger/emb/FTS 等先命中） */
+    /** FIX-024锛氬叧鑱旀墿鏁ｅ閲忎簨瀹炴暟锛坙inked 鏈湪 trigger/emb/FTS 绛夊厛鍛戒腑锛?*/
     associationHits: number
-    /** FIX-024：关联图激活边数（含 embedding 已命中的 linked 边） */
+    /** FIX-024锛氬叧鑱斿浘婵€娲昏竟鏁帮紙鍚?embedding 宸插懡涓殑 linked 杈癸級 */
     associationActivations: number
-    /** FIX-022：第 8 路时间锚点命中事实数 */
+    /** FIX-022锛氱 8 璺椂闂撮敋鐐瑰懡涓簨瀹炴暟 */
     temporalAnchorHits: number
   }
   activatedAssociationIds: string[]
 }
 
-/** 上一轮激活的关联 ID 列表（供 postChatTurn 纠错使用） */
+/** 涓婁竴杞縺娲荤殑鍏宠仈 ID 鍒楄〃锛堜緵 postChatTurn 绾犻敊浣跨敤锛?*/
 export let lastActivatedAssociationIds: string[] = []
-/** 共现激活频率门控计数器 */
+/** 鍏辩幇婵€娲婚鐜囬棬鎺ц鏁板櫒 */
 let cooccurrenceTicks = 0
 
 export class MemoryRetriever {
@@ -78,7 +78,7 @@ export class MemoryRetriever {
     const sessionFactIds = new Set(sessionFacts.map((f) => f.id))
     const inSession = (f: MemoryFact) => sessionFactIds.has(f.id)
 
-    // 相关性调度：关系阶段缩放预算，信任下降时收紧
+    // 鐩稿叧鎬ц皟搴︼細鍏崇郴闃舵缂╂斁棰勭畻锛屼俊浠讳笅闄嶆椂鏀剁揣
     const adjustedBudget = Math.round(budgetChars * hint.stageMultiplier)
     const cap = Math.min(adjustedBudget, TIER_B_CHAR_BUDGET)
     const triggered = this.factStore.searchByTriggers(query).filter(inSession)
@@ -94,17 +94,17 @@ export class MemoryRetriever {
       inSession
     )
 
-    // 短路：触发词+FTS 已足够充裕时，仅跳过 TF-IDF 兜底（字符级噪音）；Embedding 与关联扩散仍执行
+    // 鐭矾锛氳Е鍙戣瘝+FTS 宸茶冻澶熷厖瑁曟椂锛屼粎璺宠繃 TF-IDF 鍏滃簳锛堝瓧绗︾骇鍣煶锛夛紱Embedding 涓庡叧鑱旀墿鏁ｄ粛鎵ц
     const fastFactCount = new Set([...triggered, ...ftsHits].map(f => f.id)).size
     const fastHasHighConfidence = [...triggered, ...ftsHits].some(f => f.confidence > 0.7)
     const shouldShortCircuit = fastFactCount >= 5 && fastHasHighConfidence
 
-    // O6: 语义搜索 — FTS 优先，Jaccard 补充
+    // O6: 璇箟鎼滅储 鈥?FTS 浼樺厛锛孞accard 琛ュ厖
     const semanticHits = SEMANTIC_SEARCH_ENABLED
       ? searchBySemantics(sessionFacts, query, SEMANTIC_SEARCH_TOP_K)
       : []
 
-    // Embedding 向量语义搜索 — 语义理解（"喜欢猫" ↔ "喵星人"）；大库 recall 不因短路跳过
+    // Embedding 鍚戦噺璇箟鎼滅储 鈥?璇箟鐞嗚В锛?鍠滄鐚? 鈫?"鍠垫槦浜?锛夛紱澶у簱 recall 涓嶅洜鐭矾璺宠繃
     let embeddingHits: MemoryFact[] = []
     let embeddingActive = false
     if (EMBEDDING_SEARCH_ENABLED && this.vectorStore?.embedQuery) {
@@ -119,12 +119,12 @@ export class MemoryRetriever {
           sessionFacts
         )
         embeddingActive = embeddingHits.length > 0
-      } catch { /* embedding 搜索失败，静默降级 */ }
+      } catch { /* embedding 鎼滅储澶辫触锛岄潤榛橀檷绾?*/ }
     }
 
-    // TF-IDF 余弦相似度 — 仅在 embedding 不可用时作为兜底
-    // embedding 可用时跳过（TF-IDF 的字符级匹配是噪音，会稀释语义排名）
-    // FIX-013 / FIX-039：shouldShortCircuit 仅影响 TF-IDF vectorHits；关联扩散（第 9 路）与 embedding 不受短路影响
+    // TF-IDF 浣欏鸡鐩镐技搴?鈥?浠呭湪 embedding 涓嶅彲鐢ㄦ椂浣滀负鍏滃簳
+    // embedding 鍙敤鏃惰烦杩囷紙TF-IDF 鐨勫瓧绗︾骇鍖归厤鏄櫔闊筹紝浼氱█閲婅涔夋帓鍚嶏級
+    // FIX-013 / FIX-039锛歴houldShortCircuit 浠呭奖鍝?TF-IDF vectorHits锛涘叧鑱旀墿鏁ｏ紙绗?9 璺級涓?embedding 涓嶅彈鐭矾褰卞搷
     const vectorHits = !shouldShortCircuit && !embeddingActive && VECTOR_SEARCH_ENABLED && this.vectorStore
       ? this.vectorStore.resolveFacts(
           this.vectorStore.search(query, VECTOR_SEARCH_TOP_K),
@@ -132,13 +132,13 @@ export class MemoryRetriever {
         )
       : []
 
-    // FIX-007：消息内时间语义 — 「去年这时」等由 embedding 检出后额外检索并 boost
+    // FIX-007锛氭秷鎭唴鏃堕棿璇箟 鈥?銆屽幓骞磋繖鏃躲€嶇瓑鐢?embedding 妫€鍑哄悗棰濆妫€绱㈠苟 boost
     let temporalSemanticHits: MemoryFact[] = []
     let temporalSemanticHint = ''
     if (temporalSemanticSignal?.label) {
       const label = temporalSemanticSignal.label
       temporalSemanticHint =
-        `【时间回忆线索·${label}】用户可能在回忆与该时段相关的事，优先联想对应记忆。`
+        `銆愭椂闂村洖蹇嗙嚎绱⒙?{label}銆戠敤鎴峰彲鑳藉湪鍥炲繂涓庤鏃舵鐩稿叧鐨勪簨锛屼紭鍏堣仈鎯冲搴旇蹇嗐€俙
       const seenTemporalSemantic = new Set<string>()
       const pushSemantic = (f: MemoryFact) => {
         if (seenTemporalSemantic.has(f.id) || f.status !== 'active') return
@@ -171,7 +171,7 @@ export class MemoryRetriever {
           )) {
             pushSemantic(f)
           }
-        } catch { /* embedding 搜索失败，静默降级 */ }
+        } catch { /* embedding 鎼滅储澶辫触锛岄潤榛橀檷绾?*/ }
       }
     }
 
@@ -213,10 +213,10 @@ export class MemoryRetriever {
       factsForEcho.push(f)
     }
 
-    // ══ 第 8 路：时间锚点语义联想 + 主动感知 ══
-    // 主动感知：当前日期接近 recurring 锚点时自动触发（用户不说"生日"也会想起来）
+    // 鈺愨晲 绗?8 璺細鏃堕棿閿氱偣璇箟鑱旀兂 + 涓诲姩鎰熺煡 鈺愨晲
+    // 涓诲姩鎰熺煡锛氬綋鍓嶆棩鏈熸帴杩?recurring 閿氱偣鏃惰嚜鍔ㄨЕ鍙戯紙鐢ㄦ埛涓嶈"鐢熸棩"涔熶細鎯宠捣鏉ワ級
     let temporalAnchorHits: MemoryFact[] = []
-    /** 锚点 SQL 命中的关联事实（与 mergedIds 去重独立，供 KPI/trace） */
+    /** 閿氱偣 SQL 鍛戒腑鐨勫叧鑱斾簨瀹烇紙涓?mergedIds 鍘婚噸鐙珛锛屼緵 KPI/trace锛?*/
     const anchorResolvedFacts: MemoryFact[] = []
     const anchorDataRoot = this.factStore.getDataRoot()
     const nowDate = new Date()
@@ -262,7 +262,7 @@ export class MemoryRetriever {
         const today = now.toISOString().slice(5, 10) // MM-DD
         const yearAgo = now.toISOString().slice(0, 10) // YYYY-MM-DD
 
-        // 策略 1：周期性锚点（生日/纪念日/节假日）—— 同月同日 ±30 天
+        // 绛栫暐 1锛氬懆鏈熸€ч敋鐐癸紙鐢熸棩/绾康鏃?鑺傚亣鏃ワ級鈥斺€?鍚屾湀鍚屾棩 卤30 澶?
         const monthDay = today // MM-DD
         const dayStart = new Date(now.getTime() - 30 * 86400000).toISOString().slice(5, 10)
         const dayEnd = new Date(now.getTime() + 30 * 86400000).toISOString().slice(5, 10)
@@ -276,7 +276,7 @@ export class MemoryRetriever {
            LIMIT 5`
         ).all(dayStart, dayEnd) as Array<{ linked_fact_ids: string; emotional_valence: number; emotional_intensity: number; anchor_date: string }>
 
-        // 策略 2：模糊时间锚点（最近/那时候）—— 最近 3 个月
+        // 绛栫暐 2锛氭ā绯婃椂闂撮敋鐐癸紙鏈€杩?閭ｆ椂鍊欙級鈥斺€?鏈€杩?3 涓湀
         const threeMonthsAgo = new Date(now.getTime() - 90 * 86400000).toISOString().slice(0, 10)
         const fuzzyAnchors = db.prepare(
           `SELECT linked_fact_ids, emotional_valence, emotional_intensity
@@ -288,7 +288,7 @@ export class MemoryRetriever {
 
         const anchorRows = [...recurringAnchors, ...fuzzyAnchors]
         const seenTemporal = new Set(mergedIds)
-        // 按 emotional_intensity 排序，优先注入高情绪锚点
+        // 鎸?emotional_intensity 鎺掑簭锛屼紭鍏堟敞鍏ラ珮鎯呯华閿氱偣
         anchorRows.sort((a, b) => b.emotional_intensity - a.emotional_intensity)
         for (const anchor of anchorRows) {
           try {
@@ -307,8 +307,8 @@ export class MemoryRetriever {
       }
     } catch { /* temporal anchors table may not exist yet */ }
 
-    // ══ 第 9 路：记忆关联网络扩散（一跳）══
-    // FIX-039：无论 shouldShortCircuit 与否，本段始终执行（勿与 TF-IDF 短路混淆）
+    // 鈺愨晲 绗?9 璺細璁板繂鍏宠仈缃戠粶鎵╂暎锛堜竴璺筹級鈺愨晲
+    // FIX-039锛氭棤璁?shouldShortCircuit 涓庡惁锛屾湰娈靛缁堟墽琛岋紙鍕夸笌 TF-IDF 鐭矾娣锋穯锛?
     let associationHits: MemoryFact[] = []
     const activatedIds = new Set<string>()
     if (this.associationIndex) {
@@ -344,22 +344,22 @@ export class MemoryRetriever {
       }
     }
 
-    // 时间锚点结果合并
+    // 鏃堕棿閿氱偣缁撴灉鍚堝苟
     for (const f of temporalAnchorHits) {
       if (mergedIds.has(f.id)) continue
       mergedIds.add(f.id)
       factsForEcho.push(f)
     }
 
-    // 关联扩散结果合并
+    // 鍏宠仈鎵╂暎缁撴灉鍚堝苟
     for (const f of associationHits) {
       if (mergedIds.has(f.id)) continue
       mergedIds.add(f.id)
       factsForEcho.push(f)
     }
 
-    // ══ 关联共现激活：同轮检索到的语义相近事实自动 strengthen ══
-    // 频率门控：每 3 轮激活一次（避免高频对话中 strength 增长过快）
+    // 鈺愨晲 鍏宠仈鍏辩幇婵€娲伙細鍚岃疆妫€绱㈠埌鐨勮涔夌浉杩戜簨瀹炶嚜鍔?strengthen 鈺愨晲
+    // 棰戠巼闂ㄦ帶锛氭瘡 3 杞縺娲讳竴娆★紙閬垮厤楂橀瀵硅瘽涓?strength 澧為暱杩囧揩锛?
     if (this.associationIndex && (++cooccurrenceTicks % 3 === 0)) {
       const rankedPreview = [...factsForEcho].sort((a, b) =>
         this.factStore.scoreRelevance(b, now, currentValence, currentAff) -
@@ -371,7 +371,7 @@ export class MemoryRetriever {
           const fa = topForCooccurrence[i]
           const fb = topForCooccurrence[j]
           if (fa.domain !== fb.domain) continue
-          // 语义门控：检查 embedding cosine > 0.3
+          // 璇箟闂ㄦ帶锛氭鏌?embedding cosine > 0.3
           const faEmb = this.factStore._embeddingCache?.get(fa.id)
           const fbEmb = this.factStore._embeddingCache?.get(fb.id)
           if (faEmb && fbEmb) {
@@ -379,7 +379,7 @@ export class MemoryRetriever {
             const cosine = cosineSimilarity(faEmb, fbEmb)
             if (cosine < 0.3) continue
           }
-          // 关联类型：同子类→event_chain，跨子类→thematic
+          // 鍏宠仈绫诲瀷锛氬悓瀛愮被鈫抏vent_chain锛岃法瀛愮被鈫抰hematic
           const assocType: AssociationType =
             fa.subcategory === fb.subcategory ? 'event_chain' : 'thematic'
           this.associationIndex.strengthenOrCreate(fa.id, fb.id, assocType)
@@ -387,7 +387,7 @@ export class MemoryRetriever {
       }
     }
 
-    // 近因衰减窗口（ms）：近 3 天内更新的记忆视为"近期"
+    // 杩戝洜琛板噺绐楀彛锛坢s锛夛細杩?3 澶╁唴鏇存柊鐨勮蹇嗚涓?杩戞湡"
     const RECENT_MS = 3 * 24 * 3600 * 1000
     const ranked = [...factsForEcho].sort((a, b) => {
       const ta = triggered.some((t) => t.id === a.id)
@@ -402,15 +402,15 @@ export class MemoryRetriever {
       const sbAssoc = associationHits.some((s) => s.id === b.id)
       const saTemporalSem = temporalSemanticHits.some((s) => s.id === a.id)
       const sbTemporalSem = temporalSemanticHits.some((s) => s.id === b.id)
-      // 调度器提示：长对话或高波动时给近期记忆 1.5x 加权
+      // 璋冨害鍣ㄦ彁绀猴細闀垮璇濇垨楂樻尝鍔ㄦ椂缁欒繎鏈熻蹇?1.5x 鍔犳潈
       const recencyBoost = (f: typeof a) =>
         hint.favorRecent && (now - new Date(f.updatedAt).getTime()) < RECENT_MS ? 1.5 : 1
-      // 调度器提示：情绪波动时情感相关的记忆（OUR_BOND, MOOD, VULNERABILITIES 等）加权
+      // 璋冨害鍣ㄦ彁绀猴細鎯呯华娉㈠姩鏃舵儏鎰熺浉鍏崇殑璁板繂锛圤UR_BOND, MOOD, VULNERABILITIES 绛夛級鍔犳潈
       const emotionBoost = (f: typeof a) =>
         hint.emotionalVolatility > 0.4 && ['OUR_BOND', 'MOOD', 'VULNERABILITIES', 'SELF_PERCEPTION'].includes(f.subcategory)
           ? 1 + hint.emotionalVolatility * 0.5
           : 1
-      // 时间感知加权（T1-T6）
+      // 鏃堕棿鎰熺煡鍔犳潈锛圱1-T6锛?
       const temporalBoostA = temporalCtx ? computeTemporalBoost(a, temporalCtx) : 1.0
       const temporalBoostB = temporalCtx ? computeTemporalBoost(b, temporalCtx) : 1.0
       const sa = temporalBoostA * recencyBoost(a) * emotionBoost(a) * ((ta || saSem || saEmb || saVec || saAssoc || saTemporalSem) ? TRIGGER_MATCH_BOOST : 1) * this.factStore.scoreRelevance(a, now, currentValence, currentAff, queryEmbed)
@@ -420,12 +420,12 @@ export class MemoryRetriever {
 
     const memoryEcho = this.factStore.computeMemoryEcho(ranked)
 
-    // 主动遗忘过滤：avoid 事实不注入 Tier B（但可参与检索/排序/memoryEcho）
+    // 涓诲姩閬楀繕杩囨护锛歛void 浜嬪疄涓嶆敞鍏?Tier B锛堜絾鍙弬涓庢绱?鎺掑簭/memoryEcho锛?
     const injectable = ranked.filter(f => !f.sensitivity || f.sensitivity === 'normal')
 
-    // 统一预算控制器：所有子块从同一个预算中分配，按优先级依次填充
-    // 优先级：核心记忆 > 事实检索 > chunk片段 > 知识图谱 > 情节记忆
-    const header = '【Tier B · 结构化记忆与检索片段】'
+    // 缁熶竴棰勭畻鎺у埗鍣細鎵€鏈夊瓙鍧椾粠鍚屼竴涓绠椾腑鍒嗛厤锛屾寜浼樺厛绾т緷娆″～鍏?
+    // 浼樺厛绾э細鏍稿績璁板繂 > 浜嬪疄妫€绱?> chunk鐗囨 > 鐭ヨ瘑鍥捐氨 > 鎯呰妭璁板繂
+    const header = '銆怲ier B 路 缁撴瀯鍖栬蹇嗕笌妫€绱㈢墖娈点€?
     let remaining = cap - header.length - 4 // reserve for newlines
 
     let temporalSemanticBlock = ''
@@ -434,7 +434,7 @@ export class MemoryRetriever {
       remaining -= temporalSemanticBlock.length + 2
     }
 
-    // 1. 核心记忆（优先级最高，上限 2000 或剩余预算的一半）
+    // 1. 鏍稿績璁板繂锛堜紭鍏堢骇鏈€楂橈紝涓婇檺 2000 鎴栧墿浣欓绠楃殑涓€鍗婏級
     let coreBlock = ''
     const coreFacts = sessionId
       ? filterFactsForSession(this.factStore.getCoreFacts(), sessionId)
@@ -444,36 +444,36 @@ export class MemoryRetriever {
       const coreLines: string[] = []
       let coreChars = 0
       for (const f of coreFacts) {
-        const line = normalizeAckemBrandText(`★ ${f.subject}：${f.summary}`)
+        const line = normalizeAckemBrandText(`鈽?${f.subject}锛?{f.summary}`)
         if (coreChars + line.length + 2 > coreBudget) break
         coreLines.push(line)
         coreChars += line.length + 2
       }
       if (coreLines.length > 0) {
-        coreBlock = ['【核心记忆】', ...coreLines].join('\n')
+        coreBlock = ['銆愭牳蹇冭蹇嗐€?, ...coreLines].join('\n')
         remaining -= coreBlock.length + 2
       }
     }
 
-    // 2. 事实检索行（从剩余预算中分配）
-    // 结构化注入：关联扩散来源标注 ↳ 标记，帮助 LLM 理解记忆来源
+    // 2. 浜嬪疄妫€绱㈣锛堜粠鍓╀綑棰勭畻涓垎閰嶏級
+    // 缁撴瀯鍖栨敞鍏ワ細鍏宠仈鎵╂暎鏉ユ簮鏍囨敞 鈫?鏍囪锛屽府鍔?LLM 鐞嗚В璁板繂鏉ユ簮
     const lines: string[] = []
     for (const f of injectable) {
       const isAssoc = associationHits.some(s => s.id === f.id)
       const isTemporal = anchorResolvedFacts.some((s) => s.id === f.id)
       const isTemporalSemantic = temporalSemanticHits.some(s => s.id === f.id)
       let annotation = ''
-      if (isAssoc) annotation = ' ↳ 关联扩散'
-      else if (isTemporalSemantic) annotation = ' ↳ 时间语义'
-      else if (isTemporal) annotation = ' ↳ 时间锚点'
-      const line = normalizeAckemBrandText(`· ${f.subject}：${f.summary}${annotation}`)
-      if (remaining - (line.length + 2) < 200) break // 至少留 200 给后续块
+      if (isAssoc) annotation = ' 鈫?鍏宠仈鎵╂暎'
+      else if (isTemporalSemantic) annotation = ' 鈫?鏃堕棿璇箟'
+      else if (isTemporal) annotation = ' 鈫?鏃堕棿閿氱偣'
+      const line = normalizeAckemBrandText(`路 ${f.subject}锛?{f.summary}${annotation}`)
+      if (remaining - (line.length + 2) < 200) break // 鑷冲皯鐣?200 缁欏悗缁潡
       if (line.length + 2 > remaining) break
       lines.push(line)
       remaining -= line.length + 2
     }
 
-    // 3. Chunk 片段
+    // 3. Chunk 鐗囨
     const hits = this.index && query.trim().length > 0
       ? searchChunks(this.index, query, CHUNK_SEARCH_MAX_RESULTS) : []
     const chunkLines: string[] = []
@@ -486,7 +486,7 @@ export class MemoryRetriever {
       remaining -= block.length + 4
     }
 
-    // 4. 知识图谱（低优先级，用剩余空间）
+    // 4. 鐭ヨ瘑鍥捐氨锛堜綆浼樺厛绾э紝鐢ㄥ墿浣欑┖闂达級
     let kgBlock = ''
     if (this.kg && remaining > 150) {
       kgBlock = this.kg.buildContextBlock(query)
@@ -496,7 +496,7 @@ export class MemoryRetriever {
       if (kgBlock.length > 0) remaining -= kgBlock.length + 2
     }
 
-    // 5. 情节记忆（最低优先级）
+    // 5. 鎯呰妭璁板繂锛堟渶浣庝紭鍏堢骇锛?
     let episodeBlock = ''
     let episodesUsed = 0
     if (this.episodicStore && remaining > 150) {

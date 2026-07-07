@@ -1,8 +1,8 @@
-// [factStore] — L4 事实库
-// 职责：facts.v2.json CRUD、检索、memoirTrust、memoryEcho
-// 输入：文件路径
-// 输出：MemoryFact 集合操作
-// 引用：./taxonomy, ../engine/types, ../engine/ackemParams
+﻿// [factStore] 鈥?L4 浜嬪疄搴?
+// 鑱岃矗锛歠acts.v2.json CRUD銆佹绱€乵emoirTrust銆乵emoryEcho
+// 杈撳叆锛氭枃浠惰矾寰?
+// 杈撳嚭锛歁emoryFact 闆嗗悎鎿嶄綔
+// 寮曠敤锛?/taxonomy, ../engine/types, ../engine/AckemParams
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
@@ -29,9 +29,9 @@ import {
   AUTO_COMPACT_RETENTION_DAYS,
   FACTSTORE_WRITE_BUFFER_MS,
   FACT_DEDUP_WEIGHT_BOOST
-} from '../engine/ackemParams'
+} from '../engine/AckemParams'
 
-/** Embedding 去重阈值：同 domain + 同 subcategory 时，cosine > 此值视为语义重复 */
+/** Embedding 鍘婚噸闃堝€硷細鍚?domain + 鍚?subcategory 鏃讹紝cosine > 姝ゅ€艰涓鸿涔夐噸澶?*/
 const EMBEDDING_DEDUP_THRESHOLD = 0.85
 import type { EmotionalContext, FactLayer, MemoryEcho, MemoryFact, MemoryTier } from '../engine/types'
 import { normalizeConfidence } from '../../shared/confidence'
@@ -70,24 +70,24 @@ export interface AddFactResult {
 export class FactStore {
   private facts: MemoryFact[] = []
   private byId = new Map<string, MemoryFact>()
-  /** 外部注入的 Embedding 缓存引用（用于去重时查已有事实的 embedding） */
+  /** 澶栭儴娉ㄥ叆鐨?Embedding 缂撳瓨寮曠敤锛堢敤浜庡幓閲嶆椂鏌ュ凡鏈変簨瀹炵殑 embedding锛?*/
   _embeddingCache?: Map<string, number[]>
   private readonly path: string
   private dirty = false
   private flushTimer: ReturnType<typeof setTimeout> | null = null
-  /** Phase 3: DB 可用时走增量写入，不再全表重写 */
+  /** Phase 3: DB 鍙敤鏃惰蛋澧為噺鍐欏叆锛屼笉鍐嶅叏琛ㄩ噸鍐?*/
   private useDb = false
 
   constructor(filePath: string) {
     this.path = filePath
   }
 
-  /** SQLite dataRoot（memory/facts/... → 项目 data 根目录） */
+  /** SQLite dataRoot锛坢emory/facts/... 鈫?椤圭洰 data 鏍圭洰褰曪級 */
   getDataRoot(): string {
     return dataRootFromFactsPath(this.path)
   }
 
-  /** O(1) 按 ID 查找事实 */
+  /** O(1) 鎸?ID 鏌ユ壘浜嬪疄 */
   getById(id: string): MemoryFact | undefined {
     return this.byId.get(id)
   }
@@ -127,7 +127,7 @@ export class FactStore {
       }
       if (this.facts.length > 0) {
         replaceFactsInDb(dataRoot, this.facts)
-        // 只在 DB 真正可用时才设 useDb（replaceFactsInDb 可能因 DB 不可用而静默跳过）
+        // 鍙湪 DB 鐪熸鍙敤鏃舵墠璁?useDb锛坮eplaceFactsInDb 鍙兘鍥?DB 涓嶅彲鐢ㄨ€岄潤榛樿烦杩囷級
         if (countFactsInDb(dataRoot) > 0) {
           this.useDb = true
         }
@@ -142,7 +142,7 @@ export class FactStore {
     this.rebuildIdIndex()
   }
 
-  /** Phase 3: DB 模式下不再需要 persist/flush（增量操作已实时写 DB） */
+  /** Phase 3: DB 妯″紡涓嬩笉鍐嶉渶瑕?persist/flush锛堝閲忔搷浣滃凡瀹炴椂鍐?DB锛?*/
   private rebuildIdIndex(): void {
     this.byId.clear()
     for (const f of this.facts) {
@@ -151,13 +151,13 @@ export class FactStore {
   }
 
   private persist(): void {
-    if (this.useDb) return // 增量操作已在各方法中直接写 DB
+    if (this.useDb) return // 澧為噺鎿嶄綔宸插湪鍚勬柟娉曚腑鐩存帴鍐?DB
     this.dirty = true
     if (this.flushTimer) return
     this.flushTimer = setTimeout(() => this.flushLegacy(), FACTSTORE_WRITE_BUFFER_MS)
   }
 
-  /** 仅用于 JSON 回退模式 */
+  /** 浠呯敤浜?JSON 鍥為€€妯″紡 */
   private flushLegacy(): void {
     if (this.flushTimer) { clearTimeout(this.flushTimer); this.flushTimer = null }
     if (!this.dirty) return
@@ -168,22 +168,22 @@ export class FactStore {
     replaceFactsInDb(this.dataRoot, this.facts)
   }
 
-  /** 兼容外部调用（如 postChatTurn） */
+  /** 鍏煎澶栭儴璋冪敤锛堝 postChatTurn锛?*/
   flush(): void {
     this.flushLegacy()
   }
 
-  /** SQLite 可用时走增量 DB 写入（导入/批量写入前调用） */
+  /** SQLite 鍙敤鏃惰蛋澧為噺 DB 鍐欏叆锛堝鍏?鎵归噺鍐欏叆鍓嶈皟鐢級 */
   preferDbWrites(): void {
     if (getDatabase(this.dataRoot)) {
       this.useDb = true
     }
   }
 
-  /** 移除超过保留期的退役瞬时状态（仅 NOW/PLANS/WORLD），真实记忆永远保留 */
+  /** 绉婚櫎瓒呰繃淇濈暀鏈熺殑閫€褰圭灛鏃剁姸鎬侊紙浠?NOW/PLANS/WORLD锛夛紝鐪熷疄璁板繂姘歌繙淇濈暀 */
   compactFacts(): number {
     const cutoff = new Date(Date.now() - AUTO_COMPACT_RETENTION_DAYS * 86400000).toISOString()
-    // 只物理删除瞬时状态（NOW/PLANS/WORLD），其他退役事实（矛盾检测、降权等）永远保留
+    // 鍙墿鐞嗗垹闄ょ灛鏃剁姸鎬侊紙NOW/PLANS/WORLD锛夛紝鍏朵粬閫€褰逛簨瀹烇紙鐭涚浘妫€娴嬨€侀檷鏉冪瓑锛夋案杩滀繚鐣?
     const TRANSIENT_SUBS = new Set(['NOW', 'PLANS', 'WORLD'])
     const toRemove = this.facts.filter(f =>
       f.status !== 'active' &&
@@ -206,7 +206,7 @@ export class FactStore {
     return this.facts.filter((f) => f.status === 'active')
   }
 
-  /** Phase 2：FTS5 关键词检索（DB 可用时） */
+  /** Phase 2锛欶TS5 鍏抽敭璇嶆绱紙DB 鍙敤鏃讹級 */
   searchByFts(query: string, topK: number): MemoryFact[] {
     const dataRoot = dataRootFromFactsPath(this.path)
     const ids = searchFactIdsFts(dataRoot, query, topK)
@@ -236,15 +236,15 @@ export class FactStore {
     }
     if (w <= 0) return null
     const raw = s / w
-    // 下限保护：防止长期低信任导致 memoir_trust 无限下降
-    // 确保"破冰"机制有机会生效（ICE_BREAK_TRUST_THRESHOLD=15）
+    // 涓嬮檺淇濇姢锛氶槻姝㈤暱鏈熶綆淇′换瀵艰嚧 memoir_trust 鏃犻檺涓嬮檷
+    // 纭繚"鐮村啺"鏈哄埗鏈夋満浼氱敓鏁堬紙ICE_BREAK_TRUST_THRESHOLD=15锛?
     return Math.max(raw, MEMOIR_TRUST_FLOOR)
   }
 
   scoreRelevance(f: MemoryFact, now: number, currentValence?: number, currentAff?: number, queryEmbed?: number[]): number {
     const meta = isValidSubcategory(f.subcategory) ? CATEGORY_META[f.subcategory] : CATEGORY_META.MOOD
     const days = Math.max(0, (now - new Date(f.createdAt).getTime()) / 86400000)
-    // consolidated 洞察用专用 λ（0.003），比原始事实衰减慢
+    // consolidated 娲炲療鐢ㄤ笓鐢?位锛?.003锛夛紝姣斿師濮嬩簨瀹炶“鍑忔參
     const lambda = f.factLayer === 'consolidated' ? CONSOLIDATED_DECAY_LAMBDA : meta.decayLambda
     const decay = Math.exp(-lambda * days)
     const ei = f.emotionalContext.intensity
@@ -254,18 +254,18 @@ export class FactStore {
       currentValence !== undefined &&
       Math.abs(f.emotionalContext.valence - currentValence) < MOOD_CONGRUENT_VALENCE_DIFF
     ) {
-      // 极端情绪时降低同调加权，防止负向强化螺旋
-      // aff < -50 或 aff > 50 时，boost 从 1.5 降到 1.2
+      // 鏋佺鎯呯华鏃堕檷浣庡悓璋冨姞鏉冿紝闃叉璐熷悜寮哄寲铻烘棆
+      // aff < -50 鎴?aff > 50 鏃讹紝boost 浠?1.5 闄嶅埌 1.2
       const isExtreme = currentAff !== undefined && Math.abs(currentAff) >= MOOD_CONGRUENT_EXTREME_THRESHOLD
       const boost = isExtreme ? MOOD_CONGRUENT_EXTREME_BOOST : MOOD_CONGRUENT_BOOST
       score *= boost
     }
-    // O2: 近因加权 — 最近更新的事实获得额外加成
+    // O2: 杩戝洜鍔犳潈 鈥?鏈€杩戞洿鏂扮殑浜嬪疄鑾峰緱棰濆鍔犳垚
     const hoursSinceUpdate = (now - new Date(f.updatedAt).getTime()) / 3600000
     if (hoursSinceUpdate < RECENCY_BOOST_WINDOW_HOURS) {
       score *= RECENCY_BOOST_FACTOR
     }
-    // Embedding 情绪对齐（可选）：语义层面匹配当前消息和记忆事实
+    // Embedding 鎯呯华瀵归綈锛堝彲閫夛級锛氳涔夊眰闈㈠尮閰嶅綋鍓嶆秷鎭拰璁板繂浜嬪疄
     if (queryEmbed && this._embeddingCache) {
       const factEmbed = this._embeddingCache.get(f.id)
       if (factEmbed && factEmbed.length > 0) {
@@ -322,7 +322,7 @@ export class FactStore {
       sumW += w
       aff += f.emotionalContext.valence * w * MEMORY_ECHO_AFF_WEIGHT
       sec += (f.emotionalContext.trust > 50 ? MEMORY_ECHO_SEC_POSITIVE : MEMORY_ECHO_SEC_NEGATIVE) * w
-      // O4: 计算 aro（唤醒度=强度×权重）和 dom（支配度=信任/气氛信号）
+      // O4: 璁＄畻 aro锛堝敜閱掑害=寮哄害脳鏉冮噸锛夊拰 dom锛堟敮閰嶅害=淇′换/姘旀皼淇″彿锛?
       aro += f.emotionalContext.intensity * w * MEMORY_ECHO_ARO_INTENSITY_WEIGHT
       const domTrust = f.emotionalContext.trust > 50 ? 0.3 : -0.3
       const domAtm = f.emotionalContext.atmosphere === 'warm' ? 0.2 : f.emotionalContext.atmosphere === 'cool' ? -0.2 : 0
@@ -386,7 +386,7 @@ export class FactStore {
     return true
   }
 
-  /** 计算衰减后分数（用于 core 席位竞争和排序） */
+  /** 璁＄畻琛板噺鍚庡垎鏁帮紙鐢ㄤ簬 core 甯綅绔炰簤鍜屾帓搴忥級 */
   private computeDecayedScore(f: MemoryFact): number {
     const now = Date.now()
     const days = Math.max(0, (now - new Date(f.createdAt).getTime()) / 86400000)
@@ -398,7 +398,7 @@ export class FactStore {
   autoDemoteExcessCores(): void {
     const cores = this.facts.filter(f => f.status === 'active' && f.tier === 'core')
     if (cores.length <= CORE_MEMORY_MAX_COUNT) return
-    // 按 decayedScore 排序（而非裸 weight），僵尸核心记忆优胜劣汰
+    // 鎸?decayedScore 鎺掑簭锛堣€岄潪瑁?weight锛夛紝鍍靛案鏍稿績璁板繂浼樿儨鍔ｆ卑
     cores.sort((a, b) => this.computeDecayedScore(a) - this.computeDecayedScore(b))
     const toDemote = cores.slice(0, cores.length - CORE_MEMORY_MAX_COUNT)
     for (const f of toDemote) {
@@ -433,20 +433,20 @@ export class FactStore {
 
     for (const f of this.facts) {
       if (f.status !== 'active' || f.subcategory !== subcategory) continue
-      if (domain && f.domain !== domain) continue  // 同 domain 约束
+      if (domain && f.domain !== domain) continue  // 鍚?domain 绾︽潫
 
-      // Embedding 去重（优先，语义更准）
+      // Embedding 鍘婚噸锛堜紭鍏堬紝璇箟鏇村噯锛?
       if (embedding && embeddingCache) {
         const fEmbed = embeddingCache.get(f.id)
         if (fEmbed) {
           const cosine = cosineSimilarity(embedding, fEmbed)
           if (cosine >= EMBEDDING_DEDUP_THRESHOLD) {
-            return f  // 高置信直接返回
+            return f  // 楂樼疆淇＄洿鎺ヨ繑鍥?
           }
         }
       }
 
-      // Jaccard 去重（兜底）
+      // Jaccard 鍘婚噸锛堝厹搴曪級
       const fSet = charSet(`${f.subject} ${f.summary}`)
       if (fSet.size < 2) continue
       let intersect = 0
@@ -463,7 +463,7 @@ export class FactStore {
     return bestMatch
   }
 
-  /** 详细版：返回 AddFactResult（含 isNew/mergedWith），用于 ingest 管线 */
+  /** 璇︾粏鐗堬細杩斿洖 AddFactResult锛堝惈 isNew/mergedWith锛夛紝鐢ㄤ簬 ingest 绠＄嚎 */
   addFactDetailed(raw: {
     domain: string
     subcategory: string
@@ -485,7 +485,7 @@ export class FactStore {
     return this._addFactImpl(raw)
   }
 
-  /** 向后兼容：返回 MemoryFact，用于测试和旧调用方 */
+  /** 鍚戝悗鍏煎锛氳繑鍥?MemoryFact锛岀敤浜庢祴璇曞拰鏃ц皟鐢ㄦ柟 */
   addFact(raw: {
     domain: string
     subcategory: string
@@ -528,7 +528,7 @@ export class FactStore {
     const now = new Date().toISOString()
     const incomingConfidence = normalizeConfidence(raw.confidence ?? meta.defaultConfidence)
 
-    // O1: 事实去重 — Embedding + Jaccard 双条件
+    // O1: 浜嬪疄鍘婚噸 鈥?Embedding + Jaccard 鍙屾潯浠?
     const existing = this.findSimilarFact(sub, raw.subject, raw.summary, raw.domain, raw.embedding, this._embeddingCache)
     if (existing) {
       existing.weight = Math.max(existing.weight, raw.weight ?? meta.defaultWeight) + FACT_DEDUP_WEIGHT_BOOST
@@ -541,7 +541,7 @@ export class FactStore {
       existing.privacyLevel = mostRestrictivePrivacy(existing.privacyLevel, raw.privacyLevel)
       existing.updatedAt = now
       existing.updateTrail = [...existing.updateTrail, now]
-      // B: 合并后若权重超过阈值，提升为核心记忆
+      // B: 鍚堝苟鍚庤嫢鏉冮噸瓒呰繃闃堝€硷紝鎻愬崌涓烘牳蹇冭蹇?
       if (!existing.tier || existing.tier !== 'core') {
         if (existing.weight >= CORE_MEMORY_WEIGHT_THRESHOLD) {
           existing.tier = 'core'
@@ -579,7 +579,7 @@ export class FactStore {
       privacyLevel: raw.privacyLevel ?? 'normal',
       ageMeta: raw.ageMeta
     }
-    // B: 自动提升——高权重事实自动成为核心记忆
+    // B: 鑷姩鎻愬崌鈥斺€旈珮鏉冮噸浜嬪疄鑷姩鎴愪负鏍稿績璁板繂
     if (!fact.tier && fact.weight >= CORE_MEMORY_WEIGHT_THRESHOLD) {
       fact.tier = 'core'
       this.autoDemoteExcessCores()
@@ -628,12 +628,12 @@ export class FactStore {
     return true
   }
 
-  /** 名字降权：新增名字时，同 subject 的旧名字 weight-1 */
+  /** 鍚嶅瓧闄嶆潈锛氭柊澧炲悕瀛楁椂锛屽悓 subject 鐨勬棫鍚嶅瓧 weight-1 */
   downgradeNameFacts(subject: string): void {
     for (const f of this.facts) {
       if (
         f.subcategory === 'BASIC_PROFILE' &&
-        (f.subject === '用户姓名' || f.subject === '用户昵称') &&
+        (f.subject === '鐢ㄦ埛濮撳悕' || f.subject === '鐢ㄦ埛鏄电О') &&
         f.subject === subject &&
         f.weight > 0 &&
         f.status === 'active'
