@@ -44,6 +44,7 @@ const ZH: OssNoticeContent = {
     },
     {
       title: '允许的使用（无需单独商业授权）',
+      paragraphs: [],
       bullets: [
         '个人学习、研究与非商业自用',
         'Fork 或集成到其他项目，且衍生作品同样以 AGPL-3.0 开源',
@@ -122,6 +123,7 @@ const EN: OssNoticeContent = {
     },
     {
       title: 'Permitted use (no separate commercial license)',
+      paragraphs: [],
       bullets: [
         'Personal learning, research, and non-commercial use',
         'Forking or integrating into other projects when derivatives remain AGPL-3.0',

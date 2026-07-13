@@ -25,6 +25,7 @@ import {
   isSkillToolName,
   skillDefsToAnthropicTools
 } from './chatSkillTools'
+import { executeMcpToolCall, isMcpToolName, mcpAnthropicTools } from './mcp/chatTools-mcp'
 import { t } from './i18n'
 import { createLogger } from './logger'
 import { runForcedWebSearchTurn } from './extensions/plugins/builtin/knowledge-presentation/presentation/webSearchPresentation'
@@ -163,7 +164,12 @@ export function anthropicAllTools(opts?: ToolsPayloadOptions): Array<{
   const skillTools = shouldOfferSkillToolsInDesktopAgentSession(agentActive === true)
     ? skillDefsToAnthropicTools(getActiveSkillToolDefs())
     : []
-  const tools = [anthropicAppendMemoryTool(), anthropicReadFileTool(), ...skillTools]
+  const tools = [
+    anthropicAppendMemoryTool(),
+    anthropicReadFileTool(),
+    ...skillTools,
+    ...mcpAnthropicTools()
+  ]
   if (opts && isDesktopAgentToolingActive(opts.settings, opts.desktopAgentChatMode === true)) {
     tools.push(useComputerAnthropicTool())
   }
@@ -448,6 +454,7 @@ export async function streamAnthropicMessages(
   }
 
   const toolBlocks = new Map<number, ToolBlockState>()
+  const completedToolBlocks: Array<[number, ToolBlockState]> = []
   const writes: string[] = []
 
   try {
@@ -538,6 +545,8 @@ export async function streamAnthropicMessages(
           } catch {
             writes.push('SKIP: invalid tool JSON')
           }
+        } else if (st) {
+          completedToolBlocks.push([idx, st])
         }
         toolBlocks.delete(idx)
         return true
@@ -571,7 +580,7 @@ export async function streamAnthropicMessages(
     let webSearchCompanionReply: string | null = null
 
     const webSearchQueries: string[] = []
-    for (const [, st] of toolBlocks) {
+    for (const [, st] of completedToolBlocks) {
       if (st.name !== 'web_search' || !st.inputJson) continue
       try {
         const args = JSON.parse(st.inputJson) as { query?: string }
@@ -603,7 +612,7 @@ export async function streamAnthropicMessages(
       }
     }
 
-    for (const [idx, st] of toolBlocks) {
+    for (const [idx, st] of completedToolBlocks) {
       if (!st.inputJson) continue
       if (st.name === 'append_memory') {
         try {
@@ -661,6 +670,22 @@ export async function streamAnthropicMessages(
           const msg = e instanceof Error ? e.message : String(e)
           toolResults.push({ name: USE_COMPUTER_TOOL_NAME, id: String(idx), content: `执行失败：${msg}` })
           writes.push(`SKIP use_computer: ${msg}`)
+        }
+      } else if (isMcpToolName(st.name)) {
+        try {
+          const mcpArgs = JSON.parse(st.inputJson) as Record<string, unknown>
+          webContents.send('chat:status', skillToolActivityLabel(st.name))
+          const content = await executeMcpToolCall(st.name, mcpArgs)
+          toolResults.push({
+            name: st.name,
+            id: String(idx),
+            content: content ?? `MCP tool「${st.name}」无返回`
+          })
+          writes.push(content ? `OK ${st.name}` : `SKIP ${st.name}`)
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e)
+          toolResults.push({ name: st.name, id: String(idx), content: `执行失败：${msg}` })
+          writes.push(`SKIP ${st.name}: ${msg}`)
         }
       } else if (isSkillToolName(st.name)) {
         try {

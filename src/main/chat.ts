@@ -13,6 +13,7 @@ import {
   getActiveSkillToolDefs,
   skillDefsToOpenAiTools
 } from './chatSkillTools'
+import { mcpOpenAiTools, MCP_CALL_TOOL_NAME, MCP_LIST_TOOLS_NAME } from './mcp/chatTools-mcp'
 import { type ActionContext } from './engine/actionExecutor'
 import { patchLatestTurnL5 } from './engine/tracer'
 import type { PrefetchedFact } from './memory/ingest'
@@ -170,7 +171,13 @@ export function toolsPayload(opts?: ToolsPayloadOptions): unknown[] {
   const skillTools = shouldOfferSkillToolsInDesktopAgentSession(agentActive === true)
     ? skillDefsToOpenAiTools(getActiveSkillToolDefs())
     : []
-  const tools: unknown[] = [appendMemoryTool, readFileTool, extractFactsTool, ...skillTools]
+  const tools: unknown[] = [
+    appendMemoryTool,
+    readFileTool,
+    extractFactsTool,
+    ...skillTools,
+    ...mcpOpenAiTools()
+  ]
   if (
     opts &&
     isDesktopAgentToolingActive(opts.settings, opts.desktopAgentChatMode === true)
@@ -187,7 +194,7 @@ export function toolNames(opts?: ToolsPayloadOptions): string[] {
   const skillNames = shouldOfferSkillToolsInDesktopAgentSession(agentActive === true)
     ? getActiveSkillToolDefs().map((d) => d.name)
     : []
-  const names = ['append_memory', 'read_file', ...skillNames]
+  const names = ['append_memory', 'read_file', ...skillNames, MCP_LIST_TOOLS_NAME, MCP_CALL_TOOL_NAME]
   if (
     opts &&
     isDesktopAgentToolingActive(opts.settings, opts.desktopAgentChatMode === true)
