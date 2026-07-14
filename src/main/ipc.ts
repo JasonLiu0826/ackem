@@ -22,6 +22,9 @@ import { registerWeixinIpc } from './ipc/weixin'
 import { registerDesktopAgentIpc } from './desktop-agent/ipc'
 import { registerSurfaceIpc } from './extensionSurfaceHost'
 import { registerUpdateIpc } from './ipc/update'
+import { registerMcpIpc } from './ipc/mcp'
+import { createMcpStdioManager } from './mcp/stdioManager-mcp'
+import { setMcpStdioManager } from './mcp/runtime-mcp'
 import { ensureVoiceIpc } from './extensions/plugins/builtin/tool/tts-voice/bootstrap'
 import { initLocale } from './i18n'
 import {
@@ -57,6 +60,8 @@ export function registerIpc(): void {
   const settings = loadSettings()
   if (settings.locale) initLocale(settings.locale)
   const extCoordinator = new ExtensionsCoordinator(root)
+  const mcpManager = createMcpStdioManager(root)
+  setMcpStdioManager(mcpManager)
   setExtensionsCoordinatorRef(extCoordinator)
   setExtensionsCoordinator(extCoordinator)
   const bridge = createGameModeHostBridge(hostBridgeDeps)
@@ -70,6 +75,11 @@ export function registerIpc(): void {
       const state = mergeEngineState(root, settings)
       const snap = buildEngineSnapshot(state, settings)
       await extCoordinator.boot(snap)
+      try {
+        await mcpManager.applyAndRestart()
+      } catch (e) {
+        log.error('mcp stdio boot failed', e)
+      }
       minecraftProvider.ensureWsServer(19532)
       startDispatchScheduler({
         coordinator: extCoordinator,
@@ -113,4 +123,5 @@ export function registerIpc(): void {
   registerDesktopCompanionIpc()
   registerSurfaceIpc()
   registerUpdateIpc()
+  registerMcpIpc(mcpManager)
 }

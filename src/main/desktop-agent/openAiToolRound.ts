@@ -8,6 +8,7 @@ import {
   executeSkillToolCall,
   isSkillToolName
 } from '../chatSkillTools'
+import { executeMcpToolCall, isMcpToolName } from '../mcp/chatTools-mcp'
 import { runIntentAwareSearchPresentation } from '../extensions/plugins/builtin/knowledge-presentation/presentation/intentAwareWebSearchPresentation'
 import { runWebSearchWithTaskFrame } from '../taskFrame'
 import { skillToolActivityLabel, desktopAgentActivityLabel } from '../chatStatusLabels'
@@ -165,6 +166,22 @@ export async function executeOpenAiToolBatch(args: {
         const msg = e instanceof Error ? e.message : String(e)
         toolResults.push({ name: USE_COMPUTER_TOOL_NAME, content: `执行失败：${msg}` })
         writes.push(`SKIP use_computer: ${msg}`)
+      }
+    } else if (isMcpToolName(tc.name)) {
+      const mcpToolName = tc.name!
+      try {
+        const parsed = JSON.parse(tc.arguments || '{}') as Record<string, unknown>
+        args.webContents.send('chat:status', skillToolActivityLabel(mcpToolName))
+        const content = await executeMcpToolCall(mcpToolName, parsed)
+        toolResults.push({
+          name: mcpToolName,
+          content: content ?? `MCP tool「${mcpToolName}」无返回`
+        })
+        writes.push(content ? `OK ${mcpToolName}` : `SKIP ${mcpToolName}`)
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e)
+        toolResults.push({ name: mcpToolName, content: `执行失败：${msg}` })
+        writes.push(`SKIP ${mcpToolName}: ${msg}`)
       }
     } else if (tc.name && isSkillToolName(tc.name)) {
       try {
