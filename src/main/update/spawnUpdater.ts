@@ -1,4 +1,4 @@
-﻿import { mkdirSync, writeFileSync } from 'node:fs'
+import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { app } from 'electron'
@@ -11,9 +11,9 @@ export function buildUpdateJob(
   req: UpdateStartRequest,
   resolvedChannel: 'github' | 'gitee'
 ): UpdateJob {
-  const base = join(tmpdir(), 'Ackem-update')
+  const base = join(tmpdir(), 'britney-update')
   mkdirSync(base, { recursive: true })
-  const zipPath = join(base, `Ackem-${req.targetVersion}-win-x64.zip`)
+  const zipPath = join(base, `Britney-${req.targetVersion}-win-x64.zip`)
   const extractDir = join(base, 'extract')
   const stagingDir = join(extractDir, greenFolderName(req.targetVersion))
   return {
@@ -27,13 +27,13 @@ export function buildUpdateJob(
     zipPath,
     stagingDir,
     extractDir,
-    AckemExe: join(installDir, 'Ackem.exe')
+    britneyExe: join(installDir, 'Britney.exe')
   }
 }
 
 export function writeUpdateJob(job: UpdateJob): string {
-  const jobPath = join(tmpdir(), 'Ackem-update', 'job.json')
-  mkdirSync(join(tmpdir(), 'Ackem-update'), { recursive: true })
+  const jobPath = join(tmpdir(), 'britney-update', 'job.json')
+  mkdirSync(join(tmpdir(), 'britney-update'), { recursive: true })
   writeFileSync(jobPath, JSON.stringify(job, null, 2), 'utf-8')
   return jobPath
 }

@@ -19,7 +19,7 @@ export function generateDeterministicBundleForKind(
     }
   }
   const uskill = generateUskillBundle(session)
-  return {
+  return ({
     kind: 'uskill',
     manifest: uskill.manifest,
     skillConfig: uskill.skillConfig,
@@ -28,5 +28,5 @@ export function generateDeterministicBundleForKind(
     generationLog: [...uskill.generationLog],
     suggestedPermissions: uskill.suggestedPermissions,
     permissionReasons: uskill.permissionReasons
-  }
+  }) as any
 }

@@ -1,4 +1,4 @@
-﻿export type UpdateChannel = 'auto' | 'github' | 'gitee'
+export type UpdateChannel = 'auto' | 'github' | 'gitee'
 
 export type ReleaseChannelInfo = {
   channel: Exclude<UpdateChannel, 'auto'>
@@ -32,7 +32,7 @@ export type UpdateJob = {
   zipPath: string
   stagingDir: string
   extractDir: string
-  AckemExe: string
+  britneyExe: string
 }
 
 export type UpdateProgressEvent = {

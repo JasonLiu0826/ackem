@@ -5,10 +5,9 @@ import { randomUUID } from 'node:crypto'
 import type {
   DispatchCatalogEntry,
   EngineSnapshot,
-  ExtensionEvent,
-  SkillInvocation,
-  SkillResult
+  ExtensionEvent
 } from './protocols'
+import type { SkillInvocation, SkillResult } from './skills/types'
 import type { RuntimeContext } from '../context/types'
 import type { KnowledgeContextResolveInput } from './plugins/builtin/knowledge-presentation/plugin'
 import { PluginRegistry } from './plugins/registry'
@@ -211,7 +210,7 @@ export class ExtensionsCoordinator {
         id: instance.manifest.id,
         name: instance.manifest.name,
         category: 'skill',
-        status: instance.status,
+        status: instance.status as any,
         dispatch: instance.manifest.dispatch
       })
     }
@@ -221,7 +220,7 @@ export class ExtensionsCoordinator {
         id: instance.manifest.id,
         name: instance.manifest.name,
         category: 'plugin',
-        status: instance.status,
+        status: instance.status as any,
         dispatch: instance.manifest.dispatch
       })
     }
@@ -288,7 +287,9 @@ export class ExtensionsCoordinator {
       autonomous: [] as DispatchCatalogEntry[],
       always_on: [] as DispatchCatalogEntry[],
       manual: [] as DispatchCatalogEntry[],
-      dispatched: [] as DispatchCatalogEntry[]
+      dispatched: [] as DispatchCatalogEntry[],
+      engine_event: [] as DispatchCatalogEntry[],
+      scheduled: [] as DispatchCatalogEntry[]
     }
     for (const entry of this.getDispatchCatalog(sessionId)) {
       grouped[entry.dispatch.mode].push(entry)

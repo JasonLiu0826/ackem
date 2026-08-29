@@ -89,11 +89,6 @@ export async function finalizeTurnAfterStream(args: {
       emotionLabel: p.newState.emotion.primaryLabel,
       personalityPresetId: settings.personalityPresetId
     })
-    void triggerAutoImageAfterTurn({
-      userMsg: p.userMsg,
-      assistantText,
-      dataRoot
-    })
   }
 }
 
@@ -216,29 +211,5 @@ async function triggerVoiceTtsAfterTurn(args: {
     await speakAssistantReplyIfVoiceActive(args)
   } catch (e) {
     log.warn('voice TTS after turn failed', { error: String(e) })
-  }
-}
-
-async function triggerAutoImageAfterTurn(args: {
-  userMsg: string
-  assistantText: string
-  dataRoot: string
-}): Promise<void> {
-  try {
-    const { autoImageSkill } = await import(
-      './extensions/skills/builtin/workflow/auto-image/skill'
-    )
-    const result = await autoImageSkill.execute({
-      args: {
-        userMsg: args.userMsg,
-        assistantReply: args.assistantText,
-        auto: true
-      }
-    })
-    if (result.ok && result.data && !(result.data as any).skipped) {
-      log.info('auto image generated', { path: (result.data as any).path })
-    }
-  } catch (e) {
-    log.warn('auto image after turn failed', { error: String(e) })
   }
 }

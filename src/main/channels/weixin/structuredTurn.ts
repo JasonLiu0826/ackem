@@ -1,4 +1,4 @@
-﻿import type { ChatMessage } from '../../context'
+import type { ChatMessage } from '../../context'
 import type { AppSettings } from '../../settings'
 import type { WorkIntentResult } from '../../engine/types'
 import { detectPlanDocumentIntent } from '../../planDocument/intent'
@@ -12,7 +12,7 @@ import {
 } from '../../extensions/plugins/builtin/knowledge-presentation/knowledgeAnswer'
 import { getKnowledgePresentationPlugin } from '../../extensions/plugins/builtin/knowledge-presentation/plugin'
 import { buildSearchCandidateQueries } from '../../extensions/plugins/builtin/knowledge-presentation/presentation/searchQueryResolver'
-import { buildAckemAwareSearchQueries } from '../../paperCard/AckemProductIdentity'
+import { buildBritneyAwareSearchQueries } from '../../paperCard/britneyProductIdentity'
 import { runIntentAwareWebSearch } from '../../extensions/plugins/builtin/knowledge-presentation/presentation/searchWithIntent'
 import { synthesizeSearchExperience } from '../../extensions/plugins/builtin/knowledge-presentation/presentation/searchSynthesis'
 import { resolveUserTaskFrame } from '../../taskFrame/resolveUserTaskFrame'
@@ -111,7 +111,7 @@ export async function runWeixinStructuredTurn(args: {
 
   log.info('web search', { query: args.intent.query })
   const taskFrame = await resolveUserTaskFrame(args.settings, args.userText)
-  const candidates = buildAckemAwareSearchQueries(
+  const candidates = buildBritneyAwareSearchQueries(
     args.userText,
     buildSearchCandidateQueries(args.userText, [args.intent.query], taskFrame.searchQuery)
   )

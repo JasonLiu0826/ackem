@@ -1,8 +1,8 @@
-﻿import { existsSync, mkdirSync } from 'fs'
+import { existsSync, mkdirSync } from 'fs'
 import { join } from 'path'
 import { app } from 'electron'
 
-/** Root of voice-service (dev: Ackem/voice-service, packaged: resources/voice-service). */
+/** Root of voice-service (dev: Britney/voice-service, packaged: resources/voice-service). */
 export function getVoiceServiceRoot(): string {
   return app.isPackaged
     ? join(process.resourcesPath, 'voice-service')

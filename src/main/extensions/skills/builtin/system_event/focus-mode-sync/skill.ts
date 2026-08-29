@@ -1,4 +1,4 @@
-﻿import { loadSettings } from '../../../../../settings'
+import { loadSettings } from '../../../../../settings'
 import { resolveDataRoot } from '../../../../../paths'
 import {
   clearGlobalDnd,
@@ -16,8 +16,8 @@ export function resetFocusModeSyncState(): void {
 }
 
 function resolveDataRootForSkill(): string {
-  if (process.env.Ackem_TEST_DATA_ROOT) {
-    return process.env.Ackem_TEST_DATA_ROOT
+  if (process.env.BRITNEY_TEST_DATA_ROOT) {
+    return process.env.BRITNEY_TEST_DATA_ROOT
   }
   try {
     return resolveDataRoot(loadSettings())

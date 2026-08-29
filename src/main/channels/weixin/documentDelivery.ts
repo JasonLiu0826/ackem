@@ -1,8 +1,8 @@
-﻿import { formatBubbleForWeixin } from '../markdownForChannel'
+import { formatBubbleForWeixin } from '../markdownForChannel'
 import type { OutboundBubble } from './deliveryPlanner'
 import { getWeixinDeliveryProfile } from './deliveryProfiles'
 import { markdownToWeixinPlain, splitWeixinDocumentChunks } from './markdownToWeixinPlain'
-import { sanitizeAckemIdentityInMarkdown } from '../../paperCard/AckemProductIdentity'
+import { sanitizeBritneyIdentityInMarkdown } from '../../paperCard/britneyProductIdentity'
 
 const DOC_GAP_MS: [number, number] = [600, 1100]
 
@@ -13,7 +13,7 @@ function docGap(rng: () => number): number {
 
 export type WeixinDocumentKind = 'knowledge' | 'plan' | 'search' | 'table'
 
-/** 缁撴瀯鍖栫焊闈㈠崱 鈫?寰俊鏂囨。妯″紡 bubble 搴忓垪锛堜即渚ｇ煭璇?+ 鍒嗗潡姝ｆ枃锛?*/
+/** 结构化纸面卡 → 微信文档模式 bubble 序列（伴侣短评 + 分块正文） */
 export function planWeixinDocumentDelivery(args: {
   companionReply: string
   cardBodyMarkdown: string
@@ -33,12 +33,12 @@ export function planWeixinDocumentDelivery(args: {
 
   let plain = markdownToWeixinPlain(
     args.userQuestion
-      ? sanitizeAckemIdentityInMarkdown(args.cardBodyMarkdown, args.userQuestion)
+      ? sanitizeBritneyIdentityInMarkdown(args.cardBodyMarkdown, args.userQuestion)
       : args.cardBodyMarkdown
   )
   const title = args.displayTitle?.trim()
-  if (title && !plain.includes(`銆?{title}銆慲)) {
-    plain = `銆?{title}銆慭n\n${plain}`
+  if (title && !plain.includes(`【${title}】`)) {
+    plain = `【${title}】\n\n${plain}`
   }
 
   const chunks = splitWeixinDocumentChunks(plain)

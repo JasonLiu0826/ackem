@@ -19,6 +19,11 @@ export default {
           hover: 'var(--color-accent-hover)',
           glow: 'var(--color-accent-glow)'
         },
+        primary: {
+          DEFAULT: 'var(--color-primary)',
+          light: 'var(--color-primary-light)',
+          dark: 'var(--color-primary-dark)'
+        },
         emotion: {
           sweet: 'var(--color-emotion-sweet)',
           warm: 'var(--color-emotion-warm)',
@@ -26,12 +31,21 @@ export default {
           fear: 'var(--color-emotion-fear)'
         },
         success: 'var(--color-success)',
-        danger: 'var(--color-danger)'
+        danger: 'var(--color-danger)',
+        'bg-base': 'var(--color-bg-base)',
+        'bg-elevated': 'var(--color-bg-elevated)',
+        'bg-surface': 'var(--color-bg-surface)',
+        'text-primary': 'var(--color-text-primary)',
+        'text-secondary': 'var(--color-text-secondary)',
+        'text-tertiary': 'var(--color-text-tertiary)',
+        'border-default': 'var(--color-border-default)',
+        'border-subtle': 'var(--color-border-subtle)',
+        'border-strong': 'var(--color-border-strong)'
       },
       fontFamily: {
-        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        display: ['"Zen Maru Gothic"', 'Inter', 'sans-serif'],
-        mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace']
+        sans: ['Inter', 'Noto Sans SC', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['"Playfair Display"', '"Noto Serif SC"', 'Georgia', 'serif'],
+        mono: ['"JetBrains Mono"', '"Fira Code"', 'ui-monospace', 'monospace']
       },
       boxShadow: {
         glow: 'var(--glow-soft)',

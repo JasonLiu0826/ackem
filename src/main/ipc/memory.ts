@@ -1,4 +1,5 @@
-﻿// [ipc/memory] 鈥?璁板繂銆佹儏鑺傘€佺煡璇嗗浘璋便€佹。妗堛€侀暅涓蹇嗐€佹棩璁般€佺绾挎€濈淮
+import { MemoryConsolidator } from '../memory/consolidator'
+// [ipc/memory] — 记忆、情节、知识图谱、档案、镜中记忆、日记、离线思维
 
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -25,7 +26,7 @@ import { saveState } from '../engine/state-persistence'
 import {
   CONTRADICTION_MIN_WEIGHT,
   CONTRADICTION_SIMILARITY_THRESHOLD
-} from '../engine/AckemParams'
+} from '../engine/britneyParams'
 import {
   clearChatHistoryFiles,
   currentDataRoot,
@@ -272,7 +273,7 @@ export function registerMemoryIpc(): void {
   ipcMain.handle('archive:read', (_e, relPath: string) => {
     const root = currentDataRoot()
     const full = join(root, 'memory', 'archive', relPath)
-    if (!existsSync(full)) return { ok: false, error: '鏂囦欢涓嶅瓨鍦? }
+    if (!existsSync(full)) return { ok: false, error: '文件不存在' }
     try {
       return { ok: true, text: readFileSync(full, 'utf-8') }
     } catch (e) {
@@ -431,7 +432,7 @@ export function registerMemoryIpc(): void {
   ipcMain.handle('diary:read', (_e, date: string) => {
     const root = currentDataRoot()
     const file = join(root, 'diary', `${date}.md`)
-    if (!existsSync(file)) return { ok: false, error: '鏃ヨ涓嶅瓨鍦? }
+    if (!existsSync(file)) return { ok: false, error: '日记不存在' }
     try {
       return { ok: true, date, content: readFileSync(file, 'utf-8') }
     } catch (e) {
@@ -445,7 +446,7 @@ export function registerMemoryIpc(): void {
     const root = resolveDataRoot(s)
     const state = mergeEngineState(root, s)
     const traces = traceLatest(10)
-    // 浠庤蹇嗗簱鎵炬渶鐩稿叧鐨勮繎鏈熶簨瀹烇紝鐢ㄤ簬涓€у寲绂荤嚎鎬濈华
+    // 从记忆库找最相关的近期事实，用于个性化离线思绪
     let relatedFact: import('../engine/types').MemoryFact | undefined
     try {
       const tempStore = new FactStore(defaultFactsPath(root))
@@ -459,14 +460,14 @@ export function registerMemoryIpc(): void {
         }
         relatedFact = best
       }
-    } catch { /* 闄嶇骇 */ }
+    } catch { /* 降级 */ }
     const thoughts = generateOfflineThoughts(traces, state.relationship, state.emotion, relatedFact)
     state.offlineThoughts = thoughts
     saveState(root, state, currentSessionId())
     return { thoughts }
   })
 
-  // 鈹€鈹€ 璁板繂鍙鍖?API 鈹€鈹€
+  // ── 记忆可视化 API ──
 
   ipcMain.handle('association:list', () => {
     const root = currentDataRoot()

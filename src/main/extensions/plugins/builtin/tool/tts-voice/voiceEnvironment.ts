@@ -1,4 +1,4 @@
-﻿import { spawn } from 'child_process'
+import { spawn } from 'child_process'
 import { existsSync } from 'fs'
 import { platform } from 'os'
 import {
@@ -106,7 +106,7 @@ export async function checkVoiceEnvironment(): Promise<VoiceEnvReport> {
       source: 'bundled',
       path: bundled.command,
       version: await readPythonVersion(bundled),
-      message: '宸蹭娇鐢?Ackem 鍐呯疆 Python锛堥殢瀹夎鍖呴檮甯︼紝鏃犻渶鍗曠嫭瀹夎锛?
+      message: '已使用 Britney 内置 Python（随安装包附带，无需单独安装）'
     }
   } else {
     const system = resolvePythonLaunchSpec()
@@ -116,7 +116,7 @@ export async function checkVoiceEnvironment(): Promise<VoiceEnvReport> {
         source: 'system',
         path: [system.command, ...system.argsPrefix].join(' '),
         version: await readPythonVersion(system),
-        message: '宸叉娴嬪埌鏈満 Python锛堝皢鐢ㄤ簬璇煶鏈嶅姟锛?
+        message: '已检测到本机 Python（将用于语音服务）'
       }
     } else {
       python = {
@@ -124,8 +124,8 @@ export async function checkVoiceEnvironment(): Promise<VoiceEnvReport> {
         source: 'missing',
         message:
           platform() === 'win32'
-            ? '鏈壘鍒?Python銆傚彲鐐瑰嚮涓嬫柟銆屼竴閿噯澶囪闊崇幆澧冦€嶏紝Ackem 浼氳嚜鍔ㄤ笅杞藉苟閰嶇疆锛堢害 300MB锛屼粎棣栨锛?
-            : '鏈壘鍒?Python 3銆傝鍏堝畨瑁?Python 3.10+锛屾垨鑱旂郴鍙戣鐗堣幏鍙栧唴缃闊冲寘'
+            ? '未找到 Python。可点击下方「一键准备语音环境」，Britney 会自动下载并配置（约 300MB，仅首次）'
+            : '未找到 Python 3。请先安装 Python 3.10+，或联系发行版获取内置语音包'
       }
     }
   }
@@ -146,25 +146,25 @@ export async function checkVoiceEnvironment(): Promise<VoiceEnvReport> {
 
   let summary: string
   if (ready) {
-    summary = '璇煶鐜宸插氨缁紝鍙互鐩存帴浣跨敤'
+    summary = '语音环境已就绪，可以直接使用'
   } else if (!scriptOk) {
-    summary = '璇煶绋嬪簭鏂囦欢缂哄け锛岃閲嶆柊瀹夎 Ackem'
+    summary = '语音程序文件缺失，请重新安装 Britney'
   } else if (!python.ok) {
-    summary = '闇€瑕佸噯澶?Python 杩愯鐜锛堝彲涓€閿畬鎴愶級'
+    summary = '需要准备 Python 运行环境（可一键完成）'
   } else if (!dependenciesOk) {
-    summary = '闇€瑕佸畨瑁呰闊充緷璧栵紙鍙竴閿畬鎴愶紝绾?3鈥?0 鍒嗛挓锛?
+    summary = '需要安装语音依赖（可一键完成，约 3–10 分钟）'
   } else {
-    summary = '渚濊禆宸插畨瑁咃紝璇煶鏈嶅姟鏈繍琛屸€斺€旇鐐瑰嚮銆屽惎鍔ㄨ闊虫湇鍔°€?
+    summary = '依赖已安装，语音服务未运行——请点击「启动语音服务」'
   }
 
   const detailParts: string[] = []
-  if (!scriptOk) detailParts.push('server.py 缂哄け')
-  if (!python.ok) detailParts.push('Python 鏈氨缁?)
+  if (!scriptOk) detailParts.push('server.py 缺失')
+  if (!python.ok) detailParts.push('Python 未就绪')
   if (python.ok && !dependenciesOk) {
-    detailParts.push(`缂哄皯渚濊禆: ${missingDependencies.join(', ')}`)
+    detailParts.push(`缺少依赖: ${missingDependencies.join(', ')}`)
   }
   if (python.ok && dependenciesOk && !serviceRunning) {
-    detailParts.push('鏈嶅姟杩涚▼鏈惎鍔?)
+    detailParts.push('服务进程未启动')
   }
 
   return {
@@ -177,7 +177,7 @@ export async function checkVoiceEnvironment(): Promise<VoiceEnvReport> {
     serviceRunning,
     canAutoInstall: scriptOk && platform() === 'win32',
     summary,
-    detail: detailParts.join(' 路 ')
+    detail: detailParts.join(' · ')
   }
 }
 
@@ -211,17 +211,17 @@ function runProcessWithLogs(
 
 async function ensureEmbeddedPython(onLog: (line: string) => void): Promise<boolean> {
   if (getBundledPythonExe() && probePythonSpec(bundledSpec()!)) {
-    onLog('鍐呯疆 Python 宸插瓨鍦紝璺宠繃涓嬭浇')
+    onLog('内置 Python 已存在，跳过下载')
     return true
   }
 
   const ps1 = getVoicePackageScriptPath()
   if (!existsSync(ps1)) {
-    onLog('鏈壘鍒?package-python.ps1锛屽皢灏濊瘯鐢ㄦ湰鏈?Python 瀹夎渚濊禆')
+    onLog('未找到 package-python.ps1，将尝试用本机 Python 安装依赖')
     return false
   }
 
-  onLog('姝ｅ湪涓嬭浇骞堕厤缃唴缃?Python锛堥娆＄害 300MB锛岃鑰愬績绛夊緟锛夆€?)
+  onLog('正在下载并配置内置 Python（首次约 300MB，请耐心等待）…')
   const result = await runProcessWithLogs(
     'powershell.exe',
     ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', ps1],
@@ -229,7 +229,7 @@ async function ensureEmbeddedPython(onLog: (line: string) => void): Promise<bool
     onLog
   )
   if (!result.ok) {
-    onLog('鍐呯疆 Python 閰嶇疆澶辫触')
+    onLog('内置 Python 配置失败')
     return false
   }
 
@@ -239,11 +239,11 @@ async function ensureEmbeddedPython(onLog: (line: string) => void): Promise<bool
 async function pipInstallRequirements(spec: PythonLaunchSpec, onLog: (line: string) => void): Promise<boolean> {
   const req = getVoiceRequirementsPath()
   if (!existsSync(req)) {
-    onLog('requirements.txt 鏈壘鍒?)
+    onLog('requirements.txt 未找到')
     return false
   }
 
-  onLog('姝ｅ湪瀹夎璇煶渚濊禆锛坒aster-whisper銆乪dge-tts 绛夛級鈥?)
+  onLog('正在安装语音依赖（faster-whisper、edge-tts 等）…')
   const result = await runProcessWithLogs(
     spec.command,
     [...spec.argsPrefix, '-m', 'pip', 'install', '-r', req],
@@ -260,10 +260,10 @@ export async function installVoiceEnvironment(onLog: (p: InstallProgress) => voi
 }> {
   const log = (phase: InstallProgress['phase'], line: string) => onLog({ phase, line })
 
-  log('prepare', '寮€濮嬪噯澶囪闊崇幆澧冣€?)
+  log('prepare', '开始准备语音环境…')
 
   if (!existsSync(getVoiceServiceScriptPath())) {
-    return { ok: false, error: '璇煶绋嬪簭鏂囦欢缂哄け锛岃閲嶆柊瀹夎 Ackem' }
+    return { ok: false, error: '语音程序文件缺失，请重新安装 Britney' }
   }
 
   let spec = bundledSpec()
@@ -271,48 +271,48 @@ export async function installVoiceEnvironment(onLog: (p: InstallProgress) => voi
     const system = resolvePythonLaunchSpec()
     if (probePythonSpec(system)) {
       spec = system
-      log('prepare', '浣跨敤鏈満 Python 瀹夎渚濊禆')
+      log('prepare', '使用本机 Python 安装依赖')
     } else if (platform() === 'win32') {
-      log('embed', '鏈満鏃?Python锛屽紑濮嬮厤缃唴缃幆澧冣€?)
+      log('embed', '本机无 Python，开始配置内置环境…')
       const embedded = await ensureEmbeddedPython((line) => log('embed', line))
       spec = bundledSpec()
       if (!embedded || !spec || !probePythonSpec(spec)) {
         return {
           ok: false,
-          error: '鏃犳硶閰嶇疆 Python銆傝妫€鏌ョ綉缁滆繛鎺ュ悗閲嶈瘯锛屾垨鎵嬪姩瀹夎 Python 3.11+'
+          error: '无法配置 Python。请检查网络连接后重试，或手动安装 Python 3.11+'
         }
       }
-      log('embed', '鍐呯疆 Python 閰嶇疆瀹屾垚')
+      log('embed', '内置 Python 配置完成')
     } else {
-      return { ok: false, error: '鏈壘鍒?Python 3锛岃鍏堝畨瑁?Python 3.10 鎴栨洿楂樼増鏈? }
+      return { ok: false, error: '未找到 Python 3，请先安装 Python 3.10 或更高版本' }
     }
   } else {
-    log('prepare', '浣跨敤 Ackem 鍐呯疆 Python')
+    log('prepare', '使用 Britney 内置 Python')
   }
 
   const deps = await checkDependencies(spec)
   if (!deps.ok) {
     const pipOk = await pipInstallRequirements(spec, (line) => log('pip', line))
     if (!pipOk) {
-      return { ok: false, error: '渚濊禆瀹夎澶辫触銆傝妫€鏌ョ綉缁滃悗閲嶈瘯' }
+      return { ok: false, error: '依赖安装失败。请检查网络后重试' }
     }
     const recheck = await checkDependencies(spec)
     if (!recheck.ok) {
-      return { ok: false, error: `浠嶇己灏戜緷璧? ${recheck.missing.join(', ')}` }
+      return { ok: false, error: `仍缺少依赖: ${recheck.missing.join(', ')}` }
     }
-    log('pip', '璇煶渚濊禆瀹夎瀹屾垚')
+    log('pip', '语音依赖安装完成')
   } else {
-    log('pip', '璇煶渚濊禆宸查綈鍏紝璺宠繃瀹夎')
+    log('pip', '语音依赖已齐全，跳过安装')
   }
 
-  log('done', '姝ｅ湪鍚姩璇煶鏈嶅姟鈥?)
+  log('done', '正在启动语音服务…')
   const started = await voiceService.restart({ ttsEngine: voiceManager.runtimeConfig.ttsEngine })
   if (!started) {
-    const err = voiceService.lastError ?? '璇煶鏈嶅姟鍚姩澶辫触'
+    const err = voiceService.lastError ?? '语音服务启动失败'
     log('error', err)
     return { ok: false, error: err }
   }
 
-  log('done', '璇煶鐜宸插氨缁?)
+  log('done', '语音环境已就绪')
   return { ok: true }
 }

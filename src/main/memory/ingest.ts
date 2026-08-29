@@ -1,6 +1,6 @@
-﻿// [ingest] 鈥?璁板繂鎽勫叆绠＄嚎
-// 鑱岃矗锛氭娊浜嬪疄銆佸啓鍏?FactStore銆佽嚜鍔ㄩ€€褰?
-// 寮曠敤锛?/factExtractor, ./factStore, ./memoryBinding, ../engine/types, ../llmClient
+// [ingest] — 记忆摄入管线
+// 职责：抽事实、写入 FactStore、自动退役
+// 引用：./factExtractor, ./factStore, ./memoryBinding, ../engine/types, ../llmClient
 import { captureEmotionalContext } from './memoryBinding'
 import { FactExtractor } from './factExtractor'
 import { MemoryConsolidator } from './consolidator'
@@ -8,7 +8,7 @@ import { EpisodeExtractor } from './episodeExtractor'
 import { extractTriples } from './tripleExtractor'
 import { MemorySelfEditor } from './memorySelfEditor'
 import { exportMemoryArchive } from './archiveExporter'
-import { AUTO_RETIRE_CHECK_INTERVAL, CONTRADICTION_SIMILARITY_THRESHOLD, EPISODE_INTERVAL_TURNS, EPISODE_INTERVAL_TURNS_LOW, EPISODE_EMOTION_INTENSITY_THRESHOLD } from '../engine/AckemParams'
+import { AUTO_RETIRE_CHECK_INTERVAL, CONTRADICTION_SIMILARITY_THRESHOLD, EPISODE_INTERVAL_TURNS, EPISODE_INTERVAL_TURNS_LOW, EPISODE_EMOTION_INTENSITY_THRESHOLD } from '../engine/britneyParams'
 import { getLastConsolidationTurn, setLastConsolidationTurn } from '../engine/state-persistence'
 import { traceLatest } from '../engine/tracer'
 import { countRawActiveFactsInStore, evaluateAutoConsolidation } from './autoConsolidationPolicy'
@@ -43,7 +43,7 @@ export type PrefetchedFact = {
 export type IngestTurnOptions = {
   skipLlmExtraction?: boolean
   prefetchedFacts?: PrefetchedFact[]
-  /** 鍚屾闃舵宸插啓鍏ヨ交閲忚鍒欎簨瀹烇紝寮傛 job 浠呰窇 LLM 鎶藉彇 */
+  /** 同步阶段已写入轻量规则事实，异步 job 仅跑 LLM 抽取 */
   lightDraftsFromSync?: boolean
   adultPrivacyLevel?: AdultMemoryPrivacyLevel
 }
@@ -68,9 +68,9 @@ export class MemoryIngestPipeline {
     /** Recent exchanges (user+assistant pairs) for episode generation */
     recentExchangesForEpisode?: Array<{ user: string; assistant: string }>,
     kg?: KnowledgeGraph,
-    /** 鍏宠仈绱㈠紩锛堝喎鍚姩鍏宠仈鍐欏叆锛?*/
+    /** 关联索引（冷启动关联写入） */
     associationIndex?: AssociationIndex,
-    /** 浜嬪疄 Embedding 缂撳瓨锛堝喎鍚姩鍏宠仈鐢級 */
+    /** 事实 Embedding 缓存（冷启动关联用） */
     factEmbeddingCache?: Map<string, number[]>,
     options?: IngestTurnOptions
   ): Promise<void> {
@@ -132,13 +132,13 @@ export class MemoryIngestPipeline {
         continue
       }
 
-      // 鑷姩鐢熸垚瑙﹀彂璇嶏紙LLM 鍙緭鍑哄叧閿瘝锛孖ntl.Segmenter 琛ラ綈缂哄け鐨勶級
+      // 自动生成触发词（LLM 只输出关键词，Intl.Segmenter 补齐缺失的）
       const autoTriggers = extractTriggers(f.subject, f.summary)
       const mergedTriggers = [...new Set([...(f.triggers ?? []), ...autoTriggers])]
 
-      // 鍚嶅瓧闄嶆潈锛氭柊澧炲悕瀛楀墠锛屽悓 subject 鐨勬棫鍚嶅瓧 weight-1
+      // 名字降权：新增名字前，同 subject 的旧名字 weight-1
       if (f.subcategory === 'BASIC_PROFILE' &&
-          (f.subject === '鐢ㄦ埛濮撳悕' || f.subject === '鐢ㄦ埛鏄电О')) {
+          (f.subject === '用户姓名' || f.subject === '用户昵称')) {
         factStore.downgradeNameFacts(f.subject)
       }
 
@@ -158,7 +158,7 @@ export class MemoryIngestPipeline {
         ageMeta: (f as any).ageMeta
       })
 
-      // FIX-022锛氭椂闂撮敋鐐?鈥?鏀惧 recurring/relationship/milestone 鍐欏叆闂ㄦ
+      // FIX-022：时间锚点 — 放宽 recurring/relationship/milestone 写入门槛
       if (shouldWriteTemporalAnchor({
         isNew: result.isNew,
         weight: f.weight ?? 0,
@@ -173,7 +173,7 @@ export class MemoryIngestPipeline {
       if (result.isNew) {
         newFactsThisTurn.push(added)
       }
-      // C: 浠庝簨瀹炰腑鎻愬彇涓夊厓缁勫姞鍏ョ煡璇嗗浘璋?
+      // C: 从事实中提取三元组加入知识图谱
       if (kg) {
         const triples = extractTriples(f.subject, f.summary, added.id, {
           subcategory: f.subcategory,
@@ -184,7 +184,7 @@ export class MemoryIngestPipeline {
         }
       }
 
-      // C3: 鎵归噺鐭涚浘妫€娴?鈥?鏀堕泦鎵€鏈夊緟妫€鏌ョ殑浜嬪疄瀵?
+      // C3: 批量矛盾检测 — 收集所有待检查的事实对
       if (added.factLayer !== 'consolidated') {
         const similar = factStore.findSimilarFacts(f.subcategory, f.subject, f.summary, CONTRADICTION_SIMILARITY_THRESHOLD)
           .filter(s => s.id !== added.id)
@@ -192,14 +192,14 @@ export class MemoryIngestPipeline {
           pendingContradictions.push({ newFact: added, existing: s })
         }
 
-        // 鐭涚浘妫€娴嬫墿澶ц寖鍥达細楂樻潈閲嶄簨瀹烇紙鈮?.5锛夐澶栫敤 Embedding 棰勭瓫鍊欓€?
+        // 矛盾检测扩大范围：高权重事实（≥1.5）额外用 Embedding 预筛候选
         if (factEmbeddingCache && (f.weight ?? 0) >= 1.5) {
           const addedEmbed = factEmbeddingCache.get(added.id)
           if (addedEmbed) {
             const allActive = factStore.listActive()
             for (const existing of allActive) {
               if (existing.id === added.id) continue
-              if (similar.some(s => s.id === existing.id)) continue // 宸插湪 Jaccard 鍊欓€夐噷
+              if (similar.some(s => s.id === existing.id)) continue // 已在 Jaccard 候选里
               const existingEmbed = factEmbeddingCache.get(existing.id)
               if (!existingEmbed) continue
               const cosine = cosineSimilarity(addedEmbed, existingEmbed)
@@ -212,7 +212,7 @@ export class MemoryIngestPipeline {
       }
     }
 
-    // FIX-025锛氬喎鍚姩鍏宠仈 鈥?鐢?result.fact.id + strengthenOrCreate/瓒冲寮哄害 add
+    // FIX-025：冷启动关联 — 用 result.fact.id + strengthenOrCreate/足够强度 add
     if (associationIndex && newFactsThisTurn.length > 0) {
       try {
         seedAssociationsForNewFacts({
@@ -224,7 +224,7 @@ export class MemoryIngestPipeline {
       } catch { /* cold-start association is best-effort */ }
     }
 
-    // C3: 鎵归噺鎵ц鐭涚浘妫€娴嬶紙涓€娆?LLM 璋冪敤澶勭悊澶氬锛岃€岄潪閫愬璋冪敤锛?
+    // C3: 批量执行矛盾检测（一次 LLM 调用处理多对，而非逐对调用）
     if (pendingContradictions.length > 0) {
       const editor = new MemorySelfEditor()
       try {
@@ -233,15 +233,15 @@ export class MemoryIngestPipeline {
     }
     if (totalTurnsForRetire > 0 && totalTurnsForRetire % AUTO_RETIRE_CHECK_INTERVAL === 0) {
       factStore.autoRetireExpired()
-      // 姣?10 杞嚜鍔ㄥ鍑轰汉绫诲彲璇荤殑璁板繂妗ｆ
+      // 每 10 轮自动导出人类可读的记忆档案
       try {
         exportMemoryArchive(dataRoot, factStore, episodicStore)
       } catch { /* export is best-effort */ }
     }
-    // C2: 姣?50 杞帇瀹為€€褰逛簨瀹烇紝闃叉鏁扮粍鏃犻檺澧為暱
+    // C2: 每 50 轮压实退役事实，防止数组无限增长
     if (totalTurnsForRetire > 0 && totalTurnsForRetire % 50 === 0) {
       factStore.compactFacts()
-      // O10锛氫綆棰戝満鏅叧鑱斿寮?鈥?涓哄鍎夸簨瀹炶ˉ寤哄叧鑱?
+      // O10：低频场景关联增强 — 为孤儿事实补建关联
       if (associationIndex && factEmbeddingCache) {
         try {
           const orphans = factStore.listActive().filter(f =>
@@ -270,7 +270,7 @@ export class MemoryIngestPipeline {
         } catch { /* association rebuild is best-effort */ }
       }
     }
-    // O3: 璁板繂鏁村悎/鍙嶆€?鈥?ingest 鍐欏叆鍚庡啀璇勪及锛屼繚璇佹湰杞柊浜嬪疄绾冲叆鍊欓€?
+    // O3: 记忆整合/反思 — ingest 写入后再评估，保证本轮新事实纳入候选
     if (totalTurnsForRetire > 0) {
       const rawFactCount = countRawActiveFactsInStore(factStore)
       const lastConsolidationTurn = getLastConsolidationTurn(dataRoot, sessionId)
@@ -285,7 +285,7 @@ export class MemoryIngestPipeline {
       }
     }
 
-    // FIX-015锛氶暅涓蹇?+ 瀛橀噺浜嬪疄鐭涚浘 鈥?ingest 鍚庢寜闂撮殧鑷姩妫€娴?
+    // FIX-015：镜中记忆 + 存量事实矛盾 — ingest 后按间隔自动检测
     if (totalTurnsForRetire > 0) {
       const selfFactAddedThisTurn = ex.facts.some(
         (f) => f.subcategory === 'SELF_PERCEPTION' || f.subcategory === 'OUR_BOND'
@@ -302,7 +302,7 @@ export class MemoryIngestPipeline {
       } catch { /* mirror audit is best-effort */ }
     }
 
-    // 鎯呰妭璁板繂 鈥?鑷€傚簲棰戠巼锛氬彇鍛ㄦ湡鍐呮渶澶ф儏缁己搴︼紙闈炲綋鍓嶈疆锛?
+    // 情节记忆 — 自适应频率：取周期内最大情绪强度（非当前轮）
     episodeEmotionMax = Math.max(episodeEmotionMax, emo.intensity)
     const episodeInterval = episodeEmotionMax > EPISODE_EMOTION_INTENSITY_THRESHOLD
       ? EPISODE_INTERVAL_TURNS : EPISODE_INTERVAL_TURNS_LOW
@@ -334,10 +334,10 @@ export class MemoryIngestPipeline {
           })
         }
       } catch { /* episode generation is best-effort */ }
-      episodeEmotionMax = 0 // 閲嶇疆鍛ㄦ湡鏈€澶ф儏缁?
+      episodeEmotionMax = 0 // 重置周期最大情绪
     }
   }
 }
 
-/** 鎯呰妭鍛ㄦ湡鍐呮渶澶ф儏缁己搴︼紙鑷€傚簲棰戠巼鐢級 */
+/** 情节周期内最大情绪强度（自适应频率用） */
 let episodeEmotionMax = 0

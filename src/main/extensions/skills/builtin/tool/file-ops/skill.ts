@@ -1,4 +1,4 @@
-﻿import { loadSettings } from '../../../../../settings'
+import { loadSettings } from '../../../../../settings'
 import { resolveDataRoot } from '../../../../../paths'
 import type { SkillHandler, SkillInvocation, SkillResult } from '../../../types'
 import { FILE_OPS_MANIFEST } from './manifest'
@@ -12,7 +12,7 @@ function resolveDataRootForSkill(): string {
   try {
     return resolveDataRoot(loadSettings())
   } catch {
-    return process.env.Ackem_TEST_DATA_ROOT ?? ''
+    return process.env.BRITNEY_TEST_DATA_ROOT ?? ''
   }
 }
 
@@ -28,7 +28,7 @@ async function execute(invocation: SkillInvocation): Promise<SkillResult> {
       const files = listStaging(dataRoot)
       return {
         ok: true,
-        output: files.length ? `staging 鏂囦欢锛?{files.join(', ')}` : 'staging 鐩綍涓虹┖銆?,
+        output: files.length ? `staging 文件：${files.join(', ')}` : 'staging 目录为空。',
         injectToContext: true,
         events: [],
         data: { files },
@@ -50,7 +50,7 @@ async function execute(invocation: SkillInvocation): Promise<SkillResult> {
       const saved = writeStagingFile(dataRoot, path, content)
       return {
         ok: true,
-        output: `宸插啓鍏?staging/${saved}`,
+        output: `已写入 staging/${saved}`,
         injectToContext: true,
         events: [],
         data: { path: saved },

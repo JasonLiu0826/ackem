@@ -1,10 +1,10 @@
-﻿// [factContradictionSampler] 鈥?浠庡瓨閲忎簨瀹炰腑鎶芥牱鐭涚浘鍊欓€夊锛團IX-015锛?
+// [factContradictionSampler] — 从存量事实中抽样矛盾候选对（FIX-015）
 
 import {
   CONTRADICTION_MIN_WEIGHT,
   CONTRADICTION_SIMILARITY_THRESHOLD,
   PERIODIC_CONTRADICTION_SAMPLE_PAIRS,
-} from '../engine/AckemParams'
+} from '../engine/britneyParams'
 import type { MemoryFact } from '../engine/types'
 import type { FactStore } from './factStore'
 
@@ -19,7 +19,7 @@ function charJaccard(a: MemoryFact, b: MemoryFact): number {
   return union.size === 0 ? 0 : overlap / union.size
 }
 
-/** 鎸?updatedAt 杈冩柊鑰呬负 newFact锛屾渶澶氳繑鍥?maxPairs 瀵?*/
+/** 按 updatedAt 较新者为 newFact，最多返回 maxPairs 对 */
 export function sampleSimilarFactPairs(
   factStore: FactStore,
   maxPairs = PERIODIC_CONTRADICTION_SAMPLE_PAIRS

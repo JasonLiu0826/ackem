@@ -63,6 +63,8 @@ import {
 } from './desktop-agent/agentJobRouting'
 import { isContinueTaskPlanIntent } from './desktop-agent/task-plan/taskPlanStore'
 
+const INVESTIGATION_SYNTHESIZE_MIN_TOKENS = 4096
+
 const log = createLogger('anthropic-chat')
 const DEFAULT_ANTHROPIC_BASE = 'https://api.anthropic.com/v1'
 const DEFAULT_ANTHROPIC_VERSION = '2023-06-01'

@@ -8,7 +8,7 @@ function escapeHtml(text: string): string {
     .replace(/"/g, '&quot;')
 }
 
-/** 由 Design Brief 确定性生成 Surface HTML（Ackem 暗色主题） */
+/** 由 Design Brief 确定性生成 Surface HTML（Britney 暗色主题） */
 export function buildSurfaceHtmlFromDesignBrief(
   title: string,
   brief: PlanUiDesignBrief,

@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { ExtensionItem } from './extensionTypes'
 
 type RevisionEntry = {
@@ -24,7 +24,7 @@ export function RefineDrawer({ item, open, onClose, onApplied }: Props): JSX.Ele
 
   const refreshHistory = useCallback(async () => {
     try {
-      const r = await window.Ackem.openforu.refine.history(item.id)
+      const r = await window.britney.openforu.refine.history(item.id)
       if (r.ok) setHistory(r.entries)
     } catch {
       setHistory([])
@@ -47,11 +47,11 @@ export function RefineDrawer({ item, open, onClose, onApplied }: Props): JSX.Ele
     setBusy(true)
     setMessage('')
     try {
-      const r = await window.Ackem.openforu.refine.preview(item.id, text)
+      const r = await window.britney.openforu.refine.preview(item.id, text)
       if (r.ok && r.preview) {
         setPreviewText([r.preview.summary, r.preview.diffPreview].filter(Boolean).join('\n\n'))
       } else {
-        setMessage(r.error ?? '棰勮澶辫触')
+        setMessage(r.error ?? '预览失败')
       }
     } finally {
       setBusy(false)
@@ -64,14 +64,14 @@ export function RefineDrawer({ item, open, onClose, onApplied }: Props): JSX.Ele
     setBusy(true)
     setMessage('')
     try {
-      const r = await window.Ackem.openforu.refine.apply(item.id, text)
+      const r = await window.britney.openforu.refine.apply(item.id, text)
       if (r.ok && r.result) {
         setMessage(r.result.message)
         setInstruction('')
         void refreshHistory()
         onApplied?.()
       } else {
-        setMessage(r.error ?? r.result?.message ?? '搴旂敤澶辫触')
+        setMessage(r.error ?? r.result?.message ?? '应用失败')
       }
     } finally {
       setBusy(false)
@@ -79,17 +79,17 @@ export function RefineDrawer({ item, open, onClose, onApplied }: Props): JSX.Ele
   }
 
   const runRollback = async (version: string) => {
-    if (busy || !window.confirm(`鍥炴粴鍒?v${version}锛焋)) return
+    if (busy || !window.confirm(`回滚到 v${version}？`)) return
     setBusy(true)
     try {
       const kind = item.origin === 'uplugin' ? 'uplugin' : 'uskill'
-      const r = await window.Ackem.openforu.refine.rollback(item.id, version, kind)
+      const r = await window.britney.openforu.refine.rollback(item.id, version, kind)
       if (r.ok) {
-        setMessage(`宸插洖婊氬埌 v${version}`)
+        setMessage(`已回滚到 v${version}`)
         void refreshHistory()
         onApplied?.()
       } else {
-        setMessage(r.error ?? '鍥炴粴澶辫触')
+        setMessage(r.error ?? '回滚失败')
       }
     } finally {
       setBusy(false)
@@ -101,19 +101,19 @@ export function RefineDrawer({ item, open, onClose, onApplied }: Props): JSX.Ele
       <button
         type="button"
         className="fixed inset-0 z-[90] bg-black/20"
-        aria-label="鍏抽棴 Refine"
+        aria-label="关闭 Refine"
         onClick={onClose}
       />
       <aside className="glass-panel fixed bottom-0 right-0 z-[91] flex max-h-[70vh] w-[min(520px,92vw)] flex-col rounded-t-2xl border border-surface-inset/60 shadow-glow-lg">
         <header className="flex shrink-0 items-center justify-between border-b border-surface-inset/50 px-4 py-3">
           <div>
-            <p className="font-display text-sm font-medium text-ink">缁х画浼樺寲</p>
+            <p className="font-display text-sm font-medium text-ink">继续优化</p>
             <p className="text-[10px] text-ink-muted">
-              {item.name} 路 {item.id}
+              {item.name} · {item.id}
             </p>
           </div>
           <button type="button" className="text-xs text-ink-muted hover:text-ink" onClick={onClose}>
-            鍏抽棴
+            关闭
           </button>
         </header>
 
@@ -122,7 +122,7 @@ export function RefineDrawer({ item, open, onClose, onApplied }: Props): JSX.Ele
             value={instruction}
             onChange={(e) => setInstruction(e.target.value)}
             rows={3}
-            placeholder="鎻忚堪浣犳兂鏀逛粈涔堬紝渚嬪锛氭妸涓绘寜閽敼鎴愩€屽紑濮嬬粌涔犮€嶃€佸鍔犻噸缃‘璁も€?
+            placeholder="描述你想改什么，例如：把主按钮改成「开始练习」、增加重置确认…"
             className="field-input w-full resize-none text-sm"
             disabled={busy}
           />
@@ -141,7 +141,7 @@ export function RefineDrawer({ item, open, onClose, onApplied }: Props): JSX.Ele
 
           {history.length > 0 && (
             <div className="text-xs">
-              <p className="mb-1 font-medium text-ink-muted">鐗堟湰蹇収</p>
+              <p className="mb-1 font-medium text-ink-muted">版本快照</p>
               <ul className="space-y-1">
                 {history.slice(0, 5).map((h) => (
                   <li
@@ -149,7 +149,7 @@ export function RefineDrawer({ item, open, onClose, onApplied }: Props): JSX.Ele
                     className="flex items-center justify-between rounded-lg border border-surface-inset/30 px-2 py-1"
                   >
                     <span className="text-ink-muted">
-                      v{h.version} 路 {new Date(h.savedAt).toLocaleString('zh-CN')}
+                      v{h.version} · {new Date(h.savedAt).toLocaleString('zh-CN')}
                     </span>
                     <button
                       type="button"
@@ -157,7 +157,7 @@ export function RefineDrawer({ item, open, onClose, onApplied }: Props): JSX.Ele
                       className="text-[10px] text-accent hover:underline disabled:opacity-50"
                       onClick={() => void runRollback(h.version)}
                     >
-                      鍥炴粴
+                      回滚
                     </button>
                   </li>
                 ))}
@@ -173,7 +173,7 @@ export function RefineDrawer({ item, open, onClose, onApplied }: Props): JSX.Ele
             onClick={() => void runPreview()}
             className="flex-1 rounded-lg border border-glass-border px-3 py-2 text-sm text-ink hover:border-accent/40 disabled:opacity-50"
           >
-            棰勮
+            预览
           </button>
           <button
             type="button"
@@ -181,7 +181,7 @@ export function RefineDrawer({ item, open, onClose, onApplied }: Props): JSX.Ele
             onClick={() => void runApply()}
             className="chat-send-btn flex-1 px-3 py-2 text-sm disabled:opacity-50"
           >
-            搴旂敤
+            应用
           </button>
         </footer>
       </aside>

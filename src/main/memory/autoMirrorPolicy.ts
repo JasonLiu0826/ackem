@@ -1,9 +1,9 @@
-﻿// [autoMirrorPolicy] 鈥?闀滀腑/鐭涚浘鑷姩妫€娴嬭Е鍙戠瓥鐣ワ紙FIX-015锛?
+// [autoMirrorPolicy] — 镜中/矛盾自动检测触发策略（FIX-015）
 
 import {
   MIRROR_CHECK_EARLY_MIN_TURNS,
   MIRROR_CHECK_INTERVAL_TURNS,
-} from '../engine/AckemParams'
+} from '../engine/britneyParams'
 
 export function evaluatePeriodicMemoryAudit(input: {
   turnsSinceLastCheck: number

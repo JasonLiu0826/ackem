@@ -1,4 +1,4 @@
-﻿import { loadSettings } from '../../../../../settings'
+import { loadSettings } from '../../../../../settings'
 import { resolveDataRoot } from '../../../../../paths'
 import type { EngineSnapshot } from '../../../../protocols'
 import type { SkillHandler, SkillInvocation, SkillResult } from '../../../types'
@@ -16,7 +16,7 @@ function resolveDataRootForSkill(): string {
   try {
     return resolveDataRoot(loadSettings())
   } catch {
-    return process.env.Ackem_TEST_DATA_ROOT ?? ''
+    return process.env.BRITNEY_TEST_DATA_ROOT ?? ''
   }
 }
 
@@ -78,7 +78,7 @@ async function execute(invocation: SkillInvocation): Promise<SkillResult> {
           type: 'weather_sense:refresh',
           payload: { location: locationInput, stale: snapshot.stale ?? false },
           injectToContext: true,
-          contextInjection: `[澶╂皵鎰熺煡] ${summary}`,
+          contextInjection: `[天气感知] ${summary}`,
           timestamp: new Date().toISOString()
         }
       ],

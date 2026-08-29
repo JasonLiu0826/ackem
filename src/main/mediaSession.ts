@@ -1,4 +1,4 @@
-/** W7 SMTC锛氳鍙?Windows System Media Transport Controls 鐘舵€?*/
+/** W7 SMTC：读取 Windows System Media Transport Controls 状态 */
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 
@@ -38,12 +38,12 @@ try {
 
 export async function readMediaSession(): Promise<MediaSessionInfo> {
   if (process.platform !== 'win32') return EMPTY
-  if (process.env.ACKEM_MEDIA_TITLE) {
+  if (process.env.BRITNEY_MEDIA_TITLE) {
     return {
-      title: process.env.ACKEM_MEDIA_TITLE,
-      artist: process.env.ACKEM_MEDIA_ARTIST ?? '',
+      title: process.env.BRITNEY_MEDIA_TITLE,
+      artist: process.env.BRITNEY_MEDIA_ARTIST ?? '',
       album: '',
-      isPlaying: process.env.ACKEM_MEDIA_PLAYING === '1'
+      isPlaying: process.env.BRITNEY_MEDIA_PLAYING === '1'
     }
   }
   try {
@@ -70,7 +70,7 @@ export async function readMediaSession(): Promise<MediaSessionInfo> {
   }
 }
 
-/** 鏍煎紡鍖栦负鍙瀛楃涓?*/
+/** 格式化为可读字符串 */
 export function formatMediaSession(info: MediaSessionInfo): string {
   if (!info.title && !info.artist) return ''
   const parts = [info.artist, info.title].filter(Boolean)
@@ -84,7 +84,7 @@ export function getCachedMediaSession(): MediaSessionInfo {
   return { ...cached }
 }
 
-/** FIX-030锛氳Е鍙戝叡濞辩瓑鍦烘櫙鍓嶅己鍒跺埛鏂?SMTC 缂撳瓨 */
+/** FIX-030：触发共娱等场景前强制刷新 SMTC 缓存 */
 export async function refreshMediaSessionCache(): Promise<MediaSessionInfo> {
   const info = await readMediaSession()
   cached = info

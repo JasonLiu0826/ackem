@@ -26,10 +26,9 @@ const defaultSettings: AppSettings = {
   tierBDiaryDays: 7,
   singleFileSoftLimitBytes: 120_000,
   memoryBudgetChars: 8000,
-  companionName: '浼翠荆',
-  companionSystemHint: '娓╂煍銆佺湡璇氾紝鐢ㄣ€屾垜銆嶆寚浠ｈ嚜宸憋紙AI 浼翠荆锛夛紝涓嶇敤銆屾垜銆嶆寚浠ｇ敤鎴枫€?,
+  companionName: '伴侣',
+  companionSystemHint: '温柔、真诚，用「我」指代自己（AI 伴侣），不用「我」指代用户。',
   companionGender: 'male',
-  companionAppearance: '涓€浣嶅勾杞诲コ瀛╋紝榛戣壊闀垮彂锛岀惀鐝€鑹茬溂鐫涳紝鐨偆鐧界殭锛岃韩鏉愮氦缁嗭紝甯哥┛鐧借壊琛～鎼厤娴呰壊鐭锛屾俯鏌旇€岀伒鍔ㄧ殑姘旇川',
   personalityPresetId: 'boy_next_door',
   personalityConfigMode: 'manual',
   inferenceConsentVersion: 1,
@@ -63,20 +62,17 @@ const defaultSettings: AppSettings = {
   desktopAgentDownloadDir: '',
   updateChannel: 'auto',
   updateSkippedVersion: '',
-  updateLastCheckAt: '',
-  agnesBaseUrl: 'https://apihub.agnes-ai.com/v1',
-  agnesApiKey: '',
-  agnesImageModel: 'agnes-image-2.1-flash'
+  updateLastCheckAt: ''
 }
 
 function settingsPath(): string {
   if (typeof app?.getPath !== 'function') {
-    return join(process.cwd(), '.test-cache', 'Ackem-app-settings.json')
+    return join(process.cwd(), '.test-cache', 'britney-app-settings.json')
   }
-  return join(app.getPath('userData'), 'Ackem-app-settings.json')
+  return join(app.getPath('userData'), 'britney-app-settings.json')
 }
 
-/** Kairos 鈫?Ackem 閲嶅懡鍚嶅墠鐨?Electron userData 璁剧疆璺緞 */
+/** Kairos → Britney 重命名前的 Electron userData 设置路径 */
 function legacySettingsPaths(): string[] {
   if (typeof app?.getPath !== 'function') return []
   const roaming = dirname(app.getPath('userData'))
@@ -226,7 +222,7 @@ export function saveSettings(next: Partial<AppSettings>): AppSettings {
     merged._encryptedApiKey = encryptKey(trimmedKey)
     merged.openaiApiKey = ENCRYPTED_PLACEHOLDER
   } else if (trimmedKey === ENCRYPTED_PLACEHOLDER || !trimmedKey) {
-    // 鐢ㄦ埛鏈敼 Key锛氫繚鐣欑鐩樹笂宸叉湁鐨勫姞瀵?blob
+    // 用户未改 Key：保留磁盘上已有的加密 blob
     if (rawOnDisk?._encryptedApiKey) {
       merged._encryptedApiKey = rawOnDisk._encryptedApiKey
       merged.openaiApiKey = ENCRYPTED_PLACEHOLDER

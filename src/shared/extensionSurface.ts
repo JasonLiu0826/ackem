@@ -1,4 +1,4 @@
-﻿/** JE-3锛歶plugin 鐙珛 Surface 閰嶇疆锛堝瓨 plugin.meta.json锛?*/
+/** JE-3：uplugin 独立 Surface 配置（存 plugin.meta.json） */
 
 import type { InteractionRequiredLevel, InteractionStep } from './openforuInteraction'
 import type { OpenForUWidgetId } from './openforuWidgets'
@@ -13,16 +13,16 @@ export type SurfaceInvokeDispatchMeta = {
 export type ExtensionSurfaceConfig = {
   enabled: boolean
   title?: string
-  /** 鍐呰仈 HTML锛圵1 鏈€灏忥級锛涙垨鐩稿鎻掍欢鐩綍鐨?entry 璺緞 */
+  /** 内联 HTML（W1 最小）；或相对插件目录的 entry 路径 */
   html?: string
   entry?: string
-  /** OID锛氬涓?Widget 妯℃澘 id锛堜紭鍏堜簬闈欐€?html锛?*/
+  /** OID：宿主 Widget 模板 id（优先于静态 html） */
   widget?: OpenForUWidgetId
   widgetConfig?: Record<string, unknown>
-  /** Gate3 浜や簰楠屾敹鍓ф湰 */
+  /** Gate3 交互验收剧本 */
   interactionScript?: InteractionStep[]
   requiredLevel?: InteractionRequiredLevel
-  /** OFU-Surface锛歴lash / 鍏抽敭璇嶈Е鍙戞椂鐨勫涓昏涓?*/
+  /** OFU-Surface：slash / 关键词触发时的宿主行为 */
   invoke?: SurfaceInvokePolicy
 }
 
@@ -47,7 +47,7 @@ function escapeHtml(text: string): string {
     .replace(/"/g, '&quot;')
 }
 
-/** W2-D 鏍囨潌椤碉細婕旂ず surfacePreload 路 Ackem.extension.getContext / close */
+/** W2-D 标杆页：演示 surfacePreload · britney.extension.getContext / close */
 export function defaultSurfaceHtml(title: string): string {
   const safeTitle = escapeHtml(title)
   return `<!DOCTYPE html>
@@ -72,32 +72,32 @@ export function defaultSurfaceHtml(title: string): string {
 </head>
 <body>
   <main>
-    <span class="badge">Ackem Extension Surface 路 W2-D</span>
+    <span class="badge">Britney Extension Surface · W2-D</span>
     <h1>${safeTitle}</h1>
-    <p class="hint">鐙珛绐楀彛宸插氨缁€備笅鏂逛俊鎭潵鑷?<code>Ackem.extension.getContext()</code>锛坰urfacePreload 绐?API锛夈€?/p>
+    <p class="hint">独立窗口已就绪。下方信息来自 <code>britney.extension.getContext()</code>（surfacePreload 窄 API）。</p>
     <div class="card">
       <div class="label">extensionId</div>
-      <div class="value" id="ext-id">鍔犺浇涓€?/div>
+      <div class="value" id="ext-id">加载中…</div>
     </div>
     <div class="card">
       <div class="label">title</div>
-      <div class="value" id="ext-title">鈥?/div>
+      <div class="value" id="ext-title">—</div>
     </div>
-    <button type="button" id="btn-close">鍏抽棴绐楀彛</button>
+    <button type="button" id="btn-close">关闭窗口</button>
   </main>
   <script>
     (async function () {
-      var extApi = window.Ackem && window.Ackem.extension;
+      var extApi = window.britney && window.britney.extension;
       if (!extApi) {
-        document.getElementById('ext-id').textContent = '锛坧reload 鏈姞杞斤級';
+        document.getElementById('ext-id').textContent = '（preload 未加载）';
         return;
       }
       try {
         var ctx = await extApi.getContext();
-        document.getElementById('ext-id').textContent = (ctx && ctx.extensionId) || '鈥?;
-        document.getElementById('ext-title').textContent = (ctx && ctx.title) || '鈥?;
+        document.getElementById('ext-id').textContent = (ctx && ctx.extensionId) || '—';
+        document.getElementById('ext-title').textContent = (ctx && ctx.title) || '—';
       } catch (e) {
-        document.getElementById('ext-id').textContent = '璇诲彇澶辫触';
+        document.getElementById('ext-id').textContent = '读取失败';
       }
       document.getElementById('btn-close').addEventListener('click', function () {
         extApi.close();

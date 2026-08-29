@@ -27,13 +27,13 @@ export type BuildContextResult = {
   knowledgeTopic?: string
   suggestedSearchQuery?: string
   forcedWebSearchQuery?: string
-  /** L0.5 璁″垝涔︿富棰橈紙Markdown 绾搁潰鍗★級 */
+  /** L0.5 计划书主题（Markdown 纸面卡） */
   planDocumentTopic?: string
-  /** L0 鐢ㄦ埛浠诲姟妗嗭紙浜や粯褰㈡€?/ 鍚堝苟鎼滅储绛栫暐锛?*/
+  /** L0 用户任务框（交付形态 / 合并搜索策略） */
   userTaskFrame?: UserTaskFrame
-  /** P0-1锛欳reate/invoke 鏈矾鐢憋紝绂佹鎵╁睍绫诲亣鎵胯 */
+  /** P0-1：Create/invoke 未路由，禁止扩展类假承诺 */
   dispatchBypassed?: boolean
-  /** 鏈疆宸茶Е鍙戠殑鎵╁睍锛坅uto_invoke 鎴栫敤鎴风‘璁ゅ惎鐢級 */
+  /** 本轮已触发的扩展（auto_invoke 或用户确认启用） */
   dispatchTriggered?: {
     extensionId: string
     extensionName: string
@@ -115,7 +115,7 @@ const gamemodeMinecraft = {
   logStatus: () => gamemodeInvoke<{ active: boolean }>('logStatus')
 }
 
-contextBridge.exposeInMainWorld('Ackem', {
+contextBridge.exposeInMainWorld('britney', {
   getSettings: (): Promise<AppSettings> => ipcRenderer.invoke('settings:get'),
   getAppVersion: (): Promise<string> => ipcRenderer.invoke('update:getAppVersion'),
   checkUpdate: (): Promise<import('../shared/updateTypes').UpdateCheckResult> =>
@@ -272,7 +272,7 @@ contextBridge.exposeInMainWorld('Ackem', {
     batPath: string | null
     nsisUninstaller: string | null
   }> => ipcRenderer.invoke('app:uninstallInfo'),
-  uninstallAckem: (opts?: { deleteData?: boolean; removeApp?: boolean }): Promise<{ ok: boolean }> =>
+  uninstallBritney: (opts?: { deleteData?: boolean; removeApp?: boolean }): Promise<{ ok: boolean }> =>
     ipcRenderer.invoke('app:uninstall', opts ?? {}),
   embeddingStatus: () => ipcRenderer.invoke('embedding:status'),
   embeddingReadiness: () => ipcRenderer.invoke('embedding:readiness'),
@@ -322,21 +322,6 @@ contextBridge.exposeInMainWorld('Ackem', {
   desireList: () => ipcRenderer.invoke('desire:list'),
   desireDismiss: (desireId: string) => ipcRenderer.invoke('desire:dismiss', desireId),
   desireClearActive: () => ipcRenderer.invoke('desire:clearActive'),
-  agnes: {
-    generateImage: (prompt: string) =>
-      ipcRenderer.invoke('agnes:generateImage', { prompt }) as Promise<{
-        success: boolean
-        imagePath?: string
-        imageUrl?: string
-        revisedPrompt?: string
-        error?: string
-      }> ,
-    detectIntent: (text: string) =>
-      ipcRenderer.invoke('agnes:detectIntent', { text }) as Promise<{
-        isImage: boolean
-        prompt?: string
-      }>
-  },
   mirrorCheck: () => ipcRenderer.invoke('mirror:check'),
   mirrorFindings: () => ipcRenderer.invoke('mirror:findings'),
   diaryGenerate: (opts?: { date?: string; force?: boolean }) => ipcRenderer.invoke('diary:generate', opts),
@@ -468,27 +453,27 @@ contextBridge.exposeInMainWorld('Ackem', {
     ipcRenderer.removeAllListeners('companionSkin:changed')
     ipcRenderer.on('companionSkin:changed', () => fn())
   },
-  /** @deprecated 浣跨敤 ext.gamemode.minecraft */
+  /** @deprecated 使用 ext.gamemode.minecraft */
   mcReact: gamemodeMinecraft.react,
-  /** @deprecated 浣跨敤 ext.gamemode.minecraft */
+  /** @deprecated 使用 ext.gamemode.minecraft */
   mcParseLog: gamemodeMinecraft.parseLog,
-  /** @deprecated 浣跨敤 ext.gamemode.minecraft */
+  /** @deprecated 使用 ext.gamemode.minecraft */
   mcStatus: gamemodeMinecraft.getWsStatus,
-  /** @deprecated 浣跨敤 ext.gamemode.minecraft */
+  /** @deprecated 使用 ext.gamemode.minecraft */
   mcSetEngineState: gamemodeMinecraft.syncEngineState,
-  /** @deprecated 浣跨敤 ext.gamemode.minecraft */
+  /** @deprecated 使用 ext.gamemode.minecraft */
   mcBotStart: gamemodeMinecraft.botStart,
-  /** @deprecated 浣跨敤 ext.gamemode.minecraft */
+  /** @deprecated 使用 ext.gamemode.minecraft */
   mcBotStop: gamemodeMinecraft.botStop,
-  /** @deprecated 浣跨敤 ext.gamemode.minecraft */
+  /** @deprecated 使用 ext.gamemode.minecraft */
   mcBotStatus: gamemodeMinecraft.botStatus,
-  /** @deprecated 浣跨敤 ext.gamemode.minecraft */
+  /** @deprecated 使用 ext.gamemode.minecraft */
   mcBotDebug: gamemodeMinecraft.botDebug,
-  /** @deprecated 浣跨敤 ext.gamemode.minecraft */
+  /** @deprecated 使用 ext.gamemode.minecraft */
   mcLogStart: gamemodeMinecraft.logStart,
-  /** @deprecated 浣跨敤 ext.gamemode.minecraft */
+  /** @deprecated 使用 ext.gamemode.minecraft */
   mcLogStop: gamemodeMinecraft.logStop,
-  /** @deprecated 浣跨敤 ext.gamemode.minecraft */
+  /** @deprecated 使用 ext.gamemode.minecraft */
   mcLogStatus: gamemodeMinecraft.logStatus,
   sessionList: () => ipcRenderer.invoke('session:list'),
   sessionCreate: (name: string) => ipcRenderer.invoke('session:create', name),
@@ -618,11 +603,15 @@ contextBridge.exposeInMainWorld('Ackem', {
     ipcRenderer.removeAllListeners('chat:error')
     ipcRenderer.on('chat:error', (_e, err: string) => fn(err))
   },
+  onChatImage: (fn: (payload: { path?: string; url?: string; prompt?: string }) => void) => {
+    ipcRenderer.removeAllListeners('chat:image')
+    ipcRenderer.on('chat:image', (_e, payload) => fn(payload))
+  },
   onDispatchProactive: (fn: (payload: { extensionId: string; message: string }) => void) => {
     ipcRenderer.removeAllListeners('dispatch:proactive')
     ipcRenderer.on('dispatch:proactive', (_e, payload) => fn(payload))
   },
-  /** @deprecated 浣跨敤 ext.gamemode.onEvent('minecraft', ...) */
+  /** @deprecated 使用 ext.gamemode.onEvent('minecraft', ...) */
   onMcEvent: (fn: (payload: { event: unknown; reaction: unknown }) => void) => {
     ipcRenderer.removeAllListeners('mc:event')
     ipcRenderer.on('mc:event', (_e, payload) => fn(payload))

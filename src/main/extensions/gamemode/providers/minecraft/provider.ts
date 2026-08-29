@@ -1,4 +1,4 @@
-﻿// [extensions/gamemode/providers/minecraft/provider] 鈥?Minecraft GameProvider
+// [extensions/gamemode/providers/minecraft/provider] — Minecraft GameProvider
 
 import type {
   GameProvider,
@@ -19,20 +19,20 @@ import { MINECRAFT_RPC_METHODS } from './rpc-methods'
 import { MinecraftGameService } from './service'
 
 export const MINECRAFT_MANIFEST: GameProviderManifest = {
-  id: 'Ackem/mc-companion@0.2.0',
-  name: 'Minecraft 闄即',
+  id: 'britney/mc-companion@0.2.0',
+  name: 'Minecraft 陪伴',
   version: '0.2.0',
   category: 'gamemode',
   gameId: 'minecraft',
   gameName: 'Minecraft',
   eventSources: ['log_file', 'manual', 'websocket'],
-  description: '涓?Minecraft 鎻愪緵 AI 浼翠荆闄即锛氭棩蹇楄В鏋愩€佷簨浠跺弽搴斻€丅ot 鎺у埗',
+  description: '为 Minecraft 提供 AI 伴侣陪伴：日志解析、事件反应、Bot 控制',
   author: 'JasonLiu0826',
   license: 'AGPL-3.0',
   main: 'provider.ts',
   engineVersion: '0.1.0',
   tags: ['minecraft', 'gaming', 'companion'],
-  recommendedPersonalityTags: ['蹇犵姮', '娲绘臣', '鍌插▏', '娓╂煍', '鍏冩皵'],
+  recommendedPersonalityTags: ['忠犬', '活泼', '傲娇', '温柔', '元气'],
   rpcMethods: [...MINECRAFT_RPC_METHODS]
 }
 

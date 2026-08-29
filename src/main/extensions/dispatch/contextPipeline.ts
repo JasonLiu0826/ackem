@@ -1,4 +1,4 @@
-﻿import type { AppSettings } from '../../settings'
+import type { AppSettings } from '../../settings'
 import type { DispatchResult } from '../protocols'
 import type { ExtensionsCoordinator } from '../coordinator'
 import { routeDispatch } from '../../engine/dispatchRouter'
@@ -34,11 +34,11 @@ export type DispatchPipelineInput = {
   coordinator: ExtensionsCoordinator
   snapshot: EngineSnapshot
   llm: ReturnType<typeof createLlmJsonClient>
-  /** 鐢ㄦ埛鎷掔粷鍚庨噸璇曟椂璺宠繃 ask */
+  /** 用户拒绝后重试时跳过 ask */
   skipAskForExtensionId?: string
-  /** wave fast path锛氳烦杩?intent/dispatch LLM */
+  /** wave fast path：跳过 intent/dispatch LLM */
   skipLlm?: boolean
-  /** 宸茬敱 prepareTurnContext 鎻愪緵鐨?query embedding锛坕ntent 鏈敼鍐欐椂鍙鐢級 */
+  /** 已由 prepareTurnContext 提供的 query embedding（intent 未改写时可复用） */
   queryEmbed?: number[]
 }
 
@@ -48,7 +48,7 @@ export async function runDispatchPipeline(
   dispatchResult?: DispatchResult
   extraInjections: string[]
   emotionHintDelta?: DispatchResult['emotionHint']
-  /** 娑堣В鍚庣殑娑堟伅锛堜緵鐭ヨ瘑鍗＄瓑鎻掍欢浣跨敤锛?*/
+  /** 消解后的消息（供知识卡等插件使用） */
   resolvedMessage?: string
   surfaceInvokeResult?: SurfaceInvokePipelineResult
 }> {
@@ -63,9 +63,9 @@ export async function runDispatchPipeline(
 
   const disabledSlash = matchSlashInvokeDisabled(input.userText, dispatchedCatalog)
   if (disabledSlash) {
-    const slashHint = getSlashCommandsForEntry(disabledSlash).slice(0, 2).join(' 鎴?')
+    const slashHint = getSlashCommandsForEntry(disabledSlash).slice(0, 2).join(' 或 ')
     const statusLabel =
-      disabledSlash.status === 'error' ? '鍔犺浇澶辫触' : '鏈惎鐢?
+      disabledSlash.status === 'error' ? '加载失败' : '未启用'
     return {
       dispatchResult: {
         decision: 'chat',
@@ -74,11 +74,11 @@ export async function runDispatchPipeline(
       },
       extraInjections: [
         [
-          '銆愭墿灞曡皟搴β峰繀璇汇€?,
-          `鐢ㄦ埛浣跨敤浜?slash 鍛戒护锛屼絾鎵╁睍銆?{disabledSlash.name}銆嶅綋鍓?{statusLabel}銆俙,
-          '璇峰埌鎵╁睍涓績 鈫?鑷垱 Plugin 鈫?鐐广€屽惎鐢ㄣ€嶏紱鑻ュ嚭鐜扮孩鏉℃姤閿欙紝鍏堥噸鍚?Ackem 鍐嶅叧鈫掑紑涓€娆°€?,
-          slashHint ? `鍚敤鍚庡彲鍦ㄤ富鑱婂ぉ鍙戦€侊細${slashHint}` : '',
-          '鍥炲鏃跺厛璇存槑涓婅堪鐘舵€侊紝涓嶈鍙綋鐜╃瑧甯﹁繃銆?
+          '【扩展调度·必读】',
+          `用户使用了 slash 命令，但扩展「${disabledSlash.name}」当前${statusLabel}。`,
+          '请到扩展中心 → 自创 Plugin → 点「启用」；若出现红条报错，先重启 Britney 再关→开一次。',
+          slashHint ? `启用后可在主聊天发送：${slashHint}` : '',
+          '回复时先说明上述状态，不要只当玩笑带过。'
         ]
           .filter(Boolean)
           .join(' ')
@@ -96,13 +96,13 @@ export async function runDispatchPipeline(
     .map((m) => `${m.role}: ${m.content.slice(0, 120)}`)
     .join('\n')
 
-  // 鈺愨晲鈺?鎰忓浘娑堣В 鈺愨晲鈺?
+  // ═══ 意图消解 ═══
   const intentResult = input.skipLlm
     ? { resolvedMessage: input.userText, wasAmbiguous: false, wasResolved: false }
     : await resolveIntent(input.userText, input.sessionId, input.llm)
   const matchText = intentResult.resolvedMessage
 
-  // Embedding 璺敱锛堢敤娑堣В鍚庣殑娑堟伅绠?embedding锛夛紱wave fast path 璺宠繃
+  // Embedding 路由（用消解后的消息算 embedding）；wave fast path 跳过
   let queryEmbed: number[] | undefined = input.queryEmbed
   let routeIndex: import('../../embedding/types').RouteIndex | undefined
   let createToolAnchor: number[] | undefined
@@ -123,7 +123,7 @@ export async function runDispatchPipeline(
           createToolAnchor = getCachedCreateToolAnchor() ?? undefined
         }
       }
-    } catch { /* Embedding 澶辫触涓嶅奖鍝嶄富娴佺▼ */ }
+    } catch { /* Embedding 失败不影响主流程 */ }
   }
 
   const dispatchResult = await routeDispatch({
@@ -145,7 +145,7 @@ export async function runDispatchPipeline(
       : async (prompt) =>
           input.llm.chatCompletionJson({
             messages: [
-              { role: 'system', content: '鍙繑鍥?JSON锛屼笉瑕?markdown銆? },
+              { role: 'system', content: '只返回 JSON，不要 markdown。' },
               { role: 'user', content: prompt }
             ],
             temperature: 0,
@@ -153,9 +153,9 @@ export async function runDispatchPipeline(
           })
   })
 
-  // 鈺愨晲鈺?璇濋杩借釜锛氬缁堟洿鏂拌瘽棰樻爤锛堟湁瀹炶川鍐呭鏃讹級 鈺愨晲鈺?
+  // ═══ 话题追踪：始终更新话题栈（有实质内容时） ═══
   const topicText = input.userText.trim()
-  if (topicText.length >= 4 && !/^[鍡摝濂界殑濂藉惂琛屾槸鍡棷鍝﹀摝鍝堝搱鍛靛懙]+$/.test(topicText)) {
+  if (topicText.length >= 4 && !/^[嗯哦好的好吧行是嗯嗯哦哦哈哈呵呵]+$/.test(topicText)) {
     pushTopic(input.sessionId, topicText.slice(0, 120), dispatchResult.decision)
   }
 
@@ -191,7 +191,7 @@ export async function runDispatchPipeline(
     extraInjections.push(...outcome.llmHints)
     if (outcome.injectContext) extraInjections.push(outcome.injectContext)
     if (!outcome.opened) {
-      extraInjections.push(`銆怱urface路閿欒銆?{outcome.message}`)
+      extraInjections.push(`【Surface·错误】${outcome.message}`)
     }
     return {
       dispatchResult,
@@ -217,7 +217,7 @@ export async function runDispatchPipeline(
     if (exec.contextInjection) extraInjections.push(exec.contextInjection)
     if (dispatchResult.reasoning === 'extension_invoke_slash') {
       extraInjections.push(
-        '銆恠lash 璋冨害路纭€с€戞湰杞凡閫氳繃 / 鍛戒护瑙﹀彂鐢ㄦ埛鎵╁睍銆備綘蹇呴』鍦ㄥ洖澶嶄腑钀藉疄涓嬫柟銆屾墿灞曚笂涓嬫枃銆嶉噷鐨勮姹傦紙鍚帰閽?Worker/鐣寗閽熺瓑鍏蜂綋鎸囩ず锛夛紝涓嶅緱鍙皟渚冪敤鎴锋暡鍛戒护銆?
+        '【slash 调度·硬性】本轮已通过 / 命令触发用户扩展。你必须在回复中落实下方「扩展上下文」里的要求（含探针/Worker/番茄钟等具体指示），不得只调侃用户敲命令。'
       )
     }
     if (exec.emotionHint) {

@@ -20,7 +20,7 @@ export function getPortableDataRoot(): string {
 export function getLocalAppDataRoot(): string {
   const la = process.env.LOCALAPPDATA
   const base = la && la.length > 0 ? la : join(homedir(), 'AppData', 'Local')
-  return join(base, 'Ackem')
+  return join(base, 'Britney')
 }
 
 export function resolveDataRoot(settings: AppSettings): string {
@@ -34,7 +34,7 @@ function toDisplayRelative(base: string, absolutePath: string, prefix: string): 
   return prefix + (normalized.startsWith('.') ? normalized.slice(2) : normalized)
 }
 
-/** 璁剧疆椤靛睍绀猴細缁濆璺緞 + 瀵圭敤鎴峰弸濂界殑鐩稿/缂╁啓璺緞 */
+/** 设置页展示：绝对路径 + 对用户友好的相对/缩写路径 */
 export function formatDataRootDisplayPaths(settings: AppSettings): DataRootDisplayPaths {
   const absolutePath = resolveDataRoot(settings)
   const mode = settings.dataRootMode
@@ -76,5 +76,5 @@ export function formatDataRootDisplayPaths(settings: AppSettings): DataRootDispl
   return { absolutePath, relativePath: absolutePath, mode }
 }
 
-/** 缁撴瀯鍖栨暟鎹崟搴擄細{dataRoot}/Ackem.db锛堜笌渚挎惡 ./data 鎴?LocalAppData 鏍逛竴鑷达級 */
-export { databasePath, ACKEM_DB_FILENAME } from './db/paths'
+/** 结构化数据单库：{dataRoot}/britney.db（与便携 ./data 或 LocalAppData 根一致） */
+export { databasePath, BRITNEY_DB_FILENAME } from './db/paths'

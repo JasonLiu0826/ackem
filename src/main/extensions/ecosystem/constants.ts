@@ -1,24 +1,24 @@
-﻿// [ecosystem/constants] 鈥?Ackem 鎵╁睍鐢熸€佸崗璁父閲?
+// [ecosystem/constants] — Britney 扩展生态协议常量
 
-/** 鎵╁睍寮曟搸 API 鍗忚鐗堟湰锛堜笌 DEVELOPER-EXTENSION-PROTOCOL.md 瀵归綈锛?*/
-export const Ackem_ENGINE_API_VERSION = '1.0.0'
+/** 扩展引擎 API 协议版本（与 DEVELOPER-EXTENSION-PROTOCOL.md 对齐） */
+export const BRITNEY_ENGINE_API_VERSION = '1.0.0'
 
-/** Ackem 搴旂敤鐗堟湰锛堜笌鍙戣鍖?extraMetadata.version 瀵归綈锛?*/
-export const Ackem_APP_VERSION = '0.0.0'
+/** Britney 应用版本（与发行包 extraMetadata.version 对齐） */
+export const BRITNEY_APP_VERSION = '0.0.0'
 
-/** .Ackem-ext 鍖呮牸寮忔爣璇?*/
-export const Ackem_EXT_PACKAGE_FORMAT = 'Ackem-ext' as const
+/** .britney-ext 包格式标识 */
+export const BRITNEY_EXT_PACKAGE_FORMAT = 'britney-ext' as const
 
-/** .Ackem-ext 鍖呮牸寮忕増鏈?*/
-export const Ackem_EXT_PACKAGE_FORMAT_VERSION = '1.0.0'
+/** .britney-ext 包格式版本 */
+export const BRITNEY_EXT_PACKAGE_FORMAT_VERSION = '1.0.0'
 
-/** 瀹樻柟鍐呯疆鎵╁睍鍛藉悕绌洪棿锛堥殢搴旂敤鍒嗗彂锛屾棤闇€绛惧悕锛?*/
-export const NAMESPACE_OFFICIAL = 'Ackem' as const
+/** 官方内置扩展命名空间（随应用分发，无需签名） */
+export const NAMESPACE_OFFICIAL = 'britney' as const
 
-/** 绀惧尯/marketplace 鎵╁睍鍛藉悕绌洪棿锛堥』绛惧悕 + 淇′换閾撅級 */
+/** 社区/marketplace 扩展命名空间（须签名 + 信任链） */
 export const NAMESPACE_COMMUNITY = 'community' as const
 
-/** 鐢ㄦ埛鑷垱 OpenForU 鎵╁睍鍛藉悕绌洪棿锛堟湰鏈?Plan 閮ㄧ讲锛屾棤闇€绛惧悕锛?*/
+/** 用户自创 OpenForU 扩展命名空间（本机 Plan 部署，无需签名） */
 export const NAMESPACE_USER = 'u' as const
 
 export type ExtensionNamespace =
@@ -32,14 +32,14 @@ export const EXTENSION_NAMESPACES: ExtensionNamespace[] = [
   NAMESPACE_USER
 ]
 
-/** community 鎵╁睍钀界洏鏍圭洰褰曪紙鐩稿 dataRoot锛?*/
+/** community 扩展落盘根目录（相对 dataRoot） */
 export const COMMUNITY_EXTENSIONS_REL = 'extensions/community'
 
-/** 淇′换鍙戝竷鑰呭叕閽ョ洰褰曪紙鐩稿 dataRoot锛?*/
+/** 信任发布者公钥目录（相对 dataRoot） */
 export const TRUST_STORE_REL = 'extensions/trust'
 
-/** 甯傚満 catalog 缂撳瓨锛堢浉瀵?dataRoot锛屽彲閫夛級 */
+/** 市场 catalog 缓存（相对 dataRoot，可选） */
 export const MARKETPLACE_CATALOG_REL = 'extensions/marketplace/catalog.json'
 
-/** 绛惧悕 sidecar 鏂囦欢鍚?*/
-export const SIGNATURE_SIDECAR_FILENAME = '.Ackem-signature.json'
+/** 签名 sidecar 文件名 */
+export const SIGNATURE_SIDECAR_FILENAME = '.britney-signature.json'

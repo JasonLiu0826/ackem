@@ -1,4 +1,4 @@
-﻿import { existsSync, mkdirSync } from 'node:fs'
+import { existsSync, mkdirSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { fileURLToPath } from 'node:url'
@@ -13,7 +13,7 @@ function moduleDir(): string {
   return dirname(fileURLToPath(import.meta.url))
 }
 
-/** 寮€鍙戯細涓昏繘绋嬫墦杩?index.js 鏃?import.meta.url 鍦?out/main锛岄』鍥炴寚婧愮爜鏍?*/
+/** 开发：主进程打进 index.js 时 import.meta.url 在 out/main，须回指源码树 */
 function findWorkerEntrySource(): string {
   const dir = moduleDir()
 
@@ -23,18 +23,18 @@ function findWorkerEntrySource(): string {
   const prebuilt = join(dir, PREBUILT_NAME)
   if (existsSync(prebuilt)) return prebuilt
 
-  const roots = [process.cwd(), join(process.cwd(), 'Ackem')]
+  const roots = [process.cwd(), join(process.cwd(), 'Britney')]
   for (const root of roots) {
     const src = join(root, WORKER_ENTRY_REL)
     if (existsSync(src)) return src
   }
 
   throw new Error(
-    `鎵句笉鍒?uplugin Worker 鍏ュ彛锛堟浘灏濊瘯 ${join(dir, 'workerEntry.ts')} 涓?*/src/main/.../workerEntry.ts锛夈€傝浠?Ackem 椤圭洰鏍圭洰褰曞惎鍔?dev銆俙
+    `找不到 uplugin Worker 入口（曾尝试 ${join(dir, 'workerEntry.ts')} 与 */src/main/.../workerEntry.ts）。请从 Britney 项目根目录启动 dev。`
   )
 }
 
-/** Worker 鑴氭湰璺緞锛氫紭鍏?out/main 鏃侀鏋勫缓浜х墿锛屽惁鍒?esbuild 婧愮爜鍒颁复鏃剁洰褰?*/
+/** Worker 脚本路径：优先 out/main 旁预构建产物，否则 esbuild 源码到临时目录 */
 export async function getWorkerScriptPath(): Promise<string> {
   if (cachedWorkerPath && existsSync(cachedWorkerPath)) {
     return cachedWorkerPath
@@ -53,7 +53,7 @@ export async function getWorkerScriptPath(): Promise<string> {
     return entry
   }
 
-  const outDir = join(tmpdir(), 'Ackem-uplugin-sandbox')
+  const outDir = join(tmpdir(), 'britney-uplugin-sandbox')
   mkdirSync(outDir, { recursive: true })
   const outfile = join(outDir, `worker-${process.pid}.mjs`)
 
@@ -70,7 +70,7 @@ export async function getWorkerScriptPath(): Promise<string> {
     })
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
-    throw new Error(`uplugin Worker 缂栬瘧澶辫触: ${msg}`)
+    throw new Error(`uplugin Worker 编译失败: ${msg}`)
   }
 
   cachedWorkerPath = outfile

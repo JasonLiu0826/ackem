@@ -1,4 +1,4 @@
-﻿import { WORKING_MEMORY_CHAR_BUDGET } from './AckemParams'
+import { WORKING_MEMORY_CHAR_BUDGET } from './britneyParams'
 import { getCachedEmbeddingProvider, ensureFactEmbeddingsReady, getOrCreateEngineCache } from '../engineCache'
 import { getCachedTemporalEmbeddings } from '../embedding/preLlmWarmup'
 import { computeConversationEmbed } from '../embedding/scoring'
@@ -97,7 +97,7 @@ export async function prepareTurnContext(args: {
         temporalLabelEmbed = temporalEmbeddings.get(msgTemporalSemanticSignal.label)
       }
     } catch {
-      /* Embedding 澶辫触涓嶅奖鍝嶄富娴佺▼ */
+      /* Embedding 失败不影响主流程 */
     }
   }
   const embedMs = Date.now() - tEmbed

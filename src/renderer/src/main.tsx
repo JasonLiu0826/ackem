@@ -12,7 +12,7 @@ applyTheme(resolveInitialTheme())
 initThemeSync()
 markBootSplashBooting()
 
-const splashMount = document.getElementById('ackem-boot-splash')
+const splashMount = document.getElementById('britney-boot-splash')
 if (splashMount) {
   ReactDOM.createRoot(splashMount).render(
     <React.StrictMode>

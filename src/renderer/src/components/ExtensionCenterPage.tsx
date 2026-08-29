@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { t } from '../lib/i18n'
 import { ExtensionCard } from './ExtensionCard'
 import { ExtensionDetailPanel } from './ExtensionDetailPanel'
@@ -6,7 +6,7 @@ import { type ExtensionItem, isCoreExtensionItem } from './extensionTypes'
 import { useUiStore } from '../store/uiStore'
 import { useAppStore } from '../store/appStore'
 import { isOpenForUConfigured, OPENFORU_NOT_CONFIGURED_MSG } from '../../../shared/openforuConfig'
-import type { OpenForUExtensionRow, OpenForUWorkspace } from '../Ackem'
+import type { OpenForUExtensionRow, OpenForUWorkspace } from '../ackem'
 import { isUserExtensionId, guessUserExtensionDirPath } from '../../../shared/openforuExtensions'
 import { PermissionRequestModal } from './PermissionRequestModal'
 import {
@@ -61,7 +61,7 @@ function mapOpenForURow(row: OpenForUExtensionRow): ExtensionItem {
     description:
       row.manifest.description?.trim() ||
       row.manifest.dispatch?.summary?.trim() ||
-      'OpenForU 鐢ㄦ埛鑷垱鎵╁睍',
+      'OpenForU 用户自创扩展',
     version: row.manifest.version,
     status: row.status,
     runnable: row.runnable && !(row.pendingPermissions?.length ?? 0),
@@ -82,7 +82,7 @@ function mapRegistryRowAsUser(row: ExtRow, kind: 'uskill' | 'uplugin'): Extensio
     description:
       row.manifest.description?.trim() ||
       row.manifest.dispatch?.summary?.trim() ||
-      'OpenForU 鐢ㄦ埛鑷垱鎵╁睍',
+      'OpenForU 用户自创扩展',
     version: row.manifest.version,
     status: row.status,
     runnable: row.runnable,
@@ -98,7 +98,7 @@ async function loadUserExtensions(sk: ExtRow[], pl: ExtRow[]): Promise<{
   userPlugins: ExtensionItem[]
 }> {
   try {
-    const ofuExt = await window.Ackem.openforu.listExtensions()
+    const ofuExt = await window.britney.openforu.listExtensions()
     const fromOpenForU = {
       userSkills: sortExtensions(ofuExt.uskills.map(mapOpenForURow)),
       userPlugins: sortExtensions(ofuExt.uplugins.map(mapOpenForURow))
@@ -107,7 +107,7 @@ async function loadUserExtensions(sk: ExtRow[], pl: ExtRow[]): Promise<{
       return fromOpenForU
     }
   } catch {
-    // IPC 鏈氨缁垨涓昏繘绋嬪皻鏈敞鍐?handler 鏃惰蛋 registry 鍥為€€
+    // IPC 未就绪或主进程尚未注册 handler 时走 registry 回退
   }
 
   return {
@@ -166,7 +166,7 @@ function ExtensionGrid({
   onRefine?: (item: ExtensionItem) => void
 }): JSX.Element {
   if (items.length === 0) {
-    return <p className="text-xs text-ink-muted">鏆傛棤鏉＄洰</p>
+    return <p className="text-xs text-ink-muted">暂无条目</p>
   }
   return (
     <div className="grid gap-4 sm:grid-cols-2">
@@ -207,22 +207,22 @@ function UserExtensionEmpty({
   onOpenPlan: () => void
   onGoSettings: () => void
 }): JSX.Element {
-  const label = kind === 'uskill' ? 'Skill锛坲skill锛? : '鎻掍欢锛坲plugin锛?
+  const label = kind === 'uskill' ? 'Skill（uskill）' : '插件（uplugin）'
   return (
     <div className="glass-panel rounded-2xl border border-dashed border-surface-inset/80 px-4 py-10 text-center">
-      <p className="text-sm text-ink-muted">杩樻病鏈夎嚜鍒泏label}銆?/p>
-      <p className="mt-1 text-xs text-ink-muted">鍦?Plan 涓璁″苟閮ㄧ讲鍚庯紝浼氬嚭鐜板湪鏈〉銆?/p>
+      <p className="text-sm text-ink-muted">还没有自创{label}。</p>
+      <p className="mt-1 text-xs text-ink-muted">在 Plan 中设计并部署后，会出现在本页。</p>
       {!openforuReady && (
         <p className="exp-body mt-3 text-xs">
           {OPENFORU_NOT_CONFIGURED_MSG}
           <button type="button" className="exp-title ml-2 underline" onClick={onGoSettings}>
-            鍘昏缃?
+            去设置
           </button>
         </p>
       )}
       {openforuReady && (
         <button type="button" className="mt-4 chat-send-btn px-4 py-2 text-sm" onClick={onOpenPlan}>
-          鎵撳紑 Plan 鍒涘缓
+          打开 Plan 创建
         </button>
       )}
     </div>
@@ -277,13 +277,13 @@ export function ExtensionCenterPage(): JSX.Element {
         return
       }
       try {
-        const r = await window.Ackem.openforu.planRefineOpen(item.id, { displayName: item.name })
+        const r = await window.britney.openforu.planRefineOpen(item.id, { displayName: item.name })
         if (r.ok) {
           bumpPlanReload()
           setPlanOpen(true)
-          pushToast(`宸叉墦寮€ Plan 路 ${item.name}`)
+          pushToast(`已打开 Plan · ${item.name}`)
         } else {
-          pushToast(r.error ?? '鏃犳硶鎵撳紑 Plan 宸ヤ綔鍖?)
+          pushToast(r.error ?? '无法打开 Plan 工作区')
         }
       } catch (e) {
         pushToast(e instanceof Error ? e.message : String(e))
@@ -296,13 +296,13 @@ export function ExtensionCenterPage(): JSX.Element {
     setLoading(true)
     setToggleError(null)
     try {
-      const pl = (await window.Ackem.ext.plugins.list()) as ExtRow[]
+      const pl = (await window.britney.ext.plugins.list()) as ExtRow[]
       setPlugins(
         sortExtensions(
           pl.filter((p) => !isUserExtensionId(p.manifest.id)).map((p) => mapRow(p, false))
         )
       )
-      const sk = (await window.Ackem.ext.skills.list()) as ExtRow[]
+      const sk = (await window.britney.ext.skills.list()) as ExtRow[]
       setSkills(
         sortExtensions(
           sk.filter((s) => !isUserExtensionId(s.manifest.id)).map((s) => mapRow(s, true))
@@ -313,8 +313,8 @@ export function ExtensionCenterPage(): JSX.Element {
       setUserSkills(userExt.userSkills)
       setUserPlugins(userExt.userPlugins)
 
-      if (openforuReady && window.Ackem.openforu.workspaces?.list) {
-        const ws = await window.Ackem.openforu.workspaces.list()
+      if (openforuReady && window.britney.openforu.workspaces?.list) {
+        const ws = await window.britney.openforu.workspaces.list()
         if (ws.ok) {
           setWorkspaces(ws.workspaces)
           setWorkspaceMax(ws.max)
@@ -340,7 +340,7 @@ export function ExtensionCenterPage(): JSX.Element {
   }, [tab, load])
 
   useEffect(() => {
-    const unsubscribe = window.Ackem.openforu.onNotify(() => {
+    const unsubscribe = window.britney.openforu.onNotify(() => {
       void load()
     })
     return unsubscribe
@@ -349,10 +349,10 @@ export function ExtensionCenterPage(): JSX.Element {
   const togglePlugin = async (id: string, active: boolean) => {
     setToggleError(null)
     const res = (await (active
-      ? window.Ackem.ext.plugins.activate(id)
-      : window.Ackem.ext.plugins.deactivate(id))) as { ok: boolean; error?: string }
+      ? window.britney.ext.plugins.activate(id)
+      : window.britney.ext.plugins.deactivate(id))) as { ok: boolean; error?: string }
     if (!res.ok) {
-      setToggleError(res.error ?? '鎿嶄綔澶辫触')
+      setToggleError(res.error ?? '操作失败')
       return
     }
     await load()
@@ -361,10 +361,10 @@ export function ExtensionCenterPage(): JSX.Element {
   const toggleSkill = async (id: string, active: boolean) => {
     setToggleError(null)
     const res = (await (active
-      ? window.Ackem.ext.skills.activate(id)
-      : window.Ackem.ext.skills.deactivate(id))) as { ok: boolean; error?: string }
+      ? window.britney.ext.skills.activate(id)
+      : window.britney.ext.skills.deactivate(id))) as { ok: boolean; error?: string }
     if (!res.ok) {
-      setToggleError((res as { error?: string }).error ?? '鎿嶄綔澶辫触')
+      setToggleError((res as { error?: string }).error ?? '操作失败')
       return
     }
     await load()
@@ -372,17 +372,17 @@ export function ExtensionCenterPage(): JSX.Element {
 
   const removeUserExtension = async (item: ExtensionItem) => {
     if (!item.origin || (item.origin !== 'uskill' && item.origin !== 'uplugin')) return
-    const label = item.origin === 'uskill' ? 'Skill' : '鎻掍欢'
-    if (!window.confirm(`纭畾鍒犻櫎鑷垱${label}銆?{item.name}銆嶏紵\n\n灏嗗垹闄ょ鐩樻枃浠朵笖涓嶅彲鎭㈠銆俙)) return
+    const label = item.origin === 'uskill' ? 'Skill' : '插件'
+    if (!window.confirm(`确定删除自创${label}「${item.name}」？\n\n将删除磁盘文件且不可恢复。`)) return
     setToggleError(null)
-    const res = await window.Ackem.openforu.removeExtension(item.origin, item.id)
+    const res = await window.britney.openforu.removeExtension(item.origin, item.id)
     if (!res.ok) {
-      setToggleError(res.error ?? '鍒犻櫎澶辫触')
+      setToggleError(res.error ?? '删除失败')
       return
     }
     if (tab === 'user-skills' && selectedUserSkillId === item.id) setSelectedUserSkillId(null)
     if (tab === 'user-plugins' && selectedUserPluginId === item.id) setSelectedUserPluginId(null)
-    pushToast(`宸插垹闄?${item.name}`)
+    pushToast(`已删除 ${item.name}`)
     await load()
   }
 
@@ -434,13 +434,13 @@ export function ExtensionCenterPage(): JSX.Element {
   const counts = useMemo(() => tabCounts(listForTab), [listForTab])
 
   const tabs: { id: Tab; label: string; badge?: number; experimental?: boolean }[] = [
-    { id: 'plugins', label: '鎻掍欢搴? },
-    { id: 'skills', label: 'Skill 搴? },
-    { id: 'user-plugins', label: '鑷垱鎻掍欢', badge: userPlugins.length || undefined },
-    { id: 'user-skills', label: '鑷垱 Skill', badge: userSkills.length || undefined },
+    { id: 'plugins', label: '插件库' },
+    { id: 'skills', label: 'Skill 库' },
+    { id: 'user-plugins', label: '自创插件', badge: userPlugins.length || undefined },
+    { id: 'user-skills', label: '自创 Skill', badge: userSkills.length || undefined },
     {
       id: 'workspace',
-      label: '宸ヤ綔鍖?,
+      label: '工作区',
       badge: workspaces.length || undefined,
       experimental: true
     }
@@ -449,9 +449,9 @@ export function ExtensionCenterPage(): JSX.Element {
   return (
     <div className="flex h-full min-h-0 flex-col bg-surface">
       <header className="glass-panel border-b border-surface-inset/60 px-6 py-4">
-        <h1 className="font-display text-base font-semibold text-ink">鎵╁睍涓績</h1>
+        <h1 className="font-display text-base font-semibold text-ink">扩展中心</h1>
         <p className="mt-0.5 text-xs text-ink-muted">
-          瀹樻柟鎵╁睍 路 OpenForU 鑷垱 路 Plan 宸ヤ綔鍖?
+          官方扩展 · OpenForU 自创 · Plan 工作区
         </p>
       </header>
       <div className="flex overflow-x-auto border-b border-surface-inset/60 px-2">
@@ -487,7 +487,7 @@ export function ExtensionCenterPage(): JSX.Element {
               bodyKey="extensions.workspaceExperimentalDesc"
             />
             <p className="text-sm text-ink-muted">
-              Plan 宸ヤ綔鍖猴紙鏈€澶?{workspaceMax} 涓級锛屾瘡涓嫭绔嬩繚鐣欏璇濆巻鍙层€?
+              Plan 工作区（最多 {workspaceMax} 个），每个独立保留对话历史。
             </p>
             {!openforuReady && (
               <p className="exp-callout rounded-lg px-3 py-2 text-xs">
@@ -497,7 +497,7 @@ export function ExtensionCenterPage(): JSX.Element {
                   className="exp-title ml-2 underline"
                   onClick={() => setAppTab('settings')}
                 >
-                  鍘昏缃?
+                  去设置
                 </button>
               </p>
             )}
@@ -514,25 +514,25 @@ export function ExtensionCenterPage(): JSX.Element {
                   setPlanOpen(true)
                 }}
               >
-                鎵撳紑 Plan 闈㈡澘
+                打开 Plan 面板
               </button>
               {openforuReady && (
                 <button
                   type="button"
                   className="rounded-lg border border-glass-border px-4 py-2 text-sm text-ink hover:border-accent/40"
                   onClick={async () => {
-                    const r = await window.Ackem.openforu.workspaces.create()
+                    const r = await window.britney.openforu.workspaces.create()
                     if (r.ok) {
                       setWorkspaces(r.workspaces)
                       setActiveWorkspaceId(r.activeWorkspaceId)
                       if (r.evicted) {
-                        pushToast(`宸茶揪涓婇檺锛屽凡绉婚櫎銆?{r.evicted.name}銆峘)
+                        pushToast(`已达上限，已移除「${r.evicted.name}」`)
                       }
                       setPlanOpen(true)
                     }
                   }}
                 >
-                  + 鏂板缓宸ヤ綔鍖?
+                  + 新建工作区
                 </button>
               )}
             </div>
@@ -544,18 +544,18 @@ export function ExtensionCenterPage(): JSX.Element {
                       <p className="text-sm font-medium text-ink">
                         {w.name}
                         {w.id === activeWorkspaceId && (
-                          <span className="ml-2 text-[10px] text-accent">褰撳墠</span>
+                          <span className="ml-2 text-[10px] text-accent">当前</span>
                         )}
                       </p>
                       <p className="text-[11px] text-ink-muted">
-                        鏇存柊浜?{new Date(w.updatedAt).toLocaleString('zh-CN')}
+                        更新于 {new Date(w.updatedAt).toLocaleString('zh-CN')}
                       </p>
                     </div>
                     <button
                       type="button"
                       className="shrink-0 rounded-lg border border-glass-border px-3 py-1.5 text-xs text-ink hover:border-accent/40"
                       onClick={async () => {
-                        const r = await window.Ackem.openforu.workspaces.switch(w.id)
+                        const r = await window.britney.openforu.workspaces.switch(w.id)
                         if (r.ok) {
                           setActiveWorkspaceId(r.activeWorkspaceId)
                           setWorkspaces(r.workspaces)
@@ -563,29 +563,29 @@ export function ExtensionCenterPage(): JSX.Element {
                         }
                       }}
                     >
-                      缁х画
+                      继续
                     </button>
                     <button
                       type="button"
                       className="shrink-0 rounded-lg border border-red-500/30 px-3 py-1.5 text-xs text-red-300 hover:border-red-400/50"
                       onClick={async () => {
-                        if (!window.confirm(`鍒犻櫎宸ヤ綔鍖恒€?{w.name}銆嶏紵`)) return
-                        const r = await window.Ackem.openforu.workspaces.delete(w.id)
+                        if (!window.confirm(`删除工作区「${w.name}」？`)) return
+                        const r = await window.britney.openforu.workspaces.delete(w.id)
                         if (r.ok) {
                           setWorkspaces(r.workspaces)
                           setActiveWorkspaceId(r.activeWorkspaceId)
-                          pushToast('宸插垹闄?)
+                          pushToast('已删除')
                           void load()
                         }
                       }}
                     >
-                      鍒犻櫎
+                      删除
                     </button>
                   </li>
                 ))}
               </ul>
             ) : openforuReady ? (
-              <p className="text-xs text-ink-muted">鏆傛棤宸ヤ綔鍖猴紝鐐瑰嚮銆屾柊寤哄伐浣滃尯銆嶅紑濮嬨€?/p>
+              <p className="text-xs text-ink-muted">暂无工作区，点击「新建工作区」开始。</p>
             ) : null}
           </div>
         )}
@@ -595,12 +595,12 @@ export function ExtensionCenterPage(): JSX.Element {
             <p className="mb-4 text-xs text-ink-muted">
               {tab === 'user-plugins' || tab === 'user-skills' ? (
                 <>
-                  鍏?{counts.total} 椤?路 宸插惎鐢▄' '}
+                  共 {counts.total} 项 · 已启用{' '}
                   {listForTab.filter((i) => i.status === 'active').length}
                 </>
               ) : (
                 <>
-                  鍏?{counts.total} 椤?路 鍩虹鍔熻兘 {counts.core} 路 鍙惎鐢?{counts.runnable} 路 瑙勫垝涓瓄' '}
+                  共 {counts.total} 项 · 基础功能 {counts.core} · 可启用 {counts.runnable} · 规划中{' '}
                   {counts.planned}
                 </>
               )}
@@ -626,7 +626,7 @@ export function ExtensionCenterPage(): JSX.Element {
                   !selection.selectedId &&
                   listForTab.length > 0 && (
                     <p className="mb-4 text-xs text-ink-muted">
-                      鐐瑰嚮鎵╁睍鍗＄墖灞曞紑璇︽儏锛屽彲浣跨敤銆屾墦寮€绐楀彛銆嶃€岀户缁紭鍖栥€嶇瓑鎿嶄綔銆?
+                      点击扩展卡片展开详情，可使用「打开窗口」「继续优化」等操作。
                     </p>
                   )}
                 <ExtensionGrid
@@ -656,13 +656,13 @@ export function ExtensionCenterPage(): JSX.Element {
         payload={grantPayload}
         onApprove={() => {
           if (!grantItem) return
-          void window.Ackem.openforu.permissions.approveAndActivate(grantItem.id).then((r) => {
+          void window.britney.openforu.permissions.approveAndActivate(grantItem.id).then((r) => {
             setGrantItem(null)
             if (r.ok) {
-              pushToast('宸叉巿浜堟潈闄愬苟鍚敤')
+              pushToast('已授予权限并启用')
               void load()
             } else {
-              setToggleError(r.error ?? '鎺堟潈澶辫触')
+              setToggleError(r.error ?? '授权失败')
             }
           })
         }}

@@ -47,6 +47,7 @@ export default defineConfig({
     }
   },
   renderer: {
+    root: resolve('src/renderer'),
     resolve: {
       alias: {
         '@renderer': resolve('src/renderer/src')
@@ -54,13 +55,29 @@ export default defineConfig({
     },
     plugins: [react()],
     build: {
+      outDir: process.env.BUILD_TARGET === 'android' ? resolve('dist-android') : undefined,
+      // Disable modulePreload polyfill — it adds crossorigin attr which
+      // breaks file:// loading in Android WebView (CORS rejection)
+      // Also force IIFE format — ES modules don't execute under file:// origin
+      ...(process.env.BUILD_TARGET === 'android' ? {
+        modulePreload: { polyfill: false }
+      } : {}),
       rollupOptions: {
         input: {
           index: resolve('src/renderer/index.html'),
-          startup: resolve('src/renderer/startup.html'),
-          pet: resolve('src/renderer/pet.html'),
-          updater: resolve('src/renderer/updater.html')
-        }
+          ...(process.env.BUILD_TARGET !== 'android' ? {
+            startup: resolve('src/renderer/startup.html'),
+            pet: resolve('src/renderer/pet.html'),
+            updater: resolve('src/renderer/updater.html')
+          } : {})
+        },
+        ...(process.env.BUILD_TARGET === 'android' ? {
+          output: {
+            format: 'iife',
+            entryFileNames: 'assets/[name].js',
+            assetFileNames: 'assets/[name].[ext]'
+          }
+        } : {})
       }
     }
   }

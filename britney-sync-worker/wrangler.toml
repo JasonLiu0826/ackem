@@ -1,0 +1,15 @@
+name = "britney-sync"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+
+[vars]
+ENVIRONMENT = "production"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "britney-sync"
+database_id = "placeholder-will-be-created"
+
+[[r2_buckets]]
+binding = "IMAGES"
+bucket_name = "britney-images"

@@ -1,10 +1,10 @@
-﻿import { loadSettings } from '../../settings'
+import { loadSettings } from '../../settings'
 import { loadState, saveState } from '../../engine/state-persistence'
 import { createLogger } from '../../logger'
 import {
   ensureActivityBaselines,
   recordProactiveSent,
-  recordWeixinAckemActivity
+  recordWeixinBritneyActivity
 } from './activity'
 import { evaluateWeixinProactiveGate } from './proactiveGate'
 import { composeWeixinProactiveMessage } from './proactiveMessage'
@@ -86,7 +86,7 @@ async function tickProactive(dataRoot: string, isPolling: () => boolean): Promis
         bubbles,
         dataRoot
       })
-      recordWeixinAckemActivity(dataRoot)
+      recordWeixinBritneyActivity(dataRoot)
       recordProactiveSent(dataRoot)
 
       if (state) {

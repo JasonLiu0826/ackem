@@ -1,4 +1,4 @@
-﻿import { existsSync } from 'node:fs'
+import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { spawn } from 'node:child_process'
 import { app } from 'electron'
@@ -13,12 +13,12 @@ export function runUpdatePreflight(): { ok: true; installDir: string } | { ok: f
 }
 
 export function resolveLauncherExePath(installDir: string): string {
-  const launcher = `${installDir}\\AckemLauncher.exe`
+  const launcher = `${installDir}\\BritneyLauncher.exe`
   if (existsSync(launcher)) return launcher
-  const cmd = `${installDir}\\AckemLauncher.cmd`
+  const cmd = `${installDir}\\BritneyLauncher.cmd`
   if (existsSync(cmd)) return cmd
-  // 鍏煎鏃х豢鑹茬増
-  const legacy = `${installDir}\\AckemUpdater.exe`
+  // 兼容旧绿色版
+  const legacy = `${installDir}\\BritneyUpdater.exe`
   if (existsSync(legacy)) return legacy
   return app.getPath('exe')
 }
@@ -30,7 +30,7 @@ export function resolveUpdaterExePath(installDir: string): string {
 
 export function spawnLauncherProcess(installDir: string, jobPath: string): void {
   const target = resolveLauncherExePath(installDir)
-  const arg = `--Ackem-updater=${jobPath}`
+  const arg = `--britney-updater=${jobPath}`
 
   if (target.toLowerCase().endsWith('.cmd')) {
     const child = spawn('cmd.exe', ['/c', target, arg], {

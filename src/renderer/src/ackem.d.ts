@@ -6,6 +6,8 @@ import type { UserTaskFrame } from '../../shared/taskFrame'
 import type { AgentEvent, AgentRunMeta } from '../../shared/openforuAgentTypes'
 import type { PermissionRequestPayload } from '../../shared/openforuPermissions'
 
+import type { AppSettings, CompanionSuggestion, LlmProvider, PresetGender, UserSixDimensions } from '../../shared/types'
+
 export type { AppSettings, CompanionSuggestion, LlmProvider, PresetGender, UserSixDimensions }
 export type { OpenForUExtensionRow } from '../../shared/openforuExtensions'
 
@@ -53,19 +55,19 @@ export type BuildContextResult = {
     planTopic?: string
     emotionLabel?: string
   }
-  /** L0.5 鐭ヨ瘑鏁寸悊涓婚锛堣Е鍙戠焊闈㈠崱锛屼笉鑱旂綉锛?*/
+  /** L0.5 知识整理主题（触发纸面卡，不联网） */
   knowledgeTopic?: string
-  /** @deprecated 鍚?knowledgeTopic */
+  /** @deprecated 同 knowledgeTopic */
   suggestedSearchQuery?: string
-  /** L0.5 璁″垝涔︿富棰橈紙Markdown 璁″垝绾搁潰鍗★紝涓?OpenForU planTopic 鏃犲叧锛?*/
+  /** L0.5 计划书主题（Markdown 计划纸面卡，与 OpenForU planTopic 无关） */
   planDocumentTopic?: string
-  /** L0.5 鏄惧紡鑱旂綉鎼滐細瑙勫垯灞傚己鍒?web_search锛宷uery 宸叉彁鍙?*/
+  /** L0.5 显式联网搜：规则层强制 web_search，query 已提取 */
   forcedWebSearchQuery?: string
-  /** L0 鐢ㄦ埛浠诲姟妗嗭紙浜や粯褰㈡€?/ 鍚堝苟鎼滅储锛?*/
+  /** L0 用户任务框（交付形态 / 合并搜索） */
   userTaskFrame?: UserTaskFrame
-  /** P0-1锛欳reate/invoke 鏈矾鐢憋紝绂佹鎵╁睍绫诲亣鎵胯 */
+  /** P0-1：Create/invoke 未路由，禁止扩展类假承诺 */
   dispatchBypassed?: boolean
-  /** 鏈疆宸茶Е鍙戠殑鎵╁睍锛坅uto_invoke 鎴栫敤鎴风‘璁ゅ惎鐢級 */
+  /** 本轮已触发的扩展（auto_invoke 或用户确认启用） */
   dispatchTriggered?: {
     extensionId: string
     extensionName: string
@@ -141,7 +143,7 @@ export type OpenForUWorkspaceCreateResult = OpenForUWorkspaceOpenResult & {
 
 export type OpenForUWorkspaceSwitchResult = OpenForUWorkspaceOpenResult
 
-export type AckemCanonInfo = {
+export type BritneyCanonInfo = {
   name: string
   birthDate: string
   creator: {
@@ -169,7 +171,7 @@ export type CreatorMemoryUiBundle = {
   entries: CreatorMemoryUiEntry[]
 }
 
-export type AckemApi = {
+export type BritneyApi = {
   i18n: {
     t: (key: string, params?: Record<string, string | number>) => Promise<string>
     getLocale: () => Promise<string>
@@ -185,7 +187,7 @@ export type AckemApi = {
   openUpdateRelease: (url: string) => Promise<void>
   getUpdateChannelPreference: () => Promise<UpdateChannel>
   setUpdateChannelPreference: (channel: UpdateChannel) => Promise<UpdateChannel>
-  getCanon: () => Promise<AckemCanonInfo>
+  getCanon: () => Promise<BritneyCanonInfo>
   getCreatorMemory: () => Promise<CreatorMemoryUiBundle>
   setSettings: (patch: Partial<AppSettings>) => Promise<AppSettings>
   getDataRoot: () => Promise<{ path: string; relativePath: string; mode: string; databasePath: string }>
@@ -300,7 +302,7 @@ export type AckemApi = {
     batPath: string | null
     nsisUninstaller: string | null
   }>
-  uninstallAckem: (opts?: { deleteData?: boolean; removeApp?: boolean }) => Promise<{ ok: boolean }>
+  uninstallBritney: (opts?: { deleteData?: boolean; removeApp?: boolean }) => Promise<{ ok: boolean }>
   embeddingStatus: () => Promise<{
     activeModel: string
     providerReady: boolean
@@ -412,18 +414,6 @@ export type AckemApi = {
   desireList: () => Promise<{ slots: (null | { id: string; topic: string; category: string; urgency: number; status: string; sourceTurn: number })[] }>
   desireDismiss: (desireId: string) => Promise<{ slots: (null | { id: string; topic: string; category: string; urgency: number; status: string; sourceTurn: number })[] }>
   desireClearActive: () => Promise<{ slots: (null | { id: string; topic: string; category: string; urgency: number; status: string; sourceTurn: number })[] }>
-  agnes: {
-    generateImage: (prompt: string) => Promise<{
-      success: boolean
-      imageUrl?: string  // ackem-img:// 鍗忚 URL 鎴?http(s) URL
-      revisedPrompt?: string
-      error?: string
-    }>
-    detectIntent: (text: string) => Promise<{
-      isImage: boolean
-      prompt?: string
-    }>
-  }
   mirrorCheck: () => Promise<{
     contradictions: Array<{ old: { text: string; valence: number }; new: { text: string; valence: number }; topic: string; description: string }>
     findings: { version: 1; mirror: unknown[]; factFlags: unknown[] }
@@ -704,12 +694,12 @@ export type AckemApi = {
       fn: (payload: import('../../shared/machineMap').MachineMapProgressPayload | null) => void
     ) => void
   }
-  /** 褰撳墠搴斾娇鐢ㄧ殑浼翠荆浜や簰褰㈣薄缁戝畾锛坰kin 鎻掍欢鍙鐩栧唴缃?Canvas锛?*/
+  /** 当前应使用的伴侣交互形象绑定（skin 插件可覆盖内置 Canvas） */
   companionSkinActive: () => Promise<CompanionSkinBinding>
   companionSkinList: () => Promise<CompanionSkinBinding[]>
   companionSkinSetActive: (pluginId: string | null) => Promise<{ ok: boolean }>
   onCompanionSkinChanged: (fn: () => void) => void
-  /** @deprecated 浣跨敤 ext.gamemode.minecraft */
+  /** @deprecated 使用 ext.gamemode.minecraft */
   mcReact: (event: { type: string; raw: string; timestamp: string; payload?: Record<string, unknown> }) => Promise<{ text: string; isEasterEgg: boolean; emotionGroup: string }>
   mcParseLog: (line: string) => Promise<{ type: string; raw: string; timestamp: string; payload?: Record<string, unknown> } | null>
   mcStatus: () => Promise<{ running: boolean; wsPort: number; wsClients: number; logPath?: string }>
@@ -730,7 +720,7 @@ export type AckemApi = {
   archiveExport: () => Promise<{ filesWritten: number; factsExported: number; episodesExported: number; coreCount: number }>
   loadChatHistory: () => Promise<unknown[]>
   saveChatHistory: (rows: unknown[]) => Promise<void>
-  // 妗岄潰闄即
+  // 桌面陪伴
   companionTimeContext: () => Promise<{ timeOfDay: string; hour: number; minute: number; weekday: number; isWeekend: boolean; greeting: string; atmosphereHint: string; topicHints: string[] }>
   companionPresence: () => Promise<{ mode: 'active' | 'quiet' | 'sleeping'; lastInteractionMs: number; idleDurationMs: number; timeOfDay: string }>
   companionTouch: () => Promise<{ ok: boolean }>
@@ -745,7 +735,7 @@ export type AckemApi = {
     fn: (meta?: { memoryWrites?: string[]; assistantText?: string; turnId?: string }) => void
   ) => void
   onChatError: (fn: (err: string) => void) => void
-  onMcEvent: (fn: (payload: { event: unknown; reaction: unknown }) => void) => void
+  onChatImage: (fn: (payload: { path?: string; url?: string; prompt?: string }) => void) => void
   onMcBotDebug: (fn: (snapshot: McBotDebugSnapshot) => void) => void
   onWindowFocused: (fn: () => void) => void
   ui: {
@@ -885,7 +875,7 @@ export type VoiceEnvReport = {
 
 declare global {
   interface Window {
-    Ackem: AckemApi
+    britney: BritneyApi
   }
 }
 

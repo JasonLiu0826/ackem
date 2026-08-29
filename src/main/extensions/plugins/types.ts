@@ -56,7 +56,8 @@ export type PluginPermission =
   | 'readonly'           // 只读访问 data/ 下的自身目录
   | 'data_write'         // 可写入 data/plugins/<id>/ 和 data/staging/
   | 'engine_read'        // 可读取引擎只读快照（EngineSnapshot）
-  | 'engine_inject'      // 可注入上下文到 LLM prompt
+  | 'engine_inject'
+  | 'network'      // 可注入上下文到 LLM prompt
   | 'network_outbound'   // 可发起出站网络请求
   | 'system_notification'// 可发送系统通知
   | 'clipboard_read'     // 可读取剪贴板（需用户逐次确认）

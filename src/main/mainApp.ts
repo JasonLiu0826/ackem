@@ -8,7 +8,6 @@ import { ensureDataLayout } from './layout'
 import { loadSettings } from './settings'
 import { resolveDataRoot } from './paths'
 import { createLogger, setLogDir } from './logger'
-import { registerLocalImageProtocol } from './localImageProtocol'
 import {
   initDesktopCompanion,
   startDesktopCompanionProactiveTimer,
@@ -18,7 +17,7 @@ import {
   touchDesktopCompanion
 } from './extensions/plugins/builtin/desktop-companion/bootstrap'
 import { loadTrayIcon, loadWindowIcon } from './appIcon'
-import { ACKEM_CANON } from './canon/ackemCanon'
+import { BRITNEY_CANON } from './canon/britneyCanon'
 import { isShutdownFinished, markAppQuitting, performAppShutdown } from './shutdown'
 import { closeStartupSplash } from './startupSplash'
 
@@ -53,7 +52,7 @@ function createWindow(): void {
     height: 680,
     minWidth: 900,
     minHeight: 620,
-    title: 'Ackem',
+    title: 'Britney',
     icon: windowIcon.isEmpty() ? undefined : windowIcon,
     show: false,
     backgroundColor: '#0f0d14',
@@ -99,7 +98,7 @@ function createWindow(): void {
   win.on('close', () => {
     if ((app as { isQuitting?: boolean }).isQuitting) return
     markAppQuitting()
-    log.info('main window closed 鈥?quitting app')
+    log.info('main window closed — quitting app')
     app.quit()
   })
 
@@ -123,9 +122,9 @@ function createTray(): void {
   tray = new Tray(icon.isEmpty() ? nativeImage.createEmpty() : icon)
 
   const contextMenu = Menu.buildFromTemplate([
-    { label: '灞曞紑涓婚潰鏉?, click: () => { mainWindow?.show(); mainWindow?.focus() } },
+    { label: '展开主面板', click: () => { mainWindow?.show(); mainWindow?.focus() } },
     {
-      label: '鎶樺彔鍒版瀹?,
+      label: '折叠到桌宠',
       click: async () => {
         const { showPetWindow } = await import('./petWindow.js')
         showPetWindow()
@@ -133,17 +132,17 @@ function createTray(): void {
       }
     },
     { type: 'separator' },
-    { label: '闄即鐘舵€?, enabled: false },
+    { label: '陪伴状态', enabled: false },
     { type: 'separator' },
     {
-      label: '閫€鍑?Ackem',
+      label: '退出 Britney',
       click: () => {
         markAppQuitting()
         app.quit()
       }
     }
   ])
-  tray.setToolTip('Ackem')
+  tray.setToolTip('Britney')
   tray.setContextMenu(contextMenu)
 
   tray.on('double-click', () => {
@@ -172,7 +171,6 @@ export function runMainApplication(): void {
 
   registerIpc()
   ipcReady = true
-  registerLocalImageProtocol(dataRoot)
   registerUiIpc()
   createWindow()
   createTray()
@@ -199,7 +197,7 @@ export function runMainApplication(): void {
       log.warn('embedding bootstrap failed', { error: String(e) })
     }
 
-    log.info('Ackem canon birthday', { birthDate: ACKEM_CANON.birthDate })
+    log.info('Britney canon birthday', { birthDate: BRITNEY_CANON.birthDate })
 
     const { setTraceDir } = await import('./engine/tracer.js')
     setTraceDir(dataRoot)

@@ -1,4 +1,4 @@
-﻿import type { ReactElement } from 'react'
+import type { ReactElement } from 'react'
 import { t } from '../lib/i18n'
 import { companionAvatarStatusLabel } from '../../../shared/companionSkin'
 import { CompanionAvatar } from './CompanionAvatar'
@@ -6,13 +6,12 @@ import { LightCore } from './LightCore'
 import { useAppStore, type Tab } from '../store/appStore'
 
 const items: { id: Tab; labelKey: string; icon: string }[] = [
-  { id: 'chat', labelKey: 'nav.chat', icon: '馃挰' },
-  { id: 'agent', labelKey: 'nav.agent', icon: '馃' },
-  { id: 'memory', labelKey: 'nav.memory', icon: '馃' },
-  { id: 'diary', labelKey: 'nav.diary', icon: '馃摂' },
-  { id: 'gamemode', labelKey: 'nav.gamemode', icon: '馃幃' },
-  { id: 'extensions', labelKey: 'nav.extensions', icon: '馃З' },
-  { id: 'settings', labelKey: 'nav.settings', icon: '鈿? }
+  { id: 'chat', labelKey: 'nav.chat', icon: '💬' },
+  { id: 'memory', labelKey: 'nav.memory', icon: '🧠' },
+  { id: 'diary', labelKey: 'nav.diary', icon: '📔' },
+  { id: 'gamemode', labelKey: 'nav.gamemode', icon: '🎮' },
+  { id: 'extensions', labelKey: 'nav.extensions', icon: '🧩' },
+  { id: 'settings', labelKey: 'nav.settings', icon: '⚙' }
 ]
 
 export function NavBar(props: { tab: Tab; onTab: (t: Tab) => void }): ReactElement {
@@ -25,7 +24,7 @@ export function NavBar(props: { tab: Tab; onTab: (t: Tab) => void }): ReactEleme
         type="button"
         className="mb-4 flex flex-col items-center gap-1"
         title={t('nav.collapsePet')}
-        onClick={() => void window.Ackem.ui.showPet()}
+        onClick={() => void window.britney.ui.showPet()}
       >
         <LightCore />
         <span className="font-display text-[9px] tracking-wider text-ink-muted/80">{t('nav.brand')}</span>
@@ -47,9 +46,6 @@ export function NavBar(props: { tab: Tab; onTab: (t: Tab) => void }): ReactEleme
               <span className="nav-bead-icon" aria-hidden>
                 {icon}
               </span>
-              {props.tab === id && (
-                <span className="absolute -right-px top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-l-full bg-accent/80" aria-hidden />
-              )}
             </button>
           )
         })}

@@ -62,7 +62,7 @@ export function writeFactRows(args: {
       sourceTurnIndex: turnIndex,
       emotionalContext: emo,
       privacyLevel: adultPrivacyLevel,
-      ageMeta: f.ageMeta,
+      ageMeta: f.ageMeta as { age: number; birthdayMMDD?: string; birthYear?: number; recordedAt: string; isEstimate: boolean } | undefined,
     })
 
     if (shouldWriteTemporalAnchor({

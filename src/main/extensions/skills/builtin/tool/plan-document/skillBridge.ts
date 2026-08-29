@@ -51,7 +51,8 @@ export async function runPlanDocumentViaSkill(
     toPlanCardPayload(topic, {
       cardBody: data.cardBody,
       companionReply: data.companionReply,
-      copyText: data.copyText
+      copyText: data.copyText,
+      displayTitle: data.displayTitle ?? ''
     })
   )
 

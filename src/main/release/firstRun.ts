@@ -1,5 +1,5 @@
-﻿/**
- * 棣栨鍚姩锛氭闈㈠揩鎹锋柟寮?+ 渚挎惡鏁版嵁鐩綍 + 鐜鑷锛堟墦鍖呯増锛?
+/**
+ * 首次启动：桌面快捷方式 + 便携数据目录 + 环境自检（打包版）
  */
 import { app, shell } from 'electron'
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
@@ -13,7 +13,7 @@ import {
 } from '../portableEnv'
 
 const log = createLogger('first-run')
-const MARKER = '.Ackem-first-run-complete.json'
+const MARKER = '.britney-first-run-complete.json'
 
 function markerPath(dataRoot: string): string {
   return join(dataRoot, MARKER)
@@ -32,11 +32,11 @@ function markFirstRunComplete(dataRoot: string): void {
   )
 }
 
-/** 棣栨鍚姩鍦ㄦ闈㈠垱寤?Ackem.lnk锛圵indows锛?*/
+/** 首次启动在桌面创建 Britney.lnk（Windows） */
 export function createDesktopShortcutIfNeeded(): boolean {
   if (process.platform !== 'win32') return false
   const desktop = app.getPath('desktop')
-  const shortcutPath = join(desktop, 'Ackem.lnk')
+  const shortcutPath = join(desktop, 'Britney.lnk')
   if (existsSync(shortcutPath)) return false
 
   const launchTarget = resolveUserLaunchPath()
@@ -46,7 +46,7 @@ export function createDesktopShortcutIfNeeded(): boolean {
     const ok = shell.writeShortcutLink(shortcutPath, {
       target: launchTarget,
       cwd: workDir,
-      description: 'Ackem 鈥?鏈湴 AI 浼翠荆',
+      description: 'Britney — 本地 AI 伴侣',
       icon: icon ?? launchTarget,
       iconIndex: 0,
     })
@@ -59,7 +59,7 @@ export function createDesktopShortcutIfNeeded(): boolean {
   }
 }
 
-/** 鎵撳寘鐗堥娆″惎鍔細渚挎惡 data銆佹闈㈠揩鎹锋柟寮忋€乪mbedding 鍏滃簳涓嬭浇 */
+/** 打包版首次启动：便携 data、桌面快捷方式、embedding 兜底下载 */
 export async function runFirstLaunchSetup(dataRoot: string): Promise<void> {
   if (!app.isPackaged) return
   if (!isFirstRun(dataRoot)) return

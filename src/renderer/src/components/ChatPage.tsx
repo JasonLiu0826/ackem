@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { t } from '../lib/i18n'
 import { useAppStore, type ChatRow, normalizeChatRow } from '../store/appStore'
 import { emotionLightColor } from '../lib/emotionColors'
@@ -58,12 +58,12 @@ type PendingDispatchContext = {
 }
 
 function syncDispatchTriggerFromBuilt(
-  built: Awaited<ReturnType<typeof window.Ackem.buildContext>>
+  built: Awaited<ReturnType<typeof window.britney.buildContext>>
 ): void {
   useAppStore.getState().setDispatchTriggerStatus(built.dispatchTriggered ?? null)
 }
 
-/** 褰撳墠杞祦寮忓啓鍏ョ殑 assistant 琛屼笅鏍囷紙閬垮厤鐭ヨ瘑鍗℃彃鍏ュ悗璇敼涓婁竴鏉′即渚ｆ皵娉★級 */
+/** 当前轮流式写入的 assistant 行下标（避免知识卡插入后误改上一条伴侣气泡） */
 function patchAssistantAtIndex(
   setRows: (fn: (prev: ChatRow[]) => ChatRow[]) => void,
   index: number | null,
@@ -128,7 +128,7 @@ export function ChatPage(): JSX.Element {
   const [taskPlanProgress, setTaskPlanProgress] = useState<TaskPlanProgressPayload | null>(null)
   const [sessions, setSessions] = useState<Array<{ id: string; name: string }>>([])
   const streamBuf = useRef('')
-  /** 鏈疆 startChat / 褰掓。鍙栨秷 姝ｅ湪鍐欏叆鐨?assistant 琛屽彿 */
+  /** 本轮 startChat / 归档取消 正在写入的 assistant 行号 */
   const streamingAssistantIndexRef = useRef<number | null>(null)
   const chatEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -154,7 +154,7 @@ export function ChatPage(): JSX.Element {
         return false
       }
       try {
-        await window.Ackem.openforu.workspaces.create(planTopic?.trim() || undefined)
+        await window.britney.openforu.workspaces.create(planTopic?.trim() || undefined)
         setPlanOpen(true)
         return true
       } catch (e) {
@@ -171,7 +171,7 @@ export function ChatPage(): JSX.Element {
     if (!settings) return
     setDesktopAgentSettingsReady(isDesktopAgentSettingsReady(settings))
     if (!isDesktopAgentApiAvailable()) return
-    void window.Ackem.desktopAgent.sessionMode.get(activeSessionId).then((r) => {
+    void window.britney.desktopAgent.sessionMode.get(activeSessionId).then((r) => {
       setDesktopAgentChatMode(r.enabled && r.settingsReady)
       setDesktopAgentSettingsReady(r.settingsReady)
     })
@@ -184,9 +184,9 @@ export function ChatPage(): JSX.Element {
         pushToast(desktopAgentApiMissingMessage())
         return
       }
-      const res = await window.Ackem.desktopAgent.sessionMode.set(activeSessionId, next)
+      const res = await window.britney.desktopAgent.sessionMode.set(activeSessionId, next)
       if (!res.ok) {
-        pushToast(res.error ?? '鏃犳硶鍒囨崲鐢佃剳鍔╂墜妯″紡')
+        pushToast(res.error ?? '无法切换电脑助手模式')
         return
       }
       setDesktopAgentChatMode(res.enabled === true)
@@ -197,13 +197,13 @@ export function ChatPage(): JSX.Element {
         if (!hasUserMsg) {
           setBusy(true)
           try {
-            const opening = await window.Ackem.desktopAgent.opening()
+            const opening = await window.britney.desktopAgent.opening()
             if (opening.ok && opening.text.trim()) {
               setRows((prev) => [
                 ...prev,
                 { kind: 'message', role: 'assistant', content: opening.text.trim() }
               ])
-              void window.Ackem.saveChatHistory(useAppStore.getState().chatRows)
+              void window.britney.saveChatHistory(useAppStore.getState().chatRows)
             }
           } catch (e) {
             pushToast(e instanceof Error ? e.message : String(e))
@@ -264,14 +264,14 @@ export function ChatPage(): JSX.Element {
   }, [])
 
   const bindChatStreamHandlers = useCallback(() => {
-    window.Ackem.onChatStreamStart(() => {
+    window.britney.onChatStreamStart(() => {
       setActivityLabel(null)
       setInvestigationProgress(null)
       if (!useAppStore.getState().agentBusy) {
         setTaskPlanProgress(null)
       }
     })
-    window.Ackem.onChatWaveStart(({ newBubble }) => {
+    window.britney.onChatWaveStart(({ newBubble }) => {
       setActivityLabel(null)
       if (!newBubble) {
         streamBuf.current = ''
@@ -284,18 +284,18 @@ export function ChatPage(): JSX.Element {
         return n
       })
     })
-    window.Ackem.onChatChunk((c) => {
+    window.britney.onChatChunk((c) => {
       setActivityLabel(null)
       streamBuf.current += c
       patchStreamingAssistant(streamBuf.current)
     })
-    window.Ackem.onChatWaveEnd(({ text }) => {
+    window.britney.onChatWaveEnd(({ text }) => {
       if (text) {
         streamBuf.current = text
         patchStreamingAssistant(text)
       }
     })
-    window.Ackem.onChatReplace((text) => {
+    window.britney.onChatReplace((text) => {
       setActivityLabel(null)
       setInvestigationProgress(null)
       if (!useAppStore.getState().agentBusy) {
@@ -304,28 +304,28 @@ export function ChatPage(): JSX.Element {
       streamBuf.current = text
       patchStreamingAssistant(text)
     })
-    window.Ackem.onChatStatus((text) => {
+    window.britney.onChatStatus((text) => {
       const label = normalizeChatActivityLabel(text)
       setActivityLabel(label || null)
     })
-    window.Ackem.onInvestigationProgress((payload) => {
+    window.britney.onInvestigationProgress((payload) => {
       setInvestigationProgress(payload)
     })
-    window.Ackem.onTaskPlanProgress((payload) => {
+    window.britney.onTaskPlanProgress((payload) => {
       setTaskPlanProgress(payload)
     })
-    window.Ackem.onChatSearchCard((payload) => {
+    window.britney.onChatSearchCard((payload) => {
       insertSearchCard(payload)
     })
-    window.Ackem.onChatMemoryAudit((payload) => {
+    window.britney.onChatMemoryAudit((payload) => {
       insertMemoryAuditCard(payload)
     })
   }, [insertMemoryAuditCard, insertSearchCard, patchStreamingAssistant, setRows])
 
   const appendTaskDeliveryToChat = useCallback(
     (payload: DesktopAgentTaskDeliveryPayload) => {
-      const prefix = payload.allPassed ? '鉁?鐢佃剳鍔╂墜浠诲姟瀹屾垚' : '鈿狅笍 鐢佃剳鍔╂墜浠诲姟鏈畬鎴?
-      const content = `${prefix}锛?{payload.goalSummary}\n\n${payload.text}`
+      const prefix = payload.allPassed ? '✅ 电脑助手任务完成' : '⚠️ 电脑助手任务未完成'
+      const content = `${prefix}：${payload.goalSummary}\n\n${payload.text}`
       setRows((prev) => {
         const next = [...prev]
         const last = next[next.length - 1]
@@ -338,7 +338,7 @@ export function ChatPage(): JSX.Element {
         } else {
           next.push({ kind: 'message', role: 'assistant', content })
         }
-        void window.Ackem.saveChatHistory(next)
+        void window.britney.saveChatHistory(next)
         return next
       })
     },
@@ -347,21 +347,21 @@ export function ChatPage(): JSX.Element {
 
   useEffect(() => {
     if (!isDesktopAgentApiAvailable()) return
-    const offConfirm = window.Ackem.desktopAgent.confirm.onRequest((payload) => {
+    const offConfirm = window.britney.desktopAgent.confirm.onRequest((payload) => {
       setDesktopAgentConfirm(payload)
     })
-    window.Ackem.onDesktopAgentAgentBusy?.(({ sessionId: sid, busy: ab }) => {
+    window.britney.onDesktopAgentAgentBusy?.(({ sessionId: sid, busy: ab }) => {
       if (sid !== activeSessionId) return
       setAgentBusy(ab)
     })
-    window.Ackem.onDesktopAgentJobState?.((payload) => {
+    window.britney.onDesktopAgentJobState?.((payload) => {
       if (payload.sessionId !== activeSessionId) return
       setAgentJobState(payload)
       if (!payload.active) {
         setAgentJobStatus(null)
       }
     })
-    window.Ackem.onDesktopAgentJobStatus?.(({ sessionId: sid, label }) => {
+    window.britney.onDesktopAgentJobStatus?.(({ sessionId: sid, label }) => {
       if (sid !== activeSessionId) return
       setAgentJobStatus(label.trim() ? label : null)
     })
@@ -377,15 +377,15 @@ export function ChatPage(): JSX.Element {
         appendTaskDeliveryToChat(payload)
       }
     }
-    window.Ackem.onDesktopAgentTaskDelivery?.(handleDelivery)
-    window.Ackem.onDesktopAgentTaskDeliveryQueued?.(handleDelivery)
+    window.britney.onDesktopAgentTaskDelivery?.(handleDelivery)
+    window.britney.onDesktopAgentTaskDeliveryQueued?.(handleDelivery)
     return () => {
       offConfirm()
     }
   }, [activeSessionId, setAgentBusy, appendTaskDeliveryToChat])
 
   useEffect(() => {
-    void window.Ackem
+    void window.britney
       .getState()
       .then((raw) => {
         const s = raw as { emotion?: { primaryLabel?: string; aff?: number } }
@@ -421,9 +421,9 @@ export function ChatPage(): JSX.Element {
   }, [rows])
 
   useEffect(() => {
-    void window.Ackem?.ensureLayout()
-    // 鍔犺浇涓婃鐨勮亰澶╄褰?
-    void window.Ackem?.loadChatHistory().then((history: unknown[]) => {
+    void window.britney?.ensureLayout()
+    // 加载上次的聊天记录
+    void window.britney?.loadChatHistory().then((history: unknown[]) => {
       if (!history?.length) return
       const normalized = history.map(normalizeChatRow).filter((r): r is ChatRow => r != null)
       if (normalized.length > 0) setRows(normalized)
@@ -432,16 +432,16 @@ export function ChatPage(): JSX.Element {
 
   // Load session list
   useEffect(() => {
-    void window.Ackem?.sessionList().then(list => {
+    void window.britney?.sessionList().then(list => {
       if (list && list.length > 0) setSessions(list)
     }).catch(() => {})
   }, [activeSessionId])
 
   const focusChatInput = useCallback(() => {
-    // 鐢ㄥ灞?retry 纭繚鍦?Electron 鐒︾偣鐘舵€佸紓甯告椂涔熻兘鎭㈠
+    // 用多层 retry 确保在 Electron 焦点状态异常时也能恢复
     requestAnimationFrame(() => {
       inputRef.current?.focus()
-      // Electron 鍦?native dialog 鍏抽棴鍚庡彲鑳藉紓姝ラ噸缃劍鐐癸紝鍔犲欢杩?retry
+      // Electron 在 native dialog 关闭后可能异步重置焦点，加延迟 retry
       setTimeout(() => inputRef.current?.focus(), 50)
       setTimeout(() => inputRef.current?.focus(), 150)
     })
@@ -452,13 +452,13 @@ export function ChatPage(): JSX.Element {
   }, [chatFocusToken, focusChatInput])
 
   useEffect(() => {
-    window.Ackem?.onDispatchProactive?.((payload) => {
+    window.britney?.onDispatchProactive?.((payload) => {
       pushToast(`${payload.extensionId}: ${payload.message.slice(0, 80)}`)
     })
   }, [pushToast])
 
   useEffect(() => {
-    window.Ackem?.onExtensionTrigger?.((status) => {
+    window.britney?.onExtensionTrigger?.((status) => {
       useAppStore.getState().setDispatchTriggerStatus(status)
     })
   }, [])
@@ -469,13 +469,13 @@ export function ChatPage(): JSX.Element {
 
   const runChatFromBuilt = useCallback(
     async (
-      built: Awaited<ReturnType<typeof window.Ackem.buildContext>>,
+      built: Awaited<ReturnType<typeof window.britney.buildContext>>,
       awakeningHint?: string
     ) => {
       if (!settings) return
 
       bindChatStreamHandlers()
-      window.Ackem.onChatDone((meta) => {
+      window.britney.onChatDone((meta) => {
         setActivityLabel(null)
         setInvestigationProgress(null)
         clearStreamingAssistantIndex()
@@ -483,9 +483,9 @@ export function ChatPage(): JSX.Element {
           pushToast(t('chat.memoryWrite', { writes: meta.memoryWrites.join('; ') }))
         }
         incrementTurn()
-        void window.Ackem.saveChatHistory(useAppStore.getState().chatRows)
+        void window.britney.saveChatHistory(useAppStore.getState().chatRows)
       })
-      window.Ackem.onChatError((err) => {
+      window.britney.onChatError((err) => {
         setActivityLabel(null)
         setInvestigationProgress(null)
         if (String(err) === 'EMBEDDING_WARMING') {
@@ -495,12 +495,15 @@ export function ChatPage(): JSX.Element {
         pushToast(err)
         patchStreamingAssistant(t('chat.error', { error: String(err) }))
       })
+      window.britney.onChatImage((payload) => {
+        setRows((prev) => [...prev, { kind: 'image', ...payload }])
+      })
 
       if (built.skipLlm && built.redlineReply) {
         patchStreamingAssistant(built.redlineReply ?? '')
         clearStreamingAssistantIndex()
         incrementTurn()
-        void window.Ackem.saveChatHistory(useAppStore.getState().chatRows)
+        void window.britney.saveChatHistory(useAppStore.getState().chatRows)
         return
       }
 
@@ -509,13 +512,13 @@ export function ChatPage(): JSX.Element {
         patchStreamingAssistant(
           opened
             ? t('chat.openPlan')
-            : `${OPENFORU_NOT_CONFIGURED_MSG} 璇峰厛鍒拌缃〉濉啓 OpenForU 涓撶敤妯″瀷鍚庡啀璇曘€俙
+            : `${OPENFORU_NOT_CONFIGURED_MSG} 请先到设置页填写 OpenForU 专用模型后再试。`
         )
         clearStreamingAssistantIndex()
         return
       }
 
-      await window.Ackem.startChat({
+      await window.britney.startChat({
         messages: built.messages,
         settings,
         turnId: built.turnId,
@@ -574,7 +577,7 @@ export function ChatPage(): JSX.Element {
           role: 'assistant',
           content: opened
             ? t('chat.openPlan')
-            : `${OPENFORU_NOT_CONFIGURED_MSG} 璇峰厛鍒拌缃〉濉啓 OpenForU 涓撶敤妯″瀷鍚庡啀璇曘€俙
+            : `${OPENFORU_NOT_CONFIGURED_MSG} 请先到设置页填写 OpenForU 专用模型后再试。`
         }
       ])
     },
@@ -593,7 +596,7 @@ export function ChatPage(): JSX.Element {
       bindChatStreamHandlers()
 
       try {
-        const built = await window.Ackem.buildContext({
+        const built = await window.britney.buildContext({
           userText: ctx.userText,
           explicitRel: ctx.explicitRel,
           recentMessages: ctx.recent,
@@ -625,120 +628,19 @@ export function ChatPage(): JSX.Element {
   )
 
 
-  // 鈹€鈹€ 鎷栨嫿閫変腑鑷姩澶嶅埗 鈹€鈹€
-  useEffect(() => {
-    let lastCopied = ''
-    const tryCopy = (text: string) => {
-      // Electron 涓?navigator.clipboard 闇€瑕佺劍鐐癸紝鐢?execCommand 鏇村彲闈?
-      try {
-        const ta = document.createElement('textarea')
-        ta.value = text
-        ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0'
-        document.body.appendChild(ta)
-        ta.focus()
-        ta.select()
-        const ok = document.execCommand('copy')
-        document.body.removeChild(ta)
-        if (ok) pushToast(`馃搵 宸插鍒?${text.length} 瀛梎)
-      } catch {
-        // 鏈€鍚庡皾璇?clipboard API
-        void navigator.clipboard.writeText(text).then(
-          () => pushToast(`馃搵 宸插鍒?${text.length} 瀛梎)
-        ).catch(() => {})
-      }
-    }
-
-    const handleMouseUp = () => {
-      // 鐭欢杩熺‘淇濋€夋嫨宸插畬鎴?
-      setTimeout(() => {
-        const sel = window.getSelection()
-        const text = sel?.toString()?.trim()
-        if (!text || text.length < 2 || text === lastCopied) return
-
-        // 妫€鏌ラ€夊尯鏄惁鍦ㄨ亰澶╂皵娉″唴
-        const anchor = sel?.anchorNode
-        if (!anchor) return
-        const parent = anchor.nodeType === 3 ? anchor.parentElement : anchor as Element
-        if (!parent?.closest('.message-user, .message-her, .md-content')) return
-
-        lastCopied = text
-        tryCopy(text)
-      }, 10)
-    }
-    document.addEventListener('mouseup', handleMouseUp)
-    return () => document.removeEventListener('mouseup', handleMouseUp)
-  }, [pushToast])
-
-  // 鈹€鈹€ Agnes 鏂囩敓鍥?鈹€鈹€
-  const generateImage = useCallback(async (prompt: string) => {
-    const imageIndex = useAppStore.getState().chatRows.length
-    // 鎻掑叆鐢ㄦ埛娑堟伅 + 鍔犺浇涓殑鍥剧墖鍗＄墖
-    setRows((prev) => [
-      ...prev,
-      { kind: 'message', role: 'user', content: `馃帹 鐢讳竴寮狅細${prompt}` },
-      { kind: 'image', prompt, loading: true }
-    ])
-    setInput('')
-    setBusy(true)
-
-    try {
-      const result = await window.Ackem.agnes.generateImage(prompt)
-      setRows((prev) => {
-        const n = [...prev]
-        // 鎵惧埌鏈€鍚庝竴涓?loading 鐨?image 琛?
-        for (let i = n.length - 1; i >= 0; i--) {
-          if (n[i].kind === 'image' && (n[i] as { loading?: boolean }).loading) {
-            n[i] = {
-              kind: 'image',
-              prompt,
-              imagePath: result.imagePath,
-              imageUrl: result.imageUrl,
-              revisedPrompt: result.revisedPrompt,
-              loading: false,
-              error: result.success ? undefined : result.error
-            }
-            break
-          }
-        }
-        void window.Ackem.saveChatHistory(n)
-        return n
-      })
-    } catch (e) {
-      setRows((prev) => {
-        const n = [...prev]
-        for (let i = n.length - 1; i >= 0; i--) {
-          if (n[i].kind === 'image' && (n[i] as { loading?: boolean }).loading) {
-            n[i] = {
-              kind: 'image',
-              prompt,
-              loading: false,
-              error: e instanceof Error ? e.message : String(e)
-            }
-            break
-          }
-        }
-        void window.Ackem.saveChatHistory(n)
-        return n
-      })
-    } finally {
-      setBusy(false)
-      focusChatInput()
-    }
-  }, [setRows, setInput, setBusy, focusChatInput])
-
   useEffect(() => {
     const onWinFocus = () => focusChatInput()
     window.addEventListener('focus', onWinFocus)
-    // 涓昏繘绋?BrowserWindow focus 浜嬩欢涔熶細閫氳繃 IPC 杞彂鍒版澶?
-    window.Ackem?.onWindowFocused(() => focusChatInput())
+    // 主进程 BrowserWindow focus 事件也会通过 IPC 转发到此处
+    window.britney?.onWindowFocused(() => focusChatInput())
     return () => window.removeEventListener('focus', onWinFocus)
   }, [focusChatInput])
 
-  // 鐢ㄦ埛鍙栨秷浜嗗綊妗?鈫?AI 涓诲姩琛ㄨ揪琚儗鍙涚殑鎰熷彈锛堟棤鐢ㄦ埛鍙娑堟伅锛?
+  // 用户取消了归档 → AI 主动表达被背叛的感受（无用户可见消息）
   const deleteEffectRun = useRef(false)
   useEffect(() => {
     if (!deleteAttempted || !settings) return
-    if (deleteEffectRun.current) return  // 闃叉 React StrictMode 鍙屾鎵ц
+    if (deleteEffectRun.current) return  // 防止 React StrictMode 双次执行
     deleteEffectRun.current = true
     setDeleteAttempted(false)
 
@@ -759,7 +661,7 @@ export function ChatPage(): JSX.Element {
     void (async () => {
       setBusy(true)
       streamBuf.current = ''
-      // 涓嶆斁鐢ㄦ埛娑堟伅锛孉I 涓诲姩寮€鍙?
+      // 不放用户消息，AI 主动开口
       const prevRows = useAppStore.getState().chatRows
       const archiveAssistantIndex = prevRows.length
       streamingAssistantIndexRef.current = archiveAssistantIndex
@@ -769,7 +671,7 @@ export function ChatPage(): JSX.Element {
       bindChatStreamHandlers()
 
       try {
-        const built = await window.Ackem.buildContext({
+        const built = await window.britney.buildContext({
           userText: t('chat.archiveSilent'),
           systemHint,
           recentMessages: prevRows
@@ -781,27 +683,30 @@ export function ChatPage(): JSX.Element {
         })
         syncDispatchTriggerFromBuilt(built)
 
-        window.Ackem.onChatDone(() => {
+        window.britney.onChatDone(() => {
           clearStreamingAssistantIndex()
           incrementTurn()
-          // 鑷姩淇濆瓨鑱婂ぉ璁板綍
-          void window.Ackem.saveChatHistory(useAppStore.getState().chatRows)
+          // 自动保存聊天记录
+          void window.britney.saveChatHistory(useAppStore.getState().chatRows)
         })
-        window.Ackem.onChatError((err) => {
+        window.britney.onChatError((err) => {
           if (String(err) === 'EMBEDDING_WARMING') {
             pushToast(t('chat.embedding.warming'))
             return
           }
           pushToast(err)
-          void window.Ackem.saveChatHistory(useAppStore.getState().chatRows)
+          void window.britney.saveChatHistory(useAppStore.getState().chatRows)
           patchStreamingAssistant(t('chat.error', { error: String(err) }))
+        })
+        window.britney.onChatImage((payload) => {
+          setRows((prev) => [...prev, { kind: 'image', ...payload }])
         })
 
         if (built.skipLlm && built.redlineReply) {
           patchStreamingAssistant(built.redlineReply ?? '')
           clearStreamingAssistantIndex()
         } else {
-          await window.Ackem.startChat({
+          await window.britney.startChat({
             messages: built.messages,
             settings,
             turnId: built.turnId,
@@ -836,20 +741,6 @@ export function ChatPage(): JSX.Element {
   ])
 
   const send = useCallback(async () => {
-    // 妫€娴嬪浘鐗囩敓鎴愭剰鍥?
-    const trimmedInput = input.trim()
-    if (trimmedInput && !busy) {
-      try {
-        const intent = await window.Ackem.agnes.detectIntent(trimmedInput)
-        if (intent.isImage && intent.prompt) {
-          void generateImage(intent.prompt)
-          return
-        }
-      } catch {
-        // 妫€娴嬪け璐ュ垯璧版甯歌亰澶╂祦绋?
-      }
-    }
-
     const validation = validateChatSend(input, settings, busy, t('chat.docOnly'), embeddingReadiness)
     if (!validation.ok) {
       const msg = chatSendBlockReasonMessage(validation.reason)
@@ -871,20 +762,20 @@ export function ChatPage(): JSX.Element {
     streamingAssistantIndexRef.current = assistantIndex
     setRows(rowsWithPlaceholder)
     setInput('')
-    incrementTurn()  // 瑙﹀彂鎯呯华闈㈡澘鍒锋柊
+    incrementTurn()  // 触发情绪面板刷新
 
     const nextCore = rowsWithPlaceholder.slice(0, -1)
 
-    // 浜烘牸瑙夐啋锛氬垏鎹㈠悗棣栨瀵硅瘽娉ㄥ叆杩囨浮鎻愮ず
+    // 人格觉醒：切换后首次对话注入过渡提示
     const awakeningHint = personalityAwakening
-      ? `銆愪汉鏍艰閱掓彁绀?路 浠呬綔婕旂粠鍙傝€冿紝鍕跨洿鎺ュ杩般€戜綘鐨勬€ф牸鍒氭墠鍙戠敓浜嗗彉鍖栥€備綘鐜板湪鏇存帴杩?${personalityAwakening}"鐨勭壒璐ㄣ€備綘浠嶆槸鍚屼竴涓汉锛岃寰楁垜浠箣闂寸殑涓€鍒囷紝浣嗕綘鐪嬪緟涓栫晫鐨勬柟寮忔湁浜嗕竴浜涘井濡欑殑涓嶅悓銆傝鍦ㄦ帴涓嬫潵鐨勫璇濅腑鑷劧鍦颁綋鐜拌繖绉嶅彉鍖栵紝涓嶈鐩存帴璇村嚭"鎴戝彉浜?鎴?鎴戠殑鎬ф牸鍙樹簡"銆傞殢鐫€瀵硅瘽鎺ㄨ繘锛屼綘浼氳秺鏉ヨ秺鑷劧鍦拌瀺鍏ユ柊鐨勬€ф牸銆俙
+      ? `【人格觉醒提示 · 仅作演绎参考，勿直接复述】你的性格刚才发生了变化。你现在更接近"${personalityAwakening}"的特质。你仍是同一个人，记得我们之间的一切，但你看待世界的方式有了一些微妙的不同。请在接下来的对话中自然地体现这种变化，不要直接说出"我变了"或"我的性格变了"。随着对话推进，你会越来越自然地融入新的性格。`
       : undefined
     if (awakeningHint) setPersonalityAwakening(null)
 
     bindChatStreamHandlers()
 
     try {
-      const built = await window.Ackem.buildContext(
+      const built = await window.britney.buildContext(
         buildChatContextRequest({
           clean,
           userLine,
@@ -940,7 +831,7 @@ export function ChatPage(): JSX.Element {
     } catch (e) {
       console.error('[send] error:', e)
       pushToast(e instanceof Error ? e.message : String(e))
-      patchStreamingAssistant(`锛堥敊璇級${e instanceof Error ? e.message : String(e)}`)
+      patchStreamingAssistant(`（错误）${e instanceof Error ? e.message : String(e)}`)
     } finally {
       setActivityLabel(null)
       clearStreamingAssistantIndex()
@@ -963,14 +854,13 @@ export function ChatPage(): JSX.Element {
     runChatFromBuilt,
     emotionLabel,
     respondPlanCreate,
-    desktopAgentModeActive,
-    generateImage
+    desktopAgentModeActive
   ])
 
   if (!settings) {
     return (
       <div className="flex flex-1 items-center justify-center bg-surface text-sm text-ink-muted">
-        姝ｅ湪鍔犺浇璁剧疆鈥?
+        正在加载设置…
       </div>
     )
   }
@@ -982,14 +872,7 @@ export function ChatPage(): JSX.Element {
       onMouseDown={() => focusChatInput()}
     >
       <header className="glass-panel flex items-center justify-between border-b border-surface-inset/60 px-6 py-3">
-        <div className="flex items-center gap-2">
-          <h1 className="font-display text-base font-semibold text-ink">瀵硅瘽</h1>
-          {sessions.length > 1 && activeSessionId !== 'default' && (
-            <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[10px] text-accent font-medium">
-              {sessions.find(s => s.id === activeSessionId)?.name || activeSessionId}
-            </span>
-          )}
-        </div>
+        <h1 className="font-display text-base font-semibold text-ink">对话</h1>
         <div className="flex items-center gap-2">
           {sessions.length > 1 && (
             <select
@@ -998,12 +881,12 @@ export function ChatPage(): JSX.Element {
                 const newId = e.target.value
                 if (newId === activeSessionId) return
                 try {
-                  const r = await window.Ackem.sessionSwitch(newId)
+                  const r = await window.britney.sessionSwitch(newId)
                   if (r.ok && r.settings) {
                     useAppStore.getState().setSettings(r.settings)
                     useAppStore.getState().resetChat()
                     turnRef.current = 0
-                    const history = await window.Ackem.loadChatHistory()
+                    const history = await window.britney.loadChatHistory()
                     if (history?.length) {
                       const normalized = history
                         .map(normalizeChatRow)
@@ -1016,9 +899,9 @@ export function ChatPage(): JSX.Element {
                         turnRef.current = userTurns
                       }
                     }
-                    pushToast('宸插垏鎹細璇?)
+                    pushToast('已切换会话')
                   } else {
-                    pushToast(r.error ?? '鍒囨崲澶辫触')
+                    pushToast(r.error ?? '切换失败')
                   }
                 } catch (err) {
                   pushToast(err instanceof Error ? err.message : String(err))
@@ -1040,54 +923,19 @@ export function ChatPage(): JSX.Element {
           <InvestigationProgressBar progress={investigationProgress} />
           <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-6 py-6">
             {rows.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-16 px-6">
-                <div className="text-5xl mb-4">鉁?/div>
-                <h2 className="text-lg font-display font-semibold text-ink mb-2">寮€濮嬪璇?/h2>
-                <p className="text-sm text-ink-muted text-center max-w-md leading-relaxed mb-6">
-                  鍦ㄣ€岃缃€嶄腑閰嶇疆妯″瀷骞跺畬鎴愬勾榫勭‘璁ゅ悗锛屽嵆鍙紑濮嬪璇濄€?
-                </p>
-                <div className="flex flex-wrap gap-2 justify-center">
-                  {[
-                    { icon: '馃帹', label: '鐢讳竴寮犳棩鍑?, hint: '璇曡瘯 AI 鐢熷浘' },
-                    { icon: '馃挱', label: '鑱婅亰鏈€杩?, hint: '寮€濮嬮棽鑱? },
-                    { icon: '馃攳', label: '鎼滅储淇℃伅', hint: '鐭ヨ瘑妫€绱? }
-                  ].map(({ icon, label, hint }) => (
-                    <button
-                      key={label}
-                      type="button"
-                      onClick={() => {
-                        setInput(label)
-                        focusChatInput()
-                      }}
-                      className="glass-panel rounded-xl px-4 py-2.5 text-left hover:bg-surface-raised/50 transition-all group"
-                    >
-                      <span className="text-base mr-1.5">{icon}</span>
-                      <span className="text-sm text-ink">{label}</span>
-                      <span className="block text-[10px] text-ink-muted/60 mt-0.5 group-hover:text-ink-muted transition-colors">{hint}</span>
-                    </button>
-                  ))}
-                </div>
+              <div className="glass-panel rounded-2xl p-6 text-sm leading-relaxed text-ink-muted">
+                在「设置」中配置模型并完成年龄确认后，即可开始对话。记忆导入已并入「记忆」页。
               </div>
             )}
             {rows.map((m, i) => {
+              if (m.kind === 'image') {
+                return <ImageCard key={`img-${i}`} imagePath={m.path} imageUrl={m.url} prompt={m.prompt} />
+              }
               if (m.kind === 'search') {
                 return <SearchPaperCard key={`search-${i}`} {...m} />
               }
               if (m.kind === 'memoryAudit') {
                 return <MemoryAuditCard key={`audit-${i}`} {...m} />
-              }
-              if (m.kind === 'image') {
-                return (
-                  <ImageCard
-                    key={`image-${i}`}
-                    prompt={m.prompt}
-                    imagePath={m.imagePath}
-                    imageUrl={m.imageUrl}
-                    revisedPrompt={m.revisedPrompt}
-                    loading={m.loading}
-                    error={m.error}
-                  />
-                )
               }
               if (m.kind === 'planCreateAsk') {
                 return (
@@ -1164,7 +1012,7 @@ export function ChatPage(): JSX.Element {
                     ) : busy && i === lastAssistantIdx ? (
                       <ChatTypingIndicator label={activityLabel} />
                     ) : (
-                      <span className="text-ink-muted/60">鈥?/span>
+                      <span className="text-ink-muted/60">…</span>
                     )}
                   </div>
                 </div>
@@ -1190,7 +1038,7 @@ export function ChatPage(): JSX.Element {
             )}
             {desktopAgentModeActive && agentBusy ? (
               <div className="mx-auto mb-2 max-w-[920px] px-1 text-[10px] text-ink-muted">
-                鐢佃剳鍔╂墜鍦ㄤ笅鏂归潰鏉挎墽琛屼腑锛屼綘鍙互缁х画鑱婂ぉ銆?
+                电脑助手在下方面板执行中，你可以继续聊天。
               </div>
             ) : null}
             {!desktopAgentPreviewOnly ? (
@@ -1203,13 +1051,13 @@ export function ChatPage(): JSX.Element {
               pendingDelivery={pendingTaskDelivery}
               onAllowOnce={() => {
                 if (!desktopAgentConfirm || !isDesktopAgentApiAvailable()) return
-                void window.Ackem.desktopAgent.confirm
+                void window.britney.desktopAgent.confirm
                   .allow(desktopAgentConfirm.requestId)
                   .then(() => setDesktopAgentConfirm(null))
               }}
               onAllowSession={() => {
                 if (!desktopAgentConfirm || !isDesktopAgentApiAvailable()) return
-                void window.Ackem.desktopAgent.confirm
+                void window.britney.desktopAgent.confirm
                   .allowSession(desktopAgentConfirm.requestId)
                   .then(() => setDesktopAgentConfirm(null))
               }}
@@ -1220,7 +1068,7 @@ export function ChatPage(): JSX.Element {
                   !isDesktopAgentApiAvailable()
                 )
                   return
-                void window.Ackem.desktopAgent.confirm
+                void window.britney.desktopAgent.confirm
                   .allowTaskDeletes(
                     desktopAgentConfirm.requestId,
                     desktopAgentConfirm.taskPlanId
@@ -1229,7 +1077,7 @@ export function ChatPage(): JSX.Element {
               }}
               onDeny={() => {
                 if (!desktopAgentConfirm || !isDesktopAgentApiAvailable()) return
-                void window.Ackem.desktopAgent.confirm
+                void window.britney.desktopAgent.confirm
                   .deny(desktopAgentConfirm.requestId)
                   .then(() => setDesktopAgentConfirm(null))
               }}
@@ -1250,45 +1098,10 @@ export function ChatPage(): JSX.Element {
                 onOpenSettings={() => openSettingsAt('settings-desktop-agent')}
               />
               {desktopAgentPreviewOnly ? (
-                <span className="exp-muted text-[10px]">鏆傛湭寮€鏀?/span>
+                <span className="exp-muted text-[10px]">暂未开放</span>
               ) : desktopAgentModeActive ? (
-                <span className="exp-muted text-[10px]">瀹為獙 路 鐢佃剳鍔╂墜宸插紑鍚?/span>
+                <span className="exp-muted text-[10px]">实验 · 电脑助手已开启</span>
               ) : null}
-            </div>
-            {/* 蹇嵎宸ュ叿鏍?*/}
-            <div className="mx-auto flex max-w-[920px] items-center gap-1 px-1 mb-1.5">
-              <button
-                type="button"
-                onClick={() => {
-                  setInput('鐢讳竴寮?')
-                  focusChatInput()
-                }}
-                disabled={busy}
-                className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] text-ink-muted hover:text-ink hover:bg-surface-inset/40 transition-colors disabled:opacity-40"
-                title="鐢熸垚鍥剧墖"
-              >
-                馃帹
-              </button>
-              <button
-                type="button"
-                disabled
-                className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] text-ink-muted/40 cursor-not-allowed"
-                title="闄勪欢锛堝嵆灏嗘帹鍑猴級"
-              >
-                馃搸
-              </button>
-              <button
-                type="button"
-                disabled
-                className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] text-ink-muted/40 cursor-not-allowed"
-                title="璇煶锛堝嵆灏嗘帹鍑猴級"
-              >
-                馃帣
-              </button>
-              <div className="flex-1" />
-              {busy && (
-                <span className="text-[10px] text-ink-muted/50 animate-pulse">鎬濊€冧腑鈥?/span>
-              )}
             </div>
             <div className="chat-input-wrap mx-auto flex max-w-[920px] gap-2 p-1.5">
               <textarea
@@ -1317,7 +1130,7 @@ export function ChatPage(): JSX.Element {
                 {busy ? (
                   <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent opacity-80" />
                 ) : (
-                  '鈫?
+                  '→'
                 )}
               </button>
             </div>

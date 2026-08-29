@@ -25,7 +25,7 @@ export function validateSpecConformance(
   }
 
   for (const kw of spec.trigger.keywords) {
-    const inManifest = manifest.keywords?.includes(kw)
+    const inManifest = (manifest as any).keywords?.includes(kw)
     const inDispatch = dispatch?.keywords?.includes(kw)
     if (!inManifest && !inDispatch) {
       issues.push({ field: 'trigger.keywords', message: `缺少关键词：${kw}` })

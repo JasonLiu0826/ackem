@@ -34,7 +34,6 @@ import {
   writeDiaryMeta
 } from './diaryStorage'
 import { computeReunionShock, buildReunionDiaryPrompt } from '../../../../engine/reunion'
-import { FactStore, defaultFactsPath } from '../../../../memory/factStore'
 import { EpisodicStore, defaultEpisodesPath } from '../../../../memory/episodicStore'
 import { createLogger } from '../../../../logger'
 import { broadcastToRenderers } from '../../../../uiWindow'

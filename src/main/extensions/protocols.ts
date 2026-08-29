@@ -1,37 +1,37 @@
-﻿// [extensions/protocols] 鈥?鎵╁睍妯″潡涓庢牳蹇冨紩鎿庣殑閫氫俊鍗忚
+// [extensions/protocols] — 扩展模块与核心引擎的通信协议
 //
-// 璁捐鍘熷垯锛?
-//   1. 鎵╁睍妯″潡鍙兘閫氳繃鏈枃浠跺畾涔夌殑鎺ュ彛涓庡紩鎿庝氦浜掞紝绂佹鐩存帴 import engine/ 鎴?memory/
-//   2. 寮曟搸鐘舵€侀€氳繃鍙蹇収 (EngineSnapshot) 鏆撮湶锛屾墿灞曟ā鍧椾笉鑳界洿鎺ョ獊鍙樺紩鎿庡唴閮ㄧ姸鎬?
-//   3. 鎵╁睍妯″潡鐨勫弽棣堥€氳繃 ExtensionEvent 鍥炰紶锛岀敱 orchestrator 鍦ㄤ笅涓€杞?Pre-LLM 涓粺涓€澶勭悊
-//   4. 鎵€鏈夋墿灞曟ā鍧楃殑鏁版嵁鍐欏叆璧扮櫧鍚嶅崟璺緞锛屼笉鍙啓鍏?memory/銆乧ompanion/ 绛夊紩鎿庢潈濞佺洰褰?
+// 设计原则：
+//   1. 扩展模块只能通过本文件定义的接口与引擎交互，禁止直接 import engine/ 或 memory/
+//   2. 引擎状态通过只读快照 (EngineSnapshot) 暴露，扩展模块不能直接突变引擎内部状态
+//   3. 扩展模块的反馈通过 ExtensionEvent 回传，由 orchestrator 在下一轮 Pre-LLM 中统一处理
+//   4. 所有扩展模块的数据写入走白名单路径，不可写入 memory/、companion/ 等引擎权威目录
 //
-// 鐗堟湰锛?.0.0  |  鎵╁睍寮曟搸 API 瑙?ecosystem/constants Ackem_ENGINE_API_VERSION
-// 搴旂敤鐗堟湰瑙?manifest.engineVersion锛涘崗璁増鏈 manifest.engineApiVersion
+// 版本：1.0.0  |  扩展引擎 API 见 ecosystem/constants BRITNEY_ENGINE_API_VERSION
+// 应用版本见 manifest.engineVersion；协议版本见 manifest.engineApiVersion
 
-// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
-// 寮曟搸鍙蹇収 鈥?鎵╁睍妯″潡鑳界湅鍒扮殑寮曟搸鐘舵€?
-// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+// ═══════════════════════════════════════════════════════════════
+// 引擎只读快照 — 扩展模块能看到的引擎状态
+// ═══════════════════════════════════════════════════════════════
 
 export interface EnginePersonalitySnapshot {
   presetId: string
-  /** 浜旂淮浜烘牸 [0,100] */
-  T: number  // 娓╂煍 Tenderness
-  I: number  // 鐙珛 Independence
-  S: number  // 鏁忔劅 Sensitivity
-  O: number  // 寮€鏀?Openness
-  R: number  // 鐞嗘€?Rationality
+  /** 五维人格 [0,100] */
+  T: number  // 温柔 Tenderness
+  I: number  // 独立 Independence
+  S: number  // 敏感 Sensitivity
+  O: number  // 开放 Openness
+  R: number  // 理性 Rationality
   tags: string[]
-  /** 鍙嶅樊姣旂巼 [0,1]锛屼粎18+妯″紡 */
+  /** 反差比率 [0,1]，仅18+模式 */
   hiddenRatio?: number
 }
 
 export interface EngineEmotionSnapshot {
-  /** 鍥涚淮鎯呯华 [-100,100] */
-  aff: number  // 鍠滅埍 Affection
-  sec: number  // 瀹夊叏鎰?Security
-  aro: number  // 鍞ら啋搴?Arousal
-  dom: number  // 鏀厤鎰?Dominance
+  /** 四维情绪 [-100,100] */
+  aff: number  // 喜爱 Affection
+  sec: number  // 安全感 Security
+  aro: number  // 唤醒度 Arousal
+  dom: number  // 支配感 Dominance
   primaryLabel: string
   isLocked: boolean
 }
@@ -39,163 +39,163 @@ export interface EngineEmotionSnapshot {
 export interface EngineRelationshipSnapshot {
   stage: 'STRANGER' | 'FAMILIAR' | 'INTIMATE'
   trust: number       // [0,100]
-  rifts: number       // 瑁傜棔璁℃暟
+  rifts: number       // 裂痕计数
   atmosphere: 'warm' | 'neutral' | 'cool'
   sharedEventsCount: number
   consecutivePositiveTurns: number
 }
 
 export interface EngineMemorySnapshot {
-  /** 娲昏穬浜嬪疄鏁?*/
+  /** 活跃事实数 */
   activeFactCount: number
-  /** 鏈€杩?5 鏉′簨瀹炴憳瑕侊紙渚涙墿灞曟ā鍧楀仛涓婁笅鏂囨劅鐭ワ級 */
+  /** 最近 5 条事实摘要（供扩展模块做上下文感知） */
   recentFactSummaries: string[]
-  /** 鐭ヨ瘑鍥捐氨鑺傜偣鏁?*/
+  /** 知识图谱节点数 */
   kgNodeCount: number
-  /** 鎯呰妭璁板繂鏉＄洰鏁?*/
+  /** 情节记忆条目数 */
   episodeCount: number
 }
 
-/** 鎵╁睍妯″潡鍙鐨勫紩鎿庡叏璨?鈥?鍙蹇収锛屼笉鍙獊鍙?*/
+/** 扩展模块可见的引擎全貌 — 只读快照，不可突变 */
 export interface EngineSnapshot {
   personality: EnginePersonalitySnapshot
   emotion: EngineEmotionSnapshot
   relationship: EngineRelationshipSnapshot
   memory: EngineMemorySnapshot
-  /** 鎬诲璇濊疆鏁?*/
+  /** 总对话轮数 */
   totalTurns: number
-  /** 鏄惁鎴愪汉妯″紡 */
+  /** 是否成人模式 */
   adultMode: boolean
-  /** 蹇収鐢熸垚鏃堕棿 ISO */
+  /** 快照生成时间 ISO */
   capturedAt: string
-  /** 鐢ㄦ埛鏈€鍚庢椿璺?ISO锛堝璇濊疆娆℃洿鏂帮級 */
+  /** 用户最后活跃 ISO（对话轮次更新） */
   lastActiveAt: string
-  /** 褰撳墠浼氳瘽 ID */
+  /** 当前会话 ID */
   sessionId: string
 }
 
-// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
-// 鎵╁睍浜嬩欢 鈥?鎵╁睍妯″潡鍚戝紩鎿庡弽棣堢殑鏍囧噯鍖栭€氶亾
-// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+// ═══════════════════════════════════════════════════════════════
+// 扩展事件 — 扩展模块向引擎反馈的标准化通道
+// ═══════════════════════════════════════════════════════════════
 
 export type ExtensionEventCategory = 'gamemode' | 'plugin' | 'skill'
 
 export interface ExtensionEvent {
-  /** 浜嬩欢鍞竴 ID */
+  /** 事件唯一 ID */
   id: string
-  /** 鏉ユ簮妯″潡 */
+  /** 来源模块 */
   category: ExtensionEventCategory
-  /** 鏉ユ簮鎵╁睍鐨?manifest id */
+  /** 来源扩展的 manifest id */
   sourceId: string
-  /** 浜嬩欢绫诲瀷锛堝悇妯″潡鑷畾涔夛級 */
+  /** 事件类型（各模块自定义） */
   type: string
-  /** 浜嬩欢鎼哄甫鏁版嵁 */
+  /** 事件携带数据 */
   payload: Record<string, unknown>
-  /** 鎯呯华鎻愮ず锛氬缓璁殑鎯呯华璋冨埗鏂瑰悜锛堜粎浣滃弬鑰冿紝鐢卞紩鎿庢渶缁堝喅瀹氾級 */
+  /** 情绪提示：建议的情绪调制方向（仅作参考，由引擎最终决定） */
   emotionHint?: {
     affDelta?: number
     secDelta?: number
     aroDelta?: number
     domDelta?: number
   }
-  /** 鏄惁闇€瑕佹敞鍏ュ埌鏈疆涓婁笅鏂?*/
+  /** 是否需要注入到本轮上下文 */
   injectToContext?: boolean
-  /** 娉ㄥ叆鏂囨湰锛堣嫢 injectToContext=true锛?*/
+  /** 注入文本（若 injectToContext=true） */
   contextInjection?: string
-  /** 鏃堕棿鎴?ISO */
+  /** 时间戳 ISO */
   timestamp: string
 }
 
-// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
-// 鎵╁睍鎿嶄綔缁撴灉 鈥?缁熶竴鐨勮繑鍥炲€兼牸寮?
-// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+// ═══════════════════════════════════════════════════════════════
+// 扩展操作结果 — 统一的返回值格式
+// ═══════════════════════════════════════════════════════════════
 
 export interface ExtensionOpResult<T = void> {
   ok: boolean
   data?: T
   error?: string
-  /** 鎿嶄綔浜х敓鐨勫壇浣滅敤浜嬩欢锛堜細鑷姩閫佸叆寮曟搸锛?*/
+  /** 操作产生的副作用事件（会自动送入引擎） */
   events?: ExtensionEvent[]
 }
 
-// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
-// 鎵╁睍鐢熷懡鍛ㄦ湡閽╁瓙
-// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+// ═══════════════════════════════════════════════════════════════
+// 扩展生命周期钩子
+// ═══════════════════════════════════════════════════════════════
 
 export interface ExtensionLifecycleHooks {
-  /** 鎵╁睍鍔犺浇鏃惰皟鐢?*/
+  /** 扩展加载时调用 */
   onLoad?: (snapshot: EngineSnapshot) => Promise<ExtensionOpResult>
-  /** 鎵╁睍鍗歌浇鏃惰皟鐢?*/
+  /** 扩展卸载时调用 */
   onUnload?: () => Promise<ExtensionOpResult>
-  /** 寮曟搸鐘舵€佹洿鏂板悗璋冪敤锛堟瘡杞璇濆悗瑙﹀彂锛岀敱鍗忚皟鍣ㄨ皟鐢級 */
+  /** 引擎状态更新后调用（每轮对话后触发，由协调器调用） */
   onEngineUpdate?: (snapshot: EngineSnapshot) => Promise<ExtensionOpResult>
-  /** 鐢ㄦ埛娑堟伅鍙戦€佸墠璋冪敤锛堝彲杩斿洖棰濆鐨勪笂涓嬫枃娉ㄥ叆锛?*/
+  /** 用户消息发送前调用（可返回额外的上下文注入） */
   beforeUserMessage?: (userMessage: string, snapshot: EngineSnapshot) => Promise<{
     contextInjections: string[]
   }>
-  /** LLM 鍥炲鍚庤皟鐢紙鍙敤浜庡悗澶勭悊锛?*/
+  /** LLM 回复后调用（可用于后处理） */
   afterAssistantMessage?: (assistantMessage: string, snapshot: EngineSnapshot) => Promise<ExtensionOpResult>
 }
 
-// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
-// 鎵╁睍娓呭崟鍩虹瀛楁 鈥?鎵€鏈夋墿灞曟ā鍧楀叡鐢?
-// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+// ═══════════════════════════════════════════════════════════════
+// 扩展清单基础字段 — 所有扩展模块共用
+// ═══════════════════════════════════════════════════════════════
 
 export interface EcosystemManifestMeta {
-  /** 绛惧悕鍙戝竷鑰?id锛屼笌 trust/publishers.json 閿竴鑷?*/
+  /** 签名发布者 id，与 trust/publishers.json 键一致 */
   publisherId?: string
-  /** ISO 绛惧悕鏃堕棿 */
+  /** ISO 签名时间 */
   signedAt?: string
-  /** 鍒嗗彂娓犻亾 */
+  /** 分发渠道 */
   channel?: 'stable' | 'beta' | 'dev'
-  /** 甯傚満 catalog 鏉＄洰 id锛堝彲閫夛級 */
+  /** 市场 catalog 条目 id（可选） */
   listingId?: string
 }
 
 export interface ExtensionManifestBase {
-  /** 鍞竴鏍囪瘑锛屾牸寮忥細scope/name@version锛堝 "Ackem/mc-companion@1.0.0"锛?*/
+  /** 唯一标识，格式：scope/name@version（如 "britney/mc-companion@1.0.0"） */
   id: string
-  /** 鏄剧ず鍚嶇О */
+  /** 显示名称 */
   name: string
-  /** 鐗堟湰鍙?semver */
+  /** 版本号 semver */
   version: string
-  /** 鎵╁睍鍒嗙被 */
+  /** 扩展分类 */
   category: ExtensionEventCategory
-  /** 涓€鍙ヨ瘽鎻忚堪 */
+  /** 一句话描述 */
   description: string
-  /** 浣滆€?*/
+  /** 作者 */
   author: string
-  /** 璁稿彲璇?SPDX */
+  /** 许可证 SPDX */
   license: string
-  /** 涓诲叆鍙ｆ枃浠讹紙鐩稿浜庢墿灞曞寘鏍圭洰褰曪級 */
+  /** 主入口文件（相对于扩展包根目录） */
   main: string
-  /** 鏈€浣?Ackem 搴旂敤鐗堟湰瑕佹眰锛坰emver range锛屽 >=0.0.0 <1.0.0锛?*/
+  /** 最低 Britney 应用版本要求（semver range，如 >=0.0.0 <1.0.0） */
   engineVersion: string
   /**
-   * 鎵╁睍寮曟搸 API 鍗忚鐗堟湰锛坰emver range锛屽 ^1.0.0锛夈€?
-   * community/ 甯傚満鎵╁睍蹇呭～锛沚ritney/ 涓?u/ 寤鸿鏄惧紡濉啓銆?
+   * 扩展引擎 API 协议版本（semver range，如 ^1.0.0）。
+   * community/ 市场扩展必填；britney/ 与 u/ 建议显式填写。
    */
   engineApiVersion?: string
-  /** 鐢熸€?marketplace 鍏冩暟鎹紙community 绛惧悕鍖咃級 */
+  /** 生态/marketplace 元数据（community 签名包） */
   ecosystem?: EcosystemManifestMeta
-  /** 渚濊禆鐨勫叾浠栨墿灞?id锛堝彲閫夛級 */
+  /** 依赖的其他扩展 id（可选） */
   dependencies?: string[]
-  /** 鏍囩 */
+  /** 标签 */
   tags?: string[]
   /**
-   * 瀹炶瀹屾垚搴︼紙FIX-026 绛夛級锛歴tub=浠呴瑙?閫氱煡绾у弽棣堬紝闈炲畬鏁磋兘鍔涖€?
-   * 鎵╁睍涓績鎹鏄剧ず Stub 鏍囩锛岄伩鍏嶇敤鎴疯浠ヤ负宸插疄瑁呯湡璇煶绛夈€?
+   * 实装完成度（FIX-026 等）：stub=仅预览/通知级反馈，非完整能力。
+   * 扩展中心据此显示 Stub 标签，避免用户误以为已实装真语音等。
    */
-  implementationStatus?: 'complete' | 'stub' | 'preview' | 'planned' | 'deprecated'
-  /** 涓婚〉/浠撳簱 URL */
+  implementationStatus?: 'complete' | 'stub' | 'preview' | 'planned' | 'deprecated' | 'dev'
+  /** 主页/仓库 URL */
   homepage?: string
-  /** 鎵╁睍瑙﹀彂璋冨害閰嶇疆锛圗xtension Dispatch v2.0锛?*/
+  /** 扩展触发调度配置（Extension Dispatch v2.0） */
   dispatch?: DispatchConfig
 }
 
-// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
-// Extension Dispatch v2.0 鈥?dispatch.mode 鍥涘垎娉?
-// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?
+// ═══════════════════════════════════════════════════════════════
+// Extension Dispatch v2.0 — dispatch.mode 四分法
+// ═══════════════════════════════════════════════════════════════
 
 export type DispatchMode = 'autonomous' | 'always_on' | 'manual' | 'dispatched' | 'engine_event' | 'scheduled'
 
@@ -241,7 +241,7 @@ export interface DispatchConfig {
   scenarios: string[]
   summary: string
   keywords: string[]
-  /** 淇濆簳鍚姩锛歚/鐣寗閽焋 绛夛紝鍛戒腑鍗?auto_invoke锛堜笉缁忚繃 LLM锛?*/
+  /** 保底启动：`/番茄钟` 等，命中即 auto_invoke（不经过 LLM） */
   slash?: string[]
   personality_hint?: DispatchPersonalityHint
 }
@@ -274,10 +274,10 @@ export interface DispatchResult {
     domDelta?: number
   }
   askMessage?: string
-  /** OpenForU 鏂板缓宸ヤ綔鍖哄悕绉?hint */
+  /** OpenForU 新建工作区名称 hint */
   planTopic?: string
   reasoning?: string
-  /** Surface 鎻掍欢 invoke_surface 鏃剁殑瀹夸富绛栫暐 */
+  /** Surface 插件 invoke_surface 时的宿主策略 */
   surfaceInvoke?: SurfaceInvokeDispatchMeta
 }
 

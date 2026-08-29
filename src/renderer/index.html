@@ -1,9 +1,9 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Ackem</title>
+    <title>Britney</title>
     <style>
       html,
       body {
@@ -18,7 +18,7 @@
         overflow: hidden;
       }
 
-      #Ackem-boot-splash {
+      #britney-boot-splash {
         position: fixed;
         inset: 0;
         z-index: 99999;
@@ -26,7 +26,7 @@
         transition: opacity 0.42s ease, visibility 0.42s ease;
       }
 
-      #Ackem-boot-splash.Ackem-boot-splash--out {
+      #britney-boot-splash.britney-boot-splash--out {
         opacity: 0;
         visibility: hidden;
         pointer-events: none;
@@ -37,14 +37,16 @@
         background: #0f0d14;
       }
 
-      html.Ackem-booting body {
+      html.britney-booting body {
         background: #0f0d14 !important;
       }
     </style>
   </head>
   <body class="bg-surface text-ink antialiased">
-    <div id="Ackem-boot-splash" aria-live="polite" aria-busy="true"></div>
+    <div id="britney-boot-splash" aria-live="polite" aria-busy="true"></div>
     <div id="root"></div>
+    <!-- Script stays in <body> so DOM elements exist before IIFE executes (Android file://) -->
+    <!-- Vite will replace this with the built bundle during production builds -->
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

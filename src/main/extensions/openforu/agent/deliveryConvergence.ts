@@ -84,7 +84,7 @@ async function runSmokeVerify(
   }
   const verify = await verifyDeployedExtension({ extensionId, session, coordinator })
   if (!verify.ok && !verify.skipped) {
-    if (bundleKind === 'uskill') await loader.deactivateUskill(extensionId)
+    if (bundleKind === 'uskill') await loader.deactivateUskil(extensionId)
     else await loader.deactivateUplugin(extensionId)
   }
   return {
@@ -194,7 +194,7 @@ export async function runDeliveryConvergence(input: {
       session,
       input.loader,
       bundle,
-      input.deps,
+      input.deps as any,
       { silent: !!session.designSpec }
     )
     session = deployResult.session

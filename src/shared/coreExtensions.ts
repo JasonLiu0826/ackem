@@ -1,14 +1,14 @@
-﻿/** Ackem 鍩虹鑳藉姏锛氬缁堝惎鐢紝鎵╁睍涓績涓嶅彲鍏抽棴 */
+/** Britney 基础能力：始终启用，扩展中心不可关闭 */
 
-export const CORE_PLUGIN_IDS = ['Ackem/knowledge-presentation@1.0.0'] as const
+export const CORE_PLUGIN_IDS = ['britney/knowledge-presentation@1.0.0'] as const
 
 export const CORE_SKILL_IDS = [
-  'Ackem/web-search@1.0.0',
-  'Ackem/plan-document@1.0.0',
-  'Ackem/markdown-table@1.0.0',
-  'Ackem/diary-auto@0.1.0',
-  'Ackem/weather-sense@0.0.1',
-  'Ackem/emergency-companion@1.0.0'
+  'britney/web-search@1.0.0',
+  'britney/plan-document@1.0.0',
+  'britney/markdown-table@1.0.0',
+  'britney/diary-auto@0.1.0',
+  'britney/weather-sense@0.0.1',
+  'britney/emergency-companion@1.0.0'
 ] as const
 
 export type CorePluginId = (typeof CORE_PLUGIN_IDS)[number]
@@ -29,4 +29,4 @@ export function isCoreExtension(id: string): boolean {
   return isCorePlugin(id) || isCoreSkill(id)
 }
 
-export const CORE_EXTENSION_DEACTIVATE_ERROR = '璇ュ姛鑳戒负 Ackem 鍩虹鑳藉姏锛屾棤娉曞叧闂?
+export const CORE_EXTENSION_DEACTIVATE_ERROR = '该功能为 Britney 基础能力，无法关闭'

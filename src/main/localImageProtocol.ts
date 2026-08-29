@@ -29,7 +29,8 @@ export function registerLocalImageProtocol(dataRoot: string): void {
       const url = request.url
       const pathPart = url.replace('ackem-img://', '')
 
-      // 瀹夊叏鏍￠獙锛氬彧鍏佽鐗瑰畾瀛愮洰褰?      const allowedDirs = ['agnes-images', 'companion']
+            // restrict to allowed directories
+      const allowedDirs = ['agnes-images', 'companion']
       const dirName = pathPart.split('/')[0]
       if (!allowedDirs.includes(dirName)) {
         log.warn('blocked access to unauthorized directory', { path: pathPart })

@@ -38,7 +38,8 @@ const PERMISSION_LEVELS: Record<PluginPermission, { level: number; requiresAppro
   network_outbound:      { level: 2, requiresApproval: true,   description: '发起网络请求' },
   system_notification:   { level: 2, requiresApproval: true,   description: '发送系统通知' },
   clipboard_read:        { level: 3, requiresApproval: true,   description: '读取剪贴板内容（每次需确认）' },
-  foreground_detect:     { level: 3, requiresApproval: true,   description: '检测前台窗口标题' }
+  foreground_detect:     { level: 3, requiresApproval: true,   description: '检测前台窗口标题' },
+  network:               { level: 2, requiresApproval: true,   description: '发起网络请求' }
 }
 
 // ═══════════════════════════════════════════════════════════════

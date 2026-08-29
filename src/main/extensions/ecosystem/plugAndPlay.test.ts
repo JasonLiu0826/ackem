@@ -1,4 +1,4 @@
-﻿import { mkdtempSync } from 'node:fs'
+import { mkdtempSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { describe, expect, it } from 'vitest'
@@ -6,8 +6,8 @@ import { describe, expect, it } from 'vitest'
 import { SkillRegistry } from '../skills/registry'
 import { PluginRegistry } from '../plugins/registry'
 import {
-  Ackem_ENGINE_API_VERSION,
-  buildAckemExtensionPackage,
+  BRITNEY_ENGINE_API_VERSION,
+  buildBritneyExtensionPackage,
   CommunityExtensionLoader,
   generatePublisherKeyPair,
   installCommunityPackage,
@@ -16,10 +16,10 @@ import {
 
 describe('ecosystem plug-and-play', () => {
   it('installs signed community skill and loads into SkillRegistry via coordinator path', async () => {
-    const root = mkdtempSync(join(tmpdir(), 'Ackem-eco-'))
-    const keys = generatePublisherKeyPair('Ackem-test:2026')
+    const root = mkdtempSync(join(tmpdir(), 'britney-eco-'))
+    const keys = generatePublisherKeyPair('britney-test:2026')
     upsertTrustedPublisher(root, keys.publisherId, {
-      name: 'Ackem Test Publisher',
+      name: 'Britney Test Publisher',
       algorithm: 'ed25519',
       publicKey: keys.publicKeyPem,
       scopes: ['community/*']
@@ -31,12 +31,12 @@ describe('ecosystem plug-and-play', () => {
       version: '1.0.0',
       category: 'skill' as const,
       skillType: 'rule' as const,
-      description: '鎻掓嫈娴嬭瘯 Skill',
-      author: 'Ackem Test',
+      description: '插拔测试 Skill',
+      author: 'Britney Test',
       license: 'MIT',
       main: 'skill.json',
       engineVersion: '>=0.0.0 <1.0.0',
-      engineApiVersion: `^${Ackem_ENGINE_API_VERSION}`,
+      engineApiVersion: `^${BRITNEY_ENGINE_API_VERSION}`,
       triggers: ['keyword'] as const,
       keywords: ['plug-demo'],
       permissions: ['engine_read', 'engine_inject', 'readonly'],
@@ -44,9 +44,9 @@ describe('ecosystem plug-and-play', () => {
         mode: 'dispatched' as const,
         subtype: 'keyword_hint' as const,
         time: { habits: [], scenarios: [], keywords: ['plug-demo'] },
-        habits: ['鐢ㄦ埛璇?plug-demo'],
-        scenarios: ['鎻掓嫈娴嬭瘯'],
-        summary: '鎻掓嫈 demo',
+        habits: ['用户说 plug-demo'],
+        scenarios: ['插拔测试'],
+        summary: '插拔 demo',
         keywords: ['plug-demo']
       }
     }
@@ -54,14 +54,14 @@ describe('ecosystem plug-and-play', () => {
       {
         version: '1.0.0',
         promptTemplates: {
-          contextInjection: '銆愮ぞ鍖烘墿灞?plug-demo銆戝凡瑙﹀彂锛岃鐢ㄤ即渚ｈ姘旂畝鐭洖搴斻€?
+          contextInjection: '【社区扩展 plug-demo】已触发，请用伴侣语气简短回应。'
         }
       },
       null,
       2
     )
     const manifestJson = JSON.stringify(manifest, null, 2)
-    const pkg = buildAckemExtensionPackage({
+    const pkg = buildBritneyExtensionPackage({
       publisherId: keys.publisherId,
       manifest,
       files: {
@@ -120,7 +120,7 @@ describe('ecosystem plug-and-play', () => {
   })
 
   it('rejects unsigned community install without trusted publisher', async () => {
-    const root = mkdtempSync(join(tmpdir(), 'Ackem-eco-bad-'))
+    const root = mkdtempSync(join(tmpdir(), 'britney-eco-bad-'))
     const keys = generatePublisherKeyPair('unknown:2026')
     const manifest = {
       id: 'community/bad@1.0.0',
@@ -133,7 +133,7 @@ describe('ecosystem plug-and-play', () => {
       license: 'MIT',
       main: 'skill.json',
       engineVersion: '>=0.0.0 <1.0.0',
-      engineApiVersion: `^${Ackem_ENGINE_API_VERSION}`,
+      engineApiVersion: `^${BRITNEY_ENGINE_API_VERSION}`,
       triggers: ['keyword'] as const,
       keywords: ['bad'],
       permissions: ['readonly'],
@@ -150,7 +150,7 @@ describe('ecosystem plug-and-play', () => {
       'manifest.json': JSON.stringify(manifest, null, 2),
       'skill.json': JSON.stringify({ version: '1.0.0', onKeyword: { reply: 'bad' } }, null, 2)
     }
-    const pkg = buildAckemExtensionPackage({
+    const pkg = buildBritneyExtensionPackage({
       publisherId: keys.publisherId,
       manifest,
       files,
@@ -158,6 +158,6 @@ describe('ecosystem plug-and-play', () => {
     })
     const result = installCommunityPackage(root, pkg)
     expect(result.ok).toBe(false)
-    expect(result.error).toContain('鏈俊浠荤殑鍙戝竷鑰?)
+    expect(result.error).toContain('未信任的发布者')
   })
 })

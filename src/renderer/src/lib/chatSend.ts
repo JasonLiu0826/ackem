@@ -1,7 +1,7 @@
-﻿/**
- * FIX-034 鈥?Chat 鍙戦€佸叧閿矾寰勶紙绾嚱鏁帮紝渚?ChatPage 涓庡崟娴嬪叡鐢級
+/**
+ * FIX-034 — Chat 发送关键路径（纯函数，供 ChatPage 与单测共用）
  */
-import type { AppSettings } from '../Ackem'
+import type { AppSettings } from '../ackem'
 import type { ChatRow } from '../store/appStore'
 
 export type ChatSendBlockReason =
@@ -40,10 +40,10 @@ export type ChatSendValidation =
   | { ok: true; raw: string; clean: string; rel?: string }
   | { ok: false; reason: ChatSendBlockReason }
 
-/** 鐢ㄦ埛娑堟伅涓殑 @path.md 鏄惧紡寮曠敤 */
+/** 用户消息中的 @path.md 显式引用 */
 export function parseExplicitAt(
   text: string,
-  docOnlyFallback = '锛堜粎鏂囨。锛?
+  docOnlyFallback = '（仅文档）'
 ): { clean: string; rel?: string } {
   const m = text.match(/@([\w./\\-]+\.(?:md|txt))\b/i)
   if (!m) return { clean: text }
@@ -52,7 +52,7 @@ export function parseExplicitAt(
   return { clean: clean.length > 0 ? clean : docOnlyFallback, rel }
 }
 
-/** 鎸夊綋鍓?LLM provider 鍒ゆ柇 API 鏄惁宸查厤缃?*/
+/** 按当前 LLM provider 判断 API 是否已配置 */
 export function hasLlmApiConfigured(settings: AppSettings): boolean {
   const provider = settings.llmProvider ?? 'openai'
   if (provider === 'anthropic') {
@@ -61,12 +61,12 @@ export function hasLlmApiConfigured(settings: AppSettings): boolean {
   return Boolean(settings.openaiBaseUrl?.trim())
 }
 
-/** 鍙戦€佸墠闂ㄧ锛氫笌 ChatPage.send 涓€鑷达紝渚夸簬鍗曟祴瑕嗙洊鍥炲綊 */
+/** 发送前门禁：与 ChatPage.send 一致，便于单测覆盖回归 */
 export function validateChatSend(
   input: string,
   settings: AppSettings | null,
   busy: boolean,
-  docOnlyFallback = '锛堜粎鏂囨。锛?,
+  docOnlyFallback = '（仅文档）',
   embeddingReadiness?: EmbeddingReadinessSnapshot | null
 ): ChatSendValidation {
   const raw = input.trim()
@@ -89,7 +89,7 @@ export type ChatSendOptimisticRows = {
   recentMessages: Array<{ role: 'user' | 'assistant'; content: string }>
 }
 
-/** 涔愯 UI锛氳拷鍔?user 琛?+ 绌?assistant 鍗犱綅锛屽苟鎴彇 recent 渚?buildContext */
+/** 乐观 UI：追加 user 行 + 空 assistant 占位，并截取 recent 供 buildContext */
 export function buildChatSendOptimisticRows(
   rows: ChatRow[],
   userLine: string,
@@ -140,7 +140,7 @@ export function chatSendBlockReasonMessage(reason: ChatSendBlockReason): string 
     case 'missing_api_base':
       return 'Please configure API first'
     case 'age_not_confirmed':
-      return '璇峰厛瀹屾垚骞撮緞纭'
+      return '请先完成年龄确认'
     case 'embedding_warming':
       return 'chat.embedding.warming'
   }

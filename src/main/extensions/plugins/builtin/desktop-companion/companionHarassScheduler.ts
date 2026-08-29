@@ -1,4 +1,4 @@
-﻿import type { BrowserWindow } from 'electron'
+import type { BrowserWindow } from 'electron'
 import { Notification } from 'electron'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -45,7 +45,7 @@ export function deliverCompanionProactiveMessage(args: {
 
   if (Notification.isSupported()) {
     const n = new Notification({
-      title: 'Ackem',
+      title: 'Britney',
       body: notificationBodyFromProactiveMessage(message),
       silent: true
     })

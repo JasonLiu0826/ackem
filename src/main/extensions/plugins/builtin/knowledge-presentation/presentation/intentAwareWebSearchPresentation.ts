@@ -1,10 +1,10 @@
-﻿// [intentAwareWebSearchPresentation] 鈥?鎰忓浘婢勬竻 鈫?鎼滅储 鈫?绛涢€?鈫?绾搁潰鍗★紙web_search 涓婚摼璺級
+// [intentAwareWebSearchPresentation] — 意图澄清 → 搜索 → 筛选 → 纸面卡（web_search 主链路）
 
 import type { WebContents } from 'electron'
 import type { AppSettings } from '../../../../../settings'
 import type { UserTaskFrame } from '../../../../../../shared/taskFrame'
 import { buildSearchCandidateQueries } from './searchQueryResolver'
-import { buildAckemAwareSearchQueries } from '../../../../../paperCard/AckemProductIdentity'
+import { buildBritneyAwareSearchQueries } from '../../../../../paperCard/britneyProductIdentity'
 import { runIntentAwareWebSearch } from './searchWithIntent'
 import { runSearchSynthesisChain } from './searchSynthesis'
 import { lastUserMessageFromContext } from '../knowledgeAnswer'
@@ -13,15 +13,15 @@ import { WEB_SEARCH_MANIFEST } from '../../../../skills/builtin/tool/web-search/
 
 export type IntentAwarePresentationOutcome = {
   companionReply: string
-  /** 绾搁潰鍗″睍绀烘爣棰?*/
+  /** 纸面卡展示标题 */
   displayQuery: string
-  /** 瀹為檯鎼滅储寮曟搸 query */
+  /** 实际搜索引擎 query */
   searchQuery: string
   memoryWrite: string
 }
 
 /**
- * 婢勬竻 query 鈫?鑱旂綉鎼滅储 鈫?绛涢€夋潵婧?鈫?妫€绱㈢焊闈㈠崱 + 浼翠荆鐭瘎銆?
+ * 澄清 query → 联网搜索 → 筛选来源 → 检索纸面卡 + 伴侣短评。
  */
 export async function runIntentAwareSearchPresentation(
   webContents: WebContents,
@@ -37,7 +37,7 @@ export async function runIntentAwareSearchPresentation(
     publishExtensionTriggeredById(WEB_SEARCH_MANIFEST.id)
   }
   const userMsg = lastUserMessageFromContext(contextMessages)
-  const candidates = buildAckemAwareSearchQueries(
+  const candidates = buildBritneyAwareSearchQueries(
     userMsg,
     buildSearchCandidateQueries(userMsg, input.candidateQueries, input.taskFrame?.searchQuery)
   )
@@ -57,7 +57,7 @@ export async function runIntentAwareSearchPresentation(
     contextMessages,
     [
       {
-        query: displayQuery || '缃戦〉鎼滅储',
+        query: displayQuery || '网页搜索',
         results: outcome.results,
         error: outcome.error,
         intentSummary: outcome.intent.intentSummary,

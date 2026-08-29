@@ -148,7 +148,7 @@ export class OpenForUCoordinator {
     return {
       messages: session.messages,
       ...planSessionMeta(session)
-    }
+    } as PlanSessionPayload
   }
 
   loadSession(id: string): PlanSession | null {

@@ -26,7 +26,7 @@ export function AgentPage(): JSX.Element {
     const name = settings.companionName || '浼翠荆'
     const sessionId = settings.activeSessionId || 'default'
 
-    void window.Ackem.getState().then((raw) => {
+    void window.britney.getState().then((raw) => {
       const s = raw as { emotion?: { primaryLabel?: string; aff?: number }; lastActive?: string }
       setSnapshot({
         name,
@@ -88,7 +88,7 @@ export function AgentPage(): JSX.Element {
 
         {/* 鐘舵€佸崱鐗?*/}
         <div className="glass-panel rounded-2xl p-5">
-          <h2 className="text-sm font-semibold text-ink mb-4">馃搳 鐘舵€佹瑙?/h2>
+          <h2 className="text-sm font-semibold text-ink mb-4">馃搳 鐘舵€佹瑙</h2>
           <div className="grid grid-cols-3 gap-3">
             <div className="rounded-xl bg-surface-inset/30 px-3.5 py-3 text-center">
               <p className="text-2xl font-display font-bold text-ink">{userMsgCount}</p>
@@ -102,7 +102,7 @@ export function AgentPage(): JSX.Element {
               <p className="text-2xl font-display font-bold" style={{ color: threadColor }}>
                 {snapshot?.aff ?? 0}
               </p>
-              <p className="text-[11px] text-ink-muted mt-0.5">濂芥劅搴?/p>
+              <p className="text-[11px] text-ink-muted mt-0.5">濂芥劅搴</p>
             </div>
           </div>
         </div>
@@ -145,7 +145,7 @@ export function AgentPage(): JSX.Element {
             >
               <span className="text-xl">馃挰</span>
               <div>
-                <p className="text-sm font-medium text-ink">寮€濮嬪璇?/p>
+                <p className="text-sm font-medium text-ink">寮€濮嬪璇</p>
                 <p className="text-[11px] text-ink-muted">鍥炲埌鑱婂ぉ椤甸潰</p>
               </div>
             </button>
@@ -168,7 +168,7 @@ export function AgentPage(): JSX.Element {
               <span className="text-xl">馃</span>
               <div>
                 <p className="text-sm font-medium text-ink">璁板繂绠＄悊</p>
-                <p className="text-[11px] text-ink-muted">鏌ョ湅涓庢暣鐞嗚蹇?/p>
+                <p className="text-[11px] text-ink-muted">鏌ョ湅涓庢暣鐞嗚蹇</p>
               </div>
             </button>
             <button
@@ -176,10 +176,10 @@ export function AgentPage(): JSX.Element {
               onClick={goToSettings}
               className="flex items-center gap-3 rounded-xl bg-surface-inset/30 px-4 py-3.5 text-left hover:bg-surface-inset/50 transition-colors"
             >
-              <span className="text-xl">鈿?/span>
+              <span className="text-xl">鈿</span>
               <div>
                 <p className="text-sm font-medium text-ink">璁剧疆</p>
-                <p className="text-[11px] text-ink-muted">妯″瀷涓庡亸濂介厤缃?/p>
+                <p className="text-[11px] text-ink-muted">妯″瀷涓庡亸濂介厤缃</p>
               </div>
             </button>
           </div>
@@ -187,15 +187,15 @@ export function AgentPage(): JSX.Element {
 
         {/* 鑳藉姏璇存槑 */}
         <div className="glass-panel rounded-2xl p-5">
-          <h2 className="text-sm font-semibold text-ink mb-3">馃幆 鎴戣兘鍋氫粈涔?/h2>
+          <h2 className="text-sm font-semibold text-ink mb-3">馃幆 鎴戣兘鍋氫粈涔</h2>
           <div className="space-y-2.5">
             {[
-              { icon: '馃挰', title: '鏅鸿兘瀵硅瘽', desc: '鍩轰簬璁板繂鐨勬繁搴︿氦娴侊紝瓒婅亰瓒婃噦浣? },
-              { icon: '馃帹', title: 'AI 鐢熷浘', desc: '杈撳叆銆岀敾涓€寮?..銆嶅嵆鍙敓鎴愮簿缇庡浘鐗? },
-              { icon: '馃', title: '璁板繂绯荤粺', desc: '鑷姩璁颁綇閲嶈浜嬮」锛岄暱鏈熼櫔浼? },
+              { icon: '馃挰', title: '鏅鸿兘瀵硅瘽', desc: '鍩轰簬璁板繂鐨勬繁搴︿氦娴侊紝瓒婅亰瓒婃噦浣' },
+              { icon: '馃帹', title: 'AI 鐢熷浘', desc: '杈撳叆銆岀敾涓€寮?..銆嶅嵆鍙敓鎴愮簿缇庡浘鐗' },
+              { icon: '馃', title: '璁板繂绯荤粺', desc: '鑷姩璁颁綇閲嶈浜嬮」锛岄暱鏈熼櫔浼' },
               { icon: '馃摂', title: '鏃ヨ鐢熸垚', desc: '姣忔棩鑷姩鐢熸垚鐢熸椿鏃ヨ' },
-              { icon: '馃攳', title: '鐭ヨ瘑妫€绱?, desc: '璇箟鎼滅储浣犵殑璁板繂搴? },
-              { icon: '馃挱', title: '鎯呯华鎰熺煡', desc: '鐞嗚В浣犵殑鎯呯华骞惰皟鏁村洖搴旀柟寮? }
+              { icon: '馃攳', title: '鐭ヨ瘑妫€绱', desc: '璇箟鎼滅储浣犵殑璁板繂搴' },
+              { icon: '馃挱', title: '鎯呯华鎰熺煡', desc: '鐞嗚В浣犵殑鎯呯华骞惰皟鏁村洖搴旀柟寮' }
             ].map(({ icon, title, desc }) => (
               <div key={title} className="flex items-start gap-3 rounded-lg px-2 py-1.5">
                 <span className="text-base mt-0.5">{icon}</span>
@@ -212,7 +212,7 @@ export function AgentPage(): JSX.Element {
         {chatRows.length > 0 && (
           <div className="glass-panel rounded-2xl p-5">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-semibold text-ink">馃挰 鏈€杩戝璇?/h2>
+              <h2 className="text-sm font-semibold text-ink">馃挰 鏈€杩戝璇</h2>
               <button
                 type="button"
                 onClick={goToChat}
@@ -231,9 +231,9 @@ export function AgentPage(): JSX.Element {
                     className="rounded-lg bg-surface-inset/20 px-3 py-2 text-xs text-ink-muted line-clamp-2"
                   >
                     <span className="font-medium text-ink-muted/80">
-                      {r.kind === 'message' && r.role === 'user' ? '浣? : snapshot?.name}锛?                    </span>
+                      {r.kind === 'message' && r.role === 'user' ? '浣?' : snapshot?.name}锛?                    </span>
                     {r.kind === 'message' ? r.content.slice(0, 80) : ''}
-                    {r.kind === 'message' && r.content.length > 80 ? '鈥? : ''}
+                    {r.kind === 'message' && r.content.length > 80 ? '鈥?' : ''}
                   </div>
                 ))}
             </div>

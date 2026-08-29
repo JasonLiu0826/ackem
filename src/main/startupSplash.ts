@@ -1,11 +1,11 @@
-﻿import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow } from 'electron'
 import { resolveRendererHtml } from './outPaths'
 import { loadWindowIcon } from './appIcon'
 
 let splashWindow: BrowserWindow | null = null
 let splashOpened = false
 
-/** 鍦ㄤ富杩涚▼澶?chunk 鍔犺浇鍓嶅敖鏃╁睍绀哄紑灞忥紙鐙珛闈欐€侀〉 + 杩涘害鏉★級 */
+/** 在主进程大 chunk 加载前尽早展示开屏（独立静态页 + 进度条） */
 export function openStartupSplash(): void {
   if (splashOpened) return
   splashOpened = true
@@ -25,7 +25,7 @@ async function showSplashWindow(): Promise<void> {
     height: 680,
     minWidth: 900,
     minHeight: 620,
-    title: 'Ackem',
+    title: 'Britney',
     icon: icon.isEmpty() ? undefined : icon,
     show: false,
     backgroundColor: '#0f0d14',
@@ -47,7 +47,7 @@ async function showSplashWindow(): Promise<void> {
     win.show()
     win.focus()
   } catch (e) {
-    console.error('[Ackem] startup splash failed:', e)
+    console.error('[Britney] startup splash failed:', e)
     if (!win.isDestroyed()) win.close()
     splashWindow = null
   }

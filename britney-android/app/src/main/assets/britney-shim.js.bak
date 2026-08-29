@@ -1,0 +1,456 @@
+/**
+ * Britney Android Compatibility Shim
+ * Maps window.britney (Electron preload API) → window.britneyBridge (Android JS Bridge)
+ * Injected before page load so existing React code works on Android.
+ */
+(function() {
+  'use strict';
+
+  const bridge = window.britneyBridge;
+  if (!bridge) return; // Not on Android, skip
+
+  // Helper: call native bridge with Promise
+  function nativeCall(method, args) {
+    return new Promise((resolve, reject) => {
+      const cbId = 'cb_' + Math.random().toString(36).slice(2) + '_' + Date.now();
+      window.__britneyNativeCallbacks = window.__britneyNativeCallbacks || {};
+      window.__britneyNativeCallbacks[cbId] = { resolve, reject };
+      try {
+        bridge[method](...args, cbId);
+      } catch(e) {
+        delete window.__britneyNativeCallbacks[cbId];
+        reject(e);
+      }
+    });
+  }
+
+  // Helper: stream call
+  function nativeStream(method, params, onToken) {
+    return new Promise((resolve, reject) => {
+      const streamId = 'st_' + Math.random().toString(36).slice(2) + '_' + Date.now();
+      window.__britneyNativeStreams = window.__britneyNativeStreams || {};
+      window.__britneyNativeStreams[streamId] = {
+        onToken,
+        onDone: () => { delete window.__britneyNativeStreams[streamId]; resolve(); },
+        onError: (err) => { delete window.__britneyNativeStreams[streamId]; reject(new Error(err)); }
+      };
+      try {
+        bridge[method](params, streamId);
+      } catch(e) {
+        delete window.__britneyNativeStreams[streamId];
+        reject(e);
+      }
+    });
+  }
+
+  // Global callbacks from native
+  window.__britneyNativeCallback = function(cbId, result, error) {
+    const cbs = window.__britneyNativeCallbacks || {};
+    const cb = cbs[cbId];
+    if (cb) {
+      if (error) cb.reject(new Error(error));
+      else cb.resolve(typeof result === 'string' ? JSON.parse(result) : result);
+      delete cbs[cbId];
+    }
+  };
+
+  window.__britneyNativeStreamToken = function(streamId, token, done) {
+    const streams = window.__britneyNativeStreams || {};
+    const s = streams[streamId];
+    if (s) {
+      if (done) s.onDone();
+      else s.onToken(token);
+    }
+  };
+
+  // Event listener registry
+  const listeners = {};
+
+  function onEvent(event, fn) {
+    if (!listeners[event]) listeners[event] = new Set();
+    listeners[event].add(fn);
+    return () => listeners[event].delete(fn);
+  }
+
+  function emit(event, payload) {
+    (listeners[event] || []).forEach(fn => {
+      try { fn(payload); } catch(e) { console.error('[shim]', event, e); }
+    });
+  }
+
+  // Parse settings helper
+  function parseSettings(raw) {
+    return typeof raw === 'string' ? JSON.parse(raw) : raw;
+  }
+
+  // Build the window.britney compatibility object
+  window.britney = {
+    // ===== Settings =====
+    getSettings: () => nativeCall('getSettings', []).then(parseSettings),
+    setSettings: (patch) => nativeCall('saveSettings', [JSON.stringify(patch)]),
+    getAppVersion: () => bridge.getAppVersion(),
+    getDataRoot: () => Promise.resolve({ path: '/data/data/com.britney.android/files', databasePath: 'britney.db', mode: 'android' }),
+    ensureLayout: () => Promise.resolve({ path: '/data/data/com.britney.android/files' }),
+    openDataFolder: () => Promise.resolve(), // no-op on Android
+
+    // ===== Chat =====
+    buildContext: (args) => nativeCall('buildContext', [JSON.stringify(args)]),
+    startChat: (payload) => {
+      // Convert frontend payload to LLM API params
+      const settings = payload.settings || {};
+      const llmParams = {
+        messages: payload.messages,
+        model: settings.openaiModel || settings.agnesChatModel || 'agnes-2.0-flash',
+        stream: true,
+        apiKey: settings.openaiApiKey || settings.agnesApiKey || '',
+        baseUrl: settings.openaiBaseUrl || 'https://apihub.agnes-ai.com',
+        temperature: settings.temperature ?? 0.7,
+      };
+      // Forward stream events via native callbacks
+      nativeStream('chatCompletionStream', JSON.stringify(llmParams), (token) => {
+        emit('chat:chunk', token);
+      }).then(() => {
+        emit('chat:done', {});
+      }).catch(err => {
+        emit('chat:error', err.message);
+      });
+      return Promise.resolve();
+    },
+    loadChatHistory: () => nativeCall('dbQuery', ['chat_messages', '{}']),
+    saveChatHistory: (rows) => nativeCall('dbInsert', ['chat_messages', JSON.stringify(rows)]),
+
+    // ===== Chat Events =====
+    onChatChunk: (fn) => onEvent('chat:chunk', fn),
+    onChatStreamStart: (fn) => onEvent('chat:stream-start', fn),
+    onChatDone: (fn) => onEvent('chat:done', fn),
+    onChatError: (fn) => onEvent('chat:error', fn),
+    onChatImage: (fn) => onEvent('chat:image', fn),
+    onChatReplace: (fn) => onEvent('chat:replace', fn),
+    onChatStatus: (fn) => onEvent('chat:status', fn),
+    onChatWaveStart: (fn) => onEvent('chat:wave-start', fn),
+    onChatWaveEnd: (fn) => onEvent('chat:wave-end', fn),
+    onChatSearchCard: (fn) => onEvent('chat:searchCard', fn),
+    onChatMemoryAudit: (fn) => onEvent('chat:memoryAudit', fn),
+
+    // ===== Memory =====
+    memoryList: () => nativeCall('dbQuery', ['memory_facts', '{}']),
+    memoryUpdate: (id, patch) => nativeCall('dbUpdate', ['memory_facts', JSON.stringify(patch), JSON.stringify({ id })]),
+    memoryRetire: (id) => nativeCall('dbDelete', ['memory_facts', JSON.stringify({ id })]),
+    memoryClearAll: () => nativeCall('dbDelete', ['memory_facts', '{}']),
+    memoryFeedback: (id, action) => Promise.resolve(),
+    memoryConsolidate: () => Promise.resolve(),
+    memoryStats: () => Promise.resolve({ factCount: 0 }),
+    onMemoryUpdated: (fn) => onEvent('memory:updated', fn),
+
+    // ===== Embedding =====
+    embeddingStatus: () => Promise.resolve({ phase: 'ready', progress: 1, providerReady: true }),
+    embeddingReadiness: () => Promise.resolve({ phase: 'ready', progress: 1, providerReady: true, factEmbeddingsReady: true, preLlmWarmReady: true }),
+    onEmbeddingReadinessChanged: (fn) => () => {},
+    embeddingSwitch: (modelId) => Promise.resolve(),
+    embeddingDownload: (modelId) => Promise.resolve(),
+    embeddingDownloadCancel: (modelId) => Promise.resolve(),
+    onEmbeddingDownloadProgress: (fn) => () => {},
+
+    // ===== Index =====
+    rebuildIndex: () => Promise.resolve({ chunks: 0, builtAt: new Date().toISOString() }),
+    search: (q, limit) => Promise.resolve([]),
+
+    // ===== Sessions =====
+    sessionList: () => Promise.resolve([]),
+    sessionCreate: (name) => Promise.resolve({ id: 'default', name }),
+    sessionSwitch: (id) => Promise.resolve(),
+    sessionDelete: (id) => Promise.resolve(),
+
+    // ===== Archive =====
+    archiveList: () => Promise.resolve([]),
+    archiveRead: (rel) => Promise.resolve(''),
+    archiveExport: () => Promise.resolve(),
+
+    // ===== Canon =====
+    getCanon: () => Promise.resolve({ name: 'Britney', birthDate: '2025-01-01', creator: { name: 'User' } }),
+    getCreatorMemory: () => Promise.resolve({ entries: [] }),
+
+    // ===== Personality =====
+    personalityList: (gender) => Promise.resolve([]),
+    personalitySet: (id) => Promise.resolve(),
+
+    // ===== Profile =====
+    profileEstimateScan: (paths) => Promise.resolve({}),
+    profileGet: () => Promise.resolve(null),
+    profileInferFromFiles: (args) => Promise.resolve({}),
+    profileApplyCompanionSuggestion: () => Promise.resolve(),
+
+    // ===== Associations & Anchors =====
+    associationList: () => Promise.resolve([]),
+    anchorList: () => Promise.resolve([]),
+
+    // ===== Knowledge Graph =====
+    kgList: () => Promise.resolve([]),
+    kgOneHop: (entity) => Promise.resolve([]),
+
+    // ===== Episodes =====
+    episodeList: () => Promise.resolve([]),
+
+    // ===== Desire =====
+    desireList: () => Promise.resolve([]),
+    desireDismiss: (id) => Promise.resolve(),
+    desireClearActive: () => Promise.resolve(),
+
+    // ===== Mirror =====
+    mirrorCheck: () => Promise.resolve(),
+    mirrorFindings: () => Promise.resolve([]),
+
+    // ===== Diary =====
+    diaryGenerate: (opts) => Promise.resolve(),
+    diaryList: () => Promise.resolve([]),
+    diaryRead: (date) => Promise.resolve(''),
+
+    // ===== Thought =====
+    thoughtGenerate: () => Promise.resolve(),
+
+    // ===== Import =====
+    selectFiles: () => Promise.resolve({ paths: [] }),
+    importFiles: (paths) => Promise.resolve({ copied: [], errors: [] }),
+    promoteImport: (rel) => Promise.resolve(),
+    importParseDocuments: (args) => Promise.resolve({ jobId: 'noop' }),
+    importGetJob: (jobId) => Promise.resolve({ status: 'done', facts: [] }),
+    importCommitJob: (args) => Promise.resolve({ committed: 0 }),
+
+    // ===== Companion =====
+    companionTimeContext: () => Promise.resolve({}),
+    companionPresence: () => Promise.resolve({}),
+    companionTouch: () => Promise.resolve(),
+    companionStatusText: () => Promise.resolve(''),
+    companionGetConfig: () => Promise.resolve({}),
+    companionSetConfig: (patch) => Promise.resolve(),
+    companionSkinActive: () => Promise.resolve(null),
+    companionSkinList: () => Promise.resolve([]),
+    companionSkinSetActive: (id) => Promise.resolve(),
+    onCompanionSkinChanged: (fn) => () => {},
+    onCompanionProactive: (fn) => onEvent('companion:proactive', fn),
+    onDiaryAutoGenerated: (fn) => () => {},
+
+    // ===== UI =====
+    ui: {
+      getTheme: () => Promise.resolve('dark'),
+      setTheme: (mode) => Promise.resolve(),
+      onThemeChanged: (fn) => () => {},
+      getLevel: () => Promise.resolve(2),
+      showPet: () => Promise.resolve(),
+      hidePet: () => Promise.resolve(),
+      expandToMain: (opts) => Promise.resolve(),
+      setAlwaysOnTop: (v) => Promise.resolve(),
+      setLevel: (level) => Promise.resolve(),
+      onChatBubble: (fn) => () => {},
+      onLevel: (fn) => () => {},
+      onExpand: (fn) => () => {},
+      onExtensionToast: (fn) => () => {},
+    },
+
+    // ===== Voice =====
+    voice: {
+      sendAudioChunk: (buf) => Promise.resolve(),
+      cancelTts: () => Promise.resolve(),
+      setMode: (mode) => Promise.resolve(),
+      setInputChannel: (ch) => Promise.resolve(),
+      applySettings: (patch) => Promise.resolve(),
+      restartService: () => Promise.resolve(),
+      setPttActive: (v) => Promise.resolve(),
+      checkEnvironment: () => Promise.resolve({}),
+      installEnvironment: () => Promise.resolve(),
+      setTheaterSession: (v) => Promise.resolve(),
+      health: () => Promise.resolve({}),
+      onTtsAudio: (fn) => () => {},
+      onTtsSpeakText: (fn) => () => {},
+      onTtsSpeakCancel: (fn) => () => {},
+      onTranscript: (fn) => () => {},
+      onStateChange: (fn) => () => {},
+      onListening: (fn) => () => {},
+      onThinking: (fn) => () => {},
+      onEngineStatus: (fn) => () => {},
+      onInstallLog: (fn) => () => {},
+    },
+
+    // ===== Extensions =====
+    ext: {
+      gamemode: {
+        list: () => Promise.resolve([]),
+        activate: () => Promise.resolve(),
+        deactivate: () => Promise.resolve(),
+        status: () => Promise.resolve({}),
+        invoke: () => Promise.resolve(),
+        minecraft: {},
+        onEvent: (id, fn) => () => {},
+      },
+      plugins: {
+        list: (type) => Promise.resolve([]),
+        activate: (id) => Promise.resolve(),
+        deactivate: (id) => Promise.resolve(),
+      },
+      skills: {
+        list: () => Promise.resolve([]),
+        activate: (id) => Promise.resolve(),
+        deactivate: (id) => Promise.resolve(),
+      },
+      media: { status: () => Promise.resolve({}) },
+    },
+
+    // ===== OpenForU =====
+    openforu: {
+      workspaces: {
+        list: () => Promise.resolve([]),
+        open: () => Promise.resolve(),
+        create: () => Promise.resolve(),
+        switch: (id) => Promise.resolve(),
+        delete: (id) => Promise.resolve(),
+      },
+      planStart: () => Promise.resolve(),
+      planSend: () => Promise.resolve(),
+      planConfirm: () => Promise.resolve(),
+      planApproveWireframe: () => Promise.resolve(),
+      planDeploy: () => Promise.resolve(),
+      planRedeploy: () => Promise.resolve(),
+      planRefineOpen: () => Promise.resolve(),
+      onPlanSessionUpdated: (fn) => () => {},
+      planStatus: () => Promise.resolve({}),
+      listArtifacts: () => Promise.resolve([]),
+      previewArtifact: () => Promise.resolve(),
+      readArtifact: () => Promise.resolve(),
+      listExtensions: () => Promise.resolve([]),
+      openSurfaceWindow: () => Promise.resolve(),
+      removeExtension: () => Promise.resolve(),
+      permissions: {
+        onRequest: (fn) => () => {},
+        approve: () => Promise.resolve(),
+        deny: () => Promise.resolve(),
+        approveAndActivate: () => Promise.resolve(),
+      },
+      onNotify: (fn) => () => {},
+      agent: {
+        getStatus: () => Promise.resolve({}),
+        cancel: () => Promise.resolve(),
+        onEvent: (fn) => () => {},
+      },
+      refine: {
+        preview: () => Promise.resolve(),
+        apply: () => Promise.resolve(),
+        history: () => Promise.resolve([]),
+        rollback: () => Promise.resolve(),
+      },
+    },
+
+    // ===== Desktop Agent (stubs) =====
+    desktopAgent: {
+      sessionMode: {
+        get: () => Promise.resolve({ enabled: false, settingsReady: false }),
+        set: () => Promise.resolve({ ok: true, enabled: false }),
+      },
+      opening: () => Promise.resolve({ ok: false, error: 'Not available on Android' }),
+      confirm: {
+        onRequest: (fn) => () => {},
+        allow: () => Promise.resolve(),
+        allowSession: () => Promise.resolve(),
+        allowTaskDeletes: () => Promise.resolve(),
+        deny: () => Promise.resolve(),
+      },
+      auditRecent: () => Promise.resolve([]),
+    },
+
+    // ===== Machine Map (stub) =====
+    machineMap: {
+      status: () => Promise.resolve({}),
+      reindex: () => Promise.resolve({ ok: true }),
+      onProgress: (fn) => () => {},
+    },
+
+    // ===== Weixin (stub) =====
+    weixinGetStatus: () => Promise.resolve({ connected: false, enabled: false, polling: false, proactiveEnabled: false, tokenExpired: false }),
+    weixinStartLogin: () => Promise.resolve({}),
+    weixinPollLogin: () => Promise.resolve({ ok: false }),
+    weixinSubmitVerifyCode: () => Promise.resolve({ ok: false }),
+    weixinDisconnect: () => Promise.resolve({ ok: true }),
+    weixinSetEnabled: () => Promise.resolve(),
+    weixinSetProactiveEnabled: () => Promise.resolve(),
+    weixinRestart: () => Promise.resolve(),
+    onWeixinStatusChanged: (fn) => () => {},
+
+    // ===== State =====
+    getState: () => Promise.resolve({}),
+    resetState: () => Promise.resolve(),
+    traceLatest: (n) => Promise.resolve([]),
+
+    // ===== Policy =====
+    policyDecisionLogRecent: (limit) => Promise.resolve([]),
+
+    // ===== FS =====
+    readRel: (rel, maxBytes) => Promise.resolve(''),
+    writeAllowed: (rel, content, mode) => Promise.resolve(),
+    getPathForFile: (file) => '',
+
+    // ===== Media =====
+    mediaStatus: () => Promise.resolve({}),
+
+    // ===== Events =====
+    onWindowFocused: (fn) => () => {},
+    onExtensionTrigger: (fn) => () => {},
+    onDispatchProactive: (fn) => () => {},
+    onInvestigationProgress: (fn) => () => {},
+    onTaskPlanProgress: (fn) => () => {},
+    onDesktopAgentAgentBusy: (fn) => () => {},
+    onDesktopAgentJobState: (fn) => () => {},
+    onDesktopAgentJobStatus: (fn) => () => {},
+    onDesktopAgentTaskDelivery: (fn) => () => {},
+    onDesktopAgentTaskDeliveryQueued: (fn) => () => {},
+
+    // ===== i18n =====
+    i18n: {
+      t: (key, params) => Promise.resolve(key),
+      getLocale: () => Promise.resolve('zh'),
+      setLocale: (locale) => Promise.resolve(),
+      getAllResources: () => Promise.resolve({ zh: {}, en: {}, locale: 'zh' }),
+    },
+
+    // ===== Update =====
+    checkUpdate: () => Promise.resolve({ available: false }),
+    startUpdate: () => Promise.resolve({ ok: false }),
+    openUpdateRelease: () => Promise.resolve(),
+    getUpdateChannelPreference: () => Promise.resolve('stable'),
+    setUpdateChannelPreference: () => Promise.resolve('stable'),
+
+    // ===== App =====
+    appReload: () => window.location.reload(),
+    uninstallInfo: () => Promise.resolve({ mode: 'android' }),
+    uninstallBritney: () => Promise.resolve({ ok: true }),
+
+    // ===== Sync (native bridge) =====
+    syncInit: (url, deviceId) => nativeCall('syncPair', ['init']),
+    syncGeneratePairCode: () => nativeCall('syncPair', ['generate']),
+    syncConfirmPair: (code) => nativeCall('syncPair', [code]),
+    syncTrigger: () => Promise.resolve(),
+    syncStart: () => Promise.resolve(),
+    syncStop: () => Promise.resolve(),
+    syncPull: (ts) => nativeCall('syncPull', [ts]),
+    syncPush: (changes) => nativeCall('syncPush', [JSON.stringify(changes)]),
+    syncStatus: () => Promise.resolve({ initialized: true }),
+
+    // ===== Probe =====
+    probeLocalChat: () => Promise.resolve({ ok: false }),
+
+    // ===== MC (legacy stubs) =====
+    mcReact: () => Promise.resolve(),
+    mcParseLog: () => Promise.resolve(null),
+    mcStatus: () => Promise.resolve({}),
+    mcSetEngineState: () => Promise.resolve(),
+    mcBotStart: () => Promise.resolve(),
+    mcBotStop: () => Promise.resolve(),
+    mcBotStatus: () => Promise.resolve({}),
+    mcBotDebug: () => Promise.resolve(null),
+    mcLogStart: () => Promise.resolve(),
+    mcLogStop: () => Promise.resolve(),
+    mcLogStatus: () => Promise.resolve({}),
+    onMcEvent: (fn) => () => {},
+    onMcBotDebug: (fn) => () => {},
+  };
+
+  console.log('[Britney Shim] window.britney compatibility layer loaded (Android)');
+})();

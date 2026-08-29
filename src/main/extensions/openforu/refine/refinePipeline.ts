@@ -226,7 +226,7 @@ export async function applyRefine(
     previousVersion: prevVersion,
     version: parseVersionFromExtensionId(deployResult.id),
     purpose: evolved.summary,
-    keywords: evolved.bundle.manifest.keywords ?? dispatch?.keywords ?? [],
+    keywords: (evolved.bundle.manifest as any).keywords ?? dispatch?.keywords ?? [],
     slash: dispatch?.slash ?? [],
     uiType:
       evolved.bundle.kind === 'uplugin' && evolved.bundle.files['surface.html']

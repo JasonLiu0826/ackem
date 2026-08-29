@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Britney</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #0f0d14;
+      }
+
+      #root {
+        height: 100%;
+        overflow: hidden;
+      }
+
+      #britney-boot-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        background: #0f0d14;
+        transition: opacity 0.42s ease, visibility 0.42s ease;
+      }
+
+      #britney-boot-splash.britney-boot-splash--out {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+
+      #root {
+        min-height: 100%;
+        background: #0f0d14;
+      }
+
+      html.britney-booting body {
+        background: #0f0d14 !important;
+      }
+    </style>
+
+    <!-- ======================================================
+         Britney Android: Boot diagnostics + i18n + shim
+         Load order (all synchronous, no defer):
+           1. Inline boot diagnostics — sets up error handlers
+           2. i18n-resources.js — populates window.__britneyI18nResources
+           3. britney-shim.js — maps window.britney.* to bridge
+         All load BEFORE the main bundle (which is at body end).
+         ======================================================= -->
+    <script>
+      (function () {
+        'use strict';
+        if (!window.britneyBridge) {
+          console.error('[BritneyBoot] FATAL: window.britneyBridge NOT found');
+        } else {
+          var methods = [];
+          try {
+            methods = Object.getOwnPropertyNames(Object.getPrototypeOf(window.britneyBridge));
+          } catch (e) {}
+          console.log('[BritneyBoot] window.britneyBridge OK, methods(' + methods.length + '): ' + methods.slice(0, 20).join(','));
+        }
+
+        // ===== Polyfill: createConicGradient NaN guard =====
+        // On Android, sensor data (rotY, tiltX, etc.) may be undefined/NaN,
+        // causing createConicGradient to throw "non-finite" errors.
+        // Wrap it to clamp NaN/Infinity to 0.
+        var _origCreateConic = CanvasRenderingContext2D.prototype.createConicGradient;
+        CanvasRenderingContext2D.prototype.createConicGradient = function (startAngle, x, y) {
+          if (!isFinite(startAngle)) startAngle = 0;
+          if (!isFinite(x)) x = 0;
+          if (!isFinite(y)) y = 0;
+          return _origCreateConic.call(this, startAngle, x, y);
+        };
+        // Also guard createRadialGradient and createLinearGradient
+        var _origCreateRadial = CanvasRenderingContext2D.prototype.createRadialGradient;
+        CanvasRenderingContext2D.prototype.createRadialGradient = function (x0, y0, r0, x1, y1, r1) {
+          if (!isFinite(x0)) x0 = 0; if (!isFinite(y0)) y0 = 0; if (!isFinite(r0)) r0 = 0;
+          if (!isFinite(x1)) x1 = 0; if (!isFinite(y1)) y1 = 0; if (!isFinite(r1)) r1 = 0;
+          return _origCreateRadial.call(this, x0, y0, r0, x1, y1, r1);
+        };
+        var _origCreateLinear = CanvasRenderingContext2D.prototype.createLinearGradient;
+        CanvasRenderingContext2D.prototype.createLinearGradient = function (x0, y0, x1, y1) {
+          if (!isFinite(x0)) x0 = 0; if (!isFinite(y0)) y0 = 0;
+          if (!isFinite(x1)) x1 = 0; if (!isFinite(y1)) y1 = 0;
+          return _origCreateLinear.call(this, x0, y0, x1, y1);
+        };
+
+        window.addEventListener('error', function (e) {
+          console.error('[BritneyBoot] Uncaught: ' + (e.message || '(no message)') + ' @ ' + (e.filename || '') + ':' + (e.lineno || 0) + ':' + (e.colno || 0));
+        });
+        window.addEventListener('unhandledrejection', function (e) {
+          var r = e && e.reason;
+          console.error('[BritneyBoot] UnhandledRejection: ' + (r && r.message ? r.message : r));
+        });
+        setTimeout(function () {
+          var s = document.getElementById('britney-boot-splash');
+          if (s && !s.classList.contains('britney-boot-splash--out')) {
+            console.warn('[BritneyBoot] Boot splash still visible after 15s — force-hiding.');
+            s.classList.add('britney-boot-splash--out');
+          }
+        }, 15000);
+        console.log('[BritneyBoot] Boot diagnostics loaded (with Canvas NaN guards)');
+      })();
+    </script>
+
+    <!-- i18n resources (must load before shim) -->
+    <script src="./i18n-resources.js"></script>
+
+    <!-- Britney compatibility shim -->
+    <script src="./britney-shim.js"></script>
+  </head>
+  <body class="bg-surface text-ink antialiased">
+    <div id="britney-boot-splash" aria-live="polite" aria-busy="true"></div>
+    <div id="root"></div>
+
+    <!-- Main bundle: at body end so DOM (#root) is parsed before script runs.
+         Replaces type="module" which doesn't execute under file:// origin.
+         CSS is bundled inside index.js (no separate .css file in Android build). -->
+    <script src="./assets/index.js"></script>
+  </body>
+</html>

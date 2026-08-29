@@ -1,4 +1,4 @@
-﻿import { useCallback, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useAppStore } from '../store/appStore'
 import { t } from '../lib/i18n'
 
@@ -17,7 +17,7 @@ export function MemoryPage(): JSX.Element {
       return
     }
     try {
-      const r = await window.Ackem.search(term, 30)
+      const r = await window.britney.search(term, 30)
       setHits(r)
     } catch (e) {
       pushToast(e instanceof Error ? e.message : String(e))
@@ -25,7 +25,7 @@ export function MemoryPage(): JSX.Element {
   }, [pushToast, q])
 
   const openPreview = async (rel: string) => {
-    const r = await window.Ackem.readRel(rel)
+    const r = await window.britney.readRel(rel)
     if (!r.ok || !r.text) {
       pushToast(r.error ?? t('viz.readFailed'))
       return
@@ -61,7 +61,7 @@ export function MemoryPage(): JSX.Element {
             <button
               type="button"
               onClick={async () => {
-                await window.Ackem.rebuildIndex()
+                await window.britney.rebuildIndex()
                 pushToast(t('viz.indexRebuilt'))
                 await runSearch()
               }}
@@ -100,7 +100,7 @@ export function MemoryPage(): JSX.Element {
                 <button
                   type="button"
                   className="inline-flex items-center gap-1 rounded-lg border border-surface-inset px-2 py-1 text-[11px] text-ink-muted hover:text-ink"
-                  onClick={() => void window.Ackem.openDataFolder()}
+                  onClick={() => void window.britney.openDataFolder()}
                 >
                   {t('viz.openFolder')}
                 </button>

@@ -1,7 +1,7 @@
 // 内置 Skill 注册表
 // stub.ts 非运行时 — 见 extensions/STUB_FILES.md（FIX-033）
 
-import type { SkillRegistry } from '../../registry'
+import type { SkillRegistry } from '../registry'
 import { registerBuiltinWebSearch } from './tool/web-search/register'
 import { registerBuiltinPlanDocument } from './tool/plan-document/register'
 import { registerBuiltinMarkdownTable } from './tool/markdown-table/register'
@@ -23,9 +23,6 @@ import { registerBuiltinAmbientRecall } from './scheduled/ambient-recall/registe
 import { registerBuiltinProceduralMemory } from './engine_event/procedural-memory/register'
 import { registerBuiltinGrowthUnlock } from './engine_event/growth-unlock/register'
 import { registerBuiltinMediaCoWatch } from './system_event/media-co-watch/register'
-import { registerBuiltinOpenMontage } from './tool/openmontage/register'
-import { registerBuiltinAgnesImage } from './tool/agnes-image/register'
-import { registerBuiltinAutoImage } from './workflow/auto-image/register'
 
 /** 注册所有已实装的内置 Skill */
 export async function registerBuiltinSkills(registry: SkillRegistry): Promise<void> {
@@ -50,9 +47,6 @@ export async function registerBuiltinSkills(registry: SkillRegistry): Promise<vo
   await registerBuiltinProceduralMemory(registry)
   await registerBuiltinGrowthUnlock(registry)
   await registerBuiltinMediaCoWatch(registry)
-  await registerBuiltinOpenMontage(registry)
-  await registerBuiltinAgnesImage(registry)
-  await registerBuiltinAutoImage(registry)
 }
 
 export { PLACEHOLDER_SKILL_IDS } from './register-catalog'
