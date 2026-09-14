@@ -5,6 +5,16 @@ import type { MemoryAuditCardPayload } from '../../shared/memoryAudit'
 import type { UserTaskFrame } from '../../shared/taskFrame'
 import type { AgentEvent, AgentRunMeta } from '../../shared/openforuAgentTypes'
 import type { PermissionRequestPayload } from '../../shared/openforuPermissions'
+import type {
+  McpCallToolPayload,
+  McpCallToolResult,
+  McpStdioApplyResult,
+  McpStdioConfigText,
+  McpStdioRuntimeStatus,
+  McpStdioTestPayload,
+  McpStdioTestResult,
+  McpToolDescriptor
+} from '../../shared/mcp'
 
 export type { AppSettings, CompanionSuggestion, LlmProvider, PresetGender, UserSixDimensions }
 export type { OpenForUExtensionRow } from '../../shared/openforuExtensions'
@@ -189,6 +199,16 @@ export type AckemApi = {
   getCreatorMemory: () => Promise<CreatorMemoryUiBundle>
   setSettings: (patch: Partial<AppSettings>) => Promise<AppSettings>
   getDataRoot: () => Promise<{ path: string; relativePath: string; mode: string; databasePath: string }>
+  mcp: {
+    openConfigFile: () => Promise<{ path: string }>
+    applyAndRestart: () => Promise<McpStdioApplyResult>
+    getRuntimeStatus: () => Promise<McpStdioRuntimeStatus>
+    listTools: () => Promise<McpToolDescriptor[]>
+    callTool: (payload: McpCallToolPayload) => Promise<McpCallToolResult>
+    readConfigText: () => Promise<McpStdioConfigText>
+    writeConfigText: (text: string) => Promise<McpStdioConfigText>
+    testServer: (payload: McpStdioTestPayload) => Promise<McpStdioTestResult>
+  }
   ensureLayout: () => Promise<{ path: string }>
   openDataFolder: () => Promise<void>
   selectFiles: () => Promise<{ paths: string[] }>

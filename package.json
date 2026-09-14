@@ -24,14 +24,17 @@
     "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "@types/d3": "^7.4.3",
     "better-sqlite3": "^12.10.0",
     "d3": "^7.9.0",
     "esbuild": "^0.28.0",
+    "minecraft-data": "^3.111.0",
     "mineflayer": "^4.37.1",
     "mineflayer-pathfinder": "^2.4.5",
     "opencc-js": "^1.3.1",
     "qrcode": "^1.5.4",
+    "vec3": "^0.1.10",
     "ws": "^8.20.1",
     "zustand": "^5.0.0"
   },

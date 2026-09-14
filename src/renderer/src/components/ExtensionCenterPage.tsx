@@ -15,8 +15,9 @@ import {
   type PermissionRequestPayload
 } from '../../../shared/openforuPermissions'
 import { ExperimentalFeatureBadge, ExperimentalFeatureNotice } from './settings/settingsUi'
+import { McpExtensionPanel } from './McpExtensionPanel-mcp'
 
-type Tab = 'plugins' | 'skills' | 'user-plugins' | 'user-skills' | 'workspace'
+type Tab = 'plugins' | 'skills' | 'mcp' | 'user-plugins' | 'user-skills' | 'workspace'
 
 type DispatchConfig = {
   mode: string
@@ -436,6 +437,7 @@ export function ExtensionCenterPage(): JSX.Element {
   const tabs: { id: Tab; label: string; badge?: number; experimental?: boolean }[] = [
     { id: 'plugins', label: '插件库' },
     { id: 'skills', label: 'Skill 库' },
+    { id: 'mcp', label: 'MCP' },
     { id: 'user-plugins', label: '自创插件', badge: userPlugins.length || undefined },
     { id: 'user-skills', label: '自创 Skill', badge: userSkills.length || undefined },
     {
@@ -590,7 +592,9 @@ export function ExtensionCenterPage(): JSX.Element {
           </div>
         )}
 
-        {tab !== 'workspace' && !loading && (
+        {tab === 'mcp' && !loading && <McpExtensionPanel />}
+
+        {tab !== 'workspace' && tab !== 'mcp' && !loading && (
           <>
             <p className="mb-4 text-xs text-ink-muted">
               {tab === 'user-plugins' || tab === 'user-skills' ? (

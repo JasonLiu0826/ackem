@@ -184,7 +184,7 @@ export function SettingsPage(): JSX.Element {
   }) => {
     const saved = await window.ackem.personalitySet(p.id)
     setSettings(saved)
-    setForm((f) =>
+    setForm((f: AppSettings | null) =>
       f
         ? {
             ...f,
@@ -400,7 +400,7 @@ export function SettingsPage(): JSX.Element {
             value={form.companionGender}
             onChange={(v) => {
               const gender = v as PresetGender
-              setForm((f) => (f ? { ...f, companionGender: gender } : f))
+              setForm((f: AppSettings | null) => (f ? { ...f, companionGender: gender } : f))
               void persistPatch({ companionGender: gender }).catch((err) => {
                 pushToast(err instanceof Error ? err.message : String(err))
               })

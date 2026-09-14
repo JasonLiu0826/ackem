@@ -83,6 +83,13 @@ export async function shutdownBackgroundServices(opts?: { closeDatabases?: boole
     log.warn('minecraft disconnect failed', { error: String(e) })
   }
 
+  try {
+    const { getMcpStdioManager } = await import('./mcp/runtime-mcp.js')
+    await getMcpStdioManager()?.stopAll()
+  } catch (e) {
+    log.warn('mcp shutdown failed', { error: String(e) })
+  }
+
   if (opts?.closeDatabases !== false) {
     try {
       closeAllDatabases()

@@ -131,15 +131,6 @@ function bundleLauncherAssets(targetDir) {
 
 bundleLauncherAssets(greenDir)
 
-/** 便携模式会在 exe 旁生成 data/；本地试跑后若被打进 zip 会泄露记忆/对话/人格状态 */
-function stripShippedUserData(targetDir) {
-  const dataDir = join(targetDir, 'data')
-  if (!existsSync(dataDir)) return
-  console.warn('\n⚠ Removing local data/ from release folder (must not be shared):')
-  console.warn(' ', dataDir)
-  rmSync(dataDir, { recursive: true, force: true })
-}
-
 function assertReleaseHasNoUserData(targetDir) {
   const dataDir = join(targetDir, 'data')
   if (existsSync(dataDir)) {

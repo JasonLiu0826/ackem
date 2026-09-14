@@ -5,6 +5,16 @@ import type { WavePlan } from '../shared/wavePlan'
 import type { AgentEvent } from '../shared/openforuAgentTypes'
 import type { PermissionRequestPayload } from '../shared/openforuPermissions'
 import type { DesktopAgentConfirmRequest } from '../shared/desktopAgent'
+import type {
+  McpCallToolPayload,
+  McpCallToolResult,
+  McpStdioApplyResult,
+  McpStdioConfigText,
+  McpStdioRuntimeStatus,
+  McpStdioTestPayload,
+  McpStdioTestResult,
+  McpToolDescriptor
+} from '../shared/mcp'
 
 export type BuildContextResult = {
   messages: unknown[]
@@ -153,6 +163,19 @@ contextBridge.exposeInMainWorld('ackem', {
     ipcRenderer.invoke('settings:set', patch),
   getDataRoot: (): Promise<{ path: string; relativePath: string; mode: string; databasePath: string }> =>
     ipcRenderer.invoke('data:getRoot'),
+  mcp: {
+    openConfigFile: (): Promise<{ path: string }> => ipcRenderer.invoke('mcp:openConfigFile'),
+    applyAndRestart: (): Promise<McpStdioApplyResult> => ipcRenderer.invoke('mcp:applyAndRestart'),
+    getRuntimeStatus: (): Promise<McpStdioRuntimeStatus> => ipcRenderer.invoke('mcp:getRuntimeStatus'),
+    listTools: (): Promise<McpToolDescriptor[]> => ipcRenderer.invoke('mcp:listTools'),
+    callTool: (payload: McpCallToolPayload): Promise<McpCallToolResult> =>
+      ipcRenderer.invoke('mcp:callTool', payload),
+    readConfigText: (): Promise<McpStdioConfigText> => ipcRenderer.invoke('mcp:readConfigText'),
+    writeConfigText: (text: string): Promise<McpStdioConfigText> =>
+      ipcRenderer.invoke('mcp:writeConfigText', text),
+    testServer: (payload: McpStdioTestPayload): Promise<McpStdioTestResult> =>
+      ipcRenderer.invoke('mcp:testServer', payload)
+  },
   ensureLayout: (): Promise<{ path: string }> => ipcRenderer.invoke('data:ensureLayout'),
   openDataFolder: (): Promise<void> => ipcRenderer.invoke('shell:openData'),
   selectFiles: (): Promise<{ paths: string[] }> => ipcRenderer.invoke('dialog:selectFiles'),

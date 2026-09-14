@@ -1,6 +1,6 @@
 import { StrictMode, useEffect, useMemo, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import type { UpdateJob, UpdateProgressEvent } from '../../../../shared/updateTypes'
+import type { UpdateJob, UpdateProgressEvent } from '../../../shared/updateTypes'
 import '../assets/main.css'
 import './updater.css'
 
