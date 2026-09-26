@@ -2,7 +2,7 @@
 import type { PluginManifest } from '../../../types'
 
 export const MANIFEST: PluginManifest = {
-  "id": "ackem/prompt-mod@0.0.1",
+  "id": "britney/prompt-mod@0.0.1",
   "name": "语气模组",
   "version": "0.0.1",
   "category": "plugin",
@@ -25,5 +25,5 @@ export const MANIFEST: PluginManifest = {
     "p-15"
   ]
 } as PluginManifest
-export const PLUGIN_ID = 'ackem/prompt-mod@0.0.1'
+export const PLUGIN_ID = 'britney/prompt-mod@0.0.1'
 export const SPEC_ID = 'P-15'

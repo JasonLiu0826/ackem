@@ -158,7 +158,7 @@ export class PythonVoiceService {
       this.process.on('error', (err) => {
         const hint =
           'ENOENT' in err && (err as NodeJS.ErrnoException).code === 'ENOENT'
-            ? '未找到 Python。Windows 请安装 Python 3 并确保 py -3 可用；或手动运行 Ackem/voice-service/server.py'
+            ? '未找到 Python。Windows 请安装 Python 3 并确保 py -3 可用；或手动运行 Britney/voice-service/server.py'
             : String(err)
         this.lastStartError = hint
         console.error('[voice-service] spawn error:', err)
@@ -178,7 +178,7 @@ export class PythonVoiceService {
 
       this.lastStartError =
         this.lastStartError ??
-        '语音服务启动超时（30s）。请在本机执行: pip install -r Ackem/voice-service/requirements.txt'
+        '语音服务启动超时（30s）。请在本机执行: pip install -r Britney/voice-service/requirements.txt'
       console.error('[voice-service]', this.lastStartError)
       this.setState('error')
       return false

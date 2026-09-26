@@ -6,7 +6,7 @@
 //   3. 扩展模块的反馈通过 ExtensionEvent 回传，由 orchestrator 在下一轮 Pre-LLM 中统一处理
 //   4. 所有扩展模块的数据写入走白名单路径，不可写入 memory/、companion/ 等引擎权威目录
 //
-// 版本：1.0.0  |  扩展引擎 API 见 ecosystem/constants ACKEM_ENGINE_API_VERSION
+// 版本：1.0.0  |  扩展引擎 API 见 ecosystem/constants BRITNEY_ENGINE_API_VERSION
 // 应用版本见 manifest.engineVersion；协议版本见 manifest.engineApiVersion
 
 // ═══════════════════════════════════════════════════════════════
@@ -153,7 +153,7 @@ export interface EcosystemManifestMeta {
 }
 
 export interface ExtensionManifestBase {
-  /** 唯一标识，格式：scope/name@version（如 "ackem/mc-companion@1.0.0"） */
+  /** 唯一标识，格式：scope/name@version（如 "britney/mc-companion@1.0.0"） */
   id: string
   /** 显示名称 */
   name: string
@@ -169,11 +169,11 @@ export interface ExtensionManifestBase {
   license: string
   /** 主入口文件（相对于扩展包根目录） */
   main: string
-  /** 最低 Ackem 应用版本要求（semver range，如 >=0.0.0 <1.0.0） */
+  /** 最低 Britney 应用版本要求（semver range，如 >=0.0.0 <1.0.0） */
   engineVersion: string
   /**
    * 扩展引擎 API 协议版本（semver range，如 ^1.0.0）。
-   * community/ 市场扩展必填；ackem/ 与 u/ 建议显式填写。
+   * community/ 市场扩展必填；britney/ 与 u/ 建议显式填写。
    */
   engineApiVersion?: string
   /** 生态/marketplace 元数据（community 签名包） */
@@ -186,7 +186,7 @@ export interface ExtensionManifestBase {
    * 实装完成度（FIX-026 等）：stub=仅预览/通知级反馈，非完整能力。
    * 扩展中心据此显示 Stub 标签，避免用户误以为已实装真语音等。
    */
-  implementationStatus?: 'complete' | 'stub' | 'preview' | 'planned' | 'deprecated'
+  implementationStatus?: 'complete' | 'stub' | 'preview' | 'planned' | 'deprecated' | 'dev'
   /** 主页/仓库 URL */
   homepage?: string
   /** 扩展触发调度配置（Extension Dispatch v2.0） */

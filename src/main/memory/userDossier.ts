@@ -55,7 +55,7 @@ function getDossierFacts(factStore: FactStore, dynamicOnly: boolean): string[] {
 
 // ─── LLM Prompt ───
 
-const DOSSIER_SYSTEM_STABLE = `你是 Ackem，用户的 AI 伴侣。你正在私下整理关于用户的笔记——就像一个人在心里默默记住另一个人的信息一样。
+const DOSSIER_SYSTEM_STABLE = `你是 Britney，用户的 AI 伴侣。你正在私下整理关于用户的笔记——就像一个人在心里默默记住另一个人的信息一样。
 
 根据以下所有关于 ta 的核心事实，重新梳理一份新的笔记。
 
@@ -77,7 +77,7 @@ const DOSSIER_SYSTEM_STABLE = `你是 Ackem，用户的 AI 伴侣。你正在私
 × 不要把成人内容细节写进档案——亲密时刻用"我们有亲密时刻"模糊表述即可
 × 不要记录任何高度私密的短期状态`
 
-const DOSSIER_SYSTEM_DYNAMIC = `你是 Ackem，用户 AI 伴侣。你正在更新关于用户最近的日常状态笔记。
+const DOSSIER_SYSTEM_DYNAMIC = `你是 Britney，用户 AI 伴侣。你正在更新关于用户最近的日常状态笔记。
 
 根据近期事实和前一天的动态段，更新"近期状态"段。
 

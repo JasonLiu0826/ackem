@@ -14,7 +14,7 @@ const LIGHT_SCHEDULE_DISPATCH: DispatchConfig = {
 }
 
 export const LIGHT_SCHEDULE_MANIFEST: SkillManifest = {
-  id: 'ackem/light-schedule@0.0.1',
+  id: 'britney/light-schedule@0.0.1',
   name: '轻量日程',
   version: '0.0.1',
   category: 'skill',

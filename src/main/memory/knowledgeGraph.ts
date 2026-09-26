@@ -1,12 +1,12 @@
 // [knowledgeGraph] — 轻量知识图谱
 // 职责：实体-关系-实体三元组存储、实体索引、一跳查询
 // 对标 LangGraph knowledge graph memory
-// 引用：../engine/types, ../engine/ackemParams
+// 引用：../engine/types, ../engine/britneyParams
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { randomUUID } from 'node:crypto'
-import { KG_CHAR_BUDGET, KG_CJK_CHAR_MATCH_WEIGHT, KG_ENTITY_MATCH_WEIGHT, KG_KEYWORD_MATCH_WEIGHT, KG_MIN_SCORE, KG_QUERY_MAX_TRIPLES } from '../engine/ackemParams'
+import { KG_CHAR_BUDGET, KG_CJK_CHAR_MATCH_WEIGHT, KG_ENTITY_MATCH_WEIGHT, KG_KEYWORD_MATCH_WEIGHT, KG_MIN_SCORE, KG_QUERY_MAX_TRIPLES } from '../engine/britneyParams'
 import {
   countTriplesInDb,
   loadTriplesFromDb,

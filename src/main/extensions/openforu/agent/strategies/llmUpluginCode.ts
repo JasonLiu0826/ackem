@@ -163,7 +163,7 @@ export async function generateLlmUpluginCodeBundle(
     return fallbackInjectBundle(session, base, settings, 'LLM 未返回 main.ts', abortSignal)
   }
 
-  const tmpDir = mkdtempSync(join(tmpdir(), 'ackem-uplugin-gen-'))
+  const tmpDir = mkdtempSync(join(tmpdir(), 'britney-uplugin-gen-'))
   const check = await validateGeneratedMainTs(mainTs, tmpDir)
   if (!check.ok) {
     return fallbackInjectBundle(

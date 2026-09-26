@@ -228,7 +228,7 @@ export function hasPlanConfirmChoices(options: PlanChoiceOption[]): boolean {
 export function isPlanIntroMessage(content: string): boolean {
   const t = content.trim()
   if (!t || t.length > 280) return false
-  return /我是 Ackem Agent/i.test(t) && /请描述你想创建的/.test(t) && parsePlanChoices(t).length < 2
+  return /我是 Britney Agent/i.test(t) && /请描述你想创建的/.test(t) && parsePlanChoices(t).length < 2
 }
 
 /** 从 Agent 回复中移除已在独立 UI 区展示的块，避免 Plan 对话区重复占位 */

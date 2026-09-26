@@ -2,10 +2,10 @@
 // 职责：触发词、事实检索、chunk 片段、memory_echo
 // 输入：query、FactStore、IndexSnapshot
 // 输出：tierBBlock、MemoryEcho、trace
-// 引用：./factStore, ../indexer, ../engine/ackemParams
+// 引用：./factStore, ../indexer, ../engine/britneyParams
 
 import { searchChunks, type IndexSnapshot } from '../indexer'
-import { CHUNK_SEARCH_MAX_RESULTS, CORE_MEMORY_CHAR_BUDGET, EPISODE_CHAR_BUDGET, EMBEDDING_MIN_SCORE, EMBEDDING_SEARCH_ENABLED, EMBEDDING_SEARCH_TOP_K, MIN_CONFIDENCE_FOR_INJECTION, SEMANTIC_SEARCH_ENABLED, SEMANTIC_SEARCH_TOP_K, TIER_B_CHAR_BUDGET, TRIGGER_MATCH_BOOST, VECTOR_SEARCH_ENABLED, VECTOR_SEARCH_TOP_K } from '../engine/ackemParams'
+import { CHUNK_SEARCH_MAX_RESULTS, CORE_MEMORY_CHAR_BUDGET, EPISODE_CHAR_BUDGET, EMBEDDING_MIN_SCORE, EMBEDDING_SEARCH_ENABLED, EMBEDDING_SEARCH_TOP_K, MIN_CONFIDENCE_FOR_INJECTION, SEMANTIC_SEARCH_ENABLED, SEMANTIC_SEARCH_TOP_K, TIER_B_CHAR_BUDGET, TRIGGER_MATCH_BOOST, VECTOR_SEARCH_ENABLED, VECTOR_SEARCH_TOP_K } from '../engine/britneyParams'
 import type { MemoryEcho, MemoryFact } from '../engine/types'
 import type { FactStore } from './factStore'
 import type { EpisodicStore } from './episodicStore'
@@ -18,7 +18,7 @@ import type { TemporalContext } from './temporalContextModulator'
 import { computeTemporalBoost } from './temporalContextModulator'
 import type { TemporalSemanticSignal } from './temporalSignalExtractor'
 import { filterFactsForSession } from './sessionFacts'
-import { normalizeAckemBrandText } from '../../shared/ackemBrand'
+import { normalizeBritneyBrandText } from '../../shared/britneyBrand'
 
 export type RetrievalResult = {
   tierBBlock: string
@@ -444,7 +444,7 @@ export class MemoryRetriever {
       const coreLines: string[] = []
       let coreChars = 0
       for (const f of coreFacts) {
-        const line = normalizeAckemBrandText(`★ ${f.subject}：${f.summary}`)
+        const line = normalizeBritneyBrandText(`★ ${f.subject}：${f.summary}`)
         if (coreChars + line.length + 2 > coreBudget) break
         coreLines.push(line)
         coreChars += line.length + 2
@@ -466,7 +466,7 @@ export class MemoryRetriever {
       if (isAssoc) annotation = ' ↳ 关联扩散'
       else if (isTemporalSemantic) annotation = ' ↳ 时间语义'
       else if (isTemporal) annotation = ' ↳ 时间锚点'
-      const line = normalizeAckemBrandText(`· ${f.subject}：${f.summary}${annotation}`)
+      const line = normalizeBritneyBrandText(`· ${f.subject}：${f.summary}${annotation}`)
       if (remaining - (line.length + 2) < 200) break // 至少留 200 给后续块
       if (line.length + 2 > remaining) break
       lines.push(line)
@@ -478,7 +478,7 @@ export class MemoryRetriever {
       ? searchChunks(this.index, query, CHUNK_SEARCH_MAX_RESULTS) : []
     const chunkLines: string[] = []
     for (const h of hits) {
-      const block = normalizeAckemBrandText(
+      const block = normalizeBritneyBrandText(
         `[${h.chunk.relPath}#${h.chunk.start}-${h.chunk.end}]\n${h.chunk.text.trim()}`
       )
       if (block.length + 4 > remaining) break

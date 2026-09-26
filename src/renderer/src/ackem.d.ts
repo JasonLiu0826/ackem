@@ -6,6 +6,8 @@ import type { UserTaskFrame } from '../../shared/taskFrame'
 import type { AgentEvent, AgentRunMeta } from '../../shared/openforuAgentTypes'
 import type { PermissionRequestPayload } from '../../shared/openforuPermissions'
 
+import type { AppSettings, CompanionSuggestion, LlmProvider, PresetGender, UserSixDimensions } from '../../shared/types'
+
 export type { AppSettings, CompanionSuggestion, LlmProvider, PresetGender, UserSixDimensions }
 export type { OpenForUExtensionRow } from '../../shared/openforuExtensions'
 
@@ -141,7 +143,7 @@ export type OpenForUWorkspaceCreateResult = OpenForUWorkspaceOpenResult & {
 
 export type OpenForUWorkspaceSwitchResult = OpenForUWorkspaceOpenResult
 
-export type AckemCanonInfo = {
+export type BritneyCanonInfo = {
   name: string
   birthDate: string
   creator: {
@@ -169,7 +171,7 @@ export type CreatorMemoryUiBundle = {
   entries: CreatorMemoryUiEntry[]
 }
 
-export type AckemApi = {
+export type BritneyApi = {
   i18n: {
     t: (key: string, params?: Record<string, string | number>) => Promise<string>
     getLocale: () => Promise<string>
@@ -185,7 +187,7 @@ export type AckemApi = {
   openUpdateRelease: (url: string) => Promise<void>
   getUpdateChannelPreference: () => Promise<UpdateChannel>
   setUpdateChannelPreference: (channel: UpdateChannel) => Promise<UpdateChannel>
-  getCanon: () => Promise<AckemCanonInfo>
+  getCanon: () => Promise<BritneyCanonInfo>
   getCreatorMemory: () => Promise<CreatorMemoryUiBundle>
   setSettings: (patch: Partial<AppSettings>) => Promise<AppSettings>
   getDataRoot: () => Promise<{ path: string; relativePath: string; mode: string; databasePath: string }>
@@ -300,7 +302,7 @@ export type AckemApi = {
     batPath: string | null
     nsisUninstaller: string | null
   }>
-  uninstallAckem: (opts?: { deleteData?: boolean; removeApp?: boolean }) => Promise<{ ok: boolean }>
+  uninstallBritney: (opts?: { deleteData?: boolean; removeApp?: boolean }) => Promise<{ ok: boolean }>
   embeddingStatus: () => Promise<{
     activeModel: string
     providerReady: boolean
@@ -733,7 +735,7 @@ export type AckemApi = {
     fn: (meta?: { memoryWrites?: string[]; assistantText?: string; turnId?: string }) => void
   ) => void
   onChatError: (fn: (err: string) => void) => void
-  onMcEvent: (fn: (payload: { event: unknown; reaction: unknown }) => void) => void
+  onChatImage: (fn: (payload: { path?: string; url?: string; prompt?: string }) => void) => void
   onMcBotDebug: (fn: (snapshot: McBotDebugSnapshot) => void) => void
   onWindowFocused: (fn: () => void) => void
   ui: {
@@ -873,7 +875,7 @@ export type VoiceEnvReport = {
 
 declare global {
   interface Window {
-    ackem: AckemApi
+    britney: BritneyApi
   }
 }
 

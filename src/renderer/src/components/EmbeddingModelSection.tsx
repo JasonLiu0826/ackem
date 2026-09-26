@@ -56,7 +56,7 @@ export function EmbeddingModelSection(): JSX.Element {
 
   const refresh = useCallback(async () => {
     try {
-      const s = await window.ackem.embeddingStatus()
+      const s = await window.britney.embeddingStatus()
       setStatus(s as EmbeddingStatus)
     } catch { /* ignore */ }
   }, [])
@@ -65,7 +65,7 @@ export function EmbeddingModelSection(): JSX.Element {
 
   // 监听下载进度
   useEffect(() => {
-    window.ackem.onEmbeddingDownloadProgress((p) => {
+    window.britney.onEmbeddingDownloadProgress((p) => {
       setProgress({ bytes: p.bytes, total: p.total, speed: p.speed })
     })
   }, [])
@@ -83,8 +83,8 @@ export function EmbeddingModelSection(): JSX.Element {
       try {
         const useBundled = modelStatus?.bundled ?? (modelId === 'bge-small-zh' || modelId === 'bge-small-en')
         const res = useBundled
-          ? await window.ackem.embeddingSwitch(modelId)
-          : await window.ackem.embeddingDownload(modelId)
+          ? await window.britney.embeddingSwitch(modelId)
+          : await window.britney.embeddingDownload(modelId)
         if (res.ok) {
           await refresh()
         } else {
@@ -100,7 +100,7 @@ export function EmbeddingModelSection(): JSX.Element {
       // 已下载，直接切换
       setSwitching(modelId)
       try {
-        const res = await window.ackem.embeddingSwitch(modelId)
+        const res = await window.britney.embeddingSwitch(modelId)
         if (res.ok) {
           await refresh()
         } else {
@@ -116,7 +116,7 @@ export function EmbeddingModelSection(): JSX.Element {
 
   const handleCancel = async (modelId: string) => {
     try {
-      await window.ackem.embeddingDownloadCancel(modelId)
+      await window.britney.embeddingDownloadCancel(modelId)
     } catch { /* ignore */ }
     setDownloading(null)
     setProgress(null)
@@ -252,7 +252,7 @@ export function EmbeddingModelSection(): JSX.Element {
 
       {/* Hint */}
       <p className="text-[11px] text-ink-muted leading-relaxed">
-        💡 Ackem 预装中文 bge-small-zh 与英文 bge-small-en，首次启动自动解压。切换语言时会自动选用对应模型；切换后建议重启 Ackem。
+        💡 Britney 预装中文 bge-small-zh 与英文 bge-small-en，首次启动自动解压。切换语言时会自动选用对应模型；切换后建议重启 Britney。
       </p>
     </div>
   )

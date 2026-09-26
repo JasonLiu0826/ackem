@@ -12,7 +12,7 @@ describe('isExtensionCapabilityListingQuery', () => {
     expect(isExtensionCapabilityListingQuery('你会干什么')).toBe(true)
     expect(isExtensionCapabilityListingQuery('你有什么功能')).toBe(true)
     expect(isExtensionCapabilityListingQuery('你都有什么功能')).toBe(true)
-    expect(isExtensionCapabilityListingQuery('Ackem 能帮我做什么')).toBe(true)
+    expect(isExtensionCapabilityListingQuery('Britney 能帮我做什么')).toBe(true)
     expect(isExtensionCapabilityListingQuery('你能做什么')).toBe(true)
     expect(isExtensionCapabilityListingQuery('介绍一下你的功能')).toBe(true)
     expect(isExtensionCapabilityListingQuery('有哪些插件')).toBe(true)
@@ -40,7 +40,7 @@ describe('buildPlatformFeaturesSection', () => {
 describe('buildExtensionCatalogListingBlock', () => {
   const sample: DispatchCatalogEntry[] = [
     {
-      id: 'ackem/web-search@1.0.0',
+      id: 'britney/web-search@1.0.0',
       name: '网页搜索',
       category: 'skill',
       status: 'active',

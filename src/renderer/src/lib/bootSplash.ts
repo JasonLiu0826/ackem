@@ -1,8 +1,8 @@
-const SPLASH_ID = 'ackem-boot-splash'
+const SPLASH_ID = 'britney-boot-splash'
 
-export const BOOT_SPLASH_STATUS_EVENT = 'ackem-boot-status'
-export const BOOT_SPLASH_PROGRESS_EVENT = 'ackem-boot-progress'
-export const BOOT_SPLASH_READY_EVENT = 'ackem-boot-ready'
+export const BOOT_SPLASH_STATUS_EVENT = 'britney-boot-status'
+export const BOOT_SPLASH_PROGRESS_EVENT = 'britney-boot-progress'
+export const BOOT_SPLASH_READY_EVENT = 'britney-boot-ready'
 
 const BOOT_SPLASH_MIN_MS = 3000
 const BOOT_SPLASH_MAX_MS = 5000
@@ -14,11 +14,11 @@ export function pickBootSplashMinDurationMs(rng: () => number = Math.random): nu
 }
 
 export function markBootSplashBooting(): void {
-  document.documentElement.classList.add('ackem-booting')
+  document.documentElement.classList.add('britney-booting')
 }
 
 export function markBootSplashAppReady(): void {
-  document.documentElement.classList.remove('ackem-booting')
+  document.documentElement.classList.remove('britney-booting')
 }
 
 /** 主界面 React 树已挂到 #root（开屏淡出前必须满足） */
@@ -29,9 +29,9 @@ export function isBootRootPainted(): boolean {
 
 export function dismissBootSplash(): void {
   const el = document.getElementById(SPLASH_ID)
-  if (!el || el.classList.contains('ackem-boot-splash--out')) return
+  if (!el || el.classList.contains('britney-boot-splash--out')) return
   markBootSplashAppReady()
-  el.classList.add('ackem-boot-splash--out')
+  el.classList.add('britney-boot-splash--out')
   el.setAttribute('aria-busy', 'false')
   window.setTimeout(() => el.remove(), 480)
 }

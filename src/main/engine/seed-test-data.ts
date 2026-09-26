@@ -359,7 +359,7 @@ export function seedTestData(presetId = 'deredere'): {
   root:string; store:FactStore; episodicStore:EpisodicStore; kg:KnowledgeGraph
   retriever:MemoryRetriever; state:FullState; cleanup:()=>void
 } {
-  const root = join(tmpdir(),`ackem-seed-${Date.now()}-${Math.random().toString(36).slice(2,6)}`)
+  const root = join(tmpdir(),`britney-seed-${Date.now()}-${Math.random().toString(36).slice(2,6)}`)
   mkdirSync(join(root,'memory','facts'),{recursive:true})
   mkdirSync(join(root,'memory','episodes'),{recursive:true})
   mkdirSync(join(root,'memory','kg'),{recursive:true})
@@ -425,7 +425,7 @@ export function seedTestData(presetId = 'deredere'): {
   state.counters = { totalTurns:200, sharedEventsCount:8, consecutiveMeaningfulTurns:12 }
   state.lastActive = ts(0,20)
   state.firstMetDate = ts(300,20).slice(0,10)
-  state.ackemBirthday = ts(300,20).slice(0,10)
+  state.britneyBirthday = ts(300,20).slice(0,10)
   saveState(root,state)
 
   const retriever = new MemoryRetriever(store, null, episodicStore, kg)

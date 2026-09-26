@@ -41,7 +41,7 @@ export function resolvePermissionRequest(requestId: string, decision: Permission
 }
 
 export function shouldAutoApprovePermissions(): boolean {
-  return process.env.ACKEM_AUTO_APPROVE_PERMISSIONS === '1'
+  return process.env.BRITNEY_AUTO_APPROVE_PERMISSIONS === '1'
 }
 
 export async function requestUserPermissionApproval(

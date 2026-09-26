@@ -1,6 +1,6 @@
 import type { PluginManifest } from '../../../types'
 
-export const THEME_TOGGLE_PLUGIN_ID = 'ackem/theme-toggle@0.0.1'
+export const THEME_TOGGLE_PLUGIN_ID = 'britney/theme-toggle@0.0.1'
 
 export const THEME_TOGGLE_MANIFEST: PluginManifest = {
   id: THEME_TOGGLE_PLUGIN_ID,
@@ -8,7 +8,7 @@ export const THEME_TOGGLE_MANIFEST: PluginManifest = {
   version: '0.0.1',
   category: 'plugin',
   pluginType: 'theme',
-  description: '切换 Ackem UI 日光/暗室主题（调用内置 setUiTheme）。',
+  description: '切换 Britney UI 日光/暗室主题（调用内置 setUiTheme）。',
   author: 'JasonLiu0826',
   license: 'AGPL-3.0',
   main: 'bootstrap.ts',

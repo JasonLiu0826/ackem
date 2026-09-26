@@ -128,13 +128,13 @@ export async function parseDocumentsToImportJob(args: {
           return { ok: false, error: `${memoryRel}: ${parsed.error}` }
         }
         job.stats.chunksProcessed += 1
-        for (const f of parsed.facts) {
-          if (f.mergeWithExistingId) job.stats.factsMergedPreview += 1
-          job.facts.push(f)
+        for (const f of (parsed.facts ?? [])) {
+          if ((f as ImportFactDraft).mergeWithExistingId) job.stats.factsMergedPreview += 1
+          job.facts.push(f as ImportFactDraft)
         }
-        job.episodes.push(...parsed.episodes)
-        job.anchors.push(...parsed.anchors)
-        for (const w of parsed.stats.warnings.slice(0, 8)) {
+        job.episodes.push(...((parsed.episodes ?? []) as ImportEpisodeDraft[]))
+        job.anchors.push(...((parsed.anchors ?? []) as ImportAnchorDraft[]))
+        for (const w of (parsed.stats as any).warnings.slice(0, 8)) {
           log.warn('json import warning', { file: memoryRel, w })
         }
         continue

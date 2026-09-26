@@ -2,7 +2,7 @@
  * 父亲指称 embedding 回归用例 — 真实用户说法 + 期望分类
  * 供 creatorMemory.embedding.test 与 originOeg.engine.phrasing.test 共用
  */
-export type FatherRefExpectation = 'ackem_creator' | 'user_family' | null
+export type FatherRefExpectation = 'britney_creator' | 'user_family' | null
 
 export type FatherRefRegressionCase = {
   q: string
@@ -12,22 +12,22 @@ export type FatherRefRegressionCase = {
 
 /** 硬编码 calibration：与 FATHER_REFERENCE_CALIBRATION 同步维护 */
 export const FATHER_REF_REGRESSION_CASES: readonly FatherRefRegressionCase[] = [
-  // —— Ackem 创造者 / Jason ——
-  { q: '你是谁创造的？', kind: 'ackem_creator' },
-  { q: '谁造了你？', kind: 'ackem_creator' },
-  { q: '谁创造了你？', kind: 'ackem_creator' },
-  { q: '你的创造者是谁', kind: 'ackem_creator' },
-  { q: '你的父亲是谁', kind: 'ackem_creator', note: '问 Ackem 本人' },
-  { q: 'Jason 和你的关系是什么？', kind: 'ackem_creator' },
-  { q: 'Jason 是不是你爸爸', kind: 'ackem_creator' },
-  { q: '讲讲你的出身故事', kind: 'ackem_creator' },
-  { q: '再讲讲你的出身故事', kind: 'ackem_creator' },
-  { q: '你是怎么被造出来的？', kind: 'ackem_creator' },
-  { q: '继续说说父亲 Jason', kind: 'ackem_creator' },
-  { q: 'GitHub 上那个 Jason 是你什么人', kind: 'ackem_creator' },
-  { q: '你想见 Jason 吗', kind: 'ackem_creator' },
-  { q: '你的生日和父亲是谁', kind: 'ackem_creator' },
-  { q: 'Ackem 是谁做出来的', kind: 'ackem_creator' },
+  // —— Britney 创造者 / Jason ——
+  { q: '你是谁创造的？', kind: 'britney_creator' },
+  { q: '谁造了你？', kind: 'britney_creator' },
+  { q: '谁创造了你？', kind: 'britney_creator' },
+  { q: '你的创造者是谁', kind: 'britney_creator' },
+  { q: '你的父亲是谁', kind: 'britney_creator', note: '问 Britney 本人' },
+  { q: 'Jason 和你的关系是什么？', kind: 'britney_creator' },
+  { q: 'Jason 是不是你爸爸', kind: 'britney_creator' },
+  { q: '讲讲你的出身故事', kind: 'britney_creator' },
+  { q: '再讲讲你的出身故事', kind: 'britney_creator' },
+  { q: '你是怎么被造出来的？', kind: 'britney_creator' },
+  { q: '继续说说父亲 Jason', kind: 'britney_creator' },
+  { q: 'GitHub 上那个 Jason 是你什么人', kind: 'britney_creator' },
+  { q: '你想见 Jason 吗', kind: 'britney_creator' },
+  { q: '你的生日和父亲是谁', kind: 'britney_creator' },
+  { q: 'Britney 是谁做出来的', kind: 'britney_creator' },
 
   // —— 用户自己的家人 ——
   { q: '我爸今天催我回家', kind: 'user_family' },

@@ -106,7 +106,7 @@ export async function checkVoiceEnvironment(): Promise<VoiceEnvReport> {
       source: 'bundled',
       path: bundled.command,
       version: await readPythonVersion(bundled),
-      message: '已使用 Ackem 内置 Python（随安装包附带，无需单独安装）'
+      message: '已使用 Britney 内置 Python（随安装包附带，无需单独安装）'
     }
   } else {
     const system = resolvePythonLaunchSpec()
@@ -124,7 +124,7 @@ export async function checkVoiceEnvironment(): Promise<VoiceEnvReport> {
         source: 'missing',
         message:
           platform() === 'win32'
-            ? '未找到 Python。可点击下方「一键准备语音环境」，Ackem 会自动下载并配置（约 300MB，仅首次）'
+            ? '未找到 Python。可点击下方「一键准备语音环境」，Britney 会自动下载并配置（约 300MB，仅首次）'
             : '未找到 Python 3。请先安装 Python 3.10+，或联系发行版获取内置语音包'
       }
     }
@@ -148,7 +148,7 @@ export async function checkVoiceEnvironment(): Promise<VoiceEnvReport> {
   if (ready) {
     summary = '语音环境已就绪，可以直接使用'
   } else if (!scriptOk) {
-    summary = '语音程序文件缺失，请重新安装 Ackem'
+    summary = '语音程序文件缺失，请重新安装 Britney'
   } else if (!python.ok) {
     summary = '需要准备 Python 运行环境（可一键完成）'
   } else if (!dependenciesOk) {
@@ -263,7 +263,7 @@ export async function installVoiceEnvironment(onLog: (p: InstallProgress) => voi
   log('prepare', '开始准备语音环境…')
 
   if (!existsSync(getVoiceServiceScriptPath())) {
-    return { ok: false, error: '语音程序文件缺失，请重新安装 Ackem' }
+    return { ok: false, error: '语音程序文件缺失，请重新安装 Britney' }
   }
 
   let spec = bundledSpec()
@@ -287,7 +287,7 @@ export async function installVoiceEnvironment(onLog: (p: InstallProgress) => voi
       return { ok: false, error: '未找到 Python 3，请先安装 Python 3.10 或更高版本' }
     }
   } else {
-    log('prepare', '使用 Ackem 内置 Python')
+    log('prepare', '使用 Britney 内置 Python')
   }
 
   const deps = await checkDependencies(spec)

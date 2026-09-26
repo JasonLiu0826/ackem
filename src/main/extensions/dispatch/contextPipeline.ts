@@ -76,7 +76,7 @@ export async function runDispatchPipeline(
         [
           '【扩展调度·必读】',
           `用户使用了 slash 命令，但扩展「${disabledSlash.name}」当前${statusLabel}。`,
-          '请到扩展中心 → 自创 Plugin → 点「启用」；若出现红条报错，先重启 Ackem 再关→开一次。',
+          '请到扩展中心 → 自创 Plugin → 点「启用」；若出现红条报错，先重启 Britney 再关→开一次。',
           slashHint ? `启用后可在主聊天发送：${slashHint}` : '',
           '回复时先说明上述状态，不要只当玩笑带过。'
         ]

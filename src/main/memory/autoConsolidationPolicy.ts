@@ -7,7 +7,7 @@ import {
   CONSOLIDATION_MEANINGFUL_DENSITY,
   CONSOLIDATION_MIN_FACTS,
   CONSOLIDATION_MIN_TURNS,
-} from '../engine/ackemParams'
+} from '../engine/britneyParams'
 import type { MemoryFact, TurnTrace } from '../engine/types'
 import type { FactStore } from './factStore'
 

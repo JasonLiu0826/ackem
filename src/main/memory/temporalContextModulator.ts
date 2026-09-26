@@ -140,7 +140,7 @@ export function computeWeekdayMoodBias(now: Date): { affDelta: number; secDelta:
 /** 特殊日期的情绪偏移——覆盖周日曲线 */
 export function computeSpecialDateMoodBias(specialType: string): { affDelta: number; secDelta: number } {
   switch (specialType) {
-    case 'ackem_birthday':
+    case 'britney_birthday':
       return { affDelta: +3.0, secDelta: +1.5 }        // 她自己的生日——比谁都开心
     case 'birthday':
       return { affDelta: +3.0, secDelta: +1.0 }        // 庆祝感，温暖

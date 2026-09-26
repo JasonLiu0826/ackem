@@ -13,7 +13,7 @@ const DISPATCH: DispatchConfig = {
 }
 
 export const FUN_PROFILE_MANIFEST: SkillManifest = {
-  id: 'ackem/fun-profile@0.0.1',
+  id: 'britney/fun-profile@0.0.1',
   name: '趣味档案生成',
   version: '0.0.1',
   category: 'skill',

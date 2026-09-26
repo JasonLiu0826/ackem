@@ -6,8 +6,8 @@ import { describe, expect, it } from 'vitest'
 import { SkillRegistry } from '../skills/registry'
 import { PluginRegistry } from '../plugins/registry'
 import {
-  ACKEM_ENGINE_API_VERSION,
-  buildAckemExtensionPackage,
+  BRITNEY_ENGINE_API_VERSION,
+  buildBritneyExtensionPackage,
   CommunityExtensionLoader,
   generatePublisherKeyPair,
   installCommunityPackage,
@@ -16,10 +16,10 @@ import {
 
 describe('ecosystem plug-and-play', () => {
   it('installs signed community skill and loads into SkillRegistry via coordinator path', async () => {
-    const root = mkdtempSync(join(tmpdir(), 'ackem-eco-'))
-    const keys = generatePublisherKeyPair('ackem-test:2026')
+    const root = mkdtempSync(join(tmpdir(), 'britney-eco-'))
+    const keys = generatePublisherKeyPair('britney-test:2026')
     upsertTrustedPublisher(root, keys.publisherId, {
-      name: 'Ackem Test Publisher',
+      name: 'Britney Test Publisher',
       algorithm: 'ed25519',
       publicKey: keys.publicKeyPem,
       scopes: ['community/*']
@@ -32,11 +32,11 @@ describe('ecosystem plug-and-play', () => {
       category: 'skill' as const,
       skillType: 'rule' as const,
       description: '插拔测试 Skill',
-      author: 'Ackem Test',
+      author: 'Britney Test',
       license: 'MIT',
       main: 'skill.json',
       engineVersion: '>=0.0.0 <1.0.0',
-      engineApiVersion: `^${ACKEM_ENGINE_API_VERSION}`,
+      engineApiVersion: `^${BRITNEY_ENGINE_API_VERSION}`,
       triggers: ['keyword'] as const,
       keywords: ['plug-demo'],
       permissions: ['engine_read', 'engine_inject', 'readonly'],
@@ -61,7 +61,7 @@ describe('ecosystem plug-and-play', () => {
       2
     )
     const manifestJson = JSON.stringify(manifest, null, 2)
-    const pkg = buildAckemExtensionPackage({
+    const pkg = buildBritneyExtensionPackage({
       publisherId: keys.publisherId,
       manifest,
       files: {
@@ -120,7 +120,7 @@ describe('ecosystem plug-and-play', () => {
   })
 
   it('rejects unsigned community install without trusted publisher', async () => {
-    const root = mkdtempSync(join(tmpdir(), 'ackem-eco-bad-'))
+    const root = mkdtempSync(join(tmpdir(), 'britney-eco-bad-'))
     const keys = generatePublisherKeyPair('unknown:2026')
     const manifest = {
       id: 'community/bad@1.0.0',
@@ -133,7 +133,7 @@ describe('ecosystem plug-and-play', () => {
       license: 'MIT',
       main: 'skill.json',
       engineVersion: '>=0.0.0 <1.0.0',
-      engineApiVersion: `^${ACKEM_ENGINE_API_VERSION}`,
+      engineApiVersion: `^${BRITNEY_ENGINE_API_VERSION}`,
       triggers: ['keyword'] as const,
       keywords: ['bad'],
       permissions: ['readonly'],
@@ -150,7 +150,7 @@ describe('ecosystem plug-and-play', () => {
       'manifest.json': JSON.stringify(manifest, null, 2),
       'skill.json': JSON.stringify({ version: '1.0.0', onKeyword: { reply: 'bad' } }, null, 2)
     }
-    const pkg = buildAckemExtensionPackage({
+    const pkg = buildBritneyExtensionPackage({
       publisherId: keys.publisherId,
       manifest,
       files,

@@ -1,8 +1,8 @@
 export {
-  ACKEM_ENGINE_API_VERSION,
-  ACKEM_APP_VERSION,
-  ACKEM_EXT_PACKAGE_FORMAT,
-  ACKEM_EXT_PACKAGE_FORMAT_VERSION,
+  BRITNEY_ENGINE_API_VERSION,
+  BRITNEY_APP_VERSION,
+  BRITNEY_EXT_PACKAGE_FORMAT,
+  BRITNEY_EXT_PACKAGE_FORMAT_VERSION,
   NAMESPACE_OFFICIAL,
   NAMESPACE_COMMUNITY,
   NAMESPACE_USER,
@@ -40,7 +40,7 @@ export type {
   SignatureAlgorithm,
   FileDigestMap,
   SignaturePayload,
-  AckemSignatureSidecar,
+  BritneySignatureSidecar,
   PublisherKeyPair
 } from './signature'
 
@@ -61,11 +61,11 @@ export {
 export type { ManifestValidationOptions, ManifestValidationResult } from './manifestValidate'
 
 export {
-  buildAckemExtensionPackage,
-  parseAckemExtensionPackage,
-  verifyAckemExtensionPackage
+  buildBritneyExtensionPackage,
+  parseBritneyExtensionPackage,
+  verifyBritneyExtensionPackage
 } from './packageFormat'
-export type { AckemExtensionPackage } from './packageFormat'
+export type { BritneyExtensionPackage } from './packageFormat'
 
 export {
   installCommunityPackage,

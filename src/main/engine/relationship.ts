@@ -2,7 +2,7 @@
 // 职责：FSM、信任/裂痕/动量/气氛与调制系数
 // 输入：Event、上一帧 L1State
 // 输出：L1State、Modulation
-// 引用：./ackemParams, ./types
+// 引用：./britneyParams, ./types
 
 import {
   ATMOSPHERE_COOL_THRESHOLD,
@@ -36,7 +36,7 @@ import {
   TRUST_VULNERABLE,
   TRUST_MOD_MAX,
   TRUST_MOD_MIN
-} from './ackemParams'
+} from './britneyParams'
 import type { Event, ExternalAtmosphere, L1State, Modulation, RelationshipStage } from './types'
 
 const POSITIVE_TYPES = new Set(['praise', 'tease', 'vulnerable', 'apology'])

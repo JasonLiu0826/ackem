@@ -4,7 +4,7 @@ import type { WebContents } from 'electron'
 import type { AppSettings } from '../../../../../settings'
 import type { UserTaskFrame } from '../../../../../../shared/taskFrame'
 import { buildSearchCandidateQueries } from './searchQueryResolver'
-import { buildAckemAwareSearchQueries } from '../../../../../paperCard/ackemProductIdentity'
+import { buildBritneyAwareSearchQueries } from '../../../../../paperCard/britneyProductIdentity'
 import { runIntentAwareWebSearch } from './searchWithIntent'
 import { runSearchSynthesisChain } from './searchSynthesis'
 import { lastUserMessageFromContext } from '../knowledgeAnswer'
@@ -37,7 +37,7 @@ export async function runIntentAwareSearchPresentation(
     publishExtensionTriggeredById(WEB_SEARCH_MANIFEST.id)
   }
   const userMsg = lastUserMessageFromContext(contextMessages)
-  const candidates = buildAckemAwareSearchQueries(
+  const candidates = buildBritneyAwareSearchQueries(
     userMsg,
     buildSearchCandidateQueries(userMsg, input.candidateQueries, input.taskFrame?.searchQuery)
   )

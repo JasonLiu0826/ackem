@@ -14,7 +14,7 @@ import {
   normalizePeerSessionId,
   saveContextToken
 } from './store'
-import { recordWeixinAckemActivity } from './activity'
+import { recordWeixinBritneyActivity } from './activity'
 import type { WeixinAccount, WeixinMessage } from './types'
 import { createLogger } from '../../logger'
 
@@ -50,7 +50,7 @@ export function enqueueInboundWeixinMessage(
   if (msg.message_id != null && markMessageSeen(dataRoot, msg.message_id)) return
 
   if (msg.context_token) saveContextToken(dataRoot, peerId, msg.context_token)
-  recordWeixinAckemActivity(dataRoot)
+  recordWeixinBritneyActivity(dataRoot)
 
   void enqueuePeerTurn(peerId, () => handleInboundMessage(msg, account, dataRoot))
 }
@@ -109,7 +109,7 @@ async function handleInboundMessage(
       if (e.code === 'EMBEDDING_WARMING') {
         rawReply = '记忆引擎还在预热，请稍等半分钟再试～'
       } else if (e.code === 'NO_API') {
-        rawReply = '我这边还没配置好对话模型，请在 Ackem 设置里填写 API 后再试。'
+        rawReply = '我这边还没配置好对话模型，请在 Britney 设置里填写 API 后再试。'
       } else {
         rawReply = '没听清，你再说一次？'
       }

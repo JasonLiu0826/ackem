@@ -104,7 +104,7 @@ function buildSkillConfig(
           : undefined
     },
     promptTemplates: {
-      contextInjection: `【${manifest.name} 已触发】${behavior}。用 Ackem 伴侣的自然语气回应，并落实该能力描述的行为。`,
+      contextInjection: `【${manifest.name} 已触发】${behavior}。用 Britney 伴侣的自然语气回应，并落实该能力描述的行为。`,
       ...(autonomous ? { userFacing: behavior } : {})
     },
     variables: {},
@@ -140,7 +140,7 @@ export function generateUskillFromSession(session: PlanSession): AgentGeneration
     category: 'skill',
     skillType: dispatch.mode === 'autonomous' ? 'proactive' : 'rule',
     description: dispatch.summary,
-    author: 'Ackem User',
+    author: 'Britney User',
     license: 'AGPL-3.0',
     main: 'skill.json',
     engineVersion: '>=0.1.0 <2.0.0',
@@ -216,7 +216,7 @@ export function generateUpluginFromSession(session: PlanSession): GeneratedUplug
     category: 'plugin',
     pluginType: 'behavior',
     description: dispatch.summary,
-    author: 'Ackem User',
+    author: 'Britney User',
     license: 'AGPL-3.0',
     main: 'plugin.meta.json',
     engineVersion: '>=0.1.0 <2.0.0',

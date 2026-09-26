@@ -1,4 +1,5 @@
 import type { DesktopAgentAction } from './desktopAgent'
+export type { DesktopAgentAction } from './desktopAgent'
 
 /** 单步验收规则（文件系统 + 审计日志） */
 export type TaskPlanVerification =
@@ -99,6 +100,6 @@ export const DESKTOP_AGENT_TASK_ACTIONS: DesktopAgentAction[] = [
   'copy_path',
   'move_path',
   'delete_path',
-  'import_to_ackem',
+  'import_to_britney',
   'download_file'
 ]

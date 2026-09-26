@@ -65,9 +65,9 @@ export function VoiceSettings(): JSX.Element {
   const refreshEnv = useCallback(async (): Promise<void> => {
     setChecking(true)
     try {
-      const report = await window.ackem.voice?.checkEnvironment?.()
+      const report = await window.britney.voice?.checkEnvironment?.()
       setEnv(report ?? null)
-      const h = await window.ackem.voice?.health?.()
+      const h = await window.britney.voice?.health?.()
       setHealth(h ?? null)
     } catch {
       setEnv(null)
@@ -91,14 +91,14 @@ export function VoiceSettings(): JSX.Element {
     void syncVoiceSettingsToMain(settings)
     void refreshEnv()
     const timer = setInterval(() => {
-      void window.ackem.voice?.health?.().then(setHealth).catch(() => setHealth(null))
+      void window.britney.voice?.health?.().then(setHealth).catch(() => setHealth(null))
     }, 60_000)
     return () => clearInterval(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
-    const unsub = window.ackem.voice?.onInstallLog?.((p) => {
+    const unsub = window.britney.voice?.onInstallLog?.((p) => {
       setInstallLog((prev) => [...prev.slice(-80), p.line])
       requestAnimationFrame(scrollInstallLog)
     })
@@ -115,7 +115,7 @@ export function VoiceSettings(): JSX.Element {
     setInstallError(null)
     setInstallLog([])
     try {
-      const result = await window.ackem.voice?.installEnvironment?.()
+      const result = await window.britney.voice?.installEnvironment?.()
       if (!result?.ok) {
         setInstallError(result?.error ?? '准备失败，请重试')
       }
@@ -134,7 +134,7 @@ export function VoiceSettings(): JSX.Element {
     <>
       <SettingsBlock
         title="语音环境"
-        hint="Ackem 可自动配置，无需手动安装 Python 或运行命令行"
+        hint="Britney 可自动配置，无需手动安装 Python 或运行命令行"
         badge={
           envReady ? (
             <SettingsStatusBadge tone="ok">已就绪</SettingsStatusBadge>
@@ -220,7 +220,7 @@ export function VoiceSettings(): JSX.Element {
             busy={false}
             actionLabel="重启"
             onAction={() => {
-              void window.ackem.voice?.restartService?.().then(() => refreshEnv())
+              void window.britney.voice?.restartService?.().then(() => refreshEnv())
             }}
           />
         </SettingsActionStack>
@@ -331,7 +331,7 @@ export function VoiceSettings(): JSX.Element {
                   )}
                 </select>
                 <p className="settings-field-footnote">
-                  Ackem 内置 Ackem 女声语音包，开箱即用（无需训练、无需单独下载）。
+                  Britney 内置 Britney 女声语音包，开箱即用（无需训练、无需单独下载）。
                   首次说话约 30–60 秒加载模型，需 NVIDIA GPU。也可改用 Piper / edge-tts。
                 </p>
               </SettingsField>
@@ -358,8 +358,8 @@ export function VoiceSettings(): JSX.Element {
                 </select>
                 <p className="settings-field-footnote">
                   导入路径（二选一）：<br />
-                  1. %APPDATA%\Ackem\voice-models\piper\你的音色名\<br />
-                  2. 开发版 Ackem\voice-service\models\piper\<br />
+                  1. %APPDATA%\Britney\voice-models\piper\你的音色名\<br />
+                  2. 开发版 Britney\voice-service\models\piper\<br />
                   每个文件夹放一对同名 `.onnx` 与 `.onnx.json`。详见该目录下 README.md。
                 </p>
               </SettingsField>
@@ -449,7 +449,7 @@ export function VoiceSettings(): JSX.Element {
       ) : (
         <p className="settings-note settings-note--inset">
           开启语音后，在剧院模式可使用<strong>麦克风输入</strong>（语音识别后发送）。
-          TTS 语音播报灰度中，Ackem 暂不以语音回复。首次使用点「一键准备语音环境」即可。
+          TTS 语音播报灰度中，Britney 暂不以语音回复。首次使用点「一键准备语音环境」即可。
         </p>
       )}
     </>

@@ -4,7 +4,7 @@
 // 可选注入 embedQuery 函数以使用外部 embedding 模型替代 TF-IDF
 // 引用：../engine/types
 
-import { VECTOR_SEARCH_MIN_SCORE } from '../engine/ackemParams'
+import { VECTOR_SEARCH_MIN_SCORE } from '../engine/britneyParams'
 import type { MemoryFact } from '../engine/types'
 
 type SparseVec = Map<number, number>

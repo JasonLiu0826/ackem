@@ -1,11 +1,11 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import type { UpdateJob, UpdateProgressEvent } from '../shared/updateTypes'
 
-contextBridge.exposeInMainWorld('ackemUpdater', {
+contextBridge.exposeInMainWorld('britneyUpdater', {
   getJobPath: (): Promise<string> => ipcRenderer.invoke('updater:getJobPath'),
   readJob: (): Promise<UpdateJob> => ipcRenderer.invoke('updater:readJob'),
   start: (): Promise<{ ok: boolean }> => ipcRenderer.invoke('updater:start'),
-  launchAckem: (): Promise<void> => ipcRenderer.invoke('updater:launchAckem'),
+  launchBritney: (): Promise<void> => ipcRenderer.invoke('updater:launchBritney'),
   openRelease: (): Promise<void> => ipcRenderer.invoke('updater:openRelease'),
   quit: (): Promise<void> => ipcRenderer.invoke('updater:quit'),
   onProgress: (fn: (ev: UpdateProgressEvent) => void): (() => void) => {

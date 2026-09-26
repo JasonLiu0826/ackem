@@ -25,7 +25,7 @@ const WEB_SEARCH_DISPATCH: DispatchConfig = {
 }
 
 export const WEB_SEARCH_MANIFEST: SkillManifest = {
-  id: 'ackem/web-search@1.0.0',
+  id: 'britney/web-search@1.0.0',
   name: '网页搜索',
   version: '1.0.0',
   category: 'skill',

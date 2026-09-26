@@ -24,13 +24,13 @@ const KNOWLEDGE_DISPATCH: DispatchConfig = {
 }
 
 export const KNOWLEDGE_PRESENTATION_MANIFEST: PluginManifest = {
-  id: 'ackem/knowledge-presentation@1.0.0',
+  id: 'britney/knowledge-presentation@1.0.0',
   name: '知识整理',
   version: '1.0.0',
   category: 'plugin',
   pluginType: 'tool',
   description:
-    '大模型知识整理纸面卡 + 伴侣短评（不联网、无参考链接）；Ackem 基础能力，始终启用',
+    '大模型知识整理纸面卡 + 伴侣短评（不联网、无参考链接）；Britney 基础能力，始终启用',
   author: 'JasonLiu0826',
   license: 'AGPL-3.0',
   main: 'plugin.ts',

@@ -1,5 +1,5 @@
 /**
- * Ackem 卸载：桌面快捷方式、可选删除数据/程序；支持设置内触发或运行 Uninstall Ackem.bat
+ * Britney 卸载：桌面快捷方式、可选删除数据/程序；支持设置内触发或运行 Uninstall Britney.bat
  */
 import { app, shell } from 'electron'
 import { existsSync } from 'node:fs'
@@ -34,7 +34,7 @@ function exeDir(): string {
 
 function resolveNsisUninstaller(installDir: string): string | null {
   const candidates = [
-    join(installDir, 'Uninstall Ackem.exe'),
+    join(installDir, 'Uninstall Britney.exe'),
     join(installDir, 'Uninstall.exe')
   ]
   for (const p of candidates) {
@@ -45,7 +45,7 @@ function resolveNsisUninstaller(installDir: string): string | null {
 
 function resolveUninstallBatPath(): string | null {
   const candidates = [
-    join(exeDir(), 'Uninstall Ackem.bat'),
+    join(exeDir(), 'Uninstall Britney.bat'),
     join(process.resourcesPath, 'uninstall.bat'),
     join(exeDir(), 'resources', 'uninstall.bat')
   ]

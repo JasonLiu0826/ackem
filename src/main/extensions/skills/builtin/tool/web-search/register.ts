@@ -6,8 +6,8 @@ import { webSearchSkill } from './skill'
 
 export async function registerBuiltinWebSearch(registry: SkillRegistry): Promise<void> {
   // 清理旧占位版本（无 functionDef，会导致 findByFunctionName 匹配失败）
-  if (registry.get('ackem/web-search@0.0.1')) {
-    await registry.unregister('ackem/web-search@0.0.1')
+  if (registry.get('britney/web-search@0.0.1')) {
+    await registry.unregister('britney/web-search@0.0.1')
   }
 
   const reg = await registry.register(webSearchSkill)

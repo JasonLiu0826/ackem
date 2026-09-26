@@ -98,7 +98,7 @@ async function loadUserExtensions(sk: ExtRow[], pl: ExtRow[]): Promise<{
   userPlugins: ExtensionItem[]
 }> {
   try {
-    const ofuExt = await window.ackem.openforu.listExtensions()
+    const ofuExt = await window.britney.openforu.listExtensions()
     const fromOpenForU = {
       userSkills: sortExtensions(ofuExt.uskills.map(mapOpenForURow)),
       userPlugins: sortExtensions(ofuExt.uplugins.map(mapOpenForURow))
@@ -277,7 +277,7 @@ export function ExtensionCenterPage(): JSX.Element {
         return
       }
       try {
-        const r = await window.ackem.openforu.planRefineOpen(item.id, { displayName: item.name })
+        const r = await window.britney.openforu.planRefineOpen(item.id, { displayName: item.name })
         if (r.ok) {
           bumpPlanReload()
           setPlanOpen(true)
@@ -296,13 +296,13 @@ export function ExtensionCenterPage(): JSX.Element {
     setLoading(true)
     setToggleError(null)
     try {
-      const pl = (await window.ackem.ext.plugins.list()) as ExtRow[]
+      const pl = (await window.britney.ext.plugins.list()) as ExtRow[]
       setPlugins(
         sortExtensions(
           pl.filter((p) => !isUserExtensionId(p.manifest.id)).map((p) => mapRow(p, false))
         )
       )
-      const sk = (await window.ackem.ext.skills.list()) as ExtRow[]
+      const sk = (await window.britney.ext.skills.list()) as ExtRow[]
       setSkills(
         sortExtensions(
           sk.filter((s) => !isUserExtensionId(s.manifest.id)).map((s) => mapRow(s, true))
@@ -313,8 +313,8 @@ export function ExtensionCenterPage(): JSX.Element {
       setUserSkills(userExt.userSkills)
       setUserPlugins(userExt.userPlugins)
 
-      if (openforuReady && window.ackem.openforu.workspaces?.list) {
-        const ws = await window.ackem.openforu.workspaces.list()
+      if (openforuReady && window.britney.openforu.workspaces?.list) {
+        const ws = await window.britney.openforu.workspaces.list()
         if (ws.ok) {
           setWorkspaces(ws.workspaces)
           setWorkspaceMax(ws.max)
@@ -340,7 +340,7 @@ export function ExtensionCenterPage(): JSX.Element {
   }, [tab, load])
 
   useEffect(() => {
-    const unsubscribe = window.ackem.openforu.onNotify(() => {
+    const unsubscribe = window.britney.openforu.onNotify(() => {
       void load()
     })
     return unsubscribe
@@ -349,8 +349,8 @@ export function ExtensionCenterPage(): JSX.Element {
   const togglePlugin = async (id: string, active: boolean) => {
     setToggleError(null)
     const res = (await (active
-      ? window.ackem.ext.plugins.activate(id)
-      : window.ackem.ext.plugins.deactivate(id))) as { ok: boolean; error?: string }
+      ? window.britney.ext.plugins.activate(id)
+      : window.britney.ext.plugins.deactivate(id))) as { ok: boolean; error?: string }
     if (!res.ok) {
       setToggleError(res.error ?? '操作失败')
       return
@@ -361,8 +361,8 @@ export function ExtensionCenterPage(): JSX.Element {
   const toggleSkill = async (id: string, active: boolean) => {
     setToggleError(null)
     const res = (await (active
-      ? window.ackem.ext.skills.activate(id)
-      : window.ackem.ext.skills.deactivate(id))) as { ok: boolean; error?: string }
+      ? window.britney.ext.skills.activate(id)
+      : window.britney.ext.skills.deactivate(id))) as { ok: boolean; error?: string }
     if (!res.ok) {
       setToggleError((res as { error?: string }).error ?? '操作失败')
       return
@@ -375,7 +375,7 @@ export function ExtensionCenterPage(): JSX.Element {
     const label = item.origin === 'uskill' ? 'Skill' : '插件'
     if (!window.confirm(`确定删除自创${label}「${item.name}」？\n\n将删除磁盘文件且不可恢复。`)) return
     setToggleError(null)
-    const res = await window.ackem.openforu.removeExtension(item.origin, item.id)
+    const res = await window.britney.openforu.removeExtension(item.origin, item.id)
     if (!res.ok) {
       setToggleError(res.error ?? '删除失败')
       return
@@ -521,7 +521,7 @@ export function ExtensionCenterPage(): JSX.Element {
                   type="button"
                   className="rounded-lg border border-glass-border px-4 py-2 text-sm text-ink hover:border-accent/40"
                   onClick={async () => {
-                    const r = await window.ackem.openforu.workspaces.create()
+                    const r = await window.britney.openforu.workspaces.create()
                     if (r.ok) {
                       setWorkspaces(r.workspaces)
                       setActiveWorkspaceId(r.activeWorkspaceId)
@@ -555,7 +555,7 @@ export function ExtensionCenterPage(): JSX.Element {
                       type="button"
                       className="shrink-0 rounded-lg border border-glass-border px-3 py-1.5 text-xs text-ink hover:border-accent/40"
                       onClick={async () => {
-                        const r = await window.ackem.openforu.workspaces.switch(w.id)
+                        const r = await window.britney.openforu.workspaces.switch(w.id)
                         if (r.ok) {
                           setActiveWorkspaceId(r.activeWorkspaceId)
                           setWorkspaces(r.workspaces)
@@ -570,7 +570,7 @@ export function ExtensionCenterPage(): JSX.Element {
                       className="shrink-0 rounded-lg border border-red-500/30 px-3 py-1.5 text-xs text-red-300 hover:border-red-400/50"
                       onClick={async () => {
                         if (!window.confirm(`删除工作区「${w.name}」？`)) return
-                        const r = await window.ackem.openforu.workspaces.delete(w.id)
+                        const r = await window.britney.openforu.workspaces.delete(w.id)
                         if (r.ok) {
                           setWorkspaces(r.workspaces)
                           setActiveWorkspaceId(r.activeWorkspaceId)
@@ -656,7 +656,7 @@ export function ExtensionCenterPage(): JSX.Element {
         payload={grantPayload}
         onApprove={() => {
           if (!grantItem) return
-          void window.ackem.openforu.permissions.approveAndActivate(grantItem.id).then((r) => {
+          void window.britney.openforu.permissions.approveAndActivate(grantItem.id).then((r) => {
             setGrantItem(null)
             if (r.ok) {
               pushToast('已授予权限并启用')

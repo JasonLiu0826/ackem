@@ -59,7 +59,7 @@ async function polishUskillBundle(
         content: [
           '你是 OpenForU 扩展文案润色助手。只输出一个 JSON 对象，不要 markdown 包裹以外的说明。',
           '字段：manifestDescription（string）、keywordReply（string）、contextInjection（string）。',
-          '禁止修改 dispatch、keywords、权限、id。语气贴近 Ackem 伴侣，落实 Plan 方案中的具体行为。',
+          '禁止修改 dispatch、keywords、权限、id。语气贴近 Britney 伴侣，落实 Plan 方案中的具体行为。',
           '用简体中文。'
         ].join('\n')
       },

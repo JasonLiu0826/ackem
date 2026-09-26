@@ -53,7 +53,7 @@ export function filterExtractedUserFacts<T extends GuardableFact>(
 
   return facts.filter((f) => {
     if (f.subcategory === 'NOTE') return true
-    if (f.subcategory === 'OUR_BOND' && f.subject.startsWith('Ackem回复')) return true
+    if (f.subcategory === 'OUR_BOND' && f.subject.startsWith('Britney回复')) return true
 
     if (questionTurn && f.subcategory === 'BASIC_PROFILE') return false
 

@@ -1,5 +1,5 @@
 /**
- * 退出 Ackem 时统一关闭后台：语音 Python、调度器、微信通道、数据库等。
+ * 退出 Britney 时统一关闭后台：语音 Python、调度器、微信通道、数据库等。
  */
 import { app } from 'electron'
 import { loadSettings } from './settings'

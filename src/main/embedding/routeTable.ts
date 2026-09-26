@@ -30,14 +30,14 @@ import {
  */
 export const BUILTIN_ROUTE_TABLE: Record<string, string[]> = {
   // 天气
-  'ackem/weather-sense@0.0.1': [
+  'britney/weather-sense@0.0.1': [
     '帮我查天气', '明天会下雨吗', '需要带伞吗',
     '杭州天气怎么样', '今天冷不冷', '气温多少度',
     '今天会不会下雨', '出门需要带伞吗',
   ],
 
   // 搜索
-  'ackem/web-search@1.0.0': [
+  'britney/web-search@1.0.0': [
     '帮我搜一下天气', '查一下明天天气',
     '帮我查一下这个什么意思', '搜索一下这个词',
     '帮我找找相关资料', '这个东西是什么',
@@ -45,68 +45,68 @@ export const BUILTIN_ROUTE_TABLE: Record<string, string[]> = {
   ],
 
   // 提醒
-  'ackem/sedentary-reminder@0.0.1': [
+  'britney/sedentary-reminder@0.0.1': [
     '坐得腰疼', '坐太久了', '该站起来了吧',
     '起来活动一下', '脖子好酸', '腰不舒服',
     '坐久了不舒服', '该活动活动了',
   ],
-  'ackem/drink-water-reminder@0.0.1': [
+  'britney/drink-water-reminder@0.0.1': [
     '我想喝水', '该喝水了', '好渴',
     '补充水分', '倒杯水', '提醒我喝水',
     '口渴了',
   ],
-  'ackem/late-night-reminder@0.0.1': [
+  'britney/late-night-reminder@0.0.1': [
     '熬夜好伤身', '该睡觉了', '怎么这么晚了',
     '已经是凌晨了', '该休息了',
   ],
 
   // 陪伴
-  'ackem/emergency-companion@1.0.0': [
+  'britney/emergency-companion@1.0.0': [
     '我心情不好', '好难受', '想哭',
     '我好难过', '心里不舒服', '感觉撑不下去了',
     '想找人说说话', '今天特别难过',
   ],
 
   // 表格
-  'ackem/markdown-table@1.0.0': [
+  'britney/markdown-table@1.0.0': [
     '帮我做个表格', '整理成表格形式', '做个对比表',
     '帮我列个清单', '做个对比', '列个表',
   ],
 
   // 日程提醒
-  'ackem/light-schedule@0.0.1': [
+  'britney/light-schedule@0.0.1': [
     '提醒我下午3点开会', '明天9点叫我', '设个闹钟',
     '帮我记一下日程', '下午有个会别让我忘了',
     '帮我设置提醒', '记一下这个时间',
   ],
 
   // 日记
-  'ackem/diary-auto@0.1.0': [
+  'britney/diary-auto@0.1.0': [
     '写日记', '今天发生了什么', '帮我记录今天',
     '今天的日记', '帮我写日记',
   ],
 
   // 计划书
-  'ackem/plan-document@1.0.0': [
+  'britney/plan-document@1.0.0': [
     '做个计划', '帮我规划一下', '排个日程',
     '帮我安排一下行程', '做一份计划书',
     '帮我规划旅行', '接下来该做什么',
   ],
 
   // 知识呈现
-  'ackem/knowledge-presentation@1.0.0': [
+  'britney/knowledge-presentation@1.0.0': [
     '这是什么', '解释一下', '帮我科普一下',
     '介绍一下', '我想了解', '量子计算是什么',
   ],
 
   // 趣味档案
-  'ackem/fun-profile@0.0.1': [
+  'britney/fun-profile@0.0.1': [
     '我今天是什么状态', '给我做个分析', '我最近怎么样',
     '看看我的情绪', '分析一下我',
   ],
 
   // 桌面陪伴
-  'ackem/desktop-companion@0.0.1': [
+  'britney/desktop-companion@0.0.1': [
     '打开桌面陪伴', '显示桌面', '隐藏陪伴',
     '开启桌面模式',
   ],

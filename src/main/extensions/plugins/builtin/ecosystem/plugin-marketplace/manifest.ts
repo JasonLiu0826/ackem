@@ -2,7 +2,7 @@
 import type { PluginManifest } from '../../../types'
 
 export const MANIFEST: PluginManifest = {
-  "id": "ackem/plugin-marketplace@0.0.1",
+  "id": "britney/plugin-marketplace@0.0.1",
   "name": "插件生态/市场",
   "version": "0.0.1",
   "category": "plugin",
@@ -24,5 +24,5 @@ export const MANIFEST: PluginManifest = {
     "p-16"
   ]
 } as PluginManifest
-export const PLUGIN_ID = 'ackem/plugin-marketplace@0.0.1'
+export const PLUGIN_ID = 'britney/plugin-marketplace@0.0.1'
 export const SPEC_ID = 'P-16'

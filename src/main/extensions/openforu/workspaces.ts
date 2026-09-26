@@ -11,7 +11,7 @@ import { randomUUID } from 'node:crypto'
 export const MAX_OPENFORU_WORKSPACES = 6
 
 export const PLAN_WELCOME_MESSAGE =
-  '我是 Ackem Agent。请描述你想做的能力：用途、触发方式、需要的权限。\n\n我会先帮你判断适合 **Skill（uskill）** 还是 **Plugin（uplugin）**，再整理 dispatch 方案。\n- **Skill**：主聊天触发后注入行为 — **可部署**\n- **Plugin**：系统/界面钩子 — **可部署**（v1：上下文注入，非真系统钩子）'
+  '我是 Britney Agent。请描述你想做的能力：用途、触发方式、需要的权限。\n\n我会先帮你判断适合 **Skill（uskill）** 还是 **Plugin（uplugin）**，再整理 dispatch 方案。\n- **Skill**：主聊天触发后注入行为 — **可部署**\n- **Plugin**：系统/界面钩子 — **可部署**（v1：上下文注入，非真系统钩子）'
 
 export type OpenForUWorkspace = {
   id: string

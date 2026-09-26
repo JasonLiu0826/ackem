@@ -15,7 +15,7 @@ export function buildUpluginInjectTemplate(
   behavior: string
 ): string {
   const text = behavior.trim() || manifest.description || ''
-  return `【${manifest.name ?? 'uPlugin'} 已触发】${text}。用 Ackem 伴侣的自然语气回应，并落实该 Plugin 方案描述的行为（v1：上下文注入，非真系统钩子）。`
+  return `【${manifest.name ?? 'uPlugin'} 已触发】${text}。用 Britney 伴侣的自然语气回应，并落实该 Plugin 方案描述的行为（v1：上下文注入，非真系统钩子）。`
 }
 
 export function createUpluginLifecycleHooks(

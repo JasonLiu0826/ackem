@@ -1,7 +1,7 @@
 // [prompt/memory-fact-extract] — 事实抽取 prompt（v1.0 设计文档）
 // 迁移自 memory/factExtractor.ts，按设计升级
 
-import { FACT_EXTRACTION_MAX_PER_TURN } from '../engine/ackemParams'
+import { FACT_EXTRACTION_MAX_PER_TURN } from '../engine/britneyParams'
 import { DOMAINS, SUBCATEGORIES } from '../memory/taxonomy'
 import { getLocale } from '../i18n'
 import { FACT_EXTRACT_SYS_EN } from './prompt-i18n'
@@ -25,7 +25,7 @@ export function buildFactExtractSysOld(locale: string): string {
 }
 
 /** v1.1 升级版 prompt（含 25 子类定义 + weight/confidence 规则 + 拒绝清单） */
-export const FACT_EXTRACT_SYS_ZH = `你是 Ackem 的记忆抽取器。从【本轮对话】中抽取关于用户的结构化事实。
+export const FACT_EXTRACT_SYS_ZH = `你是 Britney 的记忆抽取器。从【本轮对话】中抽取关于用户的结构化事实。
 
 ── 核心原则 ──
 只从【用户】发言抽取关于用户的事实；禁止从【伴侣】发言写入用户档案（伴侣的生日/名字/设定不得记为用户信息）。

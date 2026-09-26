@@ -32,7 +32,7 @@ export async function runSandboxProbeUpluginTool(
     }
   }
 
-  const tmpDir = mkdtempSync(join(tmpdir(), 'ackem-sandbox-probe-'))
+  const tmpDir = mkdtempSync(join(tmpdir(), 'britney-sandbox-probe-'))
   const pluginDir = join(tmpDir, bundle.dirName || 'probe')
   mkdirSync(pluginDir, { recursive: true })
   writeFileSync(join(pluginDir, 'main.ts'), mainTs.endsWith('\n') ? mainTs : `${mainTs}\n`)

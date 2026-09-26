@@ -3,9 +3,9 @@ import type { DispatchConfig } from '../../../protocols'
 
 const PROD_DAILY_AT = '23:30'
 
-/** 生产 23:30；测试/开发可用 ACKEM_DIARY_DAILY_AT=HH:MM */
+/** 生产 23:30；测试/开发可用 BRITNEY_DIARY_DAILY_AT=HH:MM */
 export function getDiaryDailyAt(): string {
-  const override = process.env.ACKEM_DIARY_DAILY_AT?.trim()
+  const override = process.env.BRITNEY_DIARY_DAILY_AT?.trim()
   if (override && /^\d{1,2}:\d{2}$/.test(override)) return override
   return PROD_DAILY_AT
 }
@@ -41,12 +41,12 @@ export function getDiaryDispatch(): DispatchConfig {
 }
 
 export const DIARY_AUTO_MANIFEST: SkillManifest = {
-  id: 'ackem/diary-auto@0.1.0',
+  id: 'britney/diary-auto@0.1.0',
   name: '日记自动生成',
   version: '0.1.0',
   category: 'skill',
   skillType: 'proactive',
-  description: '每日定时生成第一人称日记（默认 23:30）；Ackem 基础能力，始终启用',
+  description: '每日定时生成第一人称日记（默认 23:30）；Britney 基础能力，始终启用',
   author: 'JasonLiu0826',
   license: 'AGPL-3.0',
   main: 'skill.ts',

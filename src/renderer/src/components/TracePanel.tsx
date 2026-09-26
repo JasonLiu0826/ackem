@@ -40,7 +40,7 @@ export function TracePanel(): JSX.Element {
   const refresh = useCallback(async () => {
     setLoading(true)
     try {
-      const raw = await window.ackem.traceLatest(limit) as TraceEntry[]
+      const raw = await window.britney.traceLatest(limit) as TraceEntry[]
       setTraces(raw)
     } catch (e) {
       console.error('trace:latest error', e)

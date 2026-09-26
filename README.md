@@ -1,4 +1,4 @@
-# 💫 Ackem
+# 💫 Britney
 
 ![Version](https://img.shields.io/badge/Version-1.0.0-orange?style=for-the-badge)
 ![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)
@@ -7,15 +7,15 @@
 ![OpenAI Compatible](https://img.shields.io/badge/API-OpenAI--Compatible-412991?style=for-the-badge&logo=openai&logoColor=white)
 ![Electron](https://img.shields.io/badge/Built_with-Electron-47848F?style=for-the-badge&logo=electron&logoColor=white)
 
-**Ackem** · **A**.C.K.E.M — **A**utonomous **C**ompanion **K**eeping **E**motional **M**emory  
+**Britney** · **A**.C.K.E.M — **A**utonomous **C**ompanion **K**eeping **E**motional **M**emory  
 *保持情感记忆的自主伙伴*
 
-**Ackem v1.0.0** — A **local-first** AI companion for Windows. Bring your own LLM (cloud or local); Ackem handles chat, memory, emotion, relationship state, and desktop presence — **all on your hard drive**.
+**Britney v1.0.0** — A **local-first** AI companion for Windows. Bring your own LLM (cloud or local); Britney handles chat, memory, emotion, relationship state, and desktop presence — **all on your hard drive**.
 
-> **Source**: [GitHub](https://github.com/JasonLiu0826/Ackem) · [Gitee mirror](https://gitee.com/jason_2005/ackem)  
-> **Download**: [GitHub Releases](https://github.com/JasonLiu0826/Ackem/releases) · [Gitee Releases](https://gitee.com/jason_2005/ackem/releases)  
-> **Build**: `npm run dist:green` → `dist/release/Ackem-1.0.0-win-x64/` · [Path map](./docs/CODEBASE-PATHS.md) · [Docs languages](./docs/I18N.md)  
-> **Status:** Ackem is still in **active testing**. As a solo-maintained project, test coverage is limited — you may hit unexpected behavior or rough edges. Frequent crashes and severe lag are uncommon, but imperfections still happen. [Open an Issue](https://github.com/JasonLiu0826/Ackem/issues) if something feels off.
+> **Source**: [GitHub](https://github.com/JasonLiu0826/Britney) · [Gitee mirror](https://gitee.com/jason_2005/britney)  
+> **Download**: [GitHub Releases](https://github.com/JasonLiu0826/Britney/releases) · [Gitee Releases](https://gitee.com/jason_2005/britney/releases)  
+> **Build**: `npm run dist:green` → `dist/release/Britney-1.0.0-win-x64/` · [Path map](./docs/CODEBASE-PATHS.md) · [Docs languages](./docs/I18N.md)  
+> **Status:** Britney is still in **active testing**. As a solo-maintained project, test coverage is limited — you may hit unexpected behavior or rough edges. Frequent crashes and severe lag are uncommon, but imperfections still happen. [Open an Issue](https://github.com/JasonLiu0826/Britney/issues) if something feels off.
 
 [中文文档](./README.zh.md) · [Privacy & data (EN)](./docs/privacy-and-data.md)
 
@@ -23,7 +23,7 @@
 
 ## At a glance
 
-Ackem is **not** a web chat box — it is a Windows desktop app that stays with you: tray, optional desktop pet, structured memory, and a companion that remembers context over time.
+Britney is **not** a web chat box — it is a Windows desktop app that stays with you: tray, optional desktop pet, structured memory, and a companion that remembers context over time.
 
 | | |
 |---|---|
@@ -78,7 +78,7 @@ Ackem is **not** a web chat box — it is a Windows desktop app that stays with 
 
 <p align="center">
   <img src="./docs/images/01-download-open.gif" alt="Download and open" width="640" />
-  <br /><em>Download zip → extract → launch Ackem.exe → wait for loading → main UI</em>
+  <br /><em>Download zip → extract → launch Britney.exe → wait for loading → main UI</em>
 </p>
 
 <p align="center">
@@ -92,9 +92,9 @@ Ackem is **not** a web chat box — it is a Windows desktop app that stays with 
 
 ## In depth
 
-### What is Ackem?
+### What is Britney?
 
-Ackem is a **local-first** Windows desktop application: you configure your LLM endpoint, and Ackem orchestrates **conversation, memory, emotion & relationship state, and desktop companionship** while keeping data on **your machine**.
+Britney is a **local-first** Windows desktop application: you configure your LLM endpoint, and Britney orchestrates **conversation, memory, emotion & relationship state, and desktop companionship** while keeping data on **your machine**.
 
 ### What you can do
 
@@ -107,7 +107,7 @@ Ackem is a **local-first** Windows desktop application: you configure your LLM e
 
 ### Where your data lives
 
-Portable green release stores everything under **`data/`** next to `Ackem.exe`: chats, memories, diaries, API keys in settings. **The official zip does not include `data/`** — an empty folder is created on first run. No default telemetry to an Ackem server.
+Portable green release stores everything under **`data/`** next to `Britney.exe`: chats, memories, diaries, API keys in settings. **The official zip does not include `data/`** — an empty folder is created on first run. No default telemetry to an Britney server.
 
 Backup, migration, deletion: [docs/memory-format.md](./docs/memory-format.md) · [docs/distribution-windows.md](./docs/distribution-windows.md)
 
@@ -133,33 +133,20 @@ Details: [docs/distribution-windows.md](./docs/distribution-windows.md)
 
 ### Steps
 
-1. **Download** — `Ackem-v1.0.0-win-x64.zip` from [GitHub Releases](https://github.com/JasonLiu0826/Ackem/releases) or [Gitee Releases](https://gitee.com/jason_2005/ackem/releases)
+1. **Download** — `Britney-v1.0.0-win-x64.zip` from [GitHub Releases](https://github.com/JasonLiu0826/Britney/releases) or [Gitee Releases](https://gitee.com/jason_2005/britney/releases)
 2. **Extract** — fully to an SSD path (do not run inside the zip)
-3. **Launch** — `Ackem.exe` or `启动 Ackem.bat`; first launch ~10–30 s ([loading screen](#screenshots--demo))
+3. **Launch** — `Britney.exe` or `启动 Britney.bat`; first launch ~10–30 s ([loading screen](#screenshots--demo))
 4. **Compliance** — accept privacy terms ([screenshot](#screenshots--demo))
 5. **Configure model** — **Settings → Model & API**: Base URL, API Key (cloud), Model ID
 6. **First chat** — send a message; optionally import `.txt`/`.md` memories
 
 > **Sharing the zip:** never re-pack your personal `data/` folder — it contains chats, memory, and keys.
 
-### macOS (community build, unofficial) {#macos-community-build-unofficial}
-
-> **Official support:** Windows green release only. The Mac builds below are **community-contributed** by [@deufe](https://github.com/deufe) — not maintained or fully verified by the core team. See [Issue #4](https://github.com/JasonLiu0826/ackem/issues/4).
-
-| File | Architecture | Download |
-|------|----------------|----------|
-| `Ackem-1.0.0-mac-arm64.dmg` | Apple Silicon (M series) | [v3 DMG](https://github.com/deufe/ackem/releases/download/v1.0.0-mac-community-v3/Ackem-1.0.0-mac-arm64.dmg) |
-| `Ackem-1.0.0-mac-x64.dmg` | Intel Mac | [v3 DMG](https://github.com/deufe/ackem/releases/download/v1.0.0-mac-community-v3/Ackem-1.0.0-mac-x64.dmg) |
-
-**Use v3 only** (v1/v2 are outdated). SHA256 and install steps: [v1.0.0 Release notes](https://github.com/JasonLiu0826/ackem/releases/tag/v1.0.0) · [appendix doc](./docs/releases/v1.0.0-mac-community-appendix.md)
-
-**First launch (Gatekeeper):** the build is not Apple-signed. After copying to `/Applications`, run `xattr -cr /Applications/Ackem.app`, then **right-click → Open** once. In-app auto-update is **Windows-only**.
-
 ---
 
 ## Developers
 
-> Ackem is an **Electron app**. The renderer depends on `window.ackem` (preload IPC).  
+> Britney is an **Electron app**. The renderer depends on `window.britney` (preload IPC).  
 > Use **`npm run dev`** — do not open the Vite URL in a browser alone.
 
 ### Prerequisites
@@ -169,12 +156,12 @@ Details: [docs/distribution-windows.md](./docs/distribution-windows.md)
 ### Daily development
 
 ```bash
-cd Ackem-v0.0.0
+cd Britney-v0.0.0
 npm install
 npm run dev
 ```
 
-Dev `data/` is in the repo working tree, separate from green release `data/` next to `Ackem.exe`.
+Dev `data/` is in the repo working tree, separate from green release `data/` next to `Britney.exe`.
 
 ### Build & package
 
@@ -206,7 +193,7 @@ npm run test:renderer
 | ⑥ | Extension | Skill/Plugin/Dispatch/OpenForU | [05-extension-system.md](./docs/developer/architecture/05-extension-system.md) |
 | ⑦ | Time | Temporal awareness, circadian rhythm, reunion, reflection | [06-time-system.md](./docs/developer/architecture/06-time-system.md) |
 | — | Data Layer | SQLite schema, Repository pattern, migrations | [07-data-layer.md](./docs/developer/architecture/07-data-layer.md) |
-| — | IPC API | `window.ackem.*` preload bridge, push events | [08-ipc-api.md](./docs/developer/architecture/08-ipc-api.md) |
+| — | IPC API | `window.britney.*` preload bridge, push events | [08-ipc-api.md](./docs/developer/architecture/08-ipc-api.md) |
 
 Index: [docs/developer/architecture/README.md](./docs/developer/architecture/README.md)
 
@@ -259,8 +246,6 @@ For commercial use, contact: **jasonliu_lyf_2005@qq.com**
 ### Contributor Agreement
 
 By submitting a contribution to this project, you agree to the [Contributor License Agreement (CLA)](./CLA.md).
-
-Recognized contributors: [CONTRIBUTORS.md](./CONTRIBUTORS.md)
 
 Copyright (C) 2026 Jason Liu (JasonLiu0826)
 

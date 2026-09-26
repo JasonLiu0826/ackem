@@ -23,7 +23,7 @@ export function CompactView(): JSX.Element {
   const [idleRest, setIdleRest] = useState(false)
 
   const refreshEmotion = useCallback(() => {
-    void window.ackem
+    void window.britney
       .getState()
       .then((raw) => {
         const s = raw as {
@@ -43,7 +43,7 @@ export function CompactView(): JSX.Element {
   }, [refreshEmotion])
 
   useEffect(() => {
-    window.ackem.ui.onChatBubble((p) => {
+    window.britney.ui.onChatBubble((p) => {
       if (!p.text?.trim()) return
       const id = Date.now()
       setBubble({ text: p.text, id })
@@ -53,7 +53,7 @@ export function CompactView(): JSX.Element {
 
   useEffect(() => {
     const checkIdle = () => {
-      void window.ackem.companionPresence().then((p) => {
+      void window.britney.companionPresence().then((p) => {
         setIdleRest(p.idleDurationMs > 30 * 60 * 1000)
       })
     }
@@ -88,11 +88,11 @@ export function CompactView(): JSX.Element {
     if (!t) return
     setInput('')
     void send(t)
-    void window.ackem.companionTouch()
+    void window.britney.companionTouch()
   }
 
   const openMain = (tab?: Tab) => {
-    void window.ackem.ui.expandToMain(tab ? { tab } : undefined)
+    void window.britney.ui.expandToMain(tab ? { tab } : undefined)
   }
 
   return (

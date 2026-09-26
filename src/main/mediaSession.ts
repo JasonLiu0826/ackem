@@ -38,12 +38,12 @@ try {
 
 export async function readMediaSession(): Promise<MediaSessionInfo> {
   if (process.platform !== 'win32') return EMPTY
-  if (process.env.ACKEM_MEDIA_TITLE) {
+  if (process.env.BRITNEY_MEDIA_TITLE) {
     return {
-      title: process.env.ACKEM_MEDIA_TITLE,
-      artist: process.env.ACKEM_MEDIA_ARTIST ?? '',
+      title: process.env.BRITNEY_MEDIA_TITLE,
+      artist: process.env.BRITNEY_MEDIA_ARTIST ?? '',
       album: '',
-      isPlaying: process.env.ACKEM_MEDIA_PLAYING === '1'
+      isPlaying: process.env.BRITNEY_MEDIA_PLAYING === '1'
     }
   }
   try {

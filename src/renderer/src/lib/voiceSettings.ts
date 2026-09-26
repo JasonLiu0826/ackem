@@ -14,7 +14,7 @@ export type VoiceSettingsState = {
   inputChannel: 'dual' | 'voice-only' | 'text-only'
 }
 
-export const VOICE_SETTINGS_STORAGE_KEY = 'ackem-voice-settings'
+export const VOICE_SETTINGS_STORAGE_KEY = 'britney-voice-settings'
 
 /** Reserved for future release — mirrors voiceRuntimeConfig.GPT_SOVITS_VOICE_ENABLED */
 export const GPT_SOVITS_VOICE_ENABLED = false
@@ -66,7 +66,7 @@ export async function syncVoiceSettingsToMain(
   settings: VoiceSettingsState,
   personalityPresetId?: string
 ): Promise<void> {
-  await window.ackem.voice?.applySettings?.({
+  await window.britney.voice?.applySettings?.({
     enabled: settings.enabled,
     ttsEnabled: TTS_BROADCAST_ENABLED ? settings.ttsEnabled : false,
     asrModel: settings.asrModel,

@@ -46,8 +46,8 @@ export const zhResources: Record<string, string> = {
   'timeDepth.overYears': '已经{n}年多了',
 
   // ═══ 特殊日期标题 ═══
-  'specialDate.ackemBirthday.1': 'Ackem 一岁生日',
-  'specialDate.ackemBirthday.n': 'Ackem {n}岁生日',
+  'specialDate.britneyBirthday.1': 'Britney 一岁生日',
+  'specialDate.britneyBirthday.n': 'Britney {n}岁生日',
   'specialDate.firstAnniversary.1': '我们相遇一周年',
   'specialDate.firstAnniversary.n': '我们相遇{n}周年',
   'specialDate.birthday': '{name}的生日',
@@ -56,7 +56,7 @@ export const zhResources: Record<string, string> = {
   'specialDate.recurring': '记忆中的这一天',
 
   // ═══ 特殊日期叙事 ═══
-  'specialDate.ackemBirthdayNarrative': '今天是 Ackem 的生日。可以把今天当作值得轻轻庆祝的日子；把正在对话的你放在中心——可以自然聊你、聊今天，但除非用户先问出身/创造者/Jason，否则不要主动提 Jason 或创造者叙事。',
+  'specialDate.britneyBirthdayNarrative': '今天是 Britney 的生日。可以把今天当作值得轻轻庆祝的日子；把正在对话的你放在中心——可以自然聊你、聊今天，但除非用户先问出身/创造者/Jason，否则不要主动提 Jason 或创造者叙事。',
   'specialDate.firstMetNarrative': '今天是你和ta认识{label}的日子。',
   'specialDate.birthdayNarrative': '今天是{name}的生日。',
   'specialDate.holidayNarrative': '今天是{name}。',
@@ -266,7 +266,7 @@ export const zhResources: Record<string, string> = {
   'settings.mobile.weixin': '微信',
   'settings.mobile.qq': 'QQ',
   'settings.mobile.telegram': 'Telegram',
-  'settings.mobile.weixinDesc': '在手机微信里和她聊天；大脑仍运行在本机 Ackem。',
+  'settings.mobile.weixinDesc': '在手机微信里和她聊天；大脑仍运行在本机 Britney。',
   'settings.mobile.weixin.statusTitle': '连接状态',
   'settings.mobile.weixin.connected': '已连接',
   'settings.mobile.weixin.disconnected': '未连接',
@@ -275,25 +275,25 @@ export const zhResources: Record<string, string> = {
   'settings.mobile.weixin.enableHint': '关闭后不再接收手机消息，但保留登录信息。',
   'settings.mobile.weixin.proactiveEnabled': '微信主动消息',
   'settings.mobile.weixin.proactiveHint':
-    '桌面与微信均 3 小时无互动、Ackem 在跑且非 22:00–8:00 时，她会像真人一样主动发微信。关闭则只回复、不主动。',
+    '桌面与微信均 3 小时无互动、Britney 在跑且非 22:00–8:00 时，她会像真人一样主动发微信。关闭则只回复、不主动。',
   'settings.mobile.weixin.polling': '正在监听手机消息…',
-  'settings.mobile.weixin.notPolling': '未在监听：请确认 Ackem 未退出，并点击下方「重新连接监听」。',
+  'settings.mobile.weixin.notPolling': '未在监听：请确认 Britney 未退出，并点击下方「重新连接监听」。',
   'settings.mobile.weixin.channelOff': '微信通道已关闭：打开上方开关后才会回复手机消息。',
   'settings.mobile.weixin.restartListen': '重新连接监听',
   'settings.mobile.weixin.embeddingWait': '记忆引擎仍在预热，预热完成前可能无法回复。',
   'settings.mobile.weixin.accountLabel': 'Bot ID',
   'settings.mobile.weixin.guideTitle': '傻瓜式连接教程',
   'settings.mobile.weixin.guideHint': '按顺序完成以下步骤即可。',
-  'settings.mobile.weixin.step1': '确认 Ackem 已配置好对话模型（设置 → 模型与 API），并已确认年龄合规。',
+  'settings.mobile.weixin.step1': '确认 Britney 已配置好对话模型（设置 → 模型与 API），并已确认年龄合规。',
   'settings.mobile.weixin.step2': '等待主界面记忆引擎预热完成（输入框上方无琥珀色「正在预热」提示）。',
   'settings.mobile.weixin.step3': '点击下方「开始连接微信」，用微信扫描出现的二维码并确认绑定。',
   'settings.mobile.weixin.step4': '若手机提示输入数字验证码，在本页输入后提交。',
   'settings.mobile.weixin.step5': '连接成功后，打开「启用微信通道」，在手机微信里给她发文字消息测试。',
-  'settings.mobile.weixin.step6': '保持 Ackem 在后台运行（可最小化到托盘，不要完全退出）。',
+  'settings.mobile.weixin.step6': '保持 Britney 在后台运行（可最小化到托盘，不要完全退出）。',
   'settings.mobile.weixin.keepAwakeTitle': '重要：电脑必须保持可用',
-  'settings.mobile.weixin.keepAwake1': 'Ackem 关闭或电脑休眠/关机时，手机微信无法收到回复。',
+  'settings.mobile.weixin.keepAwake1': 'Britney 关闭或电脑休眠/关机时，手机微信无法收到回复。',
   'settings.mobile.weixin.keepAwake2': '建议：Windows 电源设置 → 接通电源时「睡眠」设为「从不」；合盖时「不采取任何操作」（笔记本）。',
-  'settings.mobile.weixin.keepAwake3': '可最小化 Ackem 到系统托盘，让主进程继续监听消息。',
+  'settings.mobile.weixin.keepAwake3': '可最小化 Britney 到系统托盘，让主进程继续监听消息。',
   'settings.mobile.weixin.keepAwake4': '消息经微信服务器中转；需保持本机联网。',
   'settings.mobile.weixin.connectTitle': '扫码连接',
   'settings.mobile.weixin.startConnect': '开始连接微信',
@@ -390,14 +390,14 @@ export const zhResources: Record<string, string> = {
   'settings.localChatProbeFail': '连接失败：{{error}}',
   'settings.openforuModelHint': '与聊天隔离；未配置时 Plan 与工作区不可用。',
   'settings.embeddingModel': '记忆检索模型',
-  'settings.embeddingModelHint': 'Ackem 预装中文 bge-small-zh 与英文 bge-small-en，首次启动自动解压。用于记忆语义检索；搜索不准时可在设置中切换模型。',
+  'settings.embeddingModelHint': 'Britney 预装中文 bge-small-zh 与英文 bge-small-en，首次启动自动解压。用于记忆语义检索；搜索不准时可在设置中切换模型。',
   'settings.configured': '已配置',
   'settings.notConfigured': '未配置',
   'settings.temperature': '温度（0–2）',
   'settings.dataAndMemory': '数据与记忆',
   'settings.dataAndMemoryDesc': '数据目录、记忆预算与维护操作。',
   'settings.dataDir': '数据目录',
-  'settings.dataDirHint': 'Ackem 的记忆、日记与索引等本地数据存放于此。',
+  'settings.dataDirHint': 'Britney 的记忆、日记与索引等本地数据存放于此。',
   'settings.dataDirAbsolute': '绝对路径',
   'settings.dataDirRelative': '相对路径',
   'settings.portable': '便携目录',
@@ -437,19 +437,19 @@ export const zhResources: Record<string, string> = {
   'settings.safety': '安全与合规',
   'settings.safetyDesc': '年龄确认与成人内容模式。',
   'settings.ossNotice': '开源协议须知',
-  'settings.ossNoticeDesc': 'Ackem 开源许可与用户须知。',
+  'settings.ossNoticeDesc': 'Britney 开源许可与用户须知。',
   'settings.ossNoticeBodyTitle': '协议正文',
-  'settings.ossNoticePlaceholder': `Ackem v1.0.0 · 2026-06-28
+  'settings.ossNoticePlaceholder': `Britney v1.0.0 · 2026-06-28
 
 【开源许可】
-Ackem 以 GNU Affero GPL v3（AGPL-3.0）发布。版权 © 2026 Jason Liu（JasonLiu0826）。
+Britney 以 GNU Affero GPL v3（AGPL-3.0）发布。版权 © 2026 Jason Liu（JasonLiu0826）。
 修改与分发须同协议开源；若通过网络提供基于本软件的服务（含 SaaS），须向用户提供完整源代码。
-完整协议：https://github.com/JasonLiu0826/Ackem/blob/main/LICENSE
+完整协议：https://github.com/JasonLiu0826/Britney/blob/main/LICENSE
 
 【允许的使用】
 · 个人学习、研究与非商业自用
 · Fork 或集成到其他项目，且衍生作品同样以 AGPL-3.0 开源
-· 学术论文、教学与公开演示（注明 Ackem 与许可证）
+· 学术论文、教学与公开演示（注明 Britney 与许可证）
 
 【商业授权】
 闭源商业产品、SaaS 不向用户提供源码、企业私有部署不开源等场景，须单独商业授权。
@@ -461,12 +461,12 @@ Ackem 以 GNU Affero GPL v3（AGPL-3.0）发布。版权 © 2026 Jason Liu（Jas
 
 【贡献者】
 提交 Pull Request 即表示同意 CLA v1.1。
-https://github.com/JasonLiu0826/Ackem/blob/main/CLA.md
+https://github.com/JasonLiu0826/Britney/blob/main/CLA.md
 
 【隐私与用户数据】
 对话、记忆、情绪状态与导入文件均保存在本机；默认不上传对话内容。
-便携版：.\\data\\  ·  用户目录：%LOCALAPPDATA%\\Ackem\\
-备份请拷贝整棵 data 目录（含 ackem.db）。
+便携版：.\\data\\  ·  用户目录：%LOCALAPPDATA%\\Britney\\
+备份请拷贝整棵 data 目录（含 britney.db）。
 
 【官方发行包不含】
 用户 data/、API Key、.env 或开发者密钥；凭证需在设置中自行填写。`,
@@ -488,19 +488,19 @@ https://github.com/JasonLiu0826/Ackem/blob/main/CLA.md
   'settings.more': '更多',
   'settings.moreDesc': '快捷入口、应用信息与隐私说明。',
   'settings.uninstall': '卸载',
-  'settings.uninstallDesc': '退出 Ackem 并移除快捷方式；可选删除本地数据或程序文件。',
-  'settings.uninstallBodyTitle': '卸载 Ackem',
-  'settings.uninstallBodyHint': '会先关闭语音服务等后台进程，再执行卸载。也可在程序目录运行 Uninstall Ackem.bat。',
+  'settings.uninstallDesc': '退出 Britney 并移除快捷方式；可选删除本地数据或程序文件。',
+  'settings.uninstallBodyTitle': '卸载 Britney',
+  'settings.uninstallBodyHint': '会先关闭语音服务等后台进程，再执行卸载。也可在程序目录运行 Uninstall Britney.bat。',
   'settings.uninstallDeleteData': '同时删除本地数据（对话、记忆、模型缓存）',
   'settings.uninstallRemoveApp': '同时删除程序文件（便携版）',
-  'settings.uninstallAction': '卸载 Ackem',
+  'settings.uninstallAction': '卸载 Britney',
   'settings.uninstallBusy': '正在卸载…',
-  'settings.uninstallTitle': '确认卸载 Ackem？',
+  'settings.uninstallTitle': '确认卸载 Britney？',
   'settings.uninstallConfirm': '确认卸载',
-  'settings.uninstallDialogDesc': 'Ackem 将退出并关闭所有后台服务。此操作不可撤销。',
+  'settings.uninstallDialogDesc': 'Britney 将退出并关闭所有后台服务。此操作不可撤销。',
   'settings.uninstallDialogData': '将删除数据目录：{path}',
   'settings.uninstallDialogApp': '将尝试删除程序安装目录。',
-  'settings.uninstallStarted': '卸载程序已启动，Ackem 即将退出',
+  'settings.uninstallStarted': '卸载程序已启动，Britney 即将退出',
   'settings.uninstallFailed': '卸载失败',
   'settings.quickLinks': '快捷入口',
   'settings.quickLinksHint': '跳转到其他功能页，无需记侧边栏位置。',
@@ -512,7 +512,7 @@ https://github.com/JasonLiu0826/Ackem/blob/main/CLA.md
   'settings.memoryBankHint': '浏览 facts、事件与记忆树',
   'settings.debugPanel': '调试面板',
   'settings.debugPanelHint': '查看引擎 trace 与运行日志',
-  'settings.about': '关于 Ackem',
+  'settings.about': '关于 Britney',
   'settings.version': '版本',
   'settings.versionValue': '1.0.0（开源本地版）',
   'settings.versionSuffix': '（开源本地版）',
@@ -537,7 +537,7 @@ https://github.com/JasonLiu0826/Ackem/blob/main/CLA.md
   'settings.updateStarting': '正在启动更新器…',
   'settings.updateDevOnly': '开发模式（npm run dev）无法应用内更新；请使用绿色发行版。',
   'settings.updateConfirmTitle': '确认更新',
-  'settings.updateConfirmBody': 'Ackem 将退出并打开更新终端窗口。将下载完整安装包并替换程序文件；记忆与 API 设置不会删除。',
+  'settings.updateConfirmBody': 'Britney 将退出并打开更新终端窗口。将下载完整安装包并替换程序文件；记忆与 API 设置不会删除。',
   'settings.updateConfirmYes': '继续更新',
   'settings.updateConfirmNo': '取消',
   'settings.updateErrorNotPackaged': '仅绿色发行版支持应用内更新。',
@@ -553,7 +553,7 @@ https://github.com/JasonLiu0826/Ackem/blob/main/CLA.md
   'settings.canonCreator': '创造者',
   'settings.canonCreatorValue': 'Jason（GitHub JasonLiu0826，全球唯一）',
   'settings.creatorMemoryTitle': '创造者记忆（Canon-M）',
-  'settings.creatorMemoryHint': 'Ackem 关于创造者 Jason 的 Canon 种子记忆（中性、不衰减）。只读；按语境轮播注入，不会写入用户 Tier B。',
+  'settings.creatorMemoryHint': 'Britney 关于创造者 Jason 的 Canon 种子记忆（中性、不衰减）。只读；按语境轮播注入，不会写入用户 Tier B。',
   'settings.creatorMemoryReadOnly': '只读',
   'settings.creatorMemoryEmpty': '尚未 seed creator-memory.json',
   'settings.creatorMemoryCategory.identity': '身份',
@@ -602,7 +602,7 @@ https://github.com/JasonLiu0826/Ackem/blob/main/CLA.md
   'common.experimental': '实验性',
 
   'nav.collapsePet': '折叠到桌宠',
-  'nav.brand': 'Ackem',
+  'nav.brand': 'Britney',
   'nav.memory.archive': '档案',
   'nav.memory.search': '搜索',
   'nav.memory.timeline': '数据',
@@ -619,7 +619,7 @@ https://github.com/JasonLiu0826/Ackem/blob/main/CLA.md
   'boot.starting': '正在启动',
   'boot.noPreloadTitle': '无法连接主进程',
   'boot.noPreloadBody':
-    '未检测到 window.ackem。若在浏览器打开 http://localhost:5173 会出现此情况，请关闭浏览器并用 npm run dev / 一键启动.bat 启动 Electron；若在 Electron 内仍如此，请检查 preload 是否报错。',
+    '未检测到 window.britney。若在浏览器打开 http://localhost:5173 会出现此情况，请关闭浏览器并用 npm run dev / 一键启动.bat 启动 Electron；若在 Electron 内仍如此，请检查 preload 是否报错。',
 
   // ═══ 聊天页 ═══
   'chat.docOnly': '（本消息仅附加文档，无额外文字）',

@@ -60,7 +60,7 @@ const PARSE_FAIL_RELATIONAL_RE = /(?:陪(?:我|你)|孤独|寂寞|脱单|恋爱|
 
 function isCapabilityMetaQuery(message: string): boolean {
   return (
-    /(?:Ackem|你|这边|系统).{0,12}(?:能不能|可不可以|有没有|支持)/u.test(message) &&
+    /(?:Britney|你|这边|系统).{0,12}(?:能不能|可不可以|有没有|支持)/u.test(message) &&
     !/(?:要是|烦|麻烦|忘|自动|缺|折腾)/u.test(message)
   )
 }
@@ -97,7 +97,7 @@ export function shouldRunCapabilityProbe(
 
 export function buildCapabilityProbePrompt(userMessage: string, recentContext: string): string {
   return [
-    '你是 Ackem 的 capability probe（类似 Jarvis 评估用户是否缺一个「可部署、可重复调用」的自动化能力）。',
+    '你是 Britney 的 capability probe（类似 Jarvis 评估用户是否缺一个「可部署、可重复调用」的自动化能力）。',
     'Companion 本体已负责：对话、情感陪伴、记忆、一次性知识整理纸面卡、调度已有 Skill。',
     '只有「反复出现、可用代码/规则/触发器封装」的缺口，才建议进入 Plan 开发新 Skill/插件。',
     '只返回 JSON，不要 markdown。',

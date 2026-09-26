@@ -4,7 +4,7 @@ import {
   CONTRADICTION_MIN_WEIGHT,
   CONTRADICTION_SIMILARITY_THRESHOLD,
   PERIODIC_CONTRADICTION_SAMPLE_PAIRS,
-} from '../engine/ackemParams'
+} from '../engine/britneyParams'
 import type { MemoryFact } from '../engine/types'
 import type { FactStore } from './factStore'
 

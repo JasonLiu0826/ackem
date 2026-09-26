@@ -33,7 +33,7 @@ import {
   ACTIVE_RECALL_MIN_STAGE,
   ACTIVE_RECALL_MIN_INTERVAL,
   WORKING_MEMORY_CHAR_BUDGET
-} from './ackemParams'
+} from './britneyParams'
 import { logTurn } from './tracer'
 import { updateUserProfile, archetypeToResponseHint } from './user-profiler'
 import { sixDimensionsToHint, mapToLegacyUserProfile } from './user-dimension-inferrer'
@@ -67,14 +67,14 @@ import { userAsksLocalClock } from '../context/localTime'
 import { computeWeekdayMoodBias, computeSpecialDateMoodBias } from '../memory/temporalContextModulator'
 import { detectFastSpecialDateType } from './temporalAwareness/fastSpecialDateCheck'
 import {
-  ACKEM_CANON,
-  buildAckemCanonBlock,
+  BRITNEY_CANON,
+  buildBritneyCanonBlock,
   buildMandatoryCanonSpecialDateBlock,
   buildStrangerGuardBlock,
   CANON_MANDATORY_ANNIVERSARY_MARKER,
   CANON_MANDATORY_TEMPORAL_MARKER,
   shouldInjectStrangerGuard,
-} from '../canon/ackemCanon'
+} from '../canon/britneyCanon'
 import {
   buildCreatorMemoryBlock,
   loadCreatorMemoryStore,
@@ -522,11 +522,11 @@ export async function runPreLlmTurn(args: {
   // 特殊日期（生日/周年/节日）会覆盖周日曲线——生日当天不该有 Sunday blues
   const todayForBias = new Date()
   const firstMetStrEarly = prev.firstMetDate ?? null
-  const ackemBirthday = ACKEM_CANON.birthDate
+  const britneyBirthday = BRITNEY_CANON.birthDate
   const hasFastSpecialDate = detectFastSpecialDateType({
     today: todayForBias,
     firstMetDate: firstMetStrEarly,
-    ackemBirthday,
+    britneyBirthday,
     factStore,
   })
   const moodBias = hasFastSpecialDate
@@ -710,7 +710,7 @@ export async function runPreLlmTurn(args: {
 
   const emergencePersist = prev.emergencePersistence ?? { active: null, history: [] }
 
-  let desireResult: { stack: import('./desire').DesireStack; hints: string[] }
+  let desireResult: { stack: import('./types').DesireStack; hints: string[] }
   let activeEmergence: EmergenceState | null
 
   if (ultralite) {
@@ -846,7 +846,7 @@ export async function runPreLlmTurn(args: {
     specialDates = detectSpecialDates({
       today,
       firstMetDate: firstMetStr,
-      ackemBirthday,
+      britneyBirthday,
       birthdays,
       temporalAnchors: anchorRows,
     })
@@ -891,7 +891,7 @@ export async function runPreLlmTurn(args: {
       `本条【心理状态】只调节强弱、亲密度与话量，不得把你写成与预设无关的温柔客服或理性百科腔。`
   }
 
-  psycheBlock += `\n\n${buildAckemCanonBlock({
+  psycheBlock += `\n\n${buildBritneyCanonBlock({
     gender: preset?.gender ?? 'female',
     relationshipStage: l1Next.stage,
   })}`
@@ -1186,7 +1186,7 @@ export async function runPreLlmTurn(args: {
     let topicInjection = topicInjectionRaw
     selectedTopicFinal = selectedTopic
     const hasNonMandatorySpecialDate = specialDates.some(
-      (d) => d.type !== 'ackem_birthday' && d.type !== 'first_met_anniversary'
+      (d) => d.type !== 'britney_birthday' && d.type !== 'first_met_anniversary'
     )
     if (
       mandatoryCanonTemporal &&
@@ -1257,7 +1257,7 @@ export async function runPreLlmTurn(args: {
       psycheBlock += `\n\n【时间语义】用户消息带有「${msgTemporalSemanticSignal.label}」类时间指向，优先回忆该时段相关的共同经历；找不到合适记忆时诚实说记不清，不要编造。`
     }
 
-    // Canon-M + OEG：语义判定在聊 Ackem 创造者时，按深度限制注入父亲记忆
+    // Canon-M + OEG：语义判定在聊 Britney 创造者时，按深度限制注入父亲记忆
     if (queryEmbed?.length && dataRoot && embeddingProvider?.ready()) {
       try {
         const originPolicy = resolveOriginInjectionPolicy(
@@ -1319,7 +1319,7 @@ export async function runPreLlmTurn(args: {
     if (recentEmbedHistory.length > MAX_EMBED_HISTORY) recentEmbedHistory.shift()
   }
 
-  if (recentUserMessages.length >= 3 && fatherRefSignal?.kind !== 'ackem_creator') {
+  if (recentUserMessages.length >= 3 && fatherRefSignal?.kind !== 'britney_creator') {
     const prevTrust = prev.relationship.trust
     userProfile = updateUserProfile(
       [...recentUserMessages, msg],

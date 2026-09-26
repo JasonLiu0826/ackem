@@ -42,7 +42,7 @@ export function createPetWindow(): BrowserWindow {
     alwaysOnTop: petAlwaysOnTop,
     skipTaskbar: false,
     show: false,
-    title: 'Ackem',
+    title: 'Britney',
     icon: icon.isEmpty() ? undefined : icon,
     webPreferences: {
       preload: resolvePreloadPath('index.cjs'),

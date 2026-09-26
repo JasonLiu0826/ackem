@@ -51,7 +51,7 @@ export function buildPlanSessionGrounding(input: PlanGroundingInput): string {
     '- 若 agentPipelinePhase=done：禁止说部署进行中',
     '- 禁止声称已生成代码/已部署（除非快照显示 deployedExtensionId）',
     '- Surface 能力不得超出下方 Widget Catalog；未实装功能写入 openQuestions',
-    '- **不要**在正文写「下一步操作指引」（由 Ackem UI 侧栏展示）',
+    '- **不要**在正文写「下一步操作指引」（由 Britney UI 侧栏展示）',
     '',
     formatWidgetCatalogForPrompt()
   )

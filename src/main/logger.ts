@@ -27,7 +27,7 @@ function timestamp(): string {
 function logFilePath(): string {
   const d = new Date()
   const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-  return join(logDir, `ackem-${date}.log`)
+  return join(logDir, `britney-${date}.log`)
 }
 
 function writeFile(line: string): void {

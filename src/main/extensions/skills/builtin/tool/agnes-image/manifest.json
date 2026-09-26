@@ -1,0 +1,39 @@
+﻿{
+  "$schema": "https://Ackem.gitbook.io/Ackem/schemas/skill-manifest",
+  "id": "Ackem/agnes-image@1.0.0",
+  "name": "Agnes AI 鐢熷浘",
+  "version": "1.0.0",
+  "category": "skill",
+  "skillType": "tool",
+  "description": "浣跨敤 Agnes AI 鐢熸垚鍥剧墖銆傛敮鎸佹枃瀛楁弿杩扮敓鎴愬浘鐗囷紝鐢ㄤ簬鑱婂ぉ閰嶅浘銆佸垱鎰忚〃杈剧瓑銆?,
+  "triggers": ["llm_function_call"],
+  "permissions": [],
+  "timeoutMs": 60000,
+  "adultModeSafe": true,
+  "functionDef": {
+    "name": "agnes_image",
+    "description": "浣跨敤 Agnes AI 鐢熸垚鍥剧墖銆傝緭鍏ヤ竴娈垫弿杩帮紝杩斿洖鐢熸垚鐨勫浘鐗囥€傛敮鎸佷腑鑻辨枃鎻忚堪锛屽彲浠ョ敓鎴愬悇绉嶉鏍肩殑鍥剧墖銆?,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "prompt": {
+          "type": "string",
+          "description": "鍥剧墖鎻忚堪銆傚彲浠ユ槸涓枃鎴栬嫳鏂囷紝鎻忚堪瓒婅缁嗘晥鏋滆秺濂姐€備緥濡傦細'涓€涓コ瀛╁湪妯辫姳鏍戜笅鐪嬩功锛屾棩绯诲姩婕鏍? 鎴?'A serene mountain landscape at sunset, oil painting style'"
+        },
+        "size": {
+          "type": "string",
+          "description": "鍥剧墖灏哄銆傚彲閫夛細'1024x1024'(榛樿), '1024x1792'(绔栫増), '1792x1024'(妯増)",
+          "enum": ["1024x1024", "1024x1792", "1792x1024"]
+        }
+      },
+      "required": ["prompt"]
+    }
+  },
+  "metadata": {
+    "Ackem": {
+      "contact": "https://github.com/Ackem",
+      "filename": "agnes-image",
+      "license": "MIT"
+    }
+  }
+}

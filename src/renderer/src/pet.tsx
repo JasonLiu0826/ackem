@@ -16,13 +16,13 @@ function PetRoot(): JSX.Element {
   useEffect(() => {
     void (async () => {
       try {
-        if (typeof window.ackem === 'undefined') {
+        if (typeof window.britney === 'undefined') {
           setErr('未检测到主进程桥接')
           return
         }
-        const s = await window.ackem.getSettings()
+        const s = await window.britney.getSettings()
         setSettings(s)
-        const h = await window.ackem.loadChatHistory()
+        const h = await window.britney.loadChatHistory()
         if (h?.length) {
           const rows = h.map(normalizeChatRow).filter((r): r is ChatRow => r != null)
           if (rows.length) useAppStore.getState().setChatRows(rows)

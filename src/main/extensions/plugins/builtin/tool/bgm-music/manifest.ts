@@ -2,7 +2,7 @@
 import type { PluginManifest } from '../../../types'
 
 export const MANIFEST: PluginManifest = {
-  "id": "ackem/bgm-music@0.0.1",
+  "id": "britney/bgm-music@0.0.1",
   "name": "BGM 轻音乐",
   "version": "0.0.1",
   "category": "plugin",
@@ -24,5 +24,5 @@ export const MANIFEST: PluginManifest = {
     "p-12"
   ]
 } as PluginManifest
-export const PLUGIN_ID = 'ackem/bgm-music@0.0.1'
+export const PLUGIN_ID = 'britney/bgm-music@0.0.1'
 export const SPEC_ID = 'P-12'

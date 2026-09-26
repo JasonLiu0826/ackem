@@ -94,8 +94,8 @@ export function SettingsPage(): JSX.Element {
   }, [])
 
   useEffect(() => {
-    void window.ackem.getCanon().then((c) => setCanonInfo({ birthDate: c.birthDate }))
-    void window.ackem.getAppVersion().then(setAppVersion)
+    void window.britney.getCanon().then((c) => setCanonInfo({ birthDate: c.birthDate }))
+    void window.britney.getAppVersion().then(setAppVersion)
   }, [])
 
   /** 磁盘已持久化 → 同步全局 store + 本地 form（勿用 settings 变化盲目覆盖 form） */
@@ -112,7 +112,7 @@ export function SettingsPage(): JSX.Element {
     async (patch: Partial<AppSettings>, toast?: string) => {
       if (!form) return
       const merged = mergeSettingsDraft(form, patch)
-      const next = await window.ackem.setSettings(merged)
+      const next = await window.britney.setSettings(merged)
       applyPersisted(next)
       if (toast) pushToast(toast)
       return next
@@ -121,14 +121,14 @@ export function SettingsPage(): JSX.Element {
   )
 
   useEffect(() => {
-    void window.ackem.getSettings().then((s) => {
+    void window.britney.getSettings().then((s) => {
       applyPersisted(s)
     })
   }, [applyPersisted])
 
   useEffect(() => {
     if (!form) return
-    void window.ackem.personalityList(form.companionGender).then((list) => {
+    void window.britney.personalityList(form.companionGender).then((list) => {
       setPresets(
         list.map((p) => ({
           id: p.id,
@@ -141,7 +141,7 @@ export function SettingsPage(): JSX.Element {
 
   useEffect(() => {
     void (async () => {
-      const r = await window.ackem.getDataRoot()
+      const r = await window.britney.getDataRoot()
       setRootInfo(r)
     })()
   }, [settings?.dataRootMode])
@@ -150,7 +150,7 @@ export function SettingsPage(): JSX.Element {
 
   useEffect(() => {
     if (activeId !== 'settings-uninstall') return
-    void window.ackem.uninstallInfo().then(setUninstallInfo)
+    void window.britney.uninstallInfo().then(setUninstallInfo)
   }, [activeId])
   const settingsDeepLink = useAppStore((s) => s.settingsDeepLink)
   const clearSettingsDeepLink = useAppStore((s) => s.clearSettingsDeepLink)
@@ -182,7 +182,7 @@ export function SettingsPage(): JSX.Element {
     label: string
     requiresAdult18?: boolean
   }) => {
-    const saved = await window.ackem.personalitySet(p.id)
+    const saved = await window.britney.personalitySet(p.id)
     setSettings(saved)
     setForm((f) =>
       f
@@ -215,7 +215,7 @@ export function SettingsPage(): JSX.Element {
         form.personalityPresetId &&
         form.personalityPresetId !== p.id
       ) {
-        const st = (await window.ackem.getState()) as { counters?: { totalTurns?: number } }
+        const st = (await window.britney.getState()) as { counters?: { totalTurns?: number } }
         if ((st?.counters?.totalTurns ?? 0) > 0) {
           pendingPersonality.current = p
           setShowPersonalityConfirm(true)
@@ -243,13 +243,13 @@ export function SettingsPage(): JSX.Element {
       return
     }
     const prev = settings ?? form
-    const next = await window.ackem.setSettings(prepareSettingsForSave(form))
+    const next = await window.britney.setSettings(prepareSettingsForSave(form))
     applyPersisted(next)
-    await window.ackem.ensureLayout()
+    await window.britney.ensureLayout()
     if (!onlyDesktopAgentSettingsChanged(prev, next)) {
-      await window.ackem.rebuildIndex()
+      await window.britney.rebuildIndex()
     }
-    setRootInfo(await window.ackem.getDataRoot())
+    setRootInfo(await window.britney.getDataRoot())
     pushToast(t('settings.saved'))
   }
 
@@ -264,10 +264,10 @@ export function SettingsPage(): JSX.Element {
     setShowArchiveConfirm(false)
     setArchiveBusy(true)
     try {
-      await window.ackem.memoryClearAll()
+      await window.britney.memoryClearAll()
       resetChat()
-      await window.ackem.saveChatHistory([])
-      await window.ackem.rebuildIndex()
+      await window.britney.saveChatHistory([])
+      await window.britney.rebuildIndex()
       setTab('chat')
       requestChatInputFocus()
       pushToast(t('settings.archived'))
@@ -337,12 +337,12 @@ export function SettingsPage(): JSX.Element {
                 actionLabel={t("settings.toggle")}
                 onAction={async () => {
                   try {
-                    const level = await window.ackem.ui.getLevel()
+                    const level = await window.britney.ui.getLevel()
                     if (level.petVisible) {
-                      await window.ackem.ui.hidePet()
+                      await window.britney.ui.hidePet()
                       pushToast(t('settings.petHidden'))
                     } else {
-                      await window.ackem.ui.showPet()
+                      await window.britney.ui.showPet()
                       pushToast(t('settings.petShown'))
                     }
                   } catch {
@@ -356,7 +356,7 @@ export function SettingsPage(): JSX.Element {
                 actionLabel={t("settings.refresh")}
                 onAction={async () => {
                   try {
-                    const s = await window.ackem.mediaStatus()
+                    const s = await window.britney.mediaStatus()
                     setMediaStatus(s.formatted || t('settings.noMedia'))
                   } catch {
                     setMediaStatus(t('settings.mediaDetectFailed'))
@@ -686,7 +686,7 @@ export function SettingsPage(): JSX.Element {
             <SettingsRow>
               <button
                 type="button"
-                onClick={() => void window.ackem.openDataFolder()}
+                onClick={() => void window.britney.openDataFolder()}
                 className="field-btn-secondary px-3 py-2 text-xs"
               >
                 {t("settings.openDataDir")}
@@ -694,7 +694,7 @@ export function SettingsPage(): JSX.Element {
               <button
                 type="button"
                 onClick={async () => {
-                  await window.ackem.rebuildIndex()
+                  await window.britney.rebuildIndex()
                   pushToast(t('settings.indexRebuilt'))
                 }}
                 className="field-btn-secondary px-3 py-2 text-xs"
@@ -737,7 +737,7 @@ export function SettingsPage(): JSX.Element {
                 setDiaryBusy(true)
                 setDiaryResult(null)
                 try {
-                  const r = await window.ackem.diaryGenerate()
+                  const r = await window.britney.diaryGenerate()
                   if (r.ok) {
                     setDiaryResult(t('settings.diaryGenerated', { path: r.path ?? '' }))
                     pushToast(t('settings.diaryGeneratedToast'))
@@ -761,7 +761,7 @@ export function SettingsPage(): JSX.Element {
                 setThoughtBusy(true)
                 setThoughtResult(null)
                 try {
-                  const r = await window.ackem.thoughtGenerate()
+                  const r = await window.britney.thoughtGenerate()
                   setThoughtResult(t('settings.thoughtGenerated', { count: r.thoughts.length }))
                   pushToast(t('settings.thoughtGeneratedToast'))
                 } catch (e) {
@@ -781,7 +781,7 @@ export function SettingsPage(): JSX.Element {
                 setConsolidateBusy(true)
                 setConsolidateResult(null)
                 try {
-                  const r = await window.ackem.memoryConsolidate()
+                  const r = await window.britney.memoryConsolidate()
                   setConsolidateResult(t('settings.consolidateResult', { count: r.added }))
                   pushToast(t('settings.consolidateToast'))
                 } catch (e) {
@@ -801,7 +801,7 @@ export function SettingsPage(): JSX.Element {
                 setMirrorBusy(true)
                 setMirrorResult(null)
                 try {
-                  const r = await window.ackem.mirrorCheck()
+                  const r = await window.britney.mirrorCheck()
                   if (r.contradictions.length === 0) {
                     setMirrorResult('{t("settings.noContradiction")}')
                   } else {
@@ -1130,7 +1130,7 @@ export function SettingsPage(): JSX.Element {
         void (async () => {
           setUninstallBusy(true)
           try {
-            await window.ackem.uninstallAckem({
+            await window.britney.uninstallBritney({
               deleteData: uninstallDeleteData,
               removeApp: uninstallRemoveApp
             })

@@ -105,7 +105,7 @@ export function registerDesktopAgentIpc(): void {
     const text = await generateDesktopAgentOpening({
       settings,
       state,
-      companionName: settings.companionName || 'Ackem'
+      companionName: settings.companionName || 'Britney'
     })
     return { ok: true, text }
   })

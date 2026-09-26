@@ -7,7 +7,7 @@ import {
   DESIRE_EXPRESSED_SETTLE_AFTER_TURNS,
   DESIRE_IDLE_SETTLE_TURNS,
   DESIRE_MAX_SLOTS
-} from './ackemParams'
+} from './britneyParams'
 import type { Desire, DesireStack, Event, L1State } from './types'
 
 const NEW_DESIRE_BASE_CHANCE = 0.08

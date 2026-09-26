@@ -3,16 +3,16 @@
 import type { WebContents } from 'electron'
 import type { AppSettings } from '../../../../settings'
 import { createLlmJsonClient } from '../../../../llmClient'
-import type { SearchCardPayload } from '../../../../shared/searchCard'
+import type { SearchCardPayload } from '../../../../../shared/searchCard'
 import { buildKnowledgeL3Directive, extractL3ExpressionContext } from './l3Context'
 import { extractOrganizeTopicFromMessage } from './intent'
 import { pluginActivityLabel } from '../../../../chatStatusLabels'
 import { recencyPromptSuffix } from './presentation/recencyContext'
 import {
-  ACKEM_PRODUCT_IDENTITY_GUARD,
-  buildAckemCompareCardBlock,
-  sanitizeAckemIdentityInMarkdown
-} from '../../../../paperCard/ackemProductIdentity'
+  BRITNEY_PRODUCT_IDENTITY_GUARD,
+  buildBritneyCompareCardBlock,
+  sanitizeBritneyIdentityInMarkdown
+} from '../../../../paperCard/britneyProductIdentity'
 import {
   buildPaperCardCompanionUserTail,
   defaultPaperCardCompanionFallback,
@@ -127,7 +127,7 @@ async function synthesizeKnowledgeCardBody(
   const l3 = extractL3ExpressionContext(systemContext)
   const cardTemp = l3 ? 0.5 : 0.42
   const cardSystem =
-    buildCardSystemPrompt(systemContext) + ACKEM_PRODUCT_IDENTITY_GUARD + buildAckemCompareCardBlock(userQuestion)
+    buildCardSystemPrompt(systemContext) + BRITNEY_PRODUCT_IDENTITY_GUARD + buildBritneyCompareCardBlock(userQuestion)
 
   const taskUser = (instructions: string) =>
     `【知识整理任务】主题：「${topic}」\n` +
@@ -212,7 +212,7 @@ export async function synthesizeKnowledgeAnswer(
     userQuestion,
     input.topic
   )
-  const sanitizedBody = sanitizeAckemIdentityInMarkdown(cardBody, userQuestion)
+  const sanitizedBody = sanitizeBritneyIdentityInMarkdown(cardBody, userQuestion)
   const displayTitle = await resolvePaperCardDisplayTitle(
     settings,
     'knowledge',

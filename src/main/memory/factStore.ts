@@ -2,7 +2,7 @@
 // 职责：facts.v2.json CRUD、检索、memoirTrust、memoryEcho
 // 输入：文件路径
 // 输出：MemoryFact 集合操作
-// 引用：./taxonomy, ../engine/types, ../engine/ackemParams
+// 引用：./taxonomy, ../engine/types, ../engine/britneyParams
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
@@ -29,7 +29,7 @@ import {
   AUTO_COMPACT_RETENTION_DAYS,
   FACTSTORE_WRITE_BUFFER_MS,
   FACT_DEDUP_WEIGHT_BOOST
-} from '../engine/ackemParams'
+} from '../engine/britneyParams'
 
 /** Embedding 去重阈值：同 domain + 同 subcategory 时，cosine > 此值视为语义重复 */
 const EMBEDDING_DEDUP_THRESHOLD = 0.85

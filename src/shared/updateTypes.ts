@@ -32,7 +32,7 @@ export type UpdateJob = {
   zipPath: string
   stagingDir: string
   extractDir: string
-  ackemExe: string
+  britneyExe: string
 }
 
 export type UpdateProgressEvent = {

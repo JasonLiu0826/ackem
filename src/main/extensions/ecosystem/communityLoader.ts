@@ -27,7 +27,7 @@ import {
 import { communityPluginsDir, communitySkillsDir } from './install'
 import { validateExtensionManifest } from './manifestValidate'
 import { isCommunityExtensionId } from './extensionId'
-import type { AckemSignatureSidecar } from './signature'
+import type { BritneySignatureSidecar } from './signature'
 import { sha256Digest, verifyFileDigests, verifySignatureSidecar } from './signature'
 import { resolvePublisherPublicKey, publisherScopeAllowed } from './trustStore'
 import { isCommunityExtensionsOpen } from '../../../shared/communityExtensionFeature'
@@ -71,14 +71,14 @@ function listBundleFiles(dirPath: string, relative = ''): Record<string, string>
 export function verifyInstalledCommunityBundle(
   dataRoot: string,
   dirPath: string
-): { ok: true; sidecar: AckemSignatureSidecar } | { ok: false; error: string } {
+): { ok: true; sidecar: BritneySignatureSidecar } | { ok: false; error: string } {
   const sidecarPath = join(dirPath, SIGNATURE_SIDECAR_FILENAME)
   if (!existsSync(sidecarPath)) {
     return { ok: false, error: `缺少签名文件 ${SIGNATURE_SIDECAR_FILENAME}` }
   }
-  let sidecar: AckemSignatureSidecar
+  let sidecar: BritneySignatureSidecar
   try {
-    sidecar = JSON.parse(readFileSync(sidecarPath, 'utf-8')) as AckemSignatureSidecar
+    sidecar = JSON.parse(readFileSync(sidecarPath, 'utf-8')) as BritneySignatureSidecar
   } catch {
     return { ok: false, error: '签名文件 JSON 无效' }
   }
@@ -320,7 +320,7 @@ export class CommunityExtensionLoader {
             ? createUpluginLifecycleHooks(manifest, meta)
             : {}
 
-      const reg = await this.pluginRegistry.registerBuiltin(manifest, hooks, granted)
+      const reg = await this.pluginRegistry.registerBuiltin(manifest, hooks, granted as any)
       if (!reg.ok) {
         instance.status = 'error'
         instance.lastError = reg.error

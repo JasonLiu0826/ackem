@@ -1,4 +1,5 @@
 import type { MemoryAuditMode } from './memoryAuditIntent'
+export type { MemoryAuditMode } from './memoryAuditIntent'
 
 export type MemoryAuditFactRow = {
   id: string

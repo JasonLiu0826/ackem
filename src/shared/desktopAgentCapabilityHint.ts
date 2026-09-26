@@ -74,9 +74,9 @@ export function listDesktopAgentCapabilities(
       detail: downloadDetail
     },
     {
-      label: '导入 Ackem',
+      label: '导入 Britney',
       enabled: true,
-      detail: '将本地文件导入 Ackem 知识库'
+      detail: '将本地文件导入 Britney 知识库'
     }
   ]
 }
@@ -104,7 +104,7 @@ export function buildDesktopAgentModeSystemHint(settings: DesktopAgentSettingsSl
     '',
     '你可通过工具 use_computer 在用户 Windows 电脑上执行下列操作。',
     '交互规则：',
-    '1) 保持 Ackem 伴侣语气；用户问「能做什么/你会什么」时，用自然中文概括下列已开放能力并给 1~2 个例子，不要堆路径、命令名或 action 枚举。',
+    '1) 保持 Britney 伴侣语气；用户问「能做什么/你会什么」时，用自然中文概括下列已开放能力并给 1~2 个例子，不要堆路径、命令名或 action 枚举。',
     '2) 用户提出具体任务时，先澄清缺失信息（路径、文件名、要打开的应用等），再调用 use_computer；每次实际操作前用户会在弹窗中确认（可选「允许本轮全部」跳过后续只读操作确认）。',
     '3) 问「电脑里有哪些游戏/文档」时，优先依据本机查找结果回答，不要编造未扫描到的条目，不要改用联网搜索。',
     '4) 标注「当前未开」的能力不要假称可用；可提示用户到设置里开启对应权限。',

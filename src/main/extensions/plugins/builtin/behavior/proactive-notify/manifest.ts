@@ -2,7 +2,7 @@
 import type { PluginManifest } from '../../../types'
 
 export const MANIFEST: PluginManifest = {
-  "id": "ackem/proactive-notify@0.0.1",
+  "id": "britney/proactive-notify@0.0.1",
   "name": "主动通知/碎碎念",
   "version": "0.0.1",
   "category": "plugin",
@@ -25,5 +25,5 @@ export const MANIFEST: PluginManifest = {
     "p-05"
   ]
 } as PluginManifest
-export const PLUGIN_ID = 'ackem/proactive-notify@0.0.1'
+export const PLUGIN_ID = 'britney/proactive-notify@0.0.1'
 export const SPEC_ID = 'P-05'

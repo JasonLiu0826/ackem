@@ -80,14 +80,14 @@ export function BootSplash(): JSX.Element {
   const pct = Math.min(100, Math.round(progress))
 
   return (
-    <div className="ackem-boot-splash-panel">
-      <div className="ackem-boot-orb-host nav-companion-orb" aria-hidden>
+    <div className="britney-boot-splash-panel">
+      <div className="britney-boot-orb-host nav-companion-orb" aria-hidden>
         <AIVatar state="idle" size={120} glowCanvasScale={2.8} parallaxStrength={0} className="bg-transparent" />
       </div>
-      <h1 className="ackem-boot-title">Ackem</h1>
-      <div className="ackem-boot-progress-wrap">
+      <h1 className="britney-boot-title">Britney</h1>
+      <div className="britney-boot-progress-wrap">
         <div
-          className="trust-glow-bar ackem-boot-progress"
+          className="trust-glow-bar britney-boot-progress"
           role="progressbar"
           aria-valuemin={0}
           aria-valuemax={100}
@@ -96,9 +96,9 @@ export function BootSplash(): JSX.Element {
         >
           <span style={{ width: `${pct}%` }} />
         </div>
-        <p className="ackem-boot-status" data-ackem-boot-status>
+        <p className="britney-boot-status" data-britney-boot-status>
           {status}
-          <span className="ackem-boot-pct">{pct}%</span>
+          <span className="britney-boot-pct">{pct}%</span>
         </p>
       </div>
     </div>

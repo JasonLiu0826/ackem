@@ -1,9 +1,9 @@
-# Ackem 发行配置（Windows + macOS）
+# Ackem Windows 发行配置（W3）
 # 隐私：绝不打包 data/ · .env · 用户 settings（见 docs/distribution-windows.md）
 
-appId: com.ackem.desktop
-productName: Ackem
-copyright: Copyright © 2026 Ackem contributors
+appId: com.britney.desktop
+productName: Britney
+copyright: Copyright © 2026 Britney contributors
 
 # 版本与 package.json 对齐（发行 v1.0.0）
 extraMetadata:
@@ -31,7 +31,7 @@ files:
 
 extraFiles:
   - from: scripts/uninstall.bat
-    to: Uninstall Ackem.bat
+    to: Uninstall Britney.bat
 
 extraResources:
   - from: scripts/uninstall.bat
@@ -74,7 +74,7 @@ win:
     - target: dir
       arch:
         - x64
-  artifactName: ${productName}-${version}-win-${arch}.${ext}
+  artifactName: ${productName}-${version}-${arch}.${ext}
 
 nsis:
   oneClick: false
@@ -83,33 +83,3 @@ nsis:
   shortcutName: Ackem
   artifactName: ${productName}-${version}-Setup-${arch}.exe
   deleteAppDataOnUninstall: false
-
-mac:
-  icon: build/icon.icns
-  category: public.app-category.productivity
-  hardenedRuntime: false
-  identity: null
-  entitlements: build/entitlements.mac.plist
-  entitlementsInherit: build/entitlements.mac.plist
-  target:
-    - target: dmg
-      arch:
-        - arm64
-        - x64
-  artifactName: ${productName}-${version}-mac-${arch}.${ext}
-  extraFiles: []
-
-dmg:
-  title: "${productName} ${version}"
-  iconSize: 100
-  contents:
-    - x: 180
-      y: 170
-    - x: 480
-      y: 170
-      type: link
-      path: /Applications
-  window:
-    width: 660
-    height: 400
-  artifactName: ${productName}-${version}-mac-${arch}.${ext}

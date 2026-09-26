@@ -34,7 +34,7 @@ export async function preloadI18n(): Promise<void> {
   if (initPromise) return initPromise
   initPromise = (async () => {
     try {
-      const res = await window.ackem.i18n.getAllResources()
+      const res = await window.britney.i18n.getAllResources()
       resources = res
       currentLocale = res.locale
       bumpI18nVersion()
@@ -55,7 +55,7 @@ export function getLocale(): string {
 
 /** 切换 locale（同步更新本地缓存） */
 export async function setLocale(locale: string): Promise<void> {
-  await window.ackem.i18n.setLocale(locale)
+  await window.britney.i18n.setLocale(locale)
   currentLocale = locale
 }
 
@@ -84,7 +84,7 @@ export function t(key: string, params?: Record<string, string | number>): string
 /** 刷新缓存（语言切换后调用） */
 export async function refreshI18n(): Promise<void> {
   try {
-    const res = await window.ackem.i18n.getAllResources()
+    const res = await window.britney.i18n.getAllResources()
     resources = res
     currentLocale = res.locale
     bumpI18nVersion()

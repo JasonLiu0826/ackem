@@ -35,8 +35,8 @@ export function CommandPalette(): JSX.Element | null {
       { id: 'trace', label: '打开调试', run: () => setTab('trace') },
       { id: 'ext', label: '打开扩展中心', run: () => setTab('extensions') },
       { id: 'theater', label: '进入剧院模式', run: () => setTheater(true) },
-      { id: 'pet', label: '折叠到桌宠', run: () => void window.ackem.ui.showPet() },
-      { id: 'expand', label: '展开主面板', run: () => void window.ackem.ui.expandToMain() },
+      { id: 'pet', label: '折叠到桌宠', run: () => void window.britney.ui.showPet() },
+      { id: 'expand', label: '展开主面板', run: () => void window.britney.ui.expandToMain() },
       { id: 'plan', label: '创建扩展 (Plan)', run: openPlan },
       {
         id: 'theme',
@@ -46,7 +46,7 @@ export function CommandPalette(): JSX.Element | null {
       {
         id: 'diary-gen',
         label: '生成今日日记',
-        run: () => void window.ackem.diaryGenerate()
+        run: () => void window.britney.diaryGenerate()
       }
     ],
     [setTab, setTheater, openPlan, theme]

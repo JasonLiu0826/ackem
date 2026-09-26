@@ -29,11 +29,11 @@ export function DesktopAgentSettings({ form, setForm }: Props): JSX.Element {
       return
     }
 
-    void window.ackem.machineMap.status().then(setMapStatus)
-    window.ackem.machineMap.onProgress((payload) => {
+    void window.britney.machineMap.status().then(setMapStatus)
+    window.britney.machineMap.onProgress((payload) => {
       setMapProgress(payload)
       if (payload?.status === 'complete' || payload?.status === 'error') {
-        void window.ackem.machineMap.status().then(setMapStatus)
+        void window.britney.machineMap.status().then(setMapStatus)
       }
     })
   }, [settingsReady])
@@ -81,7 +81,7 @@ export function DesktopAgentSettings({ form, setForm }: Props): JSX.Element {
         <span>
           启用电脑助手（实验）
           <span className="mt-1 block text-xs text-ink-muted">
-            开启后，可在聊天页进入电脑助手模式，让 Ackem 根据对话操作本机文件与应用。每次操作前都会弹窗确认。
+            开启后，可在聊天页进入电脑助手模式，让 Britney 根据对话操作本机文件与应用。每次操作前都会弹窗确认。
           </span>
         </span>
       </label>
@@ -137,12 +137,12 @@ export function DesktopAgentSettings({ form, setForm }: Props): JSX.Element {
             允许读取文档 / 图片（实验）
           </label>
           <label className="block text-xs font-medium text-ink-muted">
-            默认下载目录（留空则使用「下载/AckemDownloads」）
+            默认下载目录（留空则使用「下载/BritneyDownloads」）
             <input
               className="field-input mt-1"
               value={form.desktopAgentDownloadDir ?? ''}
               onChange={(e) => setForm({ desktopAgentDownloadDir: e.target.value })}
-              placeholder="例如 D:\Downloads\AckemDownloads"
+              placeholder="例如 D:\Downloads\BritneyDownloads"
             />
           </label>
         </div>

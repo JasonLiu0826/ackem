@@ -13,7 +13,7 @@ const DISPATCH: DispatchConfig = {
 }
 
 export const DREAM_GENERATOR_MANIFEST: SkillManifest = {
-  id: 'ackem/dream-generator@0.0.1',
+  id: 'britney/dream-generator@0.0.1',
   name: '梦境生成器',
   version: '0.0.1',
   category: 'skill',

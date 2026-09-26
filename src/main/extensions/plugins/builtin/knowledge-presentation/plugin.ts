@@ -25,7 +25,7 @@ import {
   type KnowledgeAnswerInput
 } from './knowledgeAnswer'
 
-export const KNOWLEDGE_PRESENTATION_PLUGIN_ID = 'ackem/knowledge-presentation@1.0.0'
+export const KNOWLEDGE_PRESENTATION_PLUGIN_ID = 'britney/knowledge-presentation@1.0.0'
 
 const log = createLogger('knowledge-presentation')
 

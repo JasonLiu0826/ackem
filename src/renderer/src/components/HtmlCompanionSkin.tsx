@@ -21,7 +21,7 @@ export function HtmlCompanionSkin({
   useEffect(() => {
     const win = iframeRef.current?.contentWindow
     if (!win) return
-    win.postMessage({ type: 'ackem:companion-avatar', state }, '*')
+    win.postMessage({ type: 'britney:companion-avatar', state }, '*')
   }, [state, binding.entry])
 
   return (

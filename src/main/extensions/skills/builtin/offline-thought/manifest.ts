@@ -14,7 +14,7 @@ const OFFLINE_DISPATCH: DispatchConfig = {
 }
 
 export const OFFLINE_THOUGHT_MANIFEST: SkillManifest = {
-  id: 'ackem/offline-thought@0.1.0',
+  id: 'britney/offline-thought@0.1.0',
   name: '离线思绪',
   version: '0.1.0',
   category: 'skill',

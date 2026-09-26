@@ -12,19 +12,19 @@ function parseMs(raw: string | null): number | null {
   return Number.isFinite(n) && n > 0 ? n : null
 }
 
-export function recordDesktopAckemActivity(dataRoot: string, atMs = Date.now()): void {
+export function recordDesktopBritneyActivity(dataRoot: string, atMs = Date.now()): void {
   kvSet(dataRoot, NS, KEY_DESKTOP, String(atMs))
 }
 
-export function recordWeixinAckemActivity(dataRoot: string, atMs = Date.now()): void {
+export function recordWeixinBritneyActivity(dataRoot: string, atMs = Date.now()): void {
   kvSet(dataRoot, NS, KEY_WEIXIN, String(atMs))
 }
 
-export function getLastDesktopAckemActivityMs(dataRoot: string): number | null {
+export function getLastDesktopBritneyActivityMs(dataRoot: string): number | null {
   return parseMs(kvGet(dataRoot, NS, KEY_DESKTOP))
 }
 
-export function getLastWeixinAckemActivityMs(dataRoot: string): number | null {
+export function getLastWeixinBritneyActivityMs(dataRoot: string): number | null {
   return parseMs(kvGet(dataRoot, NS, KEY_WEIXIN))
 }
 
@@ -38,10 +38,10 @@ export function recordProactiveSent(dataRoot: string, atMs = Date.now()): void {
 
 /** 首次启动时写入「当前」，避免刚连上就主动发 */
 export function ensureActivityBaselines(dataRoot: string, atMs = Date.now()): void {
-  if (getLastDesktopAckemActivityMs(dataRoot) == null) {
-    recordDesktopAckemActivity(dataRoot, atMs)
+  if (getLastDesktopBritneyActivityMs(dataRoot) == null) {
+    recordDesktopBritneyActivity(dataRoot, atMs)
   }
-  if (getLastWeixinAckemActivityMs(dataRoot) == null) {
-    recordWeixinAckemActivity(dataRoot, atMs)
+  if (getLastWeixinBritneyActivityMs(dataRoot) == null) {
+    recordWeixinBritneyActivity(dataRoot, atMs)
   }
 }

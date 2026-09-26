@@ -45,7 +45,7 @@ export function KgGraphView(): JSX.Element {
   const handleNodeClick = useCallback(async (node: ForceNode) => {
     setSelectedEntity(node.label)
     try {
-      const hops = await window.ackem.kgOneHop(node.label)
+      const hops = await window.britney.kgOneHop(node.label)
       setOneHop(hops as Triple[])
       setSelectedTriple(null)
     } catch { setOneHop([]) }

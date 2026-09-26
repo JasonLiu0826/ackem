@@ -24,7 +24,7 @@ export function RefineDrawer({ item, open, onClose, onApplied }: Props): JSX.Ele
 
   const refreshHistory = useCallback(async () => {
     try {
-      const r = await window.ackem.openforu.refine.history(item.id)
+      const r = await window.britney.openforu.refine.history(item.id)
       if (r.ok) setHistory(r.entries)
     } catch {
       setHistory([])
@@ -47,7 +47,7 @@ export function RefineDrawer({ item, open, onClose, onApplied }: Props): JSX.Ele
     setBusy(true)
     setMessage('')
     try {
-      const r = await window.ackem.openforu.refine.preview(item.id, text)
+      const r = await window.britney.openforu.refine.preview(item.id, text)
       if (r.ok && r.preview) {
         setPreviewText([r.preview.summary, r.preview.diffPreview].filter(Boolean).join('\n\n'))
       } else {
@@ -64,7 +64,7 @@ export function RefineDrawer({ item, open, onClose, onApplied }: Props): JSX.Ele
     setBusy(true)
     setMessage('')
     try {
-      const r = await window.ackem.openforu.refine.apply(item.id, text)
+      const r = await window.britney.openforu.refine.apply(item.id, text)
       if (r.ok && r.result) {
         setMessage(r.result.message)
         setInstruction('')
@@ -83,7 +83,7 @@ export function RefineDrawer({ item, open, onClose, onApplied }: Props): JSX.Ele
     setBusy(true)
     try {
       const kind = item.origin === 'uplugin' ? 'uplugin' : 'uskill'
-      const r = await window.ackem.openforu.refine.rollback(item.id, version, kind)
+      const r = await window.britney.openforu.refine.rollback(item.id, version, kind)
       if (r.ok) {
         setMessage(`已回滚到 v${version}`)
         void refreshHistory()

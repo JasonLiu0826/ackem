@@ -13,7 +13,7 @@ const DISPATCH: DispatchConfig = {
 }
 
 export const PROCEDURAL_MEMORY_MANIFEST: SkillManifest = {
-  id: 'ackem/procedural-memory@0.0.1',
+  id: 'britney/procedural-memory@0.0.1',
   name: '程序性记忆',
   version: '0.0.1',
   category: 'skill',

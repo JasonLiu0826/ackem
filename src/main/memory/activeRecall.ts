@@ -1,11 +1,11 @@
 // [activeRecall] — 主动回忆
 // 职责：在合适的时机，伴侣主动提起旧记忆，形成"自然想起"的对话体验
 // 对标 MemGPT recall memory / Character.AI 主动话题
-// 引用：../engine/ackemParams, ../engine/types, ./factStore
+// 引用：../engine/britneyParams, ../engine/types, ./factStore
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
-import { ACTIVE_RECALL_MIN_INTERVAL, ACTIVE_RECALL_PROBABILITY } from '../engine/ackemParams'
+import { ACTIVE_RECALL_MIN_INTERVAL, ACTIVE_RECALL_PROBABILITY } from '../engine/britneyParams'
 import type { MemoryFact } from '../engine/types'
 import type { FactStore } from './factStore'
 import { cosineSimilarity } from './factEmbeddingCache'

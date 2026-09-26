@@ -3,7 +3,7 @@
 import {
   MIRROR_CHECK_EARLY_MIN_TURNS,
   MIRROR_CHECK_INTERVAL_TURNS,
-} from '../engine/ackemParams'
+} from '../engine/britneyParams'
 
 export function evaluatePeriodicMemoryAudit(input: {
   turnsSinceLastCheck: number

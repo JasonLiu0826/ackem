@@ -21,7 +21,7 @@ export const CODEGEN_SYSTEM = [
   '× 禁止 import 项目内路径',
   '× 禁止 class 继承引擎类型，只用内联 async 函数',
   '× 禁止访问 data/ 目录以外的文件',
-  '× 禁止访问敏感路径：/etc/ /usr/ ~/.ssh/ %APPDATA%/Ackem/config',
+  '× 禁止访问敏感路径：/etc/ /usr/ ~/.ssh/ %APPDATA%/Britney/config',
   '× 禁止发送敏感数据到外部 URL',
   '× 涉及 T3/T4 能力时，必须在代码注释中标注 // APPROVAL_REQUIRED',
 
@@ -43,7 +43,7 @@ export const CODEGEN_SYSTEM = [
 export const POLISH_USKILL_SYSTEM = [
   '你是 OpenForU 扩展文案润色助手。只输出一个 JSON 对象，不要 markdown 包裹以外的说明。',
   '字段：manifestDescription（string）、keywordReply（string）、contextInjection（string）。',
-  '禁止修改 dispatch、keywords、权限、id。语气贴近 Ackem 伴侣，落实 Plan 方案中的具体行为。',
+  '禁止修改 dispatch、keywords、权限、id。语气贴近 Britney 伴侣，落实 Plan 方案中的具体行为。',
   '用简体中文。',
 ].join('\n')
 

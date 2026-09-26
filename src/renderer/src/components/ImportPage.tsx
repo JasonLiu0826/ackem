@@ -44,14 +44,14 @@ export function ImportPage(): JSX.Element {
   const doImport = useCallback(
     async (paths: string[]) => {
       if (paths.length === 0) return
-      const r = await window.ackem.importFiles(paths)
+      const r = await window.britney.importFiles(paths)
       setLast(r)
       setSelected(new Set(r.copied))
       setImportJob(null)
       setDisabledDrafts(new Set())
       if (r.errors.length) pushToast(r.errors[0] ?? '导入出错')
       else pushToast(`已导入 ${r.copied.length} 个文件`)
-      await window.ackem.rebuildIndex()
+      await window.britney.rebuildIndex()
     },
     [pushToast]
   )
@@ -66,7 +66,7 @@ export function ImportPage(): JSX.Element {
       e.preventDefault()
       setDrag(false)
       const files = Array.from(e.dataTransfer?.files ?? [])
-      const paths = files.map((f) => window.ackem.getPathForFile(f)).filter(Boolean)
+      const paths = files.map((f) => window.britney.getPathForFile(f)).filter(Boolean)
       if (paths.length === 0) {
         pushToast('未解析到本地文件路径，请使用「选择文件」。')
         return
@@ -84,7 +84,7 @@ export function ImportPage(): JSX.Element {
   }, [doImport, pushToast])
 
   const pick = async () => {
-    const r = await window.ackem.selectFiles()
+    const r = await window.britney.selectFiles()
     await doImport(r.paths)
   }
 
@@ -109,7 +109,7 @@ export function ImportPage(): JSX.Element {
       return
     }
     try {
-      const est = await window.ackem.profileEstimateScan(paths)
+      const est = await window.britney.profileEstimateScan(paths)
       setEstimate(est)
       setPendingPaths(paths)
       setConsentMode(mode)
@@ -123,7 +123,7 @@ export function ImportPage(): JSX.Element {
     setDialogLoading(true)
     try {
       if (consentMode === 'infer') {
-        const r = await window.ackem.profileInferFromFiles({
+        const r = await window.britney.profileInferFromFiles({
           relPaths: pendingPaths,
           consentAck: true,
           consentVersion: INFERENCE_CONSENT_VERSION,
@@ -134,7 +134,7 @@ export function ImportPage(): JSX.Element {
         }
         pushToast('主人六维推断完成，可在设置中查看伴侣 TISOR 建议')
       } else if (consentMode === 'memory') {
-        const r = await window.ackem.importParseDocuments({
+        const r = await window.britney.importParseDocuments({
           relPaths: pendingPaths,
           consentAck: true,
           consentVersion: IMPORT_CONSENT_VERSION,
@@ -173,7 +173,7 @@ export function ImportPage(): JSX.Element {
     if (!importJob) return
     setCommitBusy(true)
     try {
-      const r = await window.ackem.importCommitJob({
+      const r = await window.britney.importCommitJob({
         jobId: importJob.id,
         disabledDraftIds: [...disabledDrafts],
       })
@@ -233,7 +233,7 @@ export function ImportPage(): JSX.Element {
           <div className="text-center text-ink">
             <div className="font-medium">选择 txt / md / json 文件</div>
             <div className="mt-1 text-xs text-ink-muted">
-              json 推荐 schema <code className="rounded bg-surface px-1">ackem.memory.bundle</code>；也支持 facts
+              json 推荐 schema <code className="rounded bg-surface px-1">britney.memory.bundle</code>；也支持 facts
               数组或 facts.v2 片段。
             </div>
           </div>

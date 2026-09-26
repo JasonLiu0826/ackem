@@ -2,7 +2,7 @@
 import type { SkillManifest } from '../../../types'
 
 export const MANIFEST: SkillManifest = {
-  "id": "ackem/shared-experience@0.0.1",
+  "id": "britney/shared-experience@0.0.1",
   "name": "共同经历系统",
   "version": "0.0.1",
   "category": "skill",
@@ -26,5 +26,5 @@ export const MANIFEST: SkillManifest = {
     "s-19"
   ]
 } as SkillManifest
-export const SKILL_ID = 'ackem/shared-experience@0.0.1'
+export const SKILL_ID = 'britney/shared-experience@0.0.1'
 export const SPEC_ID = 'S-19'

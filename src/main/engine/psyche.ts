@@ -1,6 +1,6 @@
 // [psyche] — L3 心理状态块拼装（从引擎数学规范 §4.4 抽取）
 // 职责：自然语言 psycheBlock + 沉默判定
-// 引用：./types, ./ackemParams
+// 引用：./types, ./britneyParams
 
 import {
   ARO_EXCESS_BASELINE,
@@ -12,7 +12,7 @@ import {
   STAGE_MODIFIER_FAMILIAR,
   STAGE_MODIFIER_INTIMATE,
   STAGE_MODIFIER_STRANGER
-} from './ackemParams'
+} from './britneyParams'
 import type { EmotionState, Event, ExpressionParams, L1State, Modulation, EmergenceState } from './types'
 import { unitNoise01 } from './emotion'
 import { renderTimeReflectionHint, renderLightSuffix } from './emotionalEmergence'

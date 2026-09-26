@@ -1,15 +1,15 @@
 import { StrictMode, useEffect, useMemo, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import type { UpdateJob, UpdateProgressEvent } from '../../../../shared/updateTypes'
+import type { UpdateJob, UpdateProgressEvent } from '../../../shared/updateTypes'
 import '../assets/main.css'
 import './updater.css'
 
 declare global {
   interface Window {
-    ackemUpdater: {
+    britneyUpdater: {
       readJob: () => Promise<UpdateJob>
       start: () => Promise<{ ok: boolean }>
-      launchAckem: () => Promise<void>
+      launchBritney: () => Promise<void>
       openRelease: () => Promise<void>
       quit: () => Promise<void>
       onProgress: (fn: (ev: UpdateProgressEvent) => void) => () => void
@@ -51,8 +51,8 @@ function App(): JSX.Element {
   }
 
   useEffect(() => {
-    void window.ackemUpdater.readJob().then(setJob)
-    const off = window.ackemUpdater.onProgress((ev) => {
+    void window.britneyUpdater.readJob().then(setJob)
+    const off = window.britneyUpdater.onProgress((ev) => {
       setPhase(ev.phase)
       if (ev.message) appendLog(ev.message)
       if (ev.percent != null) setPercent(ev.percent)
@@ -71,9 +71,9 @@ function App(): JSX.Element {
   useEffect(() => {
     if (!job || started.current) return
     started.current = true
-    appendLog(`Ackem updater ready — ${channelLabel(job.channel)}`)
+    appendLog(`Britney updater ready — ${channelLabel(job.channel)}`)
     appendLog(`Target: ${job.currentVersion} → ${job.targetVersion}`)
-    void window.ackemUpdater.start().catch((e: unknown) => {
+    void window.britneyUpdater.start().catch((e: unknown) => {
       const msg = e instanceof Error ? e.message : String(e)
       setError(msg)
       setPhase('error')
@@ -111,7 +111,7 @@ function App(): JSX.Element {
   return (
     <div className="updater-shell">
       <header className="updater-head">
-        <h1>Ackem Update</h1>
+        <h1>Britney Update</h1>
         <p>
           {channelLabel(job.channel)} · {job.currentVersion} → {job.targetVersion}
           {job.expectedSize > 0 ? ` · ~${formatBytes(job.expectedSize)}` : ''}
@@ -145,12 +145,12 @@ function App(): JSX.Element {
           <p>✓ Download complete</p>
           <p>✓ Verification passed</p>
           <p>✓ Program updated (your data/ folder was not modified)</p>
-          <p className="updater-done-hint">You can restart Ackem now.</p>
+          <p className="updater-done-hint">You can restart Britney now.</p>
           <div className="updater-actions">
-            <button type="button" className="updater-btn primary" onClick={() => void window.ackemUpdater.launchAckem()}>
-              Launch Ackem
+            <button type="button" className="updater-btn primary" onClick={() => void window.britneyUpdater.launchBritney()}>
+              Launch Britney
             </button>
-            <button type="button" className="updater-btn" onClick={() => void window.ackemUpdater.quit()}>
+            <button type="button" className="updater-btn" onClick={() => void window.britneyUpdater.quit()}>
               Later
             </button>
           </div>
@@ -161,10 +161,10 @@ function App(): JSX.Element {
         <div className="updater-error">
           <p>{error ?? 'Update failed'}</p>
           <div className="updater-actions">
-            <button type="button" className="updater-btn" onClick={() => void window.ackemUpdater.openRelease()}>
+            <button type="button" className="updater-btn" onClick={() => void window.britneyUpdater.openRelease()}>
               Open release page
             </button>
-            <button type="button" className="updater-btn" onClick={() => void window.ackemUpdater.quit()}>
+            <button type="button" className="updater-btn" onClick={() => void window.britneyUpdater.quit()}>
               Close
             </button>
           </div>

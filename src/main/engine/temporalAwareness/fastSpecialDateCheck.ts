@@ -7,7 +7,7 @@ import { detectHoliday } from './holidayDetector'
 import { isAnniversaryWindowActive } from './timeDepthCalculator'
 
 export type FastSpecialDateType =
-  | 'ackem_birthday'
+  | 'britney_birthday'
   | 'first_met_anniversary'
   | 'birthday'
   | 'holiday_spring'
@@ -25,13 +25,13 @@ function formatTodayMMDD(today: Date): string {
 export function detectFastSpecialDateType(args: {
   today: Date
   firstMetDate: string | null
-  ackemBirthday?: string | null
+  britneyBirthday?: string | null
   factStore: FactStore
 }): FastSpecialDateType | null {
   const todayMMDD = formatTodayMMDD(args.today)
 
-  if (args.ackemBirthday && args.ackemBirthday.slice(5, 10) === todayMMDD) {
-    return 'ackem_birthday'
+  if (args.britneyBirthday && args.britneyBirthday.slice(5, 10) === todayMMDD) {
+    return 'britney_birthday'
   }
 
   if (isAnniversaryWindowActive(args.firstMetDate, args.today)) {

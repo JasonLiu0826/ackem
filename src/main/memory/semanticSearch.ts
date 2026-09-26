@@ -1,9 +1,9 @@
 // [semanticSearch] — 轻量级语义搜索（非向量，关键词 Jaccard 模糊匹配）
 // 职责：从用户消息提取关键词，与事实 subject+summary 做字符集相似度
 // 对标 LangChain VectorStoreRetriever 的语义匹配，但不依赖 embedding 模型
-// 引用：../engine/ackemParams, ../engine/types
+// 引用：../engine/britneyParams, ../engine/types
 
-import { SEMANTIC_KEYWORD_WEIGHT_MULTIPLIER, SEMANTIC_MIN_KEYWORD_LENGTH, SEMANTIC_SEARCH_MIN_SIMILARITY, SEMANTIC_SEARCH_TOP_K } from '../engine/ackemParams'
+import { SEMANTIC_KEYWORD_WEIGHT_MULTIPLIER, SEMANTIC_MIN_KEYWORD_LENGTH, SEMANTIC_SEARCH_MIN_SIMILARITY, SEMANTIC_SEARCH_TOP_K } from '../engine/britneyParams'
 import type { MemoryFact } from '../engine/types'
 
 function extractKeywords(text: string): string[] {

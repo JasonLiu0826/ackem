@@ -200,7 +200,7 @@ export function buildSearchResolveUserMsgEn(
 }
 
 // ═══ memory-fact-extract.en ═══
-export const FACT_EXTRACT_SYS_EN = `You are Ackem's memory extractor. Extract structured facts about the user from [this conversation turn].
+export const FACT_EXTRACT_SYS_EN = `You are Britney's memory extractor. Extract structured facts about the user from [this conversation turn].
 
 ── Core Principle ──
 Only extract facts that "if the user switched to a different AI companion tomorrow, would this information help that AI understand the user better?"

@@ -103,7 +103,7 @@ export function mockJsonCompletion(messages: ChatMsg[]): string {
     text.includes('uplugin 文案润色')
   ) {
     return JSON.stringify({
-      manifestDescription: '（mock 润色）根据 Plan 方案定制的扩展说明，语气贴近 Ackem 伴侣。',
+      manifestDescription: '（mock 润色）根据 Plan 方案定制的扩展说明，语气贴近 Britney 伴侣。',
       keywordReply: '（mock 润色）已按你的习惯触发，我会用方案里约定的方式回应你。',
       contextInjection: '（mock 润色）结合当前对话与 Plan 摘要，落实方案中的具体行为。',
       injectTemplate: '（mock 润色）Plugin 已按方案注入上下文，请按约定协助用户。'

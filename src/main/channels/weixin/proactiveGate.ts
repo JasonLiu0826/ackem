@@ -1,7 +1,7 @@
 import {
-  getLastDesktopAckemActivityMs,
+  getLastDesktopBritneyActivityMs,
   getLastProactiveSentMs,
-  getLastWeixinAckemActivityMs
+  getLastWeixinBritneyActivityMs
 } from './activity'
 
 export const PROACTIVE_IDLE_MS = 3 * 60 * 60 * 1000
@@ -26,8 +26,8 @@ export function evaluateWeixinProactiveGate(
   }
 
   const nowMs = now.getTime()
-  const desktopMs = getLastDesktopAckemActivityMs(dataRoot)
-  const weixinMs = getLastWeixinAckemActivityMs(dataRoot)
+  const desktopMs = getLastDesktopBritneyActivityMs(dataRoot)
+  const weixinMs = getLastWeixinBritneyActivityMs(dataRoot)
 
   if (desktopMs == null || nowMs - desktopMs < PROACTIVE_IDLE_MS) {
     return { ok: false, reason: 'desktop_active_recently' }

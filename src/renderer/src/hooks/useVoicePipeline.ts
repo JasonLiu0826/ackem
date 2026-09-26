@@ -99,15 +99,15 @@ export function useVoicePipeline() {
         const inputData = e.inputBuffer.getChannelData(0)
         const pcm = downsampleTo16k(inputData, ctx.sampleRate)
         const int16 = float32ToInt16(pcm)
-        window.ackem.voice?.sendAudioChunk(int16.buffer)
+        window.britney.voice?.sendAudioChunk(int16.buffer)
       }
 
       source.connect(processor)
       processor.connect(ctx.destination)
       processorRef.current = processor
 
-      await window.ackem.voice?.setMode?.(s.voiceMode)
-      await window.ackem.voice?.setInputChannel?.(s.inputChannel)
+      await window.britney.voice?.setMode?.(s.voiceMode)
+      await window.britney.voice?.setInputChannel?.(s.inputChannel)
 
       setMicActive(true)
       setState('listening')
@@ -133,8 +133,8 @@ export function useVoicePipeline() {
       streamRef.current.getTracks().forEach((t) => t.stop())
       streamRef.current = null
     }
-    void window.ackem.voice?.setMode?.('off')
-    void window.ackem.voice?.setPttActive?.(false)
+    void window.britney.voice?.setMode?.('off')
+    void window.britney.voice?.setPttActive?.(false)
     pttActiveRef.current = false
     setMicActive(false)
     setState('idle')
@@ -195,7 +195,7 @@ export function useVoicePipeline() {
     if (typeof window !== 'undefined' && window.speechSynthesis) {
       window.speechSynthesis.cancel()
     }
-    window.ackem.voice?.cancelTts()
+    window.britney.voice?.cancelTts()
     setState(micActive ? 'listening' : 'idle')
   }, [micActive])
 
@@ -236,7 +236,7 @@ export function useVoicePipeline() {
 
   const setPttActive = useCallback((active: boolean) => {
     pttActiveRef.current = active
-    void window.ackem.voice?.setPttActive?.(active)
+    void window.britney.voice?.setPttActive?.(active)
   }, [])
 
   useEffect(() => {
@@ -256,13 +256,13 @@ export function useVoicePipeline() {
 
   useEffect(() => {
     if (!TTS_BROADCAST_ENABLED) return
-    const unsubTts = window.ackem.voice?.onTtsAudio?.((audio: ArrayBuffer) => {
+    const unsubTts = window.britney.voice?.onTtsAudio?.((audio: ArrayBuffer) => {
       void playTts(audio)
     })
-    const unsubBrowserTts = window.ackem.voice?.onTtsSpeakText?.(({ text }) => {
+    const unsubBrowserTts = window.britney.voice?.onTtsSpeakText?.(({ text }) => {
       void speakBrowserTts(text)
     })
-    const unsubBrowserCancel = window.ackem.voice?.onTtsSpeakCancel?.(() => {
+    const unsubBrowserCancel = window.britney.voice?.onTtsSpeakCancel?.(() => {
       window.speechSynthesis?.cancel()
       setState(micActive ? 'listening' : 'idle')
     })
@@ -274,7 +274,7 @@ export function useVoicePipeline() {
   }, [playTts, speakBrowserTts, micActive])
 
   useEffect(() => {
-    const unsubState = window.ackem.voice?.onStateChange?.((newState: string) => {
+    const unsubState = window.britney.voice?.onStateChange?.((newState: string) => {
       if (newState === 'speaking' && !TTS_BROADCAST_ENABLED) return
       if (newState === 'speaking') setState('speaking')
       else if (newState === 'thinking') setState('thinking')
@@ -282,10 +282,10 @@ export function useVoicePipeline() {
       else if (newState === 'idle' && micActive) setState('listening')
       else if (!micActive) setState('idle')
     })
-    const unsubListening = window.ackem.voice?.onListening?.((active: boolean) => {
+    const unsubListening = window.britney.voice?.onListening?.((active: boolean) => {
       setVoiceListening(active)
     })
-    const unsubThinking = window.ackem.voice?.onThinking?.((active: boolean) => {
+    const unsubThinking = window.britney.voice?.onThinking?.((active: boolean) => {
       if (active && micActive) setState('thinking')
     })
     return () => {

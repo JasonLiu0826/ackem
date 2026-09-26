@@ -36,7 +36,7 @@ async function fetchJson<T>(url: string): Promise<T> {
       signal: ac.signal,
       headers: {
         Accept: 'application/json',
-        'User-Agent': 'Ackem-Desktop-Updater/1.0'
+        'User-Agent': 'Britney-Desktop-Updater/1.0'
       }
     })
     if (!res.ok) {

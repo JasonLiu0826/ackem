@@ -168,17 +168,17 @@ export function exportMemoryArchive(
   }
 
   // 总索引 README
-  let readme = `# 🗂️ Ackem 记忆档案\n\n`
+  let readme = `# 🗂️ Britney 记忆档案\n\n`
   readme += `> 自动生成 | ${new Date().toISOString().slice(0, 16).replace('T', ' ')}\n`
   readme += `> 总事实：${active.length} 条 | 核心记忆：${coreFacts.length} 条 | 情节：${stats.episodesExported} 段\n\n`
   readme += `---\n\n`
   readme += `## 如何使用这个档案\n\n`
-  readme += `- 这是 Ackem 对你的所有记忆的结构化归档\n`
+  readme += `- 这是 Britney 对你的所有记忆的结构化归档\n`
   readme += `- 按领域分目录，每个子类一个 .md 文件\n`
   readme += `- 你可以直接打开任何文件阅读、修改\n`
-  readme += `- 修改后，在 Ackem 中点击「重建索引」即可让修改生效\n`
+  readme += `- 修改后，在 Britney 中点击「重建索引」即可让修改生效\n`
   readme += `- ★ 标记的条目是伴侣的「核心记忆」——始终铭记在心\n`
-  readme += `- **需要 Ackem 记住某事时，请在对话里明确说「请帮我记住……」**（例如：「请帮我记住：我妈妈生日是 10 月 16 日」）。Ackem 会按你的原话写入记忆，具体归类与整理由系统在后台完成\n\n`
+  readme += `- **需要 Britney 记住某事时，请在对话里明确说「请帮我记住……」**（例如：「请帮我记住：我妈妈生日是 10 月 16 日」）。Britney 会按你的原话写入记忆，具体归类与整理由系统在后台完成\n\n`
   readme += `---\n\n## 目录\n\n`
 
   for (const [domain, subMap] of grouped) {

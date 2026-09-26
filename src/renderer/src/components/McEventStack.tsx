@@ -75,8 +75,8 @@ export function McEventStack(): JSX.Element | null {
       }, TTL_MS)
     }
 
-    window.ackem?.ext.gamemode.onEvent('minecraft', handlePayload)
-    window.ackem?.onMcEvent(handlePayload as (p: { event: unknown; reaction: unknown }) => void)
+    window.britney?.ext.gamemode.onEvent('minecraft', handlePayload)
+
   }, [])
 
   if (bubbles.length === 0) return null

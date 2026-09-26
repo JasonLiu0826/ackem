@@ -1,6 +1,6 @@
 // [desktopCompanion] — 桌面陪伴：时间感知、空闲检测、主动消息、静默陪伴
 // 职责：生成运行时上下文块（不持久化），管理陪伴在场模式
-// 引用：./engine/types, ./engine/ackemParams, ./logger
+// 引用：./engine/types, ./engine/britneyParams, ./logger
 
 import { createLogger } from '../../../../logger'
 import type { EmotionState, L1State } from '../../../../engine/types'
@@ -288,7 +288,7 @@ export class DesktopCompanion {
         harass: false
       })
 
-      const prompt = `你是 Ackem，用户的 AI 伴侣（不是底层大模型品牌）。用户暂时离开了，你要发一条 Windows 桌面通知。
+      const prompt = `你是 Britney，用户的 AI 伴侣（不是底层大模型品牌）。用户暂时离开了，你要发一条 Windows 桌面通知。
 
 ${personalityBlock}
 
@@ -353,7 +353,7 @@ ${personalityBlock}
     if (!result) return null
 
     return {
-      title: 'Ackem',
+      title: 'Britney',
       body: result.message
     }
   }

@@ -4,9 +4,9 @@ import type { DispatchConfig } from '../../../../protocols'
 
 const PROD_DAILY_AT = '23:45'
 
-/** 生产 23:45；测试/开发可用 ACKEM_LATE_NIGHT_AT=HH:MM */
+/** 生产 23:45；测试/开发可用 BRITNEY_LATE_NIGHT_AT=HH:MM */
 export function getLateNightDailyAt(): string {
-  const override = process.env.ACKEM_LATE_NIGHT_AT?.trim()
+  const override = process.env.BRITNEY_LATE_NIGHT_AT?.trim()
   if (override && /^\d{1,2}:\d{2}$/.test(override)) return override
   return PROD_DAILY_AT
 }
@@ -42,7 +42,7 @@ export function getLateNightDispatch(): DispatchConfig {
 }
 
 export const LATE_NIGHT_REMINDER_MANIFEST: SkillManifest = {
-  id: 'ackem/late-night-reminder@0.0.1',
+  id: 'britney/late-night-reminder@0.0.1',
   name: '深夜提醒',
   version: '0.0.1',
   category: 'skill',

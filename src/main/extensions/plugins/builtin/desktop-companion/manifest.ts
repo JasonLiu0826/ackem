@@ -2,7 +2,7 @@
 
 import type { PluginManifest } from '../../types'
 
-export const DESKTOP_COMPANION_PLUGIN_ID = 'ackem/desktop-companion@0.1.0'
+export const DESKTOP_COMPANION_PLUGIN_ID = 'britney/desktop-companion@0.1.0'
 
 export const DESKTOP_COMPANION_MANIFEST: PluginManifest = {
   id: DESKTOP_COMPANION_PLUGIN_ID,

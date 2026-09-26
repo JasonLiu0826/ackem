@@ -1,8 +1,8 @@
 // [consolidator] — 记忆整合/反思
 // 职责：定期用 LLM 审视近期事实，生成高层洞察（对标 MemGPT core memory reflection）
-// 引用：../engine/types, ../engine/ackemParams, ./factStore, ./taxonomy, ../prompt/memory-consolidation
+// 引用：../engine/types, ../engine/britneyParams, ./factStore, ./taxonomy, ../prompt/memory-consolidation
 
-import { CONSOLIDATION_INSIGHT_WEIGHT, CONSOLIDATION_MAX_FACTS_INPUT, CONSOLIDATION_MAX_INSIGHTS, CONSOLIDATION_MIN_FACTS } from '../engine/ackemParams'
+import { CONSOLIDATION_INSIGHT_WEIGHT, CONSOLIDATION_MAX_FACTS_INPUT, CONSOLIDATION_MAX_INSIGHTS, CONSOLIDATION_MIN_FACTS } from '../engine/britneyParams'
 import type { EmotionalContext, LlmClient } from '../engine/types'
 import type { FactStore } from './factStore'
 import { isValidSubcategory, SUBCATEGORIES, type Subcategory } from './taxonomy'

@@ -46,7 +46,7 @@ export function syncReleaseFromStaging(stagingDir: string, installDir: string): 
   if (sha256(srcAsar) !== sha256(dstAsar)) {
     throw new Error('app.asar mismatch after install — files may be locked')
   }
-  if (!existsSync(join(installDir, 'Ackem.exe'))) {
-    throw new Error('Ackem.exe missing after install')
+  if (!existsSync(join(installDir, 'Britney.exe'))) {
+    throw new Error('Britney.exe missing after install')
   }
 }

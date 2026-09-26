@@ -18,7 +18,7 @@ const DISPATCH: DispatchConfig = {
 }
 
 export const AMBIENT_RECALL_MANIFEST: SkillManifest = {
-  id: 'ackem/ambient-recall@0.0.1',
+  id: 'britney/ambient-recall@0.0.1',
   name: '回忆触发',
   version: '0.0.1',
   category: 'skill',

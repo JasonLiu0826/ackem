@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Britney" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">#6366F1</item>
+        <item name="colorPrimaryVariant">#4F46E5</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorSecondary">#EC4899</item>
+        <item name="colorSecondaryVariant">#DB2777</item>
+        <item name="colorOnSecondary">#FFFFFF</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <!-- Dark theme: status bar icons should be LIGHT (not dark) -->
+        <item name="android:windowLightStatusBar">false</item>
+        <!-- Match HTML background to avoid white flash before WebView loads -->
+        <item name="android:windowBackground">#0f0d14</item>
+    </style>
+</resources>

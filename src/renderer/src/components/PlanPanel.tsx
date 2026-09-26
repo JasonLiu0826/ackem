@@ -257,7 +257,7 @@ export function PlanPanel(): JSX.Element | null {
       return
     }
     try {
-      const r = await window.ackem.openforu.agent.getStatus(sid)
+      const r = await window.britney.openforu.agent.getStatus(sid)
       if (r.ok) setAgentRun(r.run)
     } catch {
       setAgentRun(null)
@@ -270,7 +270,7 @@ export function PlanPanel(): JSX.Element | null {
       return
     }
     void refreshAgentRun(sessionId)
-    const off = window.ackem.openforu.agent.onEvent((e) => {
+    const off = window.britney.openforu.agent.onEvent((e) => {
       if (e.sessionId === sessionId) void refreshAgentRun(sessionId)
     })
     return off
@@ -477,7 +477,7 @@ export function PlanPanel(): JSX.Element | null {
 
     setWsBusy(true)
 
-    void window.ackem.openforu.workspaces
+    void window.britney.openforu.workspaces
 
       .open()
 
@@ -500,7 +500,7 @@ export function PlanPanel(): JSX.Element | null {
   }, [open, configured, pushToast, applyWorkspacePayload, planReloadNonce])
 
   useEffect(() => {
-    const off = window.ackem.openforu.onPlanSessionUpdated?.((payload) => {
+    const off = window.britney.openforu.onPlanSessionUpdated?.((payload) => {
       applyWorkspacePayload(payload as Parameters<typeof applyWorkspacePayload>[0])
       if (payload.sessionId && typeof payload.sessionId === 'string') {
         void refreshAgentRun(payload.sessionId)
@@ -542,7 +542,7 @@ export function PlanPanel(): JSX.Element | null {
     void refreshAgentRun(sid)
     setBusy(true)
     try {
-      const d = await window.ackem.openforu.planDeploy(sid)
+      const d = await window.britney.openforu.planDeploy(sid)
       await refreshAgentRun(sid)
       if (d.ok) {
         applyPlanMeta(d)
@@ -559,7 +559,7 @@ export function PlanPanel(): JSX.Element | null {
   const cancelAgentRun = async () => {
     if (!sessionId) return
     try {
-      const r = await window.ackem.openforu.agent.cancel(sessionId)
+      const r = await window.britney.openforu.agent.cancel(sessionId)
       if (r.ok && r.cancelled) {
         pushToast('已取消部署')
         if (r.messages) applyPlanMeta(r)
@@ -596,7 +596,7 @@ export function PlanPanel(): JSX.Element | null {
     }
     setBusy(true)
     try {
-      const r = await window.ackem.openforu.planConfirm(sessionId)
+      const r = await window.britney.openforu.planConfirm(sessionId)
       if (r.ok && r.messages) {
         applyPlanMeta(r)
         if (artifactStatus.canDeploy) {
@@ -618,7 +618,7 @@ export function PlanPanel(): JSX.Element | null {
     if (!sessionId || busy) return
     setBusy(true)
     try {
-      const r = await window.ackem.openforu.planApproveWireframe(sessionId)
+      const r = await window.britney.openforu.planApproveWireframe(sessionId)
       if (r.ok) {
         applyPlanMeta(r)
         pushToast('界面方案已确认')
@@ -647,7 +647,7 @@ export function PlanPanel(): JSX.Element | null {
       setBusy(true)
       void refreshAgentRun(sessionId)
       try {
-        const r = await window.ackem.openforu.planRedeploy(sessionId, t)
+        const r = await window.britney.openforu.planRedeploy(sessionId, t)
         await refreshAgentRun(sessionId)
         if (r.ok) {
           applyPlanMeta(r)
@@ -665,7 +665,7 @@ export function PlanPanel(): JSX.Element | null {
     setBusy(true)
     setMessages((m) => [...m, { role: 'user', content: t }])
     try {
-      const r = await window.ackem.openforu.planSend(sessionId, t)
+      const r = await window.britney.openforu.planSend(sessionId, t)
       if (r.ok) {
         applyPlanMeta(r)
       } else {
@@ -693,7 +693,7 @@ export function PlanPanel(): JSX.Element | null {
 
     try {
 
-      const r = await window.ackem.openforu.workspaces.switch(workspaceId)
+      const r = await window.britney.openforu.workspaces.switch(workspaceId)
 
       if (r.ok) {
 
@@ -725,7 +725,7 @@ export function PlanPanel(): JSX.Element | null {
 
     try {
 
-      const r = await window.ackem.openforu.workspaces.create()
+      const r = await window.britney.openforu.workspaces.create()
 
       if (r.ok) {
 
@@ -769,7 +769,7 @@ export function PlanPanel(): JSX.Element | null {
 
     try {
 
-      const r = await window.ackem.openforu.workspaces.delete(activeWorkspaceId)
+      const r = await window.britney.openforu.workspaces.delete(activeWorkspaceId)
 
       if (r.ok) {
 
@@ -779,7 +779,7 @@ export function PlanPanel(): JSX.Element | null {
 
         if (r.activeWorkspaceId) {
 
-          const opened = await window.ackem.openforu.workspaces.switch(r.activeWorkspaceId)
+          const opened = await window.britney.openforu.workspaces.switch(r.activeWorkspaceId)
 
           if (opened.ok) applyWorkspacePayload(opened)
 
@@ -835,7 +835,7 @@ export function PlanPanel(): JSX.Element | null {
 
             <div className="min-w-0 flex-1">
 
-              <p className="font-display text-sm font-medium text-ink">Ackem Agent 正在为你工作</p>
+              <p className="font-display text-sm font-medium text-ink">Britney Agent 正在为你工作</p>
 
               <p className="text-[10px] text-ink-muted">Plan 模式 · 不写入主聊天记忆</p>
 

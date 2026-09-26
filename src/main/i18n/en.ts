@@ -45,8 +45,8 @@ export const enResources: Record<string, string> = {
   'timeDepth.overYears': 'over {n} years already',
 
   // ═══ Special Date Titles ═══
-  'specialDate.ackemBirthday.1': "Ackem's 1st birthday",
-  'specialDate.ackemBirthday.n': "Ackem's {n}th birthday",
+  'specialDate.britneyBirthday.1': "Britney's 1st birthday",
+  'specialDate.britneyBirthday.n': "Britney's {n}th birthday",
   'specialDate.firstAnniversary.1': 'our first anniversary',
   'specialDate.firstAnniversary.n': 'our {n}th anniversary',
   'specialDate.birthday': "{name}'s birthday",
@@ -55,7 +55,7 @@ export const enResources: Record<string, string> = {
   'specialDate.recurring': 'memories of this day',
 
   // ═══ Special Date Narratives ═══
-  'specialDate.ackemBirthdayNarrative': "It's Ackem's birthday. Treat today as something worth marking lightly; keep the person you're talking to at the center—you can chat about them and today naturally, but do not bring up Jason or creator/origin stories unless the user asks first.",
+  'specialDate.britneyBirthdayNarrative': "It's Britney's birthday. Treat today as something worth marking lightly; keep the person you're talking to at the center—you can chat about them and today naturally, but do not bring up Jason or creator/origin stories unless the user asks first.",
   'specialDate.firstMetNarrative': "Today marks {label} since you and they first met.",
   'specialDate.birthdayNarrative': "Today is {name}'s birthday.",
   'specialDate.holidayNarrative': 'Today is {name}.',
@@ -274,9 +274,9 @@ export const enResources: Record<string, string> = {
   'settings.mobile.weixin.enableHint': 'When off, no messages are received; login is kept.',
   'settings.mobile.weixin.proactiveEnabled': 'Proactive WeChat messages',
   'settings.mobile.weixin.proactiveHint':
-    'When both desktop and WeChat are idle 3h, Ackem is running, and outside 22:00–8:00, she may message you first. Off = reply only.',
+    'When both desktop and WeChat are idle 3h, Britney is running, and outside 22:00–8:00, she may message you first. Off = reply only.',
   'settings.mobile.weixin.polling': 'Listening for messages…',
-  'settings.mobile.weixin.notPolling': 'Not listening — keep Ackem running and tap “Restart listener” below.',
+  'settings.mobile.weixin.notPolling': 'Not listening — keep Britney running and tap “Restart listener” below.',
   'settings.mobile.weixin.channelOff': 'Channel is off — turn on the switch above to reply on WeChat.',
   'settings.mobile.weixin.restartListen': 'Restart listener',
   'settings.mobile.weixin.embeddingWait': 'Memory engine warming up; replies may wait.',
@@ -288,9 +288,9 @@ export const enResources: Record<string, string> = {
   'settings.mobile.weixin.step3': 'Tap “Connect WeChat” and scan the QR with WeChat.',
   'settings.mobile.weixin.step4': 'If phone asks for a code, enter it here.',
   'settings.mobile.weixin.step5': 'Turn on “Enable WeChat channel” and send a text from phone.',
-  'settings.mobile.weixin.step6': 'Keep Ackem running (minimize to tray; do not quit).',
+  'settings.mobile.weixin.step6': 'Keep Britney running (minimize to tray; do not quit).',
   'settings.mobile.weixin.keepAwakeTitle': 'Keep this PC awake',
-  'settings.mobile.weixin.keepAwake1': 'No replies if Ackem quits or PC sleeps/shuts down.',
+  'settings.mobile.weixin.keepAwake1': 'No replies if Britney quits or PC sleeps/shuts down.',
   'settings.mobile.weixin.keepAwake2': 'Windows power: set sleep to Never on AC; lid close → do nothing.',
   'settings.mobile.weixin.keepAwake3': 'Minimize to tray so the main process keeps polling.',
   'settings.mobile.weixin.keepAwake4': 'Messages go via WeChat servers; PC needs network.',
@@ -390,14 +390,14 @@ export const enResources: Record<string, string> = {
   'settings.localChatProbeFail': 'Connection failed: {{error}}',
   'settings.openforuModelHint': 'Isolated from chat; Plan and workspace unavailable when unconfigured.',
   'settings.embeddingModel': 'Memory Retrieval Model',
-  'settings.embeddingModelHint': 'Ackem bundles bge-small-zh (Chinese) and bge-small-en (English); both auto-extract on first launch. Used for semantic memory search.',
+  'settings.embeddingModelHint': 'Britney bundles bge-small-zh (Chinese) and bge-small-en (English); both auto-extract on first launch. Used for semantic memory search.',
   'settings.configured': 'Configured',
   'settings.notConfigured': 'Not configured',
   'settings.temperature': 'Temperature (0-2)',
   'settings.dataAndMemory': 'Data & Memory',
   'settings.dataAndMemoryDesc': 'Data directory, memory budget and maintenance.',
   'settings.dataDir': 'Data Directory',
-  'settings.dataDirHint': 'Local Ackem data (memory, diary, index, etc.) lives here.',
+  'settings.dataDirHint': 'Local Britney data (memory, diary, index, etc.) lives here.',
   'settings.dataDirAbsolute': 'Absolute path',
   'settings.dataDirRelative': 'Relative path',
   'settings.portable': 'Portable Directory',
@@ -437,14 +437,14 @@ export const enResources: Record<string, string> = {
   'settings.safety': 'Safety & Compliance',
   'settings.safetyDesc': 'Age confirmation and adult content mode.',
   'settings.ossNotice': 'Open Source Notice',
-  'settings.ossNoticeDesc': 'Ackem open-source license and user notice.',
+  'settings.ossNoticeDesc': 'Britney open-source license and user notice.',
   'settings.ossNoticeBodyTitle': 'Notice',
-  'settings.ossNoticePlaceholder': `Ackem v1.0.0 · 2026-06-28
+  'settings.ossNoticePlaceholder': `Britney v1.0.0 · 2026-06-28
 
 [Open-source license]
 Released under GNU Affero GPL v3 (AGPL-3.0). Copyright © 2026 Jason Liu (JasonLiu0826).
 Derivatives must use the same license; network/SaaS use requires offering complete source code.
-Full license: https://github.com/JasonLiu0826/Ackem/blob/main/LICENSE
+Full license: https://github.com/JasonLiu0826/Britney/blob/main/LICENSE
 
 [Permitted use]
 · Personal learning and non-commercial use
@@ -461,12 +461,12 @@ See NOTICE.md and LICENSE.electron.txt in the release folder.
 
 [Contributors]
 Opening a pull request means you agree to CLA v1.1.
-https://github.com/JasonLiu0826/Ackem/blob/main/CLA.md
+https://github.com/JasonLiu0826/Britney/blob/main/CLA.md
 
 [Privacy and data]
 Chats, memory, and imports stay on your device; conversation content is not uploaded by default.
-Portable: .\\data\\  ·  User dir: %LOCALAPPDATA%\\Ackem\\
-Back up the entire data folder (including ackem.db).
+Portable: .\\data\\  ·  User dir: %LOCALAPPDATA%\\Britney\\
+Back up the entire data folder (including britney.db).
 
 [Official releases do not include]
 User data/, API keys, .env, or developer secrets; configure credentials in Settings after install.`,
@@ -488,19 +488,19 @@ User data/, API keys, .env, or developer secrets; configure credentials in Setti
   'settings.more': 'More',
   'settings.moreDesc': 'Quick links, app info and privacy notes.',
   'settings.uninstall': 'Uninstall',
-  'settings.uninstallDesc': 'Quit Ackem, remove shortcuts, and optionally delete local data or app files.',
-  'settings.uninstallBodyTitle': 'Uninstall Ackem',
-  'settings.uninstallBodyHint': 'Background services (voice, etc.) stop first. You can also run Uninstall Ackem.bat from the app folder.',
+  'settings.uninstallDesc': 'Quit Britney, remove shortcuts, and optionally delete local data or app files.',
+  'settings.uninstallBodyTitle': 'Uninstall Britney',
+  'settings.uninstallBodyHint': 'Background services (voice, etc.) stop first. You can also run Uninstall Britney.bat from the app folder.',
   'settings.uninstallDeleteData': 'Also delete local data (chats, memory, model cache)',
   'settings.uninstallRemoveApp': 'Also delete application files (portable)',
-  'settings.uninstallAction': 'Uninstall Ackem',
+  'settings.uninstallAction': 'Uninstall Britney',
   'settings.uninstallBusy': 'Uninstalling…',
-  'settings.uninstallTitle': 'Uninstall Ackem?',
+  'settings.uninstallTitle': 'Uninstall Britney?',
   'settings.uninstallConfirm': 'Uninstall',
-  'settings.uninstallDialogDesc': 'Ackem will quit and stop all background services. This cannot be undone.',
+  'settings.uninstallDialogDesc': 'Britney will quit and stop all background services. This cannot be undone.',
   'settings.uninstallDialogData': 'Data folder to delete: {path}',
   'settings.uninstallDialogApp': 'The application install folder will be removed if possible.',
-  'settings.uninstallStarted': 'Uninstaller started — Ackem is quitting',
+  'settings.uninstallStarted': 'Uninstaller started — Britney is quitting',
   'settings.uninstallFailed': 'Uninstall failed',
   'settings.quickLinks': 'Quick Links',
   'settings.quickLinksHint': 'Jump to other pages without remembering sidebar positions.',
@@ -512,7 +512,7 @@ User data/, API keys, .env, or developer secrets; configure credentials in Setti
   'settings.memoryBankHint': 'Browse facts, episodes and memory tree',
   'settings.debugPanel': 'Debug Panel',
   'settings.debugPanelHint': 'View engine trace and runtime logs',
-  'settings.about': 'About Ackem',
+  'settings.about': 'About Britney',
   'settings.version': 'Version',
   'settings.versionValue': '1.0.0 (Open Source Local)',
   'settings.versionSuffix': ' (Open Source Local)',
@@ -537,7 +537,7 @@ User data/, API keys, .env, or developer secrets; configure credentials in Setti
   'settings.updateStarting': 'Starting updater…',
   'settings.updateDevOnly': 'In-app updates require the packaged green build (not npm run dev).',
   'settings.updateConfirmTitle': 'Confirm update',
-  'settings.updateConfirmBody': 'Ackem will quit and open the update terminal. The full package will be downloaded and program files replaced; memories and API settings are not deleted.',
+  'settings.updateConfirmBody': 'Britney will quit and open the update terminal. The full package will be downloaded and program files replaced; memories and API settings are not deleted.',
   'settings.updateConfirmYes': 'Continue',
   'settings.updateConfirmNo': 'Cancel',
   'settings.updateErrorNotPackaged': 'In-app updates are only available in the packaged green build.',
@@ -553,7 +553,7 @@ User data/, API keys, .env, or developer secrets; configure credentials in Setti
   'settings.canonCreator': 'Creator',
   'settings.canonCreatorValue': 'Jason (GitHub JasonLiu0826, globally unique)',
   'settings.creatorMemoryTitle': 'Creator memory (Canon-M)',
-  'settings.creatorMemoryHint': 'Ackem’s neutral Canon seed memories about creator Jason. Read-only; injected in chat by context rotation, never written to user Tier B.',
+  'settings.creatorMemoryHint': 'Britney’s neutral Canon seed memories about creator Jason. Read-only; injected in chat by context rotation, never written to user Tier B.',
   'settings.creatorMemoryReadOnly': 'Read-only',
   'settings.creatorMemoryEmpty': 'creator-memory.json not seeded yet',
   'settings.creatorMemoryCategory.identity': 'Identity',
@@ -602,7 +602,7 @@ User data/, API keys, .env, or developer secrets; configure credentials in Setti
   'common.experimental': 'Experimental',
 
   'nav.collapsePet': 'Collapse to pet',
-  'nav.brand': 'Ackem',
+  'nav.brand': 'Britney',
   'nav.memory.archive': 'Archive',
   'nav.memory.search': 'Search',
   'nav.memory.timeline': 'Data',
@@ -619,7 +619,7 @@ User data/, API keys, .env, or developer secrets; configure credentials in Setti
   'boot.starting': 'Starting',
   'boot.noPreloadTitle': 'Cannot connect to main process',
   'boot.noPreloadBody':
-    'window.ackem is missing. If you opened http://localhost:5173 in a browser, close it and start Electron (npm run dev or 一键启动.bat). In Electron, check preload errors in DevTools.',
+    'window.britney is missing. If you opened http://localhost:5173 in a browser, close it and start Electron (npm run dev or 一键启动.bat). In Electron, check preload errors in DevTools.',
 
   // ═══ Chat Page ═══
   'chat.docOnly': '(This message only attaches a document, no additional text)',

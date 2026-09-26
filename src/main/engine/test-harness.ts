@@ -7,7 +7,7 @@ import { vi } from 'vitest'
 
 // electron mock（所有 e2e 测试共享）
 vi.mock('electron', () => ({
-  app: { getPath: () => '.', getName: () => 'ackem', getVersion: () => '0.0.0' },
+  app: { getPath: () => '.', getName: () => 'britney', getVersion: () => '0.0.0' },
   dialog: { showOpenDialog: async () => ({ canceled: true, filePaths: [] }) },
   ipcMain: { handle: () => {} },
   shell: { openPath: async () => '' },
@@ -18,7 +18,7 @@ import { runPreLlmTurn } from './orchestrator.js'
 import { closeAllDatabases } from '../db/database.js'
 import { defaultFullState, saveState, loadState } from './state-persistence.js'
 import { FactStore, defaultFactsPath } from '../memory/factStore.js'
-import { TIER_B_CHAR_BUDGET } from './ackemParams.js'
+import { TIER_B_CHAR_BUDGET } from './britneyParams.js'
 import { MemoryRetriever } from '../memory/retriever.js'
 import { PERSONALITY_PRESETS, type PersonalityPreset } from '../personalityPresets.js'
 import type { FullState, TurnTrace } from './types.js'
@@ -48,7 +48,7 @@ export interface TestCtx {
 
 /** 创建一个完整的测试上下文 */
 export function createTestCtx(presetId = 'deredere'): TestCtx {
-  const root = join(tmpdir(), `ackem-test-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`)
+  const root = join(tmpdir(), `britney-test-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`)
   mkdirSync(root, { recursive: true })
   mkdirSync(join(root, 'memory', 'facts'), { recursive: true })
   mkdirSync(join(root, 'companion'), { recursive: true })

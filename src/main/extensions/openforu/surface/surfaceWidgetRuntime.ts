@@ -122,10 +122,11 @@ function startTick(extensionId: string): void {
     if (!s) return
     const st = s.state
     if (!st.running) return
-    const remaining = Number(st.remainingMs ?? 0) - 1000
-    st.remainingMs = Math.max(0, remaining)
-    st.display = formatMs(st.remainingMs)
-    if (st.remainingMs <= 0) {
+    const stT = st as Record<string, unknown>
+    const remaining = Number(stT.remainingMs ?? 0) - 1000
+    stT.remainingMs = Math.max(0, remaining)
+    stT.display = formatMs(Number(stT.remainingMs))
+    if (Number(stT.remainingMs) <= 0) {
       st.running = false
       st.phase = 'idle'
       st.phaseLabel = '完成'
@@ -148,7 +149,7 @@ function handlePomodoroInvoke(session: Session, action: string): void {
     st.phaseLabel = '专注中'
     st.activeAction = action
     st.remainingMs = Number(st.focusMinutes ?? 25) * 60_000
-    st.display = formatMs(st.remainingMs)
+    st.display = formatMs(Number(st.remainingMs))
     st.statusText = '专注计时中'
     startTick(session.extensionId)
     return
@@ -169,7 +170,7 @@ function handleCountdownInvoke(session: Session, action: string): void {
     st.running = true
     st.activeAction = action
     st.remainingMs = Number(st.durationSec ?? 300) * 1000
-    st.display = formatMs(st.remainingMs)
+    st.display = formatMs(Number(st.remainingMs))
     st.statusText = '倒计时中'
     startTick(session.extensionId)
     return

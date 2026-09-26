@@ -2,7 +2,7 @@ import { formatBubbleForWeixin } from '../markdownForChannel'
 import type { OutboundBubble } from './deliveryPlanner'
 import { getWeixinDeliveryProfile } from './deliveryProfiles'
 import { markdownToWeixinPlain, splitWeixinDocumentChunks } from './markdownToWeixinPlain'
-import { sanitizeAckemIdentityInMarkdown } from '../../paperCard/ackemProductIdentity'
+import { sanitizeBritneyIdentityInMarkdown } from '../../paperCard/britneyProductIdentity'
 
 const DOC_GAP_MS: [number, number] = [600, 1100]
 
@@ -33,7 +33,7 @@ export function planWeixinDocumentDelivery(args: {
 
   let plain = markdownToWeixinPlain(
     args.userQuestion
-      ? sanitizeAckemIdentityInMarkdown(args.cardBodyMarkdown, args.userQuestion)
+      ? sanitizeBritneyIdentityInMarkdown(args.cardBodyMarkdown, args.userQuestion)
       : args.cardBodyMarkdown
   )
   const title = args.displayTitle?.trim()

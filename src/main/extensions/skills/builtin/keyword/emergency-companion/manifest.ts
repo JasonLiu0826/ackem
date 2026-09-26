@@ -23,12 +23,12 @@ const EMERGENCY_DISPATCH: DispatchConfig = {
 }
 
 export const EMERGENCY_COMPANION_MANIFEST: SkillManifest = {
-  id: 'ackem/emergency-companion@1.0.0',
+  id: 'britney/emergency-companion@1.0.0',
   name: '应急陪伴模式',
   version: '1.0.0',
   category: 'skill',
   skillType: 'rule',
-  description: '检测 distress 关键词后进入温柔应急陪伴模式（非心理治疗）；Ackem 基础能力，始终启用',
+  description: '检测 distress 关键词后进入温柔应急陪伴模式（非心理治疗）；Britney 基础能力，始终启用',
   author: 'JasonLiu0826',
   license: 'AGPL-3.0',
   main: 'skill.ts',

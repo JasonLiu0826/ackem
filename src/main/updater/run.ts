@@ -1,6 +1,6 @@
 import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import { resolvePreloadPath, resolveRendererHtml } from '../outPaths'
-import { readUpdateJob, runUpdatePipeline, launchAckem } from '../update/pipeline'
+import { readUpdateJob, runUpdatePipeline, launchBritney } from '../update/pipeline'
 
 let mainWindow: BrowserWindow | null = null
 
@@ -22,7 +22,7 @@ function createUpdaterWindow(jobPath: string): BrowserWindow {
     height: 520,
     minWidth: 560,
     minHeight: 420,
-    title: 'Ackem Update',
+    title: 'Britney Update',
     backgroundColor: '#0f0d14',
     autoHideMenuBar: true,
     webPreferences: {
@@ -44,14 +44,14 @@ function createUpdaterWindow(jobPath: string): BrowserWindow {
   return win
 }
 
-export async function runAckemUpdater(): Promise<void> {
-  const arg = process.argv.find((a) => a.startsWith('--ackem-updater='))
+export async function runBritneyUpdater(): Promise<void> {
+  const arg = process.argv.find((a) => a.startsWith('--britney-updater='))
   if (!arg) {
-    console.error('Missing --ackem-updater=job.json')
+    console.error('Missing --britney-updater=job.json')
     app.quit()
     return
   }
-  const jobPath = arg.slice('--ackem-updater='.length).replace(/^"|"$/g, '')
+  const jobPath = arg.slice('--britney-updater='.length).replace(/^"|"$/g, '')
 
   await app.whenReady()
 
@@ -62,9 +62,9 @@ export async function runAckemUpdater(): Promise<void> {
     await runUpdatePipeline(job, mainWindow)
     return { ok: true }
   })
-  ipcMain.handle('updater:launchAckem', () => {
+  ipcMain.handle('updater:launchBritney', () => {
     const job = readUpdateJob(jobPath)
-    launchAckem(job.ackemExe)
+    launchBritney(job.britneyExe)
     app.quit()
   })
   ipcMain.handle('updater:openRelease', () => {

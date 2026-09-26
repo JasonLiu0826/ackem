@@ -14,9 +14,9 @@ export function CompanionSkinSection(props: {
   const [skins, setSkins] = useState<CompanionSkinBinding[]>([])
 
   useEffect(() => {
-    void window.ackem.companionSkinList().then(setSkins)
-    window.ackem.onCompanionSkinChanged(() => {
-      void window.ackem.companionSkinList().then(setSkins)
+    void window.britney.companionSkinList().then(setSkins)
+    window.britney.onCompanionSkinChanged(() => {
+      void window.britney.companionSkinList().then(setSkins)
     })
   }, [])
 
@@ -43,7 +43,7 @@ export function CompanionSkinSection(props: {
                 checked={(s.pluginId || '') === activeId}
                 onChange={async () => {
                   const id = s.pluginId || null
-                  const r = await window.ackem.companionSkinSetActive(id)
+                  const r = await window.britney.companionSkinSetActive(id)
                   if (r.ok) {
                     props.setForm({ ...props.form, activeCompanionSkinPluginId: id ?? undefined })
                     props.pushToast(id ? `已切换：${s.pluginName}` : '已恢复默认形象')

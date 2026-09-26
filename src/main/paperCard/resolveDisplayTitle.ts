@@ -1,4 +1,5 @@
-import { userRefersToAckemSelf } from './ackemProductIdentity'
+import type { AppSettings } from '../../shared/types'
+import { userRefersToBritneySelf } from './britneyProductIdentity'
 import { createLlmJsonClient } from '../llmClient'
 import {
   defaultPaperCardTitle,
@@ -38,8 +39,8 @@ export async function resolvePaperCardDisplayTitle(
             content:
               `你是标题助手。为这份「${KIND_LABEL[kind]}」起一个 **6～16 字**的中文主题名。\n` +
               '只输出标题本身：不要引号、不要问号、不要复述用户抱怨或整句原话、不要「计划书/整理卡」等类型词。' +
-              (userRefersToAckemSelf(userQuestion)
-                ? '\n用户在与 Ackem（你）对比时：标题须体现 Ackem，**禁止**用 DeepSeek/GPT/Claude 等模型名代替 Ackem。'
+              (userRefersToBritneySelf(userQuestion)
+                ? '\n用户在与 Britney（你）对比时：标题须体现 Britney，**禁止**用 DeepSeek/GPT/Claude 等模型名代替 Britney。'
                 : '')
           },
           {

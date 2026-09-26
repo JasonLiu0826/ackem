@@ -49,7 +49,7 @@ export function PlanArtifactPreview({
     setError(null)
     try {
       if (deployedExtensionId) {
-        const r = await window.ackem.openforu.readArtifact(deployedExtensionId)
+        const r = await window.britney.openforu.readArtifact(deployedExtensionId)
         if (r.ok && r.files) {
           setFiles(r.files as Partial<Record<ArtifactTab, string>>)
           setSource('deployed')
@@ -59,7 +59,7 @@ export function PlanArtifactPreview({
           setFiles(null)
         }
       } else {
-        const r = await window.ackem.openforu.previewArtifact(sessionId)
+        const r = await window.britney.openforu.previewArtifact(sessionId)
         if (r.ok && r.files) {
           setFiles(r.files as Partial<Record<ArtifactTab, string>>)
           setSource(r.source === 'staging' ? 'staging' : 'preview')

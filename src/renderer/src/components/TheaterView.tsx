@@ -18,7 +18,7 @@ import { isVisibleSearchRow } from '../lib/chatStreamRows'
 /** 剧院光球显示尺寸（与 glowCanvasScale 配合，勿把 canvas 缩到 size 以免整体变小） */
 const THEATER_ORB_SIZE = 280
 
-const MIC_STATE_KEY = 'ackem-theater-mic-active'
+const MIC_STATE_KEY = 'britney-theater-mic-active'
 
 function readDocumentTheme(): ThemeMode {
   return document.documentElement.classList.contains('theme-dark') ? 'dark' : 'light'
@@ -76,19 +76,19 @@ export function TheaterView(): JSX.Element | null {
   // 剧院会话：同步语音设置；TTS 关闭时仍保留 ASR / 麦克风路径
   useEffect(() => {
     if (!open) {
-      void window.ackem.voice?.setTheaterSession?.(false)
+      void window.britney.voice?.setTheaterSession?.(false)
       return
     }
     const s = loadVoiceSettings()
     if (!s.enabled || textOnly) {
-      void window.ackem.voice?.setTheaterSession?.(false)
+      void window.britney.voice?.setTheaterSession?.(false)
       return
     }
     void syncVoiceSettingsToMain(s)
-    void window.ackem.voice?.setTheaterSession?.(true)
+    void window.britney.voice?.setTheaterSession?.(true)
     voice.unlockAudio()
     return () => {
-      void window.ackem.voice?.setTheaterSession?.(false)
+      void window.britney.voice?.setTheaterSession?.(false)
     }
   }, [open, textOnly, voice.unlockAudio])
 
@@ -127,7 +127,7 @@ export function TheaterView(): JSX.Element | null {
 
   // Fetch emotion state
   useEffect(() => {
-    void window.ackem.getState().then((raw) => {
+    void window.britney.getState().then((raw) => {
       const s = raw as { emotion?: { aro?: number; aff?: number } }
       if (s.emotion?.aro != null) setAro(s.emotion.aro)
       if (s.emotion?.aff != null) setAff(s.emotion.aff)
@@ -148,7 +148,7 @@ export function TheaterView(): JSX.Element | null {
 
   // Handle ASR transcript → send or prefill input (dual channel)
   useEffect(() => {
-    const unsub = window.ackem.voice?.onTranscript?.((result) => {
+    const unsub = window.britney.voice?.onTranscript?.((result) => {
       const text = result.text.trim()
       if (!text) return
       const channel = loadVoiceSettings().inputChannel

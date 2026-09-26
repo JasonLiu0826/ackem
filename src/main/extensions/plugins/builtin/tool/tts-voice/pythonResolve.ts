@@ -82,7 +82,7 @@ export function runPythonCapture(
 export function assertVoiceServiceScript(scriptPath?: string): void {
   const path = scriptPath ?? getVoiceServiceScriptPath()
   if (!existsSync(path)) {
-    throw new Error(`语音程序未找到: ${path}。请重新安装 Ackem 或联系支持。`)
+    throw new Error(`语音程序未找到: ${path}。请重新安装 Britney 或联系支持。`)
   }
 }
 

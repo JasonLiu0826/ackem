@@ -1,9 +1,9 @@
 // [workingMemory] — 工作记忆/近期上下文缓冲区
 // 职责：维护最近N轮对话摘要，按会话隔离，作为检索上下文前置补充
 // 对标 MemGPT working context / recall memory
-// 引用：../engine/ackemParams
+// 引用：../engine/britneyParams
 
-import { WORKING_MEMORY_CHAR_BUDGET, WORKING_MEMORY_MAX_EXCHANGES } from '../engine/ackemParams'
+import { WORKING_MEMORY_CHAR_BUDGET, WORKING_MEMORY_MAX_EXCHANGES } from '../engine/britneyParams'
 
 export type Exchange = {
   turnIndex: number

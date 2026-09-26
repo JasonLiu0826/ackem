@@ -21,7 +21,7 @@ export function formatDiaryFactLine(subject: string, summary: string): string {
   const who =
     s === 'user' || s === 'ta' || s === '主人'
       ? '关于ta'
-      : s === 'companion' || s === 'self' || s === 'ackem' || s === '我'
+      : s === 'companion' || s === 'self' || s === 'britney' || s === '我'
         ? '关于我'
         : subject.trim()
           ? `关于${subject.trim()}`

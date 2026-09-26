@@ -1,6 +1,6 @@
 import type { PluginManifest } from '../../../types'
 
-export const SCREEN_EFFECTS_PLUGIN_ID = 'ackem/screen-effects@0.0.1'
+export const SCREEN_EFFECTS_PLUGIN_ID = 'britney/screen-effects@0.0.1'
 
 /** W8 前仅 pulse 广播 stub，无粒子/满屏特效 */
 export const SCREEN_EFFECTS_IMPLEMENTATION_STATUS = 'stub' as const

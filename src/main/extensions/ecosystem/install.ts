@@ -5,8 +5,8 @@ import { join } from 'node:path'
 import type { ExtensionOpResult } from '../protocols'
 import { COMMUNITY_EXTENSIONS_REL, SIGNATURE_SIDECAR_FILENAME } from './constants'
 import { parseExtensionId } from './extensionId'
-import type { AckemExtensionPackage } from './packageFormat'
-import { parseAckemExtensionPackage, verifyAckemExtensionPackage } from './packageFormat'
+import type { BritneyExtensionPackage } from './packageFormat'
+import { parseBritneyExtensionPackage, verifyBritneyExtensionPackage } from './packageFormat'
 import {
   COMMUNITY_EXTENSIONS_CLOSED_ZH,
   isCommunityExtensionsOpen
@@ -28,14 +28,14 @@ export function installCommunityPackage(
     return { ok: false, error: COMMUNITY_EXTENSIONS_CLOSED_ZH }
   }
 
-  let pkg: AckemExtensionPackage
+  let pkg: BritneyExtensionPackage
   try {
-    pkg = parseAckemExtensionPackage(rawPackage)
+    pkg = parseBritneyExtensionPackage(rawPackage)
   } catch (err) {
     return { ok: false, error: String(err) }
   }
 
-  const verify = verifyAckemExtensionPackage(dataRoot, pkg)
+  const verify = verifyBritneyExtensionPackage(dataRoot, pkg)
   if (!verify.ok) {
     return { ok: false, error: verify.errors.join('; ') }
   }
@@ -87,7 +87,7 @@ export function installCommunityPackageFromFile(
     const raw = JSON.parse(readFileSync(filePath, 'utf-8'))
     return installCommunityPackage(dataRoot, raw)
   } catch (err) {
-    return { ok: false, error: `解析 .ackem-ext 失败: ${String(err)}` }
+    return { ok: false, error: `解析 .britney-ext 失败: ${String(err)}` }
   }
 }
 

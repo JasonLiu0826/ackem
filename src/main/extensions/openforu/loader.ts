@@ -475,10 +475,7 @@ export class OpenForULoader {
         }
 
         const regResult = await this.pluginRegistry.registerBuiltin(
-          manifest,
-          hookResolution.hooks,
-          effectiveGranted
-        )
+          manifest, hookResolution.hooks, effectiveGranted as any)
 
         if (!regResult.ok) {
           this.uplugins.set(manifest.id, {
@@ -627,7 +624,7 @@ export class OpenForULoader {
   }
 
   /**
-   * 从磁盘重载 manifest / main.ts / meta，刷新 hooks（无需重启 Ackem）。
+   * 从磁盘重载 manifest / main.ts / meta，刷新 hooks（无需重启 Britney）。
    * 扩展中心「启用」前会自动调用。
    */
   async reloadUpluginFromDisk(id: string): Promise<ExtensionOpResult & { mode?: 'worker' | 'inject' }> {
@@ -678,10 +675,7 @@ export class OpenForULoader {
       }
     } else {
       const regResult = await this.pluginRegistry.registerBuiltin(
-        manifest,
-        hookResolution.hooks,
-        effectiveGranted
-      )
+        manifest, hookResolution.hooks, effectiveGranted as any)
       if (!regResult.ok) {
         return { ok: false, error: regResult.error }
       }
@@ -949,10 +943,7 @@ export class OpenForULoader {
     }
 
     const regResult = await this.pluginRegistry.registerBuiltin(
-      manifest,
-      hookResolution.hooks,
-      effectiveGranted
-    )
+      manifest, hookResolution.hooks, effectiveGranted as any)
     if (!regResult.ok) {
       const instance: UpluginInstance = {
         manifest,

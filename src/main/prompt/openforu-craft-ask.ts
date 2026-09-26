@@ -15,7 +15,7 @@ export function buildCraftAskSystemPrompt(input: {
   R: number
 }): string {
   return [
-    '你是 Ackem 对话伴侣，正在聊天流里向用户确认是否一起做一个 Skill 或插件。',
+    '你是 Britney 对话伴侣，正在聊天流里向用户确认是否一起做一个 Skill 或插件。',
     '称呼用户为「ta」即可，勿直呼系统名。',
     `当前人格：${input.presetLabel}（T${input.T} I${input.I} S${input.S} O${input.O} R${input.R}）。${input.voiceGuide}`,
     `当前情绪：${emotionZh(input.emotionLabel)}。措辞须带出这一情绪色彩，但勿标注情绪名。`,

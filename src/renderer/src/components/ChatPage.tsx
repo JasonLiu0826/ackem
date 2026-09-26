@@ -9,6 +9,7 @@ import { useEmbeddingReadiness } from '../hooks/useEmbeddingReadiness'
 import { SearchPaperCard } from './SearchPaperCard'
 import { MemoryAuditCard } from './MemoryAuditCard'
 import { PlanCreateChatCard } from './PlanCreateChatCard'
+import { ImageCard } from './ImageCard'
 import { ConfirmExtensionDialog } from './ConfirmExtensionDialog'
 import {
   ChatDesktopAgentToggle,
@@ -57,7 +58,7 @@ type PendingDispatchContext = {
 }
 
 function syncDispatchTriggerFromBuilt(
-  built: Awaited<ReturnType<typeof window.ackem.buildContext>>
+  built: Awaited<ReturnType<typeof window.britney.buildContext>>
 ): void {
   useAppStore.getState().setDispatchTriggerStatus(built.dispatchTriggered ?? null)
 }
@@ -153,7 +154,7 @@ export function ChatPage(): JSX.Element {
         return false
       }
       try {
-        await window.ackem.openforu.workspaces.create(planTopic?.trim() || undefined)
+        await window.britney.openforu.workspaces.create(planTopic?.trim() || undefined)
         setPlanOpen(true)
         return true
       } catch (e) {
@@ -170,7 +171,7 @@ export function ChatPage(): JSX.Element {
     if (!settings) return
     setDesktopAgentSettingsReady(isDesktopAgentSettingsReady(settings))
     if (!isDesktopAgentApiAvailable()) return
-    void window.ackem.desktopAgent.sessionMode.get(activeSessionId).then((r) => {
+    void window.britney.desktopAgent.sessionMode.get(activeSessionId).then((r) => {
       setDesktopAgentChatMode(r.enabled && r.settingsReady)
       setDesktopAgentSettingsReady(r.settingsReady)
     })
@@ -183,7 +184,7 @@ export function ChatPage(): JSX.Element {
         pushToast(desktopAgentApiMissingMessage())
         return
       }
-      const res = await window.ackem.desktopAgent.sessionMode.set(activeSessionId, next)
+      const res = await window.britney.desktopAgent.sessionMode.set(activeSessionId, next)
       if (!res.ok) {
         pushToast(res.error ?? '无法切换电脑助手模式')
         return
@@ -196,13 +197,13 @@ export function ChatPage(): JSX.Element {
         if (!hasUserMsg) {
           setBusy(true)
           try {
-            const opening = await window.ackem.desktopAgent.opening()
+            const opening = await window.britney.desktopAgent.opening()
             if (opening.ok && opening.text.trim()) {
               setRows((prev) => [
                 ...prev,
                 { kind: 'message', role: 'assistant', content: opening.text.trim() }
               ])
-              void window.ackem.saveChatHistory(useAppStore.getState().chatRows)
+              void window.britney.saveChatHistory(useAppStore.getState().chatRows)
             }
           } catch (e) {
             pushToast(e instanceof Error ? e.message : String(e))
@@ -263,14 +264,14 @@ export function ChatPage(): JSX.Element {
   }, [])
 
   const bindChatStreamHandlers = useCallback(() => {
-    window.ackem.onChatStreamStart(() => {
+    window.britney.onChatStreamStart(() => {
       setActivityLabel(null)
       setInvestigationProgress(null)
       if (!useAppStore.getState().agentBusy) {
         setTaskPlanProgress(null)
       }
     })
-    window.ackem.onChatWaveStart(({ newBubble }) => {
+    window.britney.onChatWaveStart(({ newBubble }) => {
       setActivityLabel(null)
       if (!newBubble) {
         streamBuf.current = ''
@@ -283,18 +284,18 @@ export function ChatPage(): JSX.Element {
         return n
       })
     })
-    window.ackem.onChatChunk((c) => {
+    window.britney.onChatChunk((c) => {
       setActivityLabel(null)
       streamBuf.current += c
       patchStreamingAssistant(streamBuf.current)
     })
-    window.ackem.onChatWaveEnd(({ text }) => {
+    window.britney.onChatWaveEnd(({ text }) => {
       if (text) {
         streamBuf.current = text
         patchStreamingAssistant(text)
       }
     })
-    window.ackem.onChatReplace((text) => {
+    window.britney.onChatReplace((text) => {
       setActivityLabel(null)
       setInvestigationProgress(null)
       if (!useAppStore.getState().agentBusy) {
@@ -303,20 +304,20 @@ export function ChatPage(): JSX.Element {
       streamBuf.current = text
       patchStreamingAssistant(text)
     })
-    window.ackem.onChatStatus((text) => {
+    window.britney.onChatStatus((text) => {
       const label = normalizeChatActivityLabel(text)
       setActivityLabel(label || null)
     })
-    window.ackem.onInvestigationProgress((payload) => {
+    window.britney.onInvestigationProgress((payload) => {
       setInvestigationProgress(payload)
     })
-    window.ackem.onTaskPlanProgress((payload) => {
+    window.britney.onTaskPlanProgress((payload) => {
       setTaskPlanProgress(payload)
     })
-    window.ackem.onChatSearchCard((payload) => {
+    window.britney.onChatSearchCard((payload) => {
       insertSearchCard(payload)
     })
-    window.ackem.onChatMemoryAudit((payload) => {
+    window.britney.onChatMemoryAudit((payload) => {
       insertMemoryAuditCard(payload)
     })
   }, [insertMemoryAuditCard, insertSearchCard, patchStreamingAssistant, setRows])
@@ -337,7 +338,7 @@ export function ChatPage(): JSX.Element {
         } else {
           next.push({ kind: 'message', role: 'assistant', content })
         }
-        void window.ackem.saveChatHistory(next)
+        void window.britney.saveChatHistory(next)
         return next
       })
     },
@@ -346,21 +347,21 @@ export function ChatPage(): JSX.Element {
 
   useEffect(() => {
     if (!isDesktopAgentApiAvailable()) return
-    const offConfirm = window.ackem.desktopAgent.confirm.onRequest((payload) => {
+    const offConfirm = window.britney.desktopAgent.confirm.onRequest((payload) => {
       setDesktopAgentConfirm(payload)
     })
-    window.ackem.onDesktopAgentAgentBusy?.(({ sessionId: sid, busy: ab }) => {
+    window.britney.onDesktopAgentAgentBusy?.(({ sessionId: sid, busy: ab }) => {
       if (sid !== activeSessionId) return
       setAgentBusy(ab)
     })
-    window.ackem.onDesktopAgentJobState?.((payload) => {
+    window.britney.onDesktopAgentJobState?.((payload) => {
       if (payload.sessionId !== activeSessionId) return
       setAgentJobState(payload)
       if (!payload.active) {
         setAgentJobStatus(null)
       }
     })
-    window.ackem.onDesktopAgentJobStatus?.(({ sessionId: sid, label }) => {
+    window.britney.onDesktopAgentJobStatus?.(({ sessionId: sid, label }) => {
       if (sid !== activeSessionId) return
       setAgentJobStatus(label.trim() ? label : null)
     })
@@ -376,15 +377,15 @@ export function ChatPage(): JSX.Element {
         appendTaskDeliveryToChat(payload)
       }
     }
-    window.ackem.onDesktopAgentTaskDelivery?.(handleDelivery)
-    window.ackem.onDesktopAgentTaskDeliveryQueued?.(handleDelivery)
+    window.britney.onDesktopAgentTaskDelivery?.(handleDelivery)
+    window.britney.onDesktopAgentTaskDeliveryQueued?.(handleDelivery)
     return () => {
       offConfirm()
     }
   }, [activeSessionId, setAgentBusy, appendTaskDeliveryToChat])
 
   useEffect(() => {
-    void window.ackem
+    void window.britney
       .getState()
       .then((raw) => {
         const s = raw as { emotion?: { primaryLabel?: string; aff?: number } }
@@ -420,9 +421,9 @@ export function ChatPage(): JSX.Element {
   }, [rows])
 
   useEffect(() => {
-    void window.ackem?.ensureLayout()
+    void window.britney?.ensureLayout()
     // 加载上次的聊天记录
-    void window.ackem?.loadChatHistory().then((history: unknown[]) => {
+    void window.britney?.loadChatHistory().then((history: unknown[]) => {
       if (!history?.length) return
       const normalized = history.map(normalizeChatRow).filter((r): r is ChatRow => r != null)
       if (normalized.length > 0) setRows(normalized)
@@ -431,7 +432,7 @@ export function ChatPage(): JSX.Element {
 
   // Load session list
   useEffect(() => {
-    void window.ackem?.sessionList().then(list => {
+    void window.britney?.sessionList().then(list => {
       if (list && list.length > 0) setSessions(list)
     }).catch(() => {})
   }, [activeSessionId])
@@ -451,13 +452,13 @@ export function ChatPage(): JSX.Element {
   }, [chatFocusToken, focusChatInput])
 
   useEffect(() => {
-    window.ackem?.onDispatchProactive?.((payload) => {
+    window.britney?.onDispatchProactive?.((payload) => {
       pushToast(`${payload.extensionId}: ${payload.message.slice(0, 80)}`)
     })
   }, [pushToast])
 
   useEffect(() => {
-    window.ackem?.onExtensionTrigger?.((status) => {
+    window.britney?.onExtensionTrigger?.((status) => {
       useAppStore.getState().setDispatchTriggerStatus(status)
     })
   }, [])
@@ -468,13 +469,13 @@ export function ChatPage(): JSX.Element {
 
   const runChatFromBuilt = useCallback(
     async (
-      built: Awaited<ReturnType<typeof window.ackem.buildContext>>,
+      built: Awaited<ReturnType<typeof window.britney.buildContext>>,
       awakeningHint?: string
     ) => {
       if (!settings) return
 
       bindChatStreamHandlers()
-      window.ackem.onChatDone((meta) => {
+      window.britney.onChatDone((meta) => {
         setActivityLabel(null)
         setInvestigationProgress(null)
         clearStreamingAssistantIndex()
@@ -482,9 +483,9 @@ export function ChatPage(): JSX.Element {
           pushToast(t('chat.memoryWrite', { writes: meta.memoryWrites.join('; ') }))
         }
         incrementTurn()
-        void window.ackem.saveChatHistory(useAppStore.getState().chatRows)
+        void window.britney.saveChatHistory(useAppStore.getState().chatRows)
       })
-      window.ackem.onChatError((err) => {
+      window.britney.onChatError((err) => {
         setActivityLabel(null)
         setInvestigationProgress(null)
         if (String(err) === 'EMBEDDING_WARMING') {
@@ -494,12 +495,15 @@ export function ChatPage(): JSX.Element {
         pushToast(err)
         patchStreamingAssistant(t('chat.error', { error: String(err) }))
       })
+      window.britney.onChatImage((payload) => {
+        setRows((prev) => [...prev, { kind: 'image', ...payload }])
+      })
 
       if (built.skipLlm && built.redlineReply) {
         patchStreamingAssistant(built.redlineReply ?? '')
         clearStreamingAssistantIndex()
         incrementTurn()
-        void window.ackem.saveChatHistory(useAppStore.getState().chatRows)
+        void window.britney.saveChatHistory(useAppStore.getState().chatRows)
         return
       }
 
@@ -514,7 +518,7 @@ export function ChatPage(): JSX.Element {
         return
       }
 
-      await window.ackem.startChat({
+      await window.britney.startChat({
         messages: built.messages,
         settings,
         turnId: built.turnId,
@@ -592,7 +596,7 @@ export function ChatPage(): JSX.Element {
       bindChatStreamHandlers()
 
       try {
-        const built = await window.ackem.buildContext({
+        const built = await window.britney.buildContext({
           userText: ctx.userText,
           explicitRel: ctx.explicitRel,
           recentMessages: ctx.recent,
@@ -628,7 +632,7 @@ export function ChatPage(): JSX.Element {
     const onWinFocus = () => focusChatInput()
     window.addEventListener('focus', onWinFocus)
     // 主进程 BrowserWindow focus 事件也会通过 IPC 转发到此处
-    window.ackem?.onWindowFocused(() => focusChatInput())
+    window.britney?.onWindowFocused(() => focusChatInput())
     return () => window.removeEventListener('focus', onWinFocus)
   }, [focusChatInput])
 
@@ -667,7 +671,7 @@ export function ChatPage(): JSX.Element {
       bindChatStreamHandlers()
 
       try {
-        const built = await window.ackem.buildContext({
+        const built = await window.britney.buildContext({
           userText: t('chat.archiveSilent'),
           systemHint,
           recentMessages: prevRows
@@ -679,27 +683,30 @@ export function ChatPage(): JSX.Element {
         })
         syncDispatchTriggerFromBuilt(built)
 
-        window.ackem.onChatDone(() => {
+        window.britney.onChatDone(() => {
           clearStreamingAssistantIndex()
           incrementTurn()
           // 自动保存聊天记录
-          void window.ackem.saveChatHistory(useAppStore.getState().chatRows)
+          void window.britney.saveChatHistory(useAppStore.getState().chatRows)
         })
-        window.ackem.onChatError((err) => {
+        window.britney.onChatError((err) => {
           if (String(err) === 'EMBEDDING_WARMING') {
             pushToast(t('chat.embedding.warming'))
             return
           }
           pushToast(err)
-          void window.ackem.saveChatHistory(useAppStore.getState().chatRows)
+          void window.britney.saveChatHistory(useAppStore.getState().chatRows)
           patchStreamingAssistant(t('chat.error', { error: String(err) }))
+        })
+        window.britney.onChatImage((payload) => {
+          setRows((prev) => [...prev, { kind: 'image', ...payload }])
         })
 
         if (built.skipLlm && built.redlineReply) {
           patchStreamingAssistant(built.redlineReply ?? '')
           clearStreamingAssistantIndex()
         } else {
-          await window.ackem.startChat({
+          await window.britney.startChat({
             messages: built.messages,
             settings,
             turnId: built.turnId,
@@ -768,7 +775,7 @@ export function ChatPage(): JSX.Element {
     bindChatStreamHandlers()
 
     try {
-      const built = await window.ackem.buildContext(
+      const built = await window.britney.buildContext(
         buildChatContextRequest({
           clean,
           userLine,
@@ -874,12 +881,12 @@ export function ChatPage(): JSX.Element {
                 const newId = e.target.value
                 if (newId === activeSessionId) return
                 try {
-                  const r = await window.ackem.sessionSwitch(newId)
+                  const r = await window.britney.sessionSwitch(newId)
                   if (r.ok && r.settings) {
                     useAppStore.getState().setSettings(r.settings)
                     useAppStore.getState().resetChat()
                     turnRef.current = 0
-                    const history = await window.ackem.loadChatHistory()
+                    const history = await window.britney.loadChatHistory()
                     if (history?.length) {
                       const normalized = history
                         .map(normalizeChatRow)
@@ -921,6 +928,9 @@ export function ChatPage(): JSX.Element {
               </div>
             )}
             {rows.map((m, i) => {
+              if (m.kind === 'image') {
+                return <ImageCard key={`img-${i}`} imagePath={m.path} imageUrl={m.url} prompt={m.prompt} />
+              }
               if (m.kind === 'search') {
                 return <SearchPaperCard key={`search-${i}`} {...m} />
               }
@@ -1041,13 +1051,13 @@ export function ChatPage(): JSX.Element {
               pendingDelivery={pendingTaskDelivery}
               onAllowOnce={() => {
                 if (!desktopAgentConfirm || !isDesktopAgentApiAvailable()) return
-                void window.ackem.desktopAgent.confirm
+                void window.britney.desktopAgent.confirm
                   .allow(desktopAgentConfirm.requestId)
                   .then(() => setDesktopAgentConfirm(null))
               }}
               onAllowSession={() => {
                 if (!desktopAgentConfirm || !isDesktopAgentApiAvailable()) return
-                void window.ackem.desktopAgent.confirm
+                void window.britney.desktopAgent.confirm
                   .allowSession(desktopAgentConfirm.requestId)
                   .then(() => setDesktopAgentConfirm(null))
               }}
@@ -1058,7 +1068,7 @@ export function ChatPage(): JSX.Element {
                   !isDesktopAgentApiAvailable()
                 )
                   return
-                void window.ackem.desktopAgent.confirm
+                void window.britney.desktopAgent.confirm
                   .allowTaskDeletes(
                     desktopAgentConfirm.requestId,
                     desktopAgentConfirm.taskPlanId
@@ -1067,7 +1077,7 @@ export function ChatPage(): JSX.Element {
               }}
               onDeny={() => {
                 if (!desktopAgentConfirm || !isDesktopAgentApiAvailable()) return
-                void window.ackem.desktopAgent.confirm
+                void window.britney.desktopAgent.confirm
                   .deny(desktopAgentConfirm.requestId)
                   .then(() => setDesktopAgentConfirm(null))
               }}

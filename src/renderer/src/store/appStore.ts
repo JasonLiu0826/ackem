@@ -26,6 +26,7 @@ export type SettingsDeepLink = {
 type Toast = { id: number; text: string }
 
 export type ChatMessageRow = { kind: 'message'; role: 'user' | 'assistant'; content: string }
+export type ChatImageRow = { kind: 'image'; path?: string; url?: string; prompt?: string }
 export type ChatSearchRow = { kind: 'search' } & SearchCardPayload
 export type ChatMemoryAuditRow = { kind: 'memoryAudit' } & MemoryAuditCardPayload
 export type ChatSystemRow = {
@@ -40,7 +41,7 @@ export type ChatPlanCreateAskRow = {
   emotionLabel: string
   status: 'pending' | 'accepted' | 'rejected'
 }
-export type ChatRow = ChatMessageRow | ChatSearchRow | ChatMemoryAuditRow | ChatSystemRow | ChatPlanCreateAskRow
+export type ChatRow = ChatMessageRow | ChatImageRow | ChatSearchRow | ChatMemoryAuditRow | ChatSystemRow | ChatPlanCreateAskRow
 
 /** 兼容旧版聊天记录（无 kind 字段） */
 export function normalizeChatRow(raw: unknown): ChatRow | null {
@@ -99,6 +100,9 @@ export function normalizeChatRow(raw: unknown): ChatRow | null {
   if (o.kind === 'system' && typeof o.content === 'string') {
     const tone = o.tone === 'success' || o.tone === 'danger' ? o.tone : 'amber'
     return { kind: 'system', content: o.content, tone }
+  }
+  if (o.kind === 'image' && (typeof o.path === 'string' || typeof o.url === 'string')) {
+    return { kind: 'image', path: typeof o.path === 'string' ? o.path : undefined, url: typeof o.url === 'string' ? o.url : undefined, prompt: typeof o.prompt === 'string' ? o.prompt : undefined }
   }
   if (o.kind === 'planCreateAsk' && typeof o.askMessage === 'string') {
     const status =

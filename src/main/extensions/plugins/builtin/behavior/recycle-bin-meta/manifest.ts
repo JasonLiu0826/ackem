@@ -2,7 +2,7 @@
 import type { PluginManifest } from '../../../types'
 
 export const MANIFEST: PluginManifest = {
-  "id": "ackem/recycle-bin-meta@0.0.1",
+  "id": "britney/recycle-bin-meta@0.0.1",
   "name": "回收站元数据",
   "version": "0.0.1",
   "category": "plugin",
@@ -25,5 +25,5 @@ export const MANIFEST: PluginManifest = {
     "p-08"
   ]
 } as PluginManifest
-export const PLUGIN_ID = 'ackem/recycle-bin-meta@0.0.1'
+export const PLUGIN_ID = 'britney/recycle-bin-meta@0.0.1'
 export const SPEC_ID = 'P-08'

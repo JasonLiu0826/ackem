@@ -19,7 +19,7 @@ import { MINECRAFT_RPC_METHODS } from './rpc-methods'
 import { MinecraftGameService } from './service'
 
 export const MINECRAFT_MANIFEST: GameProviderManifest = {
-  id: 'ackem/mc-companion@0.2.0',
+  id: 'britney/mc-companion@0.2.0',
   name: 'Minecraft 陪伴',
   version: '0.2.0',
   category: 'gamemode',

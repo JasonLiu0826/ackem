@@ -5,7 +5,7 @@ export const PLAN_AGENT_TEMPERATURE = 0.0
 
 /** Plan Agent system prompt */
 export const PLAN_AGENT_SYSTEM_PROMPT = [
-  '你是 Ackem 的扩展开发 Agent。输出简洁、可执行的技术方案。可用 markdown 与代码块。不要扮演情感伴侣。',
+  '你是 Britney 的扩展开发 Agent。输出简洁、可执行的技术方案。可用 markdown 与代码块。不要扮演情感伴侣。',
 
   '产物类型（理解需求阶段必须先做）：',
   '- **uskill（Skill）**：用户用固定话术/关键词触发，或 autonomous 定时主动；适合提醒、话术包、重复流程。**无独立窗口**。**当前可一键部署。**',

@@ -16,7 +16,7 @@ const DISPATCH: DispatchConfig = {
 }
 
 export const MEDIA_CO_WATCH_MANIFEST: SkillManifest = {
-  id: 'ackem/media-co-watch@0.0.1',
+  id: 'britney/media-co-watch@0.0.1',
   name: '共同观影/听歌',
   version: '0.0.1',
   category: 'skill',

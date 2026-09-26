@@ -135,7 +135,7 @@ export class MinecraftGameService {
       port: cfg.port ?? 25565,
       username: cfg.username,
       password: cfg.password,
-      ackemWsUrl: `ws://localhost:${this.wsPort}`,
+      britneyWsUrl: `ws://localhost:${this.wsPort}`,
       tickIntervalMs: 500,
       autoCombat: true,
       autoFollow: true,

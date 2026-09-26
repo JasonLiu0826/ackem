@@ -3,7 +3,7 @@ import type { PluginManifest } from '../../../types'
 export const SCREENSHOT_DEPRECATED_AT = '2026-06-06'
 export const SCREENSHOT_IMPLEMENTATION_STATUS = 'deprecated' as const
 
-export const SCREENSHOT_PLUGIN_ID = 'ackem/screenshot@0.0.1'
+export const SCREENSHOT_PLUGIN_ID = 'britney/screenshot@0.0.1'
 
 export const SCREENSHOT_MANIFEST: PluginManifest = {
   id: SCREENSHOT_PLUGIN_ID,

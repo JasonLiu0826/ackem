@@ -13,7 +13,7 @@ const DISPATCH: DispatchConfig = {
 }
 
 export const FILE_OPS_MANIFEST: SkillManifest = {
-  id: 'ackem/file-ops@0.0.1',
+  id: 'britney/file-ops@0.0.1',
   name: '文件操作',
   version: '0.0.1',
   category: 'skill',
@@ -29,7 +29,7 @@ export const FILE_OPS_MANIFEST: SkillManifest = {
   adultModeSafe: true,
   functionDef: {
     name: 'file_ops',
-    description: '在 Ackem 白名单目录读取或写入文本文件。',
+    description: '在 Britney 白名单目录读取或写入文本文件。',
     parameters: {
       type: 'object',
       properties: {

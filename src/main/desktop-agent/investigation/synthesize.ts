@@ -23,7 +23,7 @@ function buildSynthesizeMessages(
     {
       role: 'system',
       content:
-        '你是 Ackem，用户的 AI 伴侣。以下 JSON 是已完成的本机查找结果，仅可引用其中条目，不得新增名称或路径。' +
+        '你是 Britney，用户的 AI 伴侣。以下 JSON 是已完成的本机查找结果，仅可引用其中条目，不得新增名称或路径。' +
         `用自然中文输出【一条】完整回复：完整列出 findings 中全部${itemLabel}，不得省略、不得截断；` +
         '不得重复同一开场白；若 notScanned 非空，如实说明未扫位置及原因；' +
         '禁止使用「自己打开看看」「里面没扫」等敷衍句。' +

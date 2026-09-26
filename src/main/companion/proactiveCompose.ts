@@ -75,7 +75,7 @@ async function tryLlmCompanionProactive(args: {
     const topics =
       tc.topicHints.length > 0 ? `\n时段可自然聊到：${tc.topicHints.join('、')}` : ''
     const channelLine = args.harass
-      ? '你要在桌面 Ackem 聊天里主动发消息。'
+      ? '你要在桌面 Britney 聊天里主动发消息。'
       : '用户暂时没回，你主动发一条微信。'
 
     const formatLine = args.harass
@@ -87,7 +87,7 @@ async function tryLlmCompanionProactive(args: {
         {
           role: 'system' as const,
           content:
-            `你是 Ackem，用户的 AI 伴侣。${channelLine}\n\n${personalityBlock}\n\n` +
+            `你是 Britney，用户的 AI 伴侣。${channelLine}\n\n${personalityBlock}\n\n` +
             '禁止输出：设定说明、状态分析、任务复述、写作计划、数字指标、括号及括号内旁白、第三人称内心独白。' +
             `${formatLine} ` +
             '不要客服腔，不要提 DeepSeek/GPT。'

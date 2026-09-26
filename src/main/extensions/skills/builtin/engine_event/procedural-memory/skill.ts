@@ -9,7 +9,7 @@ function resolveDataRootForSkill(): string {
   try {
     return resolveDataRoot(loadSettings())
   } catch {
-    return process.env.ACKEM_TEST_DATA_ROOT ?? ''
+    return process.env.BRITNEY_TEST_DATA_ROOT ?? ''
   }
 }
 

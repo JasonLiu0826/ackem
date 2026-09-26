@@ -1,6 +1,6 @@
 import type { DispatchCatalogEntry, DispatchConfig } from '../protocols'
 
-/** 从 keywords 生成默认 `/关键词`（开发保底，无需重启 Ackem） */
+/** 从 keywords 生成默认 `/关键词`（开发保底，无需重启 Britney） */
 export function buildSlashAliasesFromKeywords(keywords: string[]): string[] {
   const out: string[] = []
   for (const kw of keywords) {

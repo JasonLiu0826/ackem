@@ -1,7 +1,7 @@
 // [semanticReranker] — LLM 语义重排序
 // 职责：用 LLM 对 TF-IDF 粗排结果做精排，给真正的语义相关性打分
 // 对标 OpenAI/MemGPT embedding 搜索的语义理解能力，但用 LLM 而非 embedding 模型
-// 引用：../engine/types, ../engine/ackemParams, ./factStore
+// 引用：../engine/types, ../engine/britneyParams, ./factStore
 
 import type { LlmClient, MemoryFact } from '../engine/types'
 

@@ -3,13 +3,22 @@ import { join } from 'node:path'
 import { spawn } from 'node:child_process'
 import { app } from 'electron'
 
+/** Preflight check before spawning updater */
+export function runUpdatePreflight(): { ok: true; installDir: string } | { ok: false; reason: string } {
+  const installDir = join(app.getPath('exe'), '..')
+  if (!existsSync(installDir)) {
+    return { ok: false, reason: 'install_dir_missing' }
+  }
+  return { ok: true, installDir }
+}
+
 export function resolveLauncherExePath(installDir: string): string {
-  const launcher = `${installDir}\\AckemLauncher.exe`
+  const launcher = `${installDir}\\BritneyLauncher.exe`
   if (existsSync(launcher)) return launcher
-  const cmd = `${installDir}\\AckemLauncher.cmd`
+  const cmd = `${installDir}\\BritneyLauncher.cmd`
   if (existsSync(cmd)) return cmd
   // 兼容旧绿色版
-  const legacy = `${installDir}\\AckemUpdater.exe`
+  const legacy = `${installDir}\\BritneyUpdater.exe`
   if (existsSync(legacy)) return legacy
   return app.getPath('exe')
 }
@@ -21,7 +30,7 @@ export function resolveUpdaterExePath(installDir: string): string {
 
 export function spawnLauncherProcess(installDir: string, jobPath: string): void {
   const target = resolveLauncherExePath(installDir)
-  const arg = `--ackem-updater=${jobPath}`
+  const arg = `--britney-updater=${jobPath}`
 
   if (target.toLowerCase().endsWith('.cmd')) {
     const child = spawn('cmd.exe', ['/c', target, arg], {
@@ -41,16 +50,4 @@ export function spawnLauncherProcess(installDir: string, jobPath: string): void 
     cwd: installDir
   })
   child.unref()
-}
-
-export function runUpdatePreflight(): { ok: boolean; reason?: string; installDir: string } {
-  const platform = process.platform
-  if (platform !== 'win32') {
-    return { ok: false, reason: `unsupported_platform:${platform}`, installDir: app.getAppPath() }
-  }
-  const installDir = join(app.getAppPath(), '..')
-  if (!existsSync(installDir)) {
-    return { ok: false, reason: 'install_dir_missing', installDir }
-  }
-  return { ok: true, installDir }
 }

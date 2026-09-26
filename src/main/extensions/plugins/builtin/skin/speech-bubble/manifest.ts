@@ -2,7 +2,7 @@
 import type { PluginManifest } from '../../../types'
 
 export const MANIFEST: PluginManifest = {
-  "id": "ackem/speech-bubble@0.0.1",
+  "id": "britney/speech-bubble@0.0.1",
   "name": "对话弹出动画",
   "version": "0.0.1",
   "category": "plugin",
@@ -24,5 +24,5 @@ export const MANIFEST: PluginManifest = {
     "p-14"
   ]
 } as PluginManifest
-export const PLUGIN_ID = 'ackem/speech-bubble@0.0.1'
+export const PLUGIN_ID = 'britney/speech-bubble@0.0.1'
 export const SPEC_ID = 'P-14'

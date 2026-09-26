@@ -14,7 +14,7 @@ const BIRTHDAY_DISPATCH: DispatchConfig = {
 }
 
 export const BIRTHDAY_DETECT_MANIFEST: SkillManifest = {
-  id: 'ackem/birthday-detect@0.0.1',
+  id: 'britney/birthday-detect@0.0.1',
   name: '用户生日检测',
   version: '0.0.1',
   category: 'skill',

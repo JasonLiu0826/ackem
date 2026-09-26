@@ -42,9 +42,9 @@ export interface AttentionBudgetState {
 
 export const DEFAULT_PROACTIVE_PER_HOUR = 3
 
-export const SEDENTARY_SKILL_ID = 'ackem/sedentary-reminder@0.0.1'
-export const DRINK_WATER_SKILL_ID = 'ackem/drink-water-reminder@0.0.1'
-export const LATE_NIGHT_SKILL_ID = 'ackem/late-night-reminder@0.0.1'
+export const SEDENTARY_SKILL_ID = 'britney/sedentary-reminder@0.0.1'
+export const DRINK_WATER_SKILL_ID = 'britney/drink-water-reminder@0.0.1'
+export const LATE_NIGHT_SKILL_ID = 'britney/late-night-reminder@0.0.1'
 
 /** 用户对某扩展的长期选择（JP-B4） */
 export type ExtensionPreference = 'allow' | 'deny'

@@ -88,7 +88,7 @@ export function InferenceConsentDialog({
                 {tokenMin.toLocaleString()}–{tokenMax.toLocaleString()} Token，粗估）。
               </p>
               <p>将消耗您云账户的 API Token/额度；具体计费以提供商为准。</p>
-              <p>文本不会发往 Ackem 官方服务器，仅发往您在设置中填写的 base URL。</p>
+              <p>文本不会发往 Britney 官方服务器，仅发往您在设置中填写的 base URL。</p>
             </>
           )}
           <p className="text-xs">知情同意版本 v{INFERENCE_CONSENT_VERSION}</p>

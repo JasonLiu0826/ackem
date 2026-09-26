@@ -115,7 +115,7 @@ const gamemodeMinecraft = {
   logStatus: () => gamemodeInvoke<{ active: boolean }>('logStatus')
 }
 
-contextBridge.exposeInMainWorld('ackem', {
+contextBridge.exposeInMainWorld('britney', {
   getSettings: (): Promise<AppSettings> => ipcRenderer.invoke('settings:get'),
   getAppVersion: (): Promise<string> => ipcRenderer.invoke('update:getAppVersion'),
   checkUpdate: (): Promise<import('../shared/updateTypes').UpdateCheckResult> =>
@@ -272,7 +272,7 @@ contextBridge.exposeInMainWorld('ackem', {
     batPath: string | null
     nsisUninstaller: string | null
   }> => ipcRenderer.invoke('app:uninstallInfo'),
-  uninstallAckem: (opts?: { deleteData?: boolean; removeApp?: boolean }): Promise<{ ok: boolean }> =>
+  uninstallBritney: (opts?: { deleteData?: boolean; removeApp?: boolean }): Promise<{ ok: boolean }> =>
     ipcRenderer.invoke('app:uninstall', opts ?? {}),
   embeddingStatus: () => ipcRenderer.invoke('embedding:status'),
   embeddingReadiness: () => ipcRenderer.invoke('embedding:readiness'),
@@ -602,6 +602,10 @@ contextBridge.exposeInMainWorld('ackem', {
   onChatError: (fn: (err: string) => void) => {
     ipcRenderer.removeAllListeners('chat:error')
     ipcRenderer.on('chat:error', (_e, err: string) => fn(err))
+  },
+  onChatImage: (fn: (payload: { path?: string; url?: string; prompt?: string }) => void) => {
+    ipcRenderer.removeAllListeners('chat:image')
+    ipcRenderer.on('chat:image', (_e, payload) => fn(payload))
   },
   onDispatchProactive: (fn: (payload: { extensionId: string; message: string }) => void) => {
     ipcRenderer.removeAllListeners('dispatch:proactive')

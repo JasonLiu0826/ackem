@@ -83,10 +83,10 @@ export async function getCachedFatherReferenceEmbeddings(
 ): Promise<Map<string, { cluster: FatherReferenceCluster; vector: number[] }>> {
   const sig = provider.name()
   const anchorSig = [
-    ...FATHER_REFERENCE_ANCHORS.ackem_creator,
+    ...FATHER_REFERENCE_ANCHORS.britney_creator,
     ...FATHER_REFERENCE_ANCHORS.user_family,
     ...FATHER_REFERENCE_NEUTRAL_ANCHORS,
-    ...FATHER_REFERENCE_CALIBRATION.ackem_creator,
+    ...FATHER_REFERENCE_CALIBRATION.britney_creator,
     ...FATHER_REFERENCE_CALIBRATION.user_family,
     ...FATHER_REFERENCE_CALIBRATION.neutral,
   ].join('\n')

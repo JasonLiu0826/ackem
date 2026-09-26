@@ -23,7 +23,7 @@ export type DesktopAgentAction =
   | 'download_file'
   | 'download_and_install'
   | 'run_installer'
-  | 'import_to_ackem'
+  | 'import_to_britney'
   | 'focus_app'
 
 export type UseComputerArgs = {

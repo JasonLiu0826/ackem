@@ -22,7 +22,7 @@ type McStatus = {
 /* ══════════════════════════════════════════════════════════════
    MC 陪伴独立控制台
    ══════════════════════════════════════════════════════════════ */
-const mc = () => window.ackem.ext.gamemode.minecraft
+const mc = () => window.britney.ext.gamemode.minecraft
 
 export function McPage(props: { onBack?: () => void }): JSX.Element {
   const settings = useAppStore((s) => s.settings)
@@ -32,7 +32,7 @@ export function McPage(props: { onBack?: () => void }): JSX.Element {
   // ── Bot 连接（从持久化设置恢复）──
   const [botHost, setBotHost] = useState(settings?.mcBotHost || 'localhost')
   const [botPort, setBotPort] = useState(settings?.mcBotPort || 25565)
-  const [botUsername, setBotUsername] = useState(settings?.mcBotUsername || 'AckemBot')
+  const [botUsername, setBotUsername] = useState(settings?.mcBotUsername || 'BritneyBot')
   const [botPassword, setBotPassword] = useState('')
   const [botConnecting, setBotConnecting] = useState(false)
   const [botStatus, setBotStatus] = useState<BotStatus>({ connected: false })
@@ -53,7 +53,7 @@ export function McPage(props: { onBack?: () => void }): JSX.Element {
   // 持久化 MC 设置
   const saveMcSettings = useCallback(async (patch: Record<string, unknown>) => {
     try {
-      const next = await window.ackem.setSettings(patch as Partial<import('../ackem').AppSettings>)
+      const next = await window.britney.setSettings(patch as Partial<import('../ackem').AppSettings>)
       if (setSettings) setSettings(next)
     } catch { /* ignore */ }
   }, [setSettings])
@@ -80,7 +80,7 @@ export function McPage(props: { onBack?: () => void }): JSX.Element {
 
   // 实机调试：推送 + 轮询兜底
   useEffect(() => {
-    window.ackem.onMcBotDebug((snap) => setBotDebug(snap))
+    window.britney.onMcBotDebug((snap) => setBotDebug(snap))
     const poll = setInterval(async () => {
       if (!botStatus.connected) return
       try {
@@ -207,7 +207,7 @@ export function McPage(props: { onBack?: () => void }): JSX.Element {
                   <div>坐标：<span className="font-mono text-ink">
                     ({botStatus.position?.x?.toFixed(0) ?? '?'}, {botStatus.position?.y?.toFixed(0) ?? '?'}, {botStatus.position?.z?.toFixed(0) ?? '?'})
                   </span></div>
-                  <div>Ackem WS：{botStatus.wsConnected ? '已连接' : '未连接'}</div>
+                  <div>Britney WS：{botStatus.wsConnected ? '已连接' : '未连接'}</div>
                 </div>
               ) : (
                 <div className="text-xs text-ink-muted">未连接</div>
@@ -347,7 +347,7 @@ export function McPage(props: { onBack?: () => void }): JSX.Element {
                   setBotUsername(e.target.value)
                   void saveMcSettings({ mcBotUsername: e.target.value })
                 }}
-                placeholder="AckemBot"
+                placeholder="BritneyBot"
               />
             </label>
             <label className="block">
@@ -405,7 +405,7 @@ export function McPage(props: { onBack?: () => void }): JSX.Element {
         <section className="glass-panel rounded-2xl p-5">
           <h2 className="text-sm font-semibold text-ink mb-1">日志监听（只读模式）</h2>
           <p className="text-xs text-ink-muted mb-4">
-            读取 MC latest.log，在 Ackem 聊天页显示伴侣反应。不需要 Bot 登录，适合只想看她说台词。
+            读取 MC latest.log，在 Britney 聊天页显示伴侣反应。不需要 Bot 登录，适合只想看她说台词。
           </p>
 
           <div className="grid grid-cols-[1fr_auto] gap-3 mb-4">

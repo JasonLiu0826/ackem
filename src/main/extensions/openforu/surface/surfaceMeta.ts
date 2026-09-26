@@ -3,7 +3,7 @@ import { join } from 'node:path'
 
 import { defaultSurfaceHtml, isSurfaceEnabled, type ExtensionSurfaceConfig } from '../../../../shared/extensionSurface'
 import { isOpenForUWidgetId } from '../../../../shared/openforuWidgets'
-import type { UpluginMeta } from '../openforu/upluginRuntime'
+import type { UpluginMeta } from '../upluginRuntime'
 import { buildWidgetHtml } from './widgets/buildWidgetHtml'
 
 export function readUpluginSurfaceConfig(

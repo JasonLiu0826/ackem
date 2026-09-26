@@ -8,7 +8,7 @@ import {
   sign,
   verify
 } from 'node:crypto'
-import { ACKEM_EXT_PACKAGE_FORMAT_VERSION } from './constants'
+import { BRITNEY_EXT_PACKAGE_FORMAT_VERSION } from './constants'
 
 export type SignatureAlgorithm = 'ed25519'
 
@@ -23,7 +23,7 @@ export interface SignaturePayload {
   fileDigests: FileDigestMap
 }
 
-export interface AckemSignatureSidecar {
+export interface BritneySignatureSidecar {
   formatVersion: string
   publisherId: string
   algorithm: SignatureAlgorithm
@@ -102,15 +102,15 @@ export function createSignatureSidecar(input: {
   fileDigests: FileDigestMap
   privateKeyPem: string
   signedAt?: string
-}): AckemSignatureSidecar {
+}): BritneySignatureSidecar {
   const payload = buildSignaturePayload({
-    formatVersion: ACKEM_EXT_PACKAGE_FORMAT_VERSION,
+    formatVersion: BRITNEY_EXT_PACKAGE_FORMAT_VERSION,
     publisherId: input.publisherId,
     manifestId: input.manifestId,
     fileDigests: input.fileDigests
   })
   return {
-    formatVersion: ACKEM_EXT_PACKAGE_FORMAT_VERSION,
+    formatVersion: BRITNEY_EXT_PACKAGE_FORMAT_VERSION,
     publisherId: input.publisherId,
     algorithm: 'ed25519',
     signedAt: input.signedAt ?? new Date().toISOString(),
@@ -121,7 +121,7 @@ export function createSignatureSidecar(input: {
 }
 
 export function verifySignatureSidecar(
-  sidecar: AckemSignatureSidecar,
+  sidecar: BritneySignatureSidecar,
   publicKeyPem: string
 ): { ok: true } | { ok: false; error: string } {
   if (sidecar.algorithm !== 'ed25519') {
@@ -139,7 +139,7 @@ export function verifySignatureSidecar(
 }
 
 export function verifyFileDigests(
-  sidecar: AckemSignatureSidecar,
+  sidecar: BritneySignatureSidecar,
   files: Record<string, string>
 ): { ok: true } | { ok: false; error: string } {
   for (const [path, expected] of Object.entries(sidecar.fileDigests)) {

@@ -13,7 +13,7 @@ function resolveDataRootForSkill(): string {
   try {
     return resolveDataRoot(loadSettings())
   } catch {
-    return process.env.ACKEM_TEST_DATA_ROOT ?? ''
+    return process.env.BRITNEY_TEST_DATA_ROOT ?? ''
   }
 }
 
@@ -43,10 +43,10 @@ async function execute(invocation: SkillInvocation): Promise<SkillResult> {
     return {
       ok: result.skipped,
       output: '',
-      error: result.skipped ? undefined : result.reason,
+      error: result.skipped ? undefined : String((result as any).reason ?? "unknown"),
       injectToContext: false,
       events: [],
-      data: { date: today, skipped: true, reason: result.reason },
+      data: { date: today, skipped: true, reason: String((result as any).reason ?? "unknown") },
       durationMs
     }
   }

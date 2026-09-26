@@ -45,7 +45,7 @@ export function deliverCompanionProactiveMessage(args: {
 
   if (Notification.isSupported()) {
     const n = new Notification({
-      title: 'Ackem',
+      title: 'Britney',
       body: notificationBodyFromProactiveMessage(message),
       silent: true
     })

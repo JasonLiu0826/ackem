@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
-  ACKEM_ENGINE_API_VERSION,
-  buildAckemExtensionPackage,
+  BRITNEY_ENGINE_API_VERSION,
+  buildBritneyExtensionPackage,
   formatExtensionId,
   generatePublisherKeyPair,
   isCommunityExtensionId,
@@ -10,12 +10,12 @@ import {
   parseExtensionId,
   semverSatisfies,
   validateExtensionManifest,
-  verifyAckemExtensionPackage
+  verifyBritneyExtensionPackage
 } from './index'
 
 describe('ecosystem extensionId', () => {
-  it('parses ackem/community/u namespaces', () => {
-    expect(parseExtensionId('ackem/web-search@1.0.0')?.scope).toBe('ackem')
+  it('parses britney/community/u namespaces', () => {
+    expect(parseExtensionId('britney/web-search@1.0.0')?.scope).toBe('britney')
     expect(parseExtensionId('community/hello-world@2.1.0')?.scope).toBe('community')
     expect(parseExtensionId('u/my-timer@1.0.0')?.scope).toBe('u')
     expect(parseExtensionId('invalid/foo')).toBeNull()
@@ -24,7 +24,7 @@ describe('ecosystem extensionId', () => {
   it('formatExtensionId round-trips slug', () => {
     expect(formatExtensionId('community', 'demo-skill', '1.0.0')).toBe('community/demo-skill@1.0.0')
     expect(isCommunityExtensionId('community/demo-skill@1.0.0')).toBe(true)
-    expect(isOfficialExtensionId('ackem/foo@1.0.0')).toBe(true)
+    expect(isOfficialExtensionId('britney/foo@1.0.0')).toBe(true)
     expect(isUserExtensionId('u/foo@1.0.0')).toBe(true)
   })
 })
@@ -67,14 +67,14 @@ describe('ecosystem manifestValidate', () => {
       license: 'MIT',
       main: 'skill.json',
       engineVersion: '>=0.0.0 <1.0.0',
-      engineApiVersion: `^${ACKEM_ENGINE_API_VERSION}`
+      engineApiVersion: `^${BRITNEY_ENGINE_API_VERSION}`
     })
     expect(result.ok).toBe(true)
   })
 })
 
 describe('ecosystem package signing', () => {
-  it('builds and verifies signed .ackem-ext package', () => {
+  it('builds and verifies signed .britney-ext package', () => {
     const keys = generatePublisherKeyPair('test-publisher:2026')
     const manifest = {
       id: 'community/plug-demo@1.0.0',
@@ -87,7 +87,7 @@ describe('ecosystem package signing', () => {
       license: 'MIT',
       main: 'skill.json',
       engineVersion: '>=0.0.0 <1.0.0',
-      engineApiVersion: `^${ACKEM_ENGINE_API_VERSION}`,
+      engineApiVersion: `^${BRITNEY_ENGINE_API_VERSION}`,
       triggers: ['keyword'],
       keywords: ['plug-demo'],
       permissions: ['engine_read', 'engine_inject', 'readonly'],
@@ -116,13 +116,13 @@ describe('ecosystem package signing', () => {
       'manifest.json': manifestJson,
       'skill.json': skillJson
     }
-    const pkg = buildAckemExtensionPackage({
+    const pkg = buildBritneyExtensionPackage({
       publisherId: keys.publisherId,
       manifest,
       files,
       privateKeyPem: keys.privateKeyPem
     })
-    expect(pkg.format).toBe('ackem-ext')
+    expect(pkg.format).toBe('britney-ext')
     expect(pkg.signature.manifestId).toBe('community/plug-demo@1.0.0')
   })
 })

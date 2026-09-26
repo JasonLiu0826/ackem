@@ -17,7 +17,7 @@ export type TaskPlanLoopGateInput = {
 
 export type TaskPlanLoopGateResult =
   | { action: 'continue'; continuationUserMessage: string; progress: TaskPlanProgress }
-  | { action: 'deliver'; progress: TaskPlanProgress }
+  | { action: 'deliver'; progress: TaskPlanProgress; continuationUserMessage?: string }
   | { action: 'incomplete'; progress: TaskPlanProgress; reason: 'max_rounds' | 'blocked' }
 
 /**

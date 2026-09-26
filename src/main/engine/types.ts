@@ -134,7 +134,7 @@ export type OriginExposureState =
 
 export interface OriginExposure {
   state: OriginExposureState
-  /** 连续 ackem_creator 语义轮 */
+  /** 连续 britney_creator 语义轮 */
   streak: number
   /** Guard 后禁止 deep expansion 直至该轮次（不含） */
   cooldownUntilTurn: number
@@ -167,8 +167,8 @@ export interface FullState {
   emergencePersistence?: EmergencePersistence // 情绪涌现持久化
   /** 时间感知层：首次有意义互动日期 (ISO "2026-06-11") */
   firstMetDate?: string
-  /** 时间感知层：Ackem 生日——首次启动日 (ISO "2026-06-11") */
-  ackemBirthday?: string
+  /** 时间感知层：Britney 生日——首次启动日 (ISO "2026-06-11") */
+  britneyBirthday?: string
   /** OEG：创造者叙事曝光控制 */
   originExposure?: OriginExposure
 }
@@ -302,7 +302,7 @@ export interface TurnTrace {
     /** 语境匹配到的 Canon-M 类型（空 = 未按类型过滤） */
     originCanonMMatchedCategories?: string[]
     originGuardInjected?: boolean
-    originFatherRef?: 'ackem_creator' | 'user_family' | 'ambiguous' | null
+    originFatherRef?: 'britney_creator' | 'user_family' | 'ambiguous' | null
     originFatherScore?: number
     originFatherSource?: 'calibration' | 'anchor'
     /** CANON-M-3：本轮跳过 Tier B ingest（创造者自述） */

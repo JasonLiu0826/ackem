@@ -2,8 +2,8 @@
 
 import type { ExtensionManifestBase } from '../protocols'
 import {
-  ACKEM_APP_VERSION,
-  ACKEM_ENGINE_API_VERSION,
+  BRITNEY_APP_VERSION,
+  BRITNEY_ENGINE_API_VERSION,
   NAMESPACE_COMMUNITY,
   NAMESPACE_OFFICIAL,
   NAMESPACE_USER
@@ -34,8 +34,8 @@ export function validateExtensionManifest(
 ): ManifestValidationResult {
   const errors: string[] = []
   const warnings: string[] = []
-  const hostApp = options.hostAppVersion ?? ACKEM_APP_VERSION
-  const hostApi = options.hostApiVersion ?? ACKEM_ENGINE_API_VERSION
+  const hostApp = options.hostAppVersion ?? BRITNEY_APP_VERSION
+  const hostApi = options.hostApiVersion ?? BRITNEY_ENGINE_API_VERSION
 
   if (!manifest.id) {
     push(errors, 'manifest.id 缺失')
@@ -57,11 +57,11 @@ export function validateExtensionManifest(
   if (!manifest.name?.trim()) push(errors, 'manifest.name 缺失')
   if (!manifest.category) push(errors, 'manifest.category 缺失')
   if (!manifest.engineVersion?.trim()) {
-    push(errors, 'manifest.engineVersion 缺失（Ackem 应用版本 semver range）')
+    push(errors, 'manifest.engineVersion 缺失（Britney 应用版本 semver range）')
   } else if (!semverSatisfies(hostApp, manifest.engineVersion)) {
     push(
       errors,
-      `engineVersion 不兼容：扩展要求 ${manifest.engineVersion}，当前 Ackem ${hostApp}`
+      `engineVersion 不兼容：扩展要求 ${manifest.engineVersion}，当前 Britney ${hostApp}`
     )
   }
 
@@ -79,16 +79,16 @@ export function validateExtensionManifest(
     }
   } else if (ns === NAMESPACE_USER || ns === NAMESPACE_OFFICIAL) {
     warnings.push(
-      `未声明 engineApiVersion，默认按 ^${ACKEM_ENGINE_API_VERSION} 处理（建议显式填写）`
+      `未声明 engineApiVersion，默认按 ^${BRITNEY_ENGINE_API_VERSION} 处理（建议显式填写）`
     )
-    const defaultRange = `^${ACKEM_ENGINE_API_VERSION}`
+    const defaultRange = `^${BRITNEY_ENGINE_API_VERSION}`
     if (!semverSatisfies(hostApi, defaultRange)) {
       push(errors, `默认 engineApiVersion ${defaultRange} 与当前引擎 API ${hostApi} 不兼容`)
     }
   }
 
   if (ns === NAMESPACE_OFFICIAL && !manifest.id.startsWith(`${NAMESPACE_OFFICIAL}/`)) {
-    push(errors, '官方扩展 id 必须以 ackem/ 开头')
+    push(errors, '官方扩展 id 必须以 britney/ 开头')
   }
   if (ns === NAMESPACE_COMMUNITY && !manifest.id.startsWith(`${NAMESPACE_COMMUNITY}/`)) {
     push(errors, '社区扩展 id 必须以 community/ 开头')

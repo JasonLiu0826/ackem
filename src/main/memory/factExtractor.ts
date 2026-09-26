@@ -2,13 +2,13 @@
 // 职责：从一轮对话抽取结构化事实
 // 输入：user/companion 文本、locale、L1/L2 上下文
 // 输出：ExtractionResult
-// 引用：./taxonomy, ../engine/types, ../engine/ackemParams, ../llmClient, ../prompt/memory-fact-extract
+// 引用：./taxonomy, ../engine/types, ../engine/britneyParams, ../llmClient, ../prompt/memory-fact-extract
 
 import type { ExtractionResult, L1State, EmotionState, LlmClient } from '../engine/types'
 import { normalizeConfidence } from '../../shared/confidence'
 import { isValidSubcategory } from './taxonomy'
 import { FACT_EXTRACT_TEMPERATURE, FACT_EXTRACT_SYS_ZH, buildFactExtractSysOld, buildFactExtractUserMsg } from '../prompt/memory-fact-extract'
-import { FACT_EXTRACTION_MAX_PER_TURN } from '../engine/ackemParams'
+import { FACT_EXTRACTION_MAX_PER_TURN } from '../engine/britneyParams'
 
 export class FactExtractor {
   async extract(

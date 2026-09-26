@@ -7,11 +7,7 @@ Endpoints:
     GET  /health      — Service health status
 """
 
-from __future__ import annotations
-
-
 import argparse
-import typing
 import asyncio
 import logging
 import os
@@ -35,11 +31,11 @@ logging.basicConfig(
 logger = logging.getLogger("voice-service")
 
 # --- Engines (initialized at startup) ---
-asr: typing.Optional[AsrEngine] = None
-tts: typing.Optional[TtsEngine] = None
+asr: AsrEngine | None = None
+tts: TtsEngine | None = None
 gpu_info: dict = {}
 server_port: int = 8765
-forced_tts_engine: typing.Optional[str] = None
+forced_tts_engine: str | None = None
 extra_voice_model_dirs: list[str] = []
 extra_gpt_sovits_pack_dirs: list[str] = []
 gpt_sovits_config_paths: list[str] = []

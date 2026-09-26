@@ -5,9 +5,9 @@ import type { DispatchConfig } from '../../../../protocols'
 const PROD_INTERVAL_MS = 45 * 60 * 1000
 const DEV_INTERVAL_MS = 3 * 60 * 1000
 
-/** 生产 45min；开发 3min；测试/覆盖可用 ACKEM_DRINK_WATER_INTERVAL_MS */
+/** 生产 45min；开发 3min；测试/覆盖可用 BRITNEY_DRINK_WATER_INTERVAL_MS */
 export function getDrinkWaterIntervalMs(): number {
-  const override = process.env.ACKEM_DRINK_WATER_INTERVAL_MS
+  const override = process.env.BRITNEY_DRINK_WATER_INTERVAL_MS
   if (override != null && override !== '') {
     const n = Number(override)
     if (Number.isFinite(n) && n > 0) return n
@@ -34,7 +34,7 @@ const DRINK_WATER_DISPATCH: DispatchConfig = {
 }
 
 export const DRINK_WATER_REMINDER_MANIFEST: SkillManifest = {
-  id: 'ackem/drink-water-reminder@0.0.1',
+  id: 'britney/drink-water-reminder@0.0.1',
   name: '喝水提醒',
   version: '0.0.1',
   category: 'skill',

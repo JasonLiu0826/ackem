@@ -37,13 +37,13 @@ export function DesktopAgentConfirmDialog({
           <p className="mb-4 text-sm text-red-300">{request.hardBlockReason}</p>
         ) : isClose ? (
           <p className="mb-4 text-sm leading-relaxed text-ink-muted">
-            Ackem 将要关闭 <strong className="text-ink">{request.target || request.path || '目标'}</strong>
+            Britney 将要关闭 <strong className="text-ink">{request.target || request.path || '目标'}</strong>
             ，是否允许？
           </p>
         ) : (
           <div className="mb-4 space-y-1 text-sm leading-relaxed text-ink-muted">
             <p>
-              Ackem 将要 <strong className="text-ink">{actionLabel}</strong>：
+              Britney 将要 <strong className="text-ink">{actionLabel}</strong>：
             </p>
             {request.path && <p className="break-all font-mono text-xs text-ink">{request.path}</p>}
             {request.pathTo && (

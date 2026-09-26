@@ -1,6 +1,6 @@
 /**
  * electron-builder portable 会设置 PORTABLE_EXECUTABLE_* 环境变量。
- * 数据目录、桌面快捷方式必须指向「便携 exe 所在目录」，而非 TEMP 内解压的 Ackem.exe。
+ * 数据目录、桌面快捷方式必须指向「便携 exe 所在目录」，而非 TEMP 内解压的 Britney.exe。
  */
 import { app } from 'electron'
 import { existsSync } from 'node:fs'
@@ -17,7 +17,7 @@ export function resolvePackagedAppDir(): string {
   return dirname(app.getPath('exe'))
 }
 
-/** 用户应双击启动的路径：便携 wrapper exe，或 Ackem.exe */
+/** 用户应双击启动的路径：便携 wrapper exe，或 Britney.exe */
 export function resolveUserLaunchPath(): string {
   const portableFile = process.env.PORTABLE_EXECUTABLE_FILE?.trim()
   if (portableFile && existsSync(portableFile)) return portableFile

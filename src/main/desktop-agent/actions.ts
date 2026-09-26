@@ -21,7 +21,7 @@ export const DESKTOP_AGENT_ACTION_LABELS: Record<DesktopAgentAction, string> = {
   download_file: '下载文件',
   download_and_install: '下载并安装',
   run_installer: '运行安装包',
-  import_to_ackem: '导入到 Ackem',
+  import_to_britney: '导入到 Britney',
   focus_app: '将应用带到前台'
 }
 

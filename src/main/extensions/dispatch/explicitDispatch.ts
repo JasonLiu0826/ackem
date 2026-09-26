@@ -47,7 +47,7 @@ export function detectExtensionDemandExplicit(message: string): boolean {
 
 /**
  * 无制品词但明显在「做一个功能/工具」：走隐式 Capability Probe → ask_plan。
- * 「帮我做一个番茄钟」≈「帮我做一个番茄钟 Skill」，由 Ackem 反问确认。
+ * 「帮我做一个番茄钟」≈「帮我做一个番茄钟 Skill」，由 Britney 反问确认。
  */
 export function detectBareFeatureCreateCandidate(message: string): boolean {
   const trimmed = message.trim()

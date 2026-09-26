@@ -1,4 +1,4 @@
-import type { ExtensionsCoordinator } from '../../../coordinator'
+import type { ExtensionsCoordinator } from '../../../../coordinator'
 import { WEATHER_SENSE_MANIFEST } from './manifest'
 import { isWeatherQuery } from './weatherIntent'
 

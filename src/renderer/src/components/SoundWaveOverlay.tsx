@@ -8,7 +8,7 @@ type Props = {
 }
 
 /**
- * 剧院模式全屏声浪呼吸光晕 — Ackem 说话时窗口边缘发光脉动
+ * 剧院模式全屏声浪呼吸光晕 — Britney 说话时窗口边缘发光脉动
  * 3 层正弦波叠加模拟声浪，颜色跟随情绪（aff/aro）
  */
 export function SoundWaveOverlay({ active, aff = 50, aro = 0, className = '' }: Props): JSX.Element {

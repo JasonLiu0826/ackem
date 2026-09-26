@@ -1,6 +1,6 @@
 import type { PluginManifest } from '../../../types'
 
-export const TTS_VOICE_PLUGIN_ID = 'ackem/voice-pipeline@0.1.0'
+export const TTS_VOICE_PLUGIN_ID = 'britney/voice-pipeline@0.1.0'
 
 export const TTS_VOICE_MANIFEST: PluginManifest = {
   id: TTS_VOICE_PLUGIN_ID,

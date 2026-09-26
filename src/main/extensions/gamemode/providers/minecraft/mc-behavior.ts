@@ -1362,8 +1362,8 @@ export function decideBehavior(ctx: BehaviorContext): BehaviorDecision {
 }
 
 /**
- * 将决策转为 CWAckem 可用的动作描述文本
- * 用于发送到 Ackem 生成 LLM 吐槽
+ * 将决策转为 CWBritney 可用的动作描述文本
+ * 用于发送到 Britney 生成 LLM 吐槽
  */
 export function decisionToContext(decision: BehaviorDecision, personalityId: string): string {
   const lines: string[] = []

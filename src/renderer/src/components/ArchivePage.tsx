@@ -23,7 +23,7 @@ export function ArchivePage(): JSX.Element {
   const loadList = useCallback(async () => {
     setLoading(true)
     try {
-      const r = await window.ackem.archiveList()
+      const r = await window.britney.archiveList()
       setFiles(r.files)
       setDomains(r.domains)
       setLastExportAt(r.lastExportAt)
@@ -34,10 +34,10 @@ export function ArchivePage(): JSX.Element {
   useEffect(() => { void loadList() }, [loadList])
 
   useEffect(() => {
-    const off = window.ackem.onMemoryUpdated?.(() => {
+    const off = window.britney.onMemoryUpdated?.(() => {
       void loadList()
       if (selectedFile) {
-        void window.ackem.archiveRead(selectedFile).then((r) => {
+        void window.britney.archiveRead(selectedFile).then((r) => {
           if (r.ok && r.text) setContent(r.text)
         })
       }
@@ -47,7 +47,7 @@ export function ArchivePage(): JSX.Element {
 
   const openFile = async (path: string) => {
     setSelectedFile(path)
-    const r = await window.ackem.archiveRead(path)
+    const r = await window.britney.archiveRead(path)
     if (r.ok && r.text) setContent(r.text)
     else setContent(r.error ?? '读取失败')
   }
@@ -62,7 +62,7 @@ export function ArchivePage(): JSX.Element {
   const handleExport = async () => {
     setExporting(true)
     try {
-      const r = await window.ackem.archiveExport()
+      const r = await window.britney.archiveExport()
       pushToast(`导出完成：${r.factsExported} 条事实、${r.episodesExported} 段情节、${r.coreCount} 条核心记忆`)
       await loadList()
     } catch (e) {
@@ -178,7 +178,7 @@ export function ArchivePage(): JSX.Element {
             <div className="p-6 max-w-3xl">
               <div className="mb-4 flex items-center justify-between">
                 <div className="text-xs text-ink-muted font-mono">{selectedFile}</div>
-                <button onClick={() => void window.ackem.openDataFolder()}
+                <button onClick={() => void window.britney.openDataFolder()}
                   className="rounded-lg border border-surface-inset px-2 py-1 text-[11px] text-ink-muted hover:text-ink"
                 >打开目录</button>
               </div>

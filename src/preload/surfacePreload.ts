@@ -27,7 +27,7 @@ function ensureStateSubscription(): void {
   })
 }
 
-contextBridge.exposeInMainWorld('ackem', {
+contextBridge.exposeInMainWorld('britney', {
   extension: {
     getContext: (): Promise<SurfaceContext | null> =>
       ipcRenderer.invoke('surface:getContext') as Promise<SurfaceContext | null>,

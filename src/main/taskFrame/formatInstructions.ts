@@ -44,7 +44,7 @@ export function buildCardBodyFormatBlock(frame: UserTaskFrame | undefined): stri
       `\n\n【交付形态 · 硬性】${hint}\n` +
       '- 正文**必须**以 Markdown 表格呈现（| 列 | 列 | 形式，含表头分隔行）\n' +
       '- 至少 4 行数据（不含表头）；对比任务按用户对象组织列或行\n' +
-      '- 用户拿 Ackem（你）与其他产品对比时，Ackem 必须在表头/第一列，**禁止**用 DeepSeek/GPT/Claude 等模型名代替 Ackem\n' +
+      '- 用户拿 Britney（你）与其他产品对比时，Britney 必须在表头/第一列，**禁止**用 DeepSeek/GPT/Claude 等模型名代替 Britney\n' +
       '- **禁止**用散文段落代替表格；可在表格前写 1～2 句概述\n' +
       (frame.subjects.length >= 2
         ? `- 须覆盖这些对象：${frame.subjects.join('、')}\n`

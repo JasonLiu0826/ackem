@@ -84,8 +84,8 @@ export const MODEL_MANIFESTS: ModelManifest[] = [
     compressedSizeMb: 35,
     extractedSizeMb: 90,
     source: 'bundled',
-    downloadUrl: 'https://github.com/nicepkg/ackem-models/releases/download/v1.0/bge-small-zh-v1.5.onnx.zip',
-    mirrorUrl: 'https://gitee.com/nicepkg/ackem-models/releases/download/v1.0/bge-small-zh-v1.5.onnx.zip',
+    downloadUrl: 'https://github.com/nicepkg/britney-models/releases/download/v1.0/bge-small-zh-v1.5.onnx.zip',
+    mirrorUrl: 'https://gitee.com/nicepkg/britney-models/releases/download/v1.0/bge-small-zh-v1.5.onnx.zip',
     qualityLabel: '中文效果 ★★★★',
     speedLabel: '< 10ms',
     memoryLabel: '~150MB'
@@ -96,8 +96,8 @@ export const MODEL_MANIFESTS: ModelManifest[] = [
     compressedSizeMb: 40,
     extractedSizeMb: 130,
     source: 'bundled',
-    downloadUrl: 'https://github.com/nicepkg/ackem-models/releases/download/v1.0/bge-small-en-v1.5.onnx.zip',
-    mirrorUrl: 'https://gitee.com/nicepkg/ackem-models/releases/download/v1.0/bge-small-en-v1.5.onnx.zip',
+    downloadUrl: 'https://github.com/nicepkg/britney-models/releases/download/v1.0/bge-small-en-v1.5.onnx.zip',
+    mirrorUrl: 'https://gitee.com/nicepkg/britney-models/releases/download/v1.0/bge-small-en-v1.5.onnx.zip',
     qualityLabel: 'English ★★★★',
     speedLabel: '< 10ms',
     memoryLabel: '~150MB'
@@ -108,8 +108,8 @@ export const MODEL_MANIFESTS: ModelManifest[] = [
     compressedSizeMb: 35,
     extractedSizeMb: 90,
     source: 'downloadable',
-    downloadUrl: 'https://github.com/nicepkg/ackem-models/releases/download/v1.0/m3e-small.onnx.zip',
-    mirrorUrl: 'https://gitee.com/nicepkg/ackem-models/releases/download/v1.0/m3e-small.onnx.zip',
+    downloadUrl: 'https://github.com/nicepkg/britney-models/releases/download/v1.0/m3e-small.onnx.zip',
+    mirrorUrl: 'https://gitee.com/nicepkg/britney-models/releases/download/v1.0/m3e-small.onnx.zip',
     qualityLabel: '中文效果 ★★★★',
     speedLabel: '< 10ms',
     memoryLabel: '~150MB'
@@ -120,8 +120,8 @@ export const MODEL_MANIFESTS: ModelManifest[] = [
     compressedSizeMb: 150,
     extractedSizeMb: 400,
     source: 'downloadable',
-    downloadUrl: 'https://github.com/nicepkg/ackem-models/releases/download/v1.0/bge-base-zh-v1.5.onnx.zip',
-    mirrorUrl: 'https://gitee.com/nicepkg/ackem-models/releases/download/v1.0/bge-base-zh-v1.5.onnx.zip',
+    downloadUrl: 'https://github.com/nicepkg/britney-models/releases/download/v1.0/bge-base-zh-v1.5.onnx.zip',
+    mirrorUrl: 'https://gitee.com/nicepkg/britney-models/releases/download/v1.0/bge-base-zh-v1.5.onnx.zip',
     qualityLabel: '中文效果 ★★★★★（最好）',
     speedLabel: '20-30ms',
     memoryLabel: '~500MB'

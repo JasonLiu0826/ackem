@@ -8,7 +8,7 @@ export function buildUskillContextInjection(manifest: SkillManifest, config: Usk
 
   const reply = config.onKeyword?.reply?.trim()
   if (reply) {
-    return `【${manifest.name} 已触发】${reply}。用 Ackem 伴侣的自然语气回应，并落实该能力描述的行为。`
+    return `【${manifest.name} 已触发】${reply}。用 Britney 伴侣的自然语气回应，并落实该能力描述的行为。`
   }
 
   return ''

@@ -25,8 +25,8 @@ export function recallForSpecialDate(
   const seedFacts = specialDate.linkedFactIds ?? []
 
   let narrative: string | null = null
-  if (specialDate.type === 'ackem_birthday') {
-    narrative = t('specialDate.ackemBirthdayNarrative')
+  if (specialDate.type === 'britney_birthday') {
+    narrative = t('specialDate.britneyBirthdayNarrative')
   } else if (specialDate.type === 'first_met_anniversary' && specialDate.timeDepth) {
     narrative = t('specialDate.firstMetNarrative', { label: specialDate.timeDepth.label })
   } else if (specialDate.type === 'birthday') {
@@ -45,7 +45,7 @@ export function recallForSpecialDate(
 
 function resolveLevel(type: SpecialDate['type']): 1 | 2 | 3 {
   switch (type) {
-    case 'ackem_birthday':
+    case 'britney_birthday':
     case 'first_met_anniversary':
     case 'birthday':
     case 'relationship':

@@ -18,7 +18,7 @@ const MARKDOWN_TABLE_DISPATCH: DispatchConfig = {
 }
 
 export const MARKDOWN_TABLE_MANIFEST: SkillManifest = {
-  id: 'ackem/markdown-table@1.0.0',
+  id: 'britney/markdown-table@1.0.0',
   name: 'Markdown 表格',
   version: '1.0.0',
   category: 'skill',

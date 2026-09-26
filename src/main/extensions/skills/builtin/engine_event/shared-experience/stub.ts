@@ -1,4 +1,4 @@
-// @ackem-extension-stub-not-runtime — 见 src/main/extensions/STUB_FILES.md
+// @britney-extension-stub-not-runtime — 见 src/main/extensions/STUB_FILES.md
 // 此文件不是运行时入口；manifest.json 的 main 仅满足 schema。实装后注册 register.ts / skill.ts / bootstrap.ts。
 // [S-19] 共同经历系统 — 占位入口
 // 实装后：实现 skill.ts（SkillHandler）并在 skills/builtin/register-placeholders.ts 中注册

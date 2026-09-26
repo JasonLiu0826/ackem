@@ -13,7 +13,7 @@ import {
 } from '../portableEnv'
 
 const log = createLogger('first-run')
-const MARKER = '.ackem-first-run-complete.json'
+const MARKER = '.britney-first-run-complete.json'
 
 function markerPath(dataRoot: string): string {
   return join(dataRoot, MARKER)
@@ -32,11 +32,11 @@ function markFirstRunComplete(dataRoot: string): void {
   )
 }
 
-/** 首次启动在桌面创建 Ackem.lnk（Windows） */
+/** 首次启动在桌面创建 Britney.lnk（Windows） */
 export function createDesktopShortcutIfNeeded(): boolean {
   if (process.platform !== 'win32') return false
   const desktop = app.getPath('desktop')
-  const shortcutPath = join(desktop, 'Ackem.lnk')
+  const shortcutPath = join(desktop, 'Britney.lnk')
   if (existsSync(shortcutPath)) return false
 
   const launchTarget = resolveUserLaunchPath()
@@ -46,7 +46,7 @@ export function createDesktopShortcutIfNeeded(): boolean {
     const ok = shell.writeShortcutLink(shortcutPath, {
       target: launchTarget,
       cwd: workDir,
-      description: 'Ackem — 本地 AI 伴侣',
+      description: 'Britney — 本地 AI 伴侣',
       icon: icon ?? launchTarget,
       iconIndex: 0,
     })

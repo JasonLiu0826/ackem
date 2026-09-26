@@ -215,7 +215,7 @@ async function downloadHttps(url: string, destPath: string): Promise<ExecuteResu
 
 function defaultDownloadDir(settingsDir?: string): string {
   if (settingsDir?.trim()) return settingsDir.trim()
-  return join(homedir(), 'Downloads', 'AckemDownloads')
+  return join(homedir(), 'Downloads', 'BritneyDownloads')
 }
 
 export async function executeDesktopAgentAction(
@@ -247,7 +247,7 @@ export async function executeDesktopAgentAction(
       return {
         ok: false,
         content:
-          'V1 暂不支持解析该文档格式全文；若为纯文本可改用 read_text，或先将文件导入 Ackem。',
+          'V1 暂不支持解析该文档格式全文；若为纯文本可改用 read_text，或先将文件导入 Britney。',
         summary: `文档格式 ${ext || '未知'} 暂未解析`
       }
     }
@@ -314,7 +314,7 @@ export async function executeDesktopAgentAction(
         summary: `已下载并开始安装 ${fileName}`
       }
     }
-    case 'import_to_ackem': {
+    case 'import_to_britney': {
       const importsDir = join(ctx.dataRoot, 'imports')
       mkdirSync(importsDir, { recursive: true })
       const dest = join(importsDir, basename(path))
@@ -322,7 +322,7 @@ export async function executeDesktopAgentAction(
       return {
         ok: true,
         content: `已复制到 ${dest}`,
-        summary: `已导入 ${basename(path)} 到 Ackem`
+        summary: `已导入 ${basename(path)} 到 Britney`
       }
     }
     default:

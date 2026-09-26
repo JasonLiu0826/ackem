@@ -18,8 +18,8 @@ const PS_SCRIPT = [
 let timer: ReturnType<typeof setInterval> | null = null
 
 export async function readForegroundWindowTitle(): Promise<string> {
-  if (process.env.ACKEM_FOREGROUND_TITLE) {
-    return process.env.ACKEM_FOREGROUND_TITLE
+  if (process.env.BRITNEY_FOREGROUND_TITLE) {
+    return process.env.BRITNEY_FOREGROUND_TITLE
   }
   if (process.platform !== 'win32') {
     return ''

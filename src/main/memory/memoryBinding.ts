@@ -2,9 +2,9 @@
 // 职责：情感上下文快照、effectiveTrust、L1 记忆增强
 // 输入：L1、L2、FactStore
 // 输出：EmotionalContext、MemoryAugmentedL1、effectiveTrust 标量
-// 引用：../engine/types, ../engine/ackemParams, ./factStore
+// 引用：../engine/types, ../engine/britneyParams, ./factStore
 
-import { EFFECTIVE_TRUST_L1_WEIGHT, EFFECTIVE_TRUST_MEM_WEIGHT } from '../engine/ackemParams'
+import { EFFECTIVE_TRUST_L1_WEIGHT, EFFECTIVE_TRUST_MEM_WEIGHT } from '../engine/britneyParams'
 import type { EmotionalContext, L1State, EmotionState } from '../engine/types'
 import type { FactStore } from './factStore'
 

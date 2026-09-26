@@ -1,6 +1,6 @@
 import type { PluginManifest } from '../../../types'
 
-export const LIVE2D_DESKTOP_PLUGIN_ID = 'ackem/live2d-desktop@0.0.1'
+export const LIVE2D_DESKTOP_PLUGIN_ID = 'britney/live2d-desktop@0.0.1'
 
 /** W8 前为几何光球 + 桌宠窗，非 Cubism Live2D 模型 */
 export const LIVE2D_DESKTOP_IMPLEMENTATION_STATUS = 'preview' as const

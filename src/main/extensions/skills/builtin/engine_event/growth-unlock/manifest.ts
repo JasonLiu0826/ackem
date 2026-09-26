@@ -13,7 +13,7 @@ const DISPATCH: DispatchConfig = {
 }
 
 export const GROWTH_UNLOCK_MANIFEST: SkillManifest = {
-  id: 'ackem/growth-unlock@0.0.1',
+  id: 'britney/growth-unlock@0.0.1',
   name: '成长与解锁',
   version: '0.0.1',
   category: 'skill',

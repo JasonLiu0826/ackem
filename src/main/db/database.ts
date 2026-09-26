@@ -1,5 +1,5 @@
 // [database] — 嵌入式 SQLite 网关（单例 per dataRoot）
-// 路径：{dataRoot}/ackem.db（与 layout / settings 的 dataRoot 一致，非固定 /data）
+// 路径：{dataRoot}/britney.db（与 layout / settings 的 dataRoot 一致，非固定 /data）
 
 import Database from 'better-sqlite3'
 import { mkdirSync, rmSync } from 'node:fs'
@@ -20,10 +20,10 @@ import { importLegacyDataIfNeeded } from './importLegacy'
 const pools = new Map<string, Database.Database>()
 const legacyImported = new Set<string>()
 
-/** Vitest 批量测试时仅走 JSON，避免 Windows 上 WAL 锁文件；database.test.ts 会设 ACKEM_SQLITE_IN_TEST=1 */
+/** Vitest 批量测试时仅走 JSON，避免 Windows 上 WAL 锁文件；database.test.ts 会设 BRITNEY_SQLITE_IN_TEST=1 */
 function sqliteEnabled(): boolean {
-  if (process.env.ACKEM_DISABLE_SQLITE === '1') return false
-  if (process.env.VITEST === 'true' && process.env.ACKEM_SQLITE_IN_TEST !== '1') return false
+  if (process.env.BRITNEY_DISABLE_SQLITE === '1') return false
+  if (process.env.VITEST === 'true' && process.env.BRITNEY_SQLITE_IN_TEST !== '1') return false
   return true
 }
 
@@ -86,7 +86,7 @@ function runMigrations(db: Database.Database): void {
   }
 }
 
-/** 打开或复用 dataRoot 下的 ackem.db；失败时返回 null（调用方回退 JSON） */
+/** 打开或复用 dataRoot 下的 britney.db；失败时返回 null（调用方回退 JSON） */
 export function getDatabase(dataRoot: string): Database.Database | null {
   if (!sqliteEnabled()) return null
   const cached = pools.get(dataRoot)

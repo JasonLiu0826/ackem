@@ -11,7 +11,7 @@ import { createLogger } from '../../../../logger'
 
 const log = createLogger('diary-catch-up')
 const GLOBAL_SESSION = '__autonomous__'
-const DIARY_SKILL_ID = 'ackem/diary-auto@0.1.0'
+const DIARY_SKILL_ID = 'britney/diary-auto@0.1.0'
 
 function localYesterdayString(now = new Date()): string {
   const d = new Date(now)

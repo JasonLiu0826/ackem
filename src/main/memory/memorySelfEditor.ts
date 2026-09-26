@@ -3,7 +3,7 @@
 // 对标 MemGPT self-editing memory
 // 引用：../engine/types, ./factStore, ./contradictionDetector
 
-import { SELF_EDIT_LOG_KEEP, SELF_EDIT_LOG_MAX, SELF_EDIT_REINFORCE_WEIGHT_BOOST } from '../engine/ackemParams'
+import { SELF_EDIT_LOG_KEEP, SELF_EDIT_LOG_MAX, SELF_EDIT_REINFORCE_WEIGHT_BOOST } from '../engine/britneyParams'
 import type { ContradictionCheck, LlmClient, MemoryFact } from '../engine/types'
 import type { FactStore } from './factStore'
 import { ContradictionDetector } from './contradictionDetector'

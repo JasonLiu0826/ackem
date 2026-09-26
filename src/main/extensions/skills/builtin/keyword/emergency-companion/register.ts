@@ -3,8 +3,8 @@ import { EMERGENCY_COMPANION_MANIFEST } from './manifest'
 import { emergencyCompanionSkill } from './skill'
 
 export async function registerBuiltinEmergencyCompanion(registry: SkillRegistry): Promise<void> {
-  if (registry.get('ackem/emergency-companion@0.0.1')) {
-    await registry.unregister('ackem/emergency-companion@0.0.1')
+  if (registry.get('britney/emergency-companion@0.0.1')) {
+    await registry.unregister('britney/emergency-companion@0.0.1')
   }
 
   const reg = await registry.register(emergencyCompanionSkill)

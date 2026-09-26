@@ -1,7 +1,7 @@
 // [prompt/memory-consolidation] — 整合反思 prompt（v1.0 设计文档）
 // 迁移自 memory/consolidator.ts
 
-import { CONSOLIDATION_MAX_INSIGHTS } from '../engine/ackemParams'
+import { CONSOLIDATION_MAX_INSIGHTS } from '../engine/britneyParams'
 import { getLocale } from '../i18n'
 import { CONSOLIDATION_SYS_EN, buildConsolidationUserMsgEn } from './prompt-i18n'
 

@@ -18,7 +18,7 @@ const PLAN_DOCUMENT_DISPATCH: DispatchConfig = {
 }
 
 export const PLAN_DOCUMENT_MANIFEST: SkillManifest = {
-  id: 'ackem/plan-document@1.0.0',
+  id: 'britney/plan-document@1.0.0',
   name: '计划书',
   version: '1.0.0',
   category: 'skill',

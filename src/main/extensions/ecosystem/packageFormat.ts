@@ -1,33 +1,33 @@
-// [ecosystem/packageFormat] — .ackem-ext 包格式
+// [ecosystem/packageFormat] — .britney-ext 包格式
 
 import {
-  ACKEM_EXT_PACKAGE_FORMAT,
-  ACKEM_EXT_PACKAGE_FORMAT_VERSION
+  BRITNEY_EXT_PACKAGE_FORMAT,
+  BRITNEY_EXT_PACKAGE_FORMAT_VERSION
 } from './constants'
 import type { ExtensionManifestBase } from '../protocols'
-import type { AckemSignatureSidecar } from './signature'
+import type { BritneySignatureSidecar } from './signature'
 import { buildFileDigests, createSignatureSidecar, verifyFileDigests, verifySignatureSidecar } from './signature'
 import { resolvePublisherPublicKey, publisherScopeAllowed } from './trustStore'
 import { validateExtensionManifest } from './manifestValidate'
 import { isCommunityExtensionId } from './extensionId'
 
-export interface AckemExtensionPackage {
-  format: typeof ACKEM_EXT_PACKAGE_FORMAT
+export interface BritneyExtensionPackage {
+  format: typeof BRITNEY_EXT_PACKAGE_FORMAT
   formatVersion: string
   publisherId: string
   manifest: ExtensionManifestBase & Record<string, unknown>
   files: Record<string, string>
-  signature: AckemSignatureSidecar
+  signature: BritneySignatureSidecar
 }
 
-export function buildAckemExtensionPackage(input: {
+export function buildBritneyExtensionPackage(input: {
   publisherId: string
   manifest: ExtensionManifestBase & Record<string, unknown>
   files: Record<string, string>
   privateKeyPem: string
-}): AckemExtensionPackage {
+}): BritneyExtensionPackage {
   if (!isCommunityExtensionId(input.manifest.id)) {
-    throw new Error('仅 community/ 扩展可打包为 .ackem-ext')
+    throw new Error('仅 community/ 扩展可打包为 .britney-ext')
   }
   if (!input.files['manifest.json']) {
     throw new Error('files 必须包含 manifest.json')
@@ -40,8 +40,8 @@ export function buildAckemExtensionPackage(input: {
     privateKeyPem: input.privateKeyPem
   })
   return {
-    format: ACKEM_EXT_PACKAGE_FORMAT,
-    formatVersion: ACKEM_EXT_PACKAGE_FORMAT_VERSION,
+    format: BRITNEY_EXT_PACKAGE_FORMAT,
+    formatVersion: BRITNEY_EXT_PACKAGE_FORMAT_VERSION,
     publisherId: input.publisherId,
     manifest: input.manifest,
     files: input.files,
@@ -49,27 +49,27 @@ export function buildAckemExtensionPackage(input: {
   }
 }
 
-export function parseAckemExtensionPackage(raw: unknown): AckemExtensionPackage {
+export function parseBritneyExtensionPackage(raw: unknown): BritneyExtensionPackage {
   if (!raw || typeof raw !== 'object') {
-    throw new Error('.ackem-ext 不是有效 JSON 对象')
+    throw new Error('.britney-ext 不是有效 JSON 对象')
   }
-  const pkg = raw as Partial<AckemExtensionPackage>
-  if (pkg.format !== ACKEM_EXT_PACKAGE_FORMAT) {
-    throw new Error(`format 必须为 ${ACKEM_EXT_PACKAGE_FORMAT}`)
+  const pkg = raw as Partial<BritneyExtensionPackage>
+  if (pkg.format !== BRITNEY_EXT_PACKAGE_FORMAT) {
+    throw new Error(`format 必须为 ${BRITNEY_EXT_PACKAGE_FORMAT}`)
   }
   if (!pkg.formatVersion || !pkg.publisherId || !pkg.manifest || !pkg.files || !pkg.signature) {
-    throw new Error('.ackem-ext 缺少必填字段')
+    throw new Error('.britney-ext 缺少必填字段')
   }
-  return pkg as AckemExtensionPackage
+  return pkg as BritneyExtensionPackage
 }
 
-export function verifyAckemExtensionPackage(
+export function verifyBritneyExtensionPackage(
   dataRoot: string,
-  pkg: AckemExtensionPackage
+  pkg: BritneyExtensionPackage
 ): { ok: true } | { ok: false; errors: string[] } {
   const errors: string[] = []
 
-  if (pkg.formatVersion !== ACKEM_EXT_PACKAGE_FORMAT_VERSION) {
+  if (pkg.formatVersion !== BRITNEY_EXT_PACKAGE_FORMAT_VERSION) {
     errors.push(`不支持的 formatVersion: ${pkg.formatVersion}`)
   }
 

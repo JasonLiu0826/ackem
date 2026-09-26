@@ -8,7 +8,7 @@ const useComputerParameters = {
     action: {
       type: 'string',
       description:
-        '动作：list_folder, search_files, stat_file, grep_text, read_text, read_document, read_image, open_folder, open_file, open_app, close_file, close_app, copy_path, move_path, mkdir, write_text, delete_path, download_file, download_and_install, run_installer, import_to_ackem, focus_app'
+        '动作：list_folder, search_files, stat_file, grep_text, read_text, read_document, read_image, open_folder, open_file, open_app, close_file, close_app, copy_path, move_path, mkdir, write_text, delete_path, download_file, download_and_install, run_installer, import_to_britney, focus_app'
     },
     path: { type: 'string', description: '本机路径（绝对或相对用户目录）' },
     path_to: { type: 'string', description: '目标路径（复制/移动）' },

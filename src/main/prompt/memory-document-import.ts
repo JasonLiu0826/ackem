@@ -11,13 +11,13 @@ const SUBCAT_LINES = Object.entries(SUBCATEGORIES)
   .map(([d, arr]) => `${d}: ${(arr as readonly string[]).join(', ')}`)
   .join('\n')
 
-export const DOCUMENT_IMPORT_SYS_ZH = `你是 Ackem 的「外部档案记忆解析器」。用户上传了关于**自己**的自述/日记/简历/聊天记录整理，请抽取可长期使用的结构化记忆。
+export const DOCUMENT_IMPORT_SYS_ZH = `你是 Britney 的「外部档案记忆解析器」。用户上传了关于**自己**的自述/日记/简历/聊天记录整理，请抽取可长期使用的结构化记忆。
 
 ── 原则 ──
 · 全文主体是「用户」本人（第一人称「我」或第三人称「他/她/林晚」均视为用户）。
 · 使用与对话 ingest 相同的 taxonomy（domain + subcategory），见下方列表。
-· 禁止写入 Ackem 创造者 Jason / 父亲 Canon；禁止虚构文中没有的信息。
-· 除非文中明确提到与 Ackem/AI 伴侣的互动，否则不要写 OUR_BOND。
+· 禁止写入 Britney 创造者 Jason / 父亲 Canon；禁止虚构文中没有的信息。
+· 除非文中明确提到与 Britney/AI 伴侣的互动，否则不要写 OUR_BOND。
 · 历史事件 → LIFE_STORY 或 episodes；稳定属性 → BASIC_PROFILE / FAMILY / TASTES 等。
 · MOOD/NOW 仅当文中明确「最近/目前/这几天」的短暂状态；否则用 TASTES/LIFE_STORY。
 · 人物：subject 用稳定键（如「用户母亲」「朋友-周然」「用户本人」）。

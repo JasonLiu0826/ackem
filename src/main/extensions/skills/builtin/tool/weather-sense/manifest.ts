@@ -4,9 +4,9 @@ import type { DispatchConfig } from '../../../../protocols'
 const PROD_INTERVAL_MS = 30 * 60 * 1000
 const DEV_INTERVAL_MS = 2 * 60 * 1000
 
-/** 生产 30min；开发 2min；测试/覆盖可用 ACKEM_WEATHER_INTERVAL_MS */
+/** 生产 30min；开发 2min；测试/覆盖可用 BRITNEY_WEATHER_INTERVAL_MS */
 export function getWeatherIntervalMs(): number {
-  const override = process.env.ACKEM_WEATHER_INTERVAL_MS
+  const override = process.env.BRITNEY_WEATHER_INTERVAL_MS
   if (override != null && override !== '') {
     const n = Number(override)
     if (Number.isFinite(n) && n > 0) return n
@@ -33,12 +33,12 @@ const WEATHER_DISPATCH: DispatchConfig = {
 }
 
 export const WEATHER_SENSE_MANIFEST: SkillManifest = {
-  id: 'ackem/weather-sense@0.0.1',
+  id: 'britney/weather-sense@0.0.1',
   name: '天气感知',
   version: '0.0.1',
   category: 'skill',
   skillType: 'tool',
-  description: 'Open-Meteo 定时更新天气缓存；对话中可引用当地天气；Ackem 基础能力，始终启用',
+  description: 'Open-Meteo 定时更新天气缓存；对话中可引用当地天气；Britney 基础能力，始终启用',
   author: 'JasonLiu0826',
   license: 'AGPL-3.0',
   main: 'skill.ts',

@@ -1,4 +1,4 @@
-import { WORKING_MEMORY_CHAR_BUDGET } from './ackemParams'
+import { WORKING_MEMORY_CHAR_BUDGET } from './britneyParams'
 import { getCachedEmbeddingProvider, ensureFactEmbeddingsReady, getOrCreateEngineCache } from '../engineCache'
 import { getCachedTemporalEmbeddings } from '../embedding/preLlmWarmup'
 import { computeConversationEmbed } from '../embedding/scoring'

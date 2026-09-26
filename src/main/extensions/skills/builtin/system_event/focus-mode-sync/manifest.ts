@@ -15,14 +15,14 @@ const FOCUS_MODE_DISPATCH: DispatchConfig = {
     }
   },
   habits: ['用户开启 Windows 专注助手或系统勿扰'],
-  scenarios: ['专注模式下 Ackem 自动安静', '退出专注后恢复 proactive'],
+  scenarios: ['专注模式下 Britney 自动安静', '退出专注后恢复 proactive'],
   summary: '检测 Windows 专注助手状态并同步 globalDnd（无用户可见消息）。',
   keywords: ['专注', '勿扰', 'focus'],
   personality_hint: 'neutral'
 }
 
 export const FOCUS_MODE_SYNC_MANIFEST: SkillManifest = {
-  id: 'ackem/focus-mode-sync@0.0.1',
+  id: 'britney/focus-mode-sync@0.0.1',
   name: '专注模式联动',
   version: '0.0.1',
   category: 'skill',

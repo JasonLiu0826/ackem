@@ -2,7 +2,7 @@
 // 职责：四维递推、标签映射、记忆回响叠加
 // 输入：Event、Modulation、上一帧 EmotionState；可选 rng 用于极端区噪声
 // 输出：EmotionState
-// 引用：./ackemParams, ./types
+// 引用：./britneyParams, ./types
 
 import {
   EMOTION_CAP_DENOM,
@@ -16,7 +16,7 @@ import {
   NOISE_MAX,
   NOISE_THRESHOLD_ABS,
   SINGLE_TURN_CLAMP
-} from './ackemParams'
+} from './britneyParams'
 import type { Emotion4D, EmotionState, Event, MemoryEcho, Modulation } from './types'
 
 const BASE_STIMULUS: Record<

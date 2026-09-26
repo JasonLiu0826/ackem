@@ -63,7 +63,7 @@ export function speakViaNotification(text: string): {
     return { ok: false, mode: 'none', implementationStatus: 'dev', error: 'notifications_unsupported' }
   }
   const n = new Notification({
-    title: 'Ackem · 语音',
+    title: 'Britney · 语音',
     body: body.slice(0, 200),
     silent: false
   })

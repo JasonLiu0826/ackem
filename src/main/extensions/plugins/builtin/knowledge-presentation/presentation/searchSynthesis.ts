@@ -22,10 +22,10 @@ import { finalizePaperCardCompanionReply } from '../../../../../paperCard/finali
 import { resolvePaperCardDisplayTitle } from '../../../../../paperCard/resolveDisplayTitle'
 import { beginMarkdownTableSkillActivity } from '../../../../skills/builtin/tool/markdown-table/skillBridge'
 import {
-  ACKEM_PRODUCT_IDENTITY_GUARD,
-  buildAckemCompareCardBlock,
-  sanitizeAckemIdentityInMarkdown
-} from '../../../../../paperCard/ackemProductIdentity'
+  BRITNEY_PRODUCT_IDENTITY_GUARD,
+  buildBritneyCompareCardBlock,
+  sanitizeBritneyIdentityInMarkdown
+} from '../../../../../paperCard/britneyProductIdentity'
 
 export type SearchSynthesisInput = {
   query: string
@@ -223,8 +223,8 @@ async function synthesizeCardBody(
       role: 'system',
       content:
         systemContext +
-        ACKEM_PRODUCT_IDENTITY_GUARD +
-        buildAckemCompareCardBlock(userQuestion) +
+        BRITNEY_PRODUCT_IDENTITY_GUARD +
+        buildBritneyCompareCardBlock(userQuestion) +
         '\n\n【当前任务】你正在为用户撰写「检索摘录」正文。语气可略带人格色彩，但正文以 **准确、齐全、可核对** 的信息为主，像技术简报而非闲聊。'
     },
     { role: 'user', content: userQuestion },
@@ -284,8 +284,8 @@ async function synthesizeCompanionReply(
       role: 'system',
       content:
         systemContext +
-        ACKEM_PRODUCT_IDENTITY_GUARD +
-        buildAckemCompareCardBlock(userQuestion) +
+        BRITNEY_PRODUCT_IDENTITY_GUARD +
+        buildBritneyCompareCardBlock(userQuestion) +
         PAPER_CARD_COMPANION_SYSTEM_SUFFIX +
         '\n\n【当前任务】用户刚让你帮忙搜索，**完整检索简报已在纸面卡**。你只需用伴侣口吻说 **一两句**，**禁止复述** LTS、许可证、特性列表、版本号等事实。'
     },
@@ -347,7 +347,7 @@ export async function synthesizeSearchExperience(
     cardBody: string,
     outSources: WebSearchHit[]
   ): Promise<SearchSynthesisOutput> => {
-    const sanitizedBody = sanitizeAckemIdentityInMarkdown(cardBody, userQuestion)
+    const sanitizedBody = sanitizeBritneyIdentityInMarkdown(cardBody, userQuestion)
     const displayTitle = await resolvePaperCardDisplayTitle(
       settings,
       cardKind,

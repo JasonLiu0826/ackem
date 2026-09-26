@@ -47,7 +47,7 @@ function escapeHtml(text: string): string {
     .replace(/"/g, '&quot;')
 }
 
-/** W2-D 标杆页：演示 surfacePreload · ackem.extension.getContext / close */
+/** W2-D 标杆页：演示 surfacePreload · britney.extension.getContext / close */
 export function defaultSurfaceHtml(title: string): string {
   const safeTitle = escapeHtml(title)
   return `<!DOCTYPE html>
@@ -72,9 +72,9 @@ export function defaultSurfaceHtml(title: string): string {
 </head>
 <body>
   <main>
-    <span class="badge">Ackem Extension Surface · W2-D</span>
+    <span class="badge">Britney Extension Surface · W2-D</span>
     <h1>${safeTitle}</h1>
-    <p class="hint">独立窗口已就绪。下方信息来自 <code>ackem.extension.getContext()</code>（surfacePreload 窄 API）。</p>
+    <p class="hint">独立窗口已就绪。下方信息来自 <code>britney.extension.getContext()</code>（surfacePreload 窄 API）。</p>
     <div class="card">
       <div class="label">extensionId</div>
       <div class="value" id="ext-id">加载中…</div>
@@ -87,7 +87,7 @@ export function defaultSurfaceHtml(title: string): string {
   </main>
   <script>
     (async function () {
-      var extApi = window.ackem && window.ackem.extension;
+      var extApi = window.britney && window.britney.extension;
       if (!extApi) {
         document.getElementById('ext-id').textContent = '（preload 未加载）';
         return;

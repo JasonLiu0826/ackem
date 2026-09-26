@@ -5,7 +5,7 @@ import { writeFactRows } from './factLanding'
 import type { ExtractedFactRow } from './lightExtract/types'
 import type { AdultMemoryPrivacyLevel } from '../prompt/adult-mode'
 
-const COMPANION_REPLY_SUBJECT_PREFIX = 'Ackem回复'
+const COMPANION_REPLY_SUBJECT_PREFIX = 'Britney回复'
 const DAILY_SUMMARY_MAX_CHARS = 2400
 const REPLY_LINE_MAX_CHARS = 220
 
@@ -55,7 +55,7 @@ export function buildCompanionReplyRow(
     summary: formatCompanionReplyLine(userMsg, reply, now),
     weight: 0.6,
     confidence: 1,
-    triggers: ['Ackem回复'],
+    triggers: ['Britney回复'],
   }
 }
 

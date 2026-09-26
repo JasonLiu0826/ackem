@@ -6,7 +6,7 @@ import {
 import type { OutboundBubble } from './deliveryPlanner'
 import { formatBubbleForWeixin } from '../markdownForChannel'
 import { sendStickerPlaceholder } from './stickerRegistry'
-import { recordWeixinAckemActivity } from './activity'
+import { recordWeixinBritneyActivity } from './activity'
 import type { WeixinAccount } from './types'
 import { createLogger } from '../../logger'
 
@@ -76,5 +76,5 @@ export async function sendWeixinOutboundSequence(args: {
   }
 
   await typing(account, peerId, contextToken, 2)
-  if (dataRoot) recordWeixinAckemActivity(dataRoot)
+  if (dataRoot) recordWeixinBritneyActivity(dataRoot)
 }

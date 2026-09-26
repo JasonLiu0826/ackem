@@ -648,9 +648,9 @@ export function detectSoftConcern(msg: string): boolean {
   return SOFT_CONCERN_WORDS.some(w => msg.includes(w))
 }
 
-// ═══ 显式记忆请求（用户命令 Ackem 记住/遗忘；记什么由 orchestrator 写入整句，不在此硬编码）═══
+// ═══ 显式记忆请求（用户命令 Britney 记住/遗忘；记什么由 orchestrator 写入整句，不在此硬编码）═══
 
-/** 用户让 Ackem 记住的口语/书面触发语（仅识别「要记」意图，不预设具体事实内容） */
+/** 用户让 Britney 记住的口语/书面触发语（仅识别「要记」意图，不预设具体事实内容） */
 export const REMEMBER_TRIGGERS = [
   '请帮我记住',
   '帮我记住',

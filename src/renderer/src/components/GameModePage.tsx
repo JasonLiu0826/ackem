@@ -132,7 +132,7 @@ export function GameModePage(): JSX.Element {
     let cancelled = false
     void (async () => {
       try {
-        const list = (await window.ackem.ext.gamemode.list()) as GameProviderManifest[]
+        const list = (await window.britney.ext.gamemode.list()) as GameProviderManifest[]
         if (!cancelled) setGames(list)
       } catch {
         if (!cancelled) setGames([])

@@ -5,7 +5,7 @@
  */
 
 /** 每个 stub.ts 首行必须包含此 marker，供 stubFiles.test.ts 校验 */
-export const EXTENSION_STUB_MARKER = '@ackem-extension-stub-not-runtime'
+export const EXTENSION_STUB_MARKER = '@britney-extension-stub-not-runtime'
 
 /** stub 文件总数（plugins + skills catalog 占位，共 35 个） */
 export const EXTENSION_STUB_FILE_COUNT = 35

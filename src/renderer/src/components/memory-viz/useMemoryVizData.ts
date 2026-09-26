@@ -33,11 +33,11 @@ export function useMemoryVizData(): VizData {
     setLoading(true)
     try {
       const [f, t, a, e, s] = await Promise.all([
-        window.ackem.memoryList(),
-        window.ackem.kgList(),
-        window.ackem.associationList(),
-        window.ackem.episodeList(),
-        window.ackem.memoryStats()
+        window.britney.memoryList(),
+        window.britney.kgList(),
+        window.britney.associationList(),
+        window.britney.episodeList(),
+        window.britney.memoryStats()
       ])
       setFacts(f as MemoryFact[])
       setTriples(t as Triple[])
@@ -56,7 +56,7 @@ export function useMemoryVizData(): VizData {
   }, [load])
 
   useEffect(() => {
-    const off = window.ackem.onMemoryUpdated?.(() => {
+    const off = window.britney.onMemoryUpdated?.(() => {
       void load()
     })
     return () => off?.()

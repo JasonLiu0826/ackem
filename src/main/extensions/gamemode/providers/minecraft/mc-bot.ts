@@ -1,5 +1,5 @@
 // [gaming/mc-bot] — Minecraft Bot 核心模块
-// 职责：Mineflayer 生命周期管理 + 行为循环 + Ackem WS 通信
+// 职责：Mineflayer 生命周期管理 + 行为循环 + Britney WS 通信
 // 引用：./types, ./mc-behavior, ./mc-humanizer, ./mc-ws-server, ./script-engine
 
 import type { Bot } from 'mineflayer'
@@ -50,8 +50,8 @@ export interface BotConfig {
   port: number
   username: string
   password?: string
-  /** Ackem WebSocket 地址 */
-  ackemWsUrl: string
+  /** Britney WebSocket 地址 */
+  britneyWsUrl: string
   /** 行为决策 tick 间隔（ms） */
   tickIntervalMs: number
   /** 是否启用自动战斗 */
@@ -64,7 +64,7 @@ export interface BotConfig {
 
 const DEFAULT_CONFIG: Partial<BotConfig> = {
   port: 25565,
-  ackemWsUrl: 'ws://localhost:19532',
+  britneyWsUrl: 'ws://localhost:19532',
   tickIntervalMs: 500,
   autoCombat: true,
   autoFollow: true,
@@ -330,7 +330,7 @@ function resetStuckWatch(reason: string): void {
   stuckWatch.reason = reason
 }
 
-/** 设置 Ackem 引擎状态（供行为决策器使用） */
+/** 设置 Britney 引擎状态（供行为决策器使用） */
 export function setEngineState(state: EngineStateForGaming): void {
   engineState = state
 }
@@ -1014,7 +1014,7 @@ async function doTick(): Promise<void> {
     gameState = gs
     await checkAndRecoverIfStuck(gs)
 
-    // 上报游戏状态到 Ackem
+    // 上报游戏状态到 Britney
     const socket = ws
     if (socket && socket.readyState === socket.OPEN) {
       socket.send(JSON.stringify({ type: 'game_state', ...gs }))
@@ -1422,8 +1422,8 @@ export async function startBot(cfg: Partial<BotConfig> & { host: string; usernam
 
   isRunning = true
 
-  // 连接 Ackem WebSocket
-  connectWs(config.ackemWsUrl)
+  // 连接 Britney WebSocket
+  connectWs(config.britneyWsUrl)
 
   // 启动行为 tick 循环
   tickTimer = setInterval(() => {
@@ -1469,7 +1469,7 @@ export function setBotCallbacks(cbs: BotCallbacks): void {
   callbacks = cbs
 }
 
-/** 连接到 Ackem WebSocket */
+/** 连接到 Britney WebSocket */
 async function connectWs(url: string): Promise<void> {
   try {
     const { default: WebSocket } = await import('ws')
@@ -1477,7 +1477,7 @@ async function connectWs(url: string): Promise<void> {
     ws = socket
 
     socket.on('open', () => {
-      log.info('connected to Ackem WS')
+      log.info('connected to Britney WS')
       socket.send(JSON.stringify({ type: 'hello', client: 'mineflayer-bot', username: config?.username ?? 'unknown' }))
     })
 
@@ -1529,7 +1529,7 @@ export async function executeBotActions(actions: import('./mc-behavior').BotActi
   }
 }
 
-/** 让 bot 在游戏内发言（供 Ackem LLM 回复使用） */
+/** 让 bot 在游戏内发言（供 Britney LLM 回复使用） */
 export function botSendChat(message: string): void {
   if (!bot || !isRunning) return
   // 截断过长的消息（MC 聊天栏限制 256 字符）

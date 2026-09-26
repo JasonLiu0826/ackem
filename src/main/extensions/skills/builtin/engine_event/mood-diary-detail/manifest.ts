@@ -14,7 +14,7 @@ const MOOD_DIARY_DISPATCH: DispatchConfig = {
 }
 
 export const MOOD_DIARY_DETAIL_MANIFEST: SkillManifest = {
-  id: 'ackem/mood-diary-detail@0.0.1',
+  id: 'britney/mood-diary-detail@0.0.1',
   name: '心情日记详规',
   version: '0.0.1',
   category: 'skill',

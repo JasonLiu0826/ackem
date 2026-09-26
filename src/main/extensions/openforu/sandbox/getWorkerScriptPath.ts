@@ -23,14 +23,14 @@ function findWorkerEntrySource(): string {
   const prebuilt = join(dir, PREBUILT_NAME)
   if (existsSync(prebuilt)) return prebuilt
 
-  const roots = [process.cwd(), join(process.cwd(), 'Ackem')]
+  const roots = [process.cwd(), join(process.cwd(), 'Britney')]
   for (const root of roots) {
     const src = join(root, WORKER_ENTRY_REL)
     if (existsSync(src)) return src
   }
 
   throw new Error(
-    `找不到 uplugin Worker 入口（曾尝试 ${join(dir, 'workerEntry.ts')} 与 */src/main/.../workerEntry.ts）。请从 Ackem 项目根目录启动 dev。`
+    `找不到 uplugin Worker 入口（曾尝试 ${join(dir, 'workerEntry.ts')} 与 */src/main/.../workerEntry.ts）。请从 Britney 项目根目录启动 dev。`
   )
 }
 
@@ -53,7 +53,7 @@ export async function getWorkerScriptPath(): Promise<string> {
     return entry
   }
 
-  const outDir = join(tmpdir(), 'ackem-uplugin-sandbox')
+  const outDir = join(tmpdir(), 'britney-uplugin-sandbox')
   mkdirSync(outDir, { recursive: true })
   const outfile = join(outDir, `worker-${process.pid}.mjs`)
 

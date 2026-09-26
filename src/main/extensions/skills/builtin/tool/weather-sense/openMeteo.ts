@@ -42,7 +42,7 @@ const IP_GEO_URL = 'https://geolocation-api.open-meteo.com/v1/get'
 
 /** 用户手动指定的城市（settings / env）；无则 null */
 export function getManualWeatherCity(): string | null {
-  const env = process.env.ACKEM_WEATHER_CITY?.trim()
+  const env = process.env.BRITNEY_WEATHER_CITY?.trim()
   if (env) return env
   try {
     const city = loadSettings().weatherCity?.trim()
@@ -62,7 +62,7 @@ function resolveDataRootSafe(): string {
   try {
     return resolveDataRoot(loadSettings())
   } catch {
-    return process.env.ACKEM_TEST_DATA_ROOT ?? ''
+    return process.env.BRITNEY_TEST_DATA_ROOT ?? ''
   }
 }
 
@@ -72,7 +72,7 @@ async function fetchCityFromIp(): Promise<{
   latitude: number
   longitude: number
 } | null> {
-  if (process.env.ACKEM_WEATHER_USE_FIXTURE === '1') return null
+  if (process.env.BRITNEY_WEATHER_USE_FIXTURE === '1') return null
   try {
     const ipRes = await fetch('http://ip-api.com/json/?fields=status,city,lat,lon&lang=zh-CN', {
       signal: AbortSignal.timeout(8000)
@@ -210,9 +210,9 @@ async function fetchCurrentWeather(
   }
 }
 
-/** 拉取天气；测试/离线可用 ACKEM_WEATHER_USE_FIXTURE=1 */
+/** 拉取天气；测试/离线可用 BRITNEY_WEATHER_USE_FIXTURE=1 */
 export async function fetchWeatherSnapshot(city: string): Promise<WeatherSnapshot> {
-  if (process.env.ACKEM_WEATHER_USE_FIXTURE === '1') {
+  if (process.env.BRITNEY_WEATHER_USE_FIXTURE === '1') {
     return loadFixture(city)
   }
 

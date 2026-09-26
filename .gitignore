@@ -7,3 +7,8 @@ data
 .test-cache
 .env
 .env.*
+dist-android
+britney-android/.gradle
+britney-android/build
+britney-android/app/build
+_backup_20260707

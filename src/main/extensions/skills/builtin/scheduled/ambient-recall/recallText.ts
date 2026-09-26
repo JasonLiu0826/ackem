@@ -18,6 +18,6 @@ export function buildRecallLine(fact: string): string {
 
 /** 测试可固定随机 */
 export function shouldAttemptRecall(seed: number): boolean {
-  if (process.env.ACKEM_AMBIENT_RECALL_ALWAYS === '1') return true
+  if (process.env.BRITNEY_AMBIENT_RECALL_ALWAYS === '1') return true
   return seed % 5 === 0
 }

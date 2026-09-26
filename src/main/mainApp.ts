@@ -17,7 +17,7 @@ import {
   touchDesktopCompanion
 } from './extensions/plugins/builtin/desktop-companion/bootstrap'
 import { loadTrayIcon, loadWindowIcon } from './appIcon'
-import { ACKEM_CANON } from './canon/ackemCanon'
+import { BRITNEY_CANON } from './canon/britneyCanon'
 import { isShutdownFinished, markAppQuitting, performAppShutdown } from './shutdown'
 import { closeStartupSplash } from './startupSplash'
 
@@ -52,7 +52,7 @@ function createWindow(): void {
     height: 680,
     minWidth: 900,
     minHeight: 620,
-    title: 'Ackem',
+    title: 'Britney',
     icon: windowIcon.isEmpty() ? undefined : windowIcon,
     show: false,
     backgroundColor: '#0f0d14',
@@ -135,14 +135,14 @@ function createTray(): void {
     { label: '陪伴状态', enabled: false },
     { type: 'separator' },
     {
-      label: '退出 Ackem',
+      label: '退出 Britney',
       click: () => {
         markAppQuitting()
         app.quit()
       }
     }
   ])
-  tray.setToolTip('Ackem')
+  tray.setToolTip('Britney')
   tray.setContextMenu(contextMenu)
 
   tray.on('double-click', () => {
@@ -197,7 +197,7 @@ export function runMainApplication(): void {
       log.warn('embedding bootstrap failed', { error: String(e) })
     }
 
-    log.info('Ackem canon birthday', { birthDate: ACKEM_CANON.birthDate })
+    log.info('Britney canon birthday', { birthDate: BRITNEY_CANON.birthDate })
 
     const { setTraceDir } = await import('./engine/tracer.js')
     setTraceDir(dataRoot)

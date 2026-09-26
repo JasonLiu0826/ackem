@@ -13,12 +13,12 @@ export function useEmbeddingReadiness() {
     let unsub: (() => void) | undefined
     void (async () => {
       try {
-        const snap = await window.ackem.embeddingReadiness()
+        const snap = await window.britney.embeddingReadiness()
         setEmbeddingReadiness(snap as EmbeddingReadinessSnapshot)
       } catch {
         /* ignore */
       }
-      unsub = window.ackem.onEmbeddingReadinessChanged((snap) => {
+      unsub = window.britney.onEmbeddingReadinessChanged((snap) => {
         setEmbeddingReadiness(snap as EmbeddingReadinessSnapshot)
       })
     })()

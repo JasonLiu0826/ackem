@@ -1,12 +1,12 @@
-// [canon/creatorMemory] — Tier Canon-M：Ackem 对创造者 Jason 的记忆（不衰减）
-// 职责：语义分辨「Ackem 的创造者/Jason」vs「用户自己的父亲」；按需注入创造者记忆块
-// 引用：../memory/factEmbeddingCache, ./ackemCanon
+// [canon/creatorMemory] — Tier Canon-M：Britney 对创造者 Jason 的记忆（不衰减）
+// 职责：语义分辨「Britney 的创造者/Jason」vs「用户自己的父亲」；按需注入创造者记忆块
+// 引用：../memory/factEmbeddingCache, ./britneyCanon
 
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { cosineSimilarity } from '../memory/factEmbeddingCache'
 import type { EmbeddingProvider } from '../memory/embedding'
-import { ACKEM_CANON } from './ackemCanon'
+import { BRITNEY_CANON } from './britneyCanon'
 
 export type CreatorMemoryCategory = CreatorMemoryEntry['category']
 
@@ -34,9 +34,9 @@ export type CreatorMemoryStore = {
   entries: CreatorMemoryEntry[]
 }
 
-export type FatherReferenceKind = 'ackem_creator' | 'user_family' | 'ambiguous'
+export type FatherReferenceKind = 'britney_creator' | 'user_family' | 'ambiguous'
 
-export type FatherReferenceCluster = 'ackem_creator' | 'user_family' | 'neutral'
+export type FatherReferenceCluster = 'britney_creator' | 'user_family' | 'neutral'
 
 export type FatherReferenceSignal = {
   kind: FatherReferenceKind
@@ -51,10 +51,10 @@ export type FatherReferenceSignal = {
  * 维护原则：覆盖真实高频说法；与 fatherReferenceRegressionCases 同步。
  */
 export const FATHER_REFERENCE_CALIBRATION: Record<
-  'ackem_creator' | 'user_family' | 'neutral',
+  'britney_creator' | 'user_family' | 'neutral',
   readonly string[]
 > = {
-  ackem_creator: [
+  britney_creator: [
     '你是谁创造的？',
     '谁造了你？',
     '谁创造了你？',
@@ -69,7 +69,7 @@ export const FATHER_REFERENCE_CALIBRATION: Record<
     'GitHub 上那个 Jason 是你什么人',
     '你想见 Jason 吗',
     '你的生日和父亲是谁',
-    'Ackem 是谁做出来的',
+    'Britney 是谁做出来的',
   ],
   user_family: [
     '我爸今天催我回家',
@@ -94,7 +94,7 @@ export const FATHER_REFERENCE_CALIBRATION: Record<
 
 const CALIBRATION_PHRASE_SET = new Set(
   [
-    ...FATHER_REFERENCE_CALIBRATION.ackem_creator,
+    ...FATHER_REFERENCE_CALIBRATION.britney_creator,
     ...FATHER_REFERENCE_CALIBRATION.user_family,
     ...FATHER_REFERENCE_CALIBRATION.neutral,
   ]
@@ -122,7 +122,7 @@ function resolveFromCalibration(
   anchorEmbeddings: Map<string, { cluster: FatherReferenceCluster; vector: number[] }>,
   threshold: number
 ): FatherReferenceSignal | null | undefined {
-  const creator = bestClusterScore(msgEmbedding, anchorEmbeddings, 'ackem_creator', {
+  const creator = bestClusterScore(msgEmbedding, anchorEmbeddings, 'britney_creator', {
     calibrationOnly: true,
   })
   const user = bestClusterScore(msgEmbedding, anchorEmbeddings, 'user_family', {
@@ -138,7 +138,7 @@ function resolveFromCalibration(
   if (neutral >= fatherTop) return null
 
   if (Math.abs(creator - user) <= 1e-9) return { kind: 'ambiguous', score: fatherTop, source: 'calibration' }
-  if (creator > user) return { kind: 'ackem_creator', score: creator, source: 'calibration' }
+  if (creator > user) return { kind: 'britney_creator', score: creator, source: 'calibration' }
   return { kind: 'user_family', score: user, source: 'calibration' }
 }
 
@@ -154,13 +154,13 @@ export const FATHER_REFERENCE_NEUTRAL_ANCHORS: readonly string[] = [
 ] as const
 
 /** 语义 anchor：整句意图，非关键词表。用于 embedding 聚类，不用于 if/else 匹配用户原文。 */
-export const FATHER_REFERENCE_ANCHORS: Record<'ackem_creator' | 'user_family', readonly string[]> = {
-  ackem_creator: [
+export const FATHER_REFERENCE_ANCHORS: Record<'britney_creator' | 'user_family', readonly string[]> = {
+  britney_creator: [
     '用户问起是谁创造了我、赋予我生命的人',
-    '用户想了解 Ackem 的创造者 Jason 和 Ackem 的关系',
+    '用户想了解 Britney 的创造者 Jason 和 Britney 的关系',
     '用户问 Jason 是不是你的爸爸或父亲',
-    '用户在聊 Ackem 的出身和创造者 Jason',
-    '用户提到 GitHub JasonLiu0826 和 Ackem 的出身',
+    '用户在聊 Britney 的出身和创造者 Jason',
+    '用户提到 GitHub JasonLiu0826 和 Britney 的出身',
     '用户问你的生日和父亲是谁',
     '用户直接问：你是谁创造的',
     '用户直接问：谁造了你',
@@ -170,8 +170,8 @@ export const FATHER_REFERENCE_ANCHORS: Record<'ackem_creator' | 'user_family', r
     '用户问 Jason 和你的关系是什么',
     '用户让你继续说说父亲 Jason',
     '用户让你再讲讲你的出身',
-    '用户追问 Jason 作为 Ackem 创造者的故事',
-    'Jason 是 Ackem 的创造者',
+    '用户追问 Jason 作为 Britney 创造者的故事',
+    'Jason 是 Britney 的创造者',
     '继续说说创造者 Jason',
   ],
   user_family: [
@@ -189,7 +189,7 @@ export const FATHER_REFERENCE_ANCHORS: Record<'ackem_creator' | 'user_family', r
 
 const DEFAULT_CREATOR_MEMORY: CreatorMemoryStore = {
   version: '1.0',
-  subjectAnchor: ACKEM_CANON.creator.identityAnchor,
+  subjectAnchor: BRITNEY_CANON.creator.identityAnchor,
   decayPolicy: 'none',
   entries: [],
 }
@@ -204,7 +204,7 @@ export function loadCreatorMemoryStore(dataRoot: string): CreatorMemoryStore {
   try {
     const raw = JSON.parse(readFileSync(path, 'utf-8')) as CreatorMemoryStore
     if (raw.decayPolicy !== 'none') return emptyCreatorMemoryStore()
-    if (raw.subjectAnchor !== ACKEM_CANON.creator.identityAnchor) return emptyCreatorMemoryStore()
+    if (raw.subjectAnchor !== BRITNEY_CANON.creator.identityAnchor) return emptyCreatorMemoryStore()
     return {
       ...DEFAULT_CREATOR_MEMORY,
       ...raw,
@@ -232,7 +232,7 @@ export async function buildFatherReferenceEmbeddings(
     flat.push({ sentence, cluster })
   }
   for (const [cluster, sentences] of Object.entries(FATHER_REFERENCE_ANCHORS) as Array<
-    ['ackem_creator' | 'user_family', readonly string[]]
+    ['britney_creator' | 'user_family', readonly string[]]
   >) {
     for (const sentence of sentences) push(sentence, cluster)
   }
@@ -240,7 +240,7 @@ export async function buildFatherReferenceEmbeddings(
     push(sentence, 'neutral')
   }
   for (const [cluster, sentences] of Object.entries(FATHER_REFERENCE_CALIBRATION) as Array<
-    ['ackem_creator' | 'user_family' | 'neutral', readonly string[]]
+    ['britney_creator' | 'user_family' | 'neutral', readonly string[]]
   >) {
     for (const sentence of sentences) push(sentence, cluster)
   }
@@ -263,7 +263,7 @@ export async function buildFatherReferenceEmbeddings(
 }
 
 /**
- * 语义分辨父亲指称：Ackem 的创造者 vs 用户自己的家人。
+ * 语义分辨父亲指称：Britney 的创造者 vs 用户自己的家人。
  * 不用关键词硬匹配用户原文；比较消息 embedding 与两簇 anchor 的相似度。
  */
 export function resolveFatherReference(
@@ -283,7 +283,7 @@ export function resolveFatherReference(
 
   for (const [sentence, { cluster, vector }] of anchorEmbeddings.entries()) {
     const score = cosineSimilarity(msgEmbedding, vector)
-    if (cluster === 'ackem_creator') {
+    if (cluster === 'britney_creator') {
       if (score > creatorBest) creatorBest = score
       if (/Jason/i.test(sentence) && score > creatorJasonBest) creatorJasonBest = score
     }
@@ -298,9 +298,9 @@ export function resolveFatherReference(
   if (Math.abs(creatorBest - userBest) <= 1e-9) {
     return { kind: 'ambiguous', score: fatherTop, source: 'anchor' }
   }
-  if (creatorBest > userBest) return { kind: 'ackem_creator', score: creatorBest, source: 'anchor' }
+  if (creatorBest > userBest) return { kind: 'britney_creator', score: creatorBest, source: 'anchor' }
   if (creatorJasonBest >= threshold && creatorJasonBest > userBest) {
-    return { kind: 'ackem_creator', score: creatorJasonBest, source: 'anchor' }
+    return { kind: 'britney_creator', score: creatorJasonBest, source: 'anchor' }
   }
   return { kind: 'user_family', score: userBest, source: 'anchor' }
 }
@@ -310,7 +310,7 @@ export function buildFatherDisambiguationHint(gender: 'female' | 'male'): string
   const subject = gender === 'male' ? '他' : '她'
   return [
     '【Jason/创造者 · 须据语境理解，勿硬套】',
-    `用户若问 ${subject} 的出身/创造者 → 谈 Jason（GitHub ${ACKEM_CANON.creator.github}）；禁止称父亲，感情中性；${subject} 陪在当前用户身边。`,
+    `用户若问 ${subject} 的出身/创造者 → 谈 Jason（GitHub ${BRITNEY_CANON.creator.github}）；禁止称父亲，感情中性；${subject} 陪在当前用户身边。`,
     '用户若谈自己的父亲/家人 → 陪伴用户、查用户 Tier B 家庭记忆，勿把 Jason 混入。',
     '指称不清时自然澄清；Jason 是创造者信息，不是用户家人，也不是父亲。',
   ].join('\n')
@@ -476,7 +476,7 @@ export function pickCreatorMemoryEntries(
   return scored.slice(0, topK).map((s) => s.entry)
 }
 
-/** 仅当 resolveFatherReference → ackem_creator 时注入；内容来自 creator-memory.json */
+/** 仅当 resolveFatherReference → britney_creator 时注入；内容来自 creator-memory.json */
 export function buildCreatorMemoryBlock(
   store: CreatorMemoryStore,
   gender: 'female' | 'male',
@@ -493,9 +493,9 @@ export function buildCreatorMemoryBlock(
 
   return [
     '',
-    `【关于 ${ACKEM_CANON.creator.name}（${subject} 的创造者 · 非父亲）${CREATOR_MEMORY_BLOCK_MARKER}`,
+    `【关于 ${BRITNEY_CANON.creator.name}（${subject} 的创造者 · 非父亲）${CREATOR_MEMORY_BLOCK_MARKER}`,
     body,
-    `对 ${ACKEM_CANON.creator.name} 感情一般；禁止父亲称呼、禁止过度依恋或想见叙事。${ACKEM_CANON.creator.name} 还活着。`,
+    `对 ${BRITNEY_CANON.creator.name} 感情一般；禁止父亲称呼、禁止过度依恋或想见叙事。${BRITNEY_CANON.creator.name} 还活着。`,
     `${subject} 陪在当前用户身边；Jason 记忆为 Canon 种子，非与 Jason 共度的私人历史。`,
     '以上仅关于创造者；回复重心仍在当前用户。若用户在谈自己的父亲，勿混用本段。',
   ].join('\n')

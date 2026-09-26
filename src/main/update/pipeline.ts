@@ -9,14 +9,14 @@ import { extractZip, testZipIntegrity } from './zipVerify'
 
 function resolveStagingDir(extractDir: string, version: string): string {
   const named = join(extractDir, greenFolderName(version))
-  if (existsSync(join(named, 'Ackem.exe'))) return named
-  if (existsSync(join(extractDir, 'Ackem.exe'))) return extractDir
+  if (existsSync(join(named, 'Britney.exe'))) return named
+  if (existsSync(join(extractDir, 'Britney.exe'))) return extractDir
   for (const entry of readdirSync(extractDir, { withFileTypes: true })) {
     if (!entry.isDirectory()) continue
     const candidate = join(extractDir, entry.name)
-    if (existsSync(join(candidate, 'Ackem.exe'))) return candidate
+    if (existsSync(join(candidate, 'Britney.exe'))) return candidate
   }
-  throw new Error(`Missing Ackem.exe in extracted package under ${extractDir}`)
+  throw new Error(`Missing Britney.exe in extracted package under ${extractDir}`)
 }
 
 function emit(win: Electron.BrowserWindow | null, ev: UpdateProgressEvent): void {
@@ -66,8 +66,8 @@ export async function runUpdatePipeline(job: UpdateJob, win: Electron.BrowserWin
     extractZip(job.zipPath, job.extractDir)
 
     const stagingDir = resolveStagingDir(job.extractDir, job.targetVersion)
-    if (!existsSync(join(stagingDir, 'Ackem.exe'))) {
-      throw new Error(`Extracted package missing Ackem.exe in ${stagingDir}`)
+    if (!existsSync(join(stagingDir, 'Britney.exe'))) {
+      throw new Error(`Extracted package missing Britney.exe in ${stagingDir}`)
     }
 
     send({ phase: 'extract', message: 'Extract complete', percent: 100 })
@@ -78,7 +78,7 @@ export async function runUpdatePipeline(job: UpdateJob, win: Electron.BrowserWin
 
     send({
       phase: 'done',
-      message: 'Update finished — you can restart Ackem',
+      message: 'Update finished — you can restart Britney',
       percent: 100
     })
   } catch (e) {
@@ -88,7 +88,7 @@ export async function runUpdatePipeline(job: UpdateJob, win: Electron.BrowserWin
   }
 }
 
-export function launchAckem(exePath: string): void {
+export function launchBritney(exePath: string): void {
   spawn(exePath, [], { detached: true, stdio: 'ignore', cwd: dirname(exePath) })
 }
 

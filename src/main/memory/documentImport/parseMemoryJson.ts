@@ -12,10 +12,20 @@ import type {
   MemoryJsonEpisodeInput,
   MemoryJsonFactInput,
   MemoryJsonFactsFile,
-  MemoryJsonParseResult,
+  MemoryJsonParseStats,
 } from '../../../shared/memoryJsonImport'
 import { MEMORY_JSON_BUNDLE_SCHEMA } from '../../../shared/memoryJsonImport'
 import { newDraftId } from './parseImportChunk'
+
+type MemoryJsonParseResult = {
+  ok: boolean
+  error?: string
+  facts?: unknown[]
+  episodes?: unknown[]
+  anchors?: unknown[]
+  stats?: MemoryJsonParseStats
+  warnings?: string[]
+}
 
 const SUBCATEGORY_ALIASES: Record<string, Subcategory> = {
   BASIC_PROFILE: 'BASIC_PROFILE',

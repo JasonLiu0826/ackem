@@ -1,6 +1,6 @@
-/** Ackem 结构化记忆 JSON 导入（主进程 / 渲染进程共享） */
+/** Britney 结构化记忆 JSON 导入（主进程 / 渲染进程共享） */
 
-export const MEMORY_JSON_BUNDLE_SCHEMA = 'ackem.memory.bundle' as const
+export const MEMORY_JSON_BUNDLE_SCHEMA = 'britney.memory.bundle' as const
 export const MEMORY_JSON_BUNDLE_VERSION = 1 as const
 
 /** 单条事实（导入文件内） */

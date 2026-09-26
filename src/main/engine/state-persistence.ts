@@ -2,12 +2,12 @@
 // 职责：FullState 读写
 // 输入：dataRoot
 // 输出：FullState | null
-// 引用：./types, ./ackemParams, node:fs
+// 引用：./types, ./britneyParams, node:fs
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { loadCompanionStateFromDb, saveCompanionStateToDb } from '../db/repos/companionState'
-import { INITIAL_TRUST, STATE_JSON_VERSION } from './ackemParams'
+import { INITIAL_TRUST, STATE_JSON_VERSION } from './britneyParams'
 import type { FullState, L1State } from './types'
 
 const FILE = 'state.json'

@@ -8,10 +8,10 @@ import { isDesktopAgentSettingsReady, type DesktopAgentSettingsSlice } from '../
 
 const MIN_LEN = 4
 
-/** 用户在问「Ackem 能做什么 / 有什么功能」，而非请求具体能力或情感话题 */
+/** 用户在问「Britney 能做什么 / 有什么功能」，而非请求具体能力或情感话题 */
 const LISTING_PATTERNS: RegExp[] = [
-  /(?:你|Ackem|这边|系统).{0,12}(?:会|能|可以|都).{0,8}(?:干|做|帮).{0,8}(?:什么|啥)/u,
-  /(?:你|Ackem).{0,8}(?:会|能|都).{0,6}(?:些什么|啥|什么)(?:功能|能力)?/u,
+  /(?:你|Britney|这边|系统).{0,12}(?:会|能|可以|都).{0,8}(?:干|做|帮).{0,8}(?:什么|啥)/u,
+  /(?:你|Britney).{0,8}(?:会|能|都).{0,6}(?:些什么|啥|什么)(?:功能|能力)?/u,
   /(?:有|都有|都有哪些).{0,4}(?:什么|啥)(?:功能|能力|本事|特长)/u,
   /(?:哪些|什么).{0,8}(?:扩展|插件|[Ss]kill|技能)/u,
   /介绍.{0,10}(?:一下.{0,6})?(?:功能|能力|扩展)/u,
@@ -29,7 +29,9 @@ const MODE_LABEL: Record<DispatchConfig['mode'], string> = {
   dispatched: '对话触发',
   autonomous: '后台自动',
   always_on: '常驻',
-  manual: '手动'
+  manual: '手动',
+    engine_event: 'engine_event',
+    scheduled: 'scheduled'
 }
 
 const STATUS_LABEL: Record<DispatchCatalogEntry['status'], string> = {
@@ -145,7 +147,7 @@ export function buildExtensionCatalogListingBlock(
 
   const lines: string[] = [
     '【扩展能力清单 · 本轮自动检索】',
-    '用户正在询问 Ackem 的能力/功能。你必须基于下列清单如实介绍，保持伴侣口吻。',
+    '用户正在询问 Britney 的能力/功能。你必须基于下列清单如实介绍，保持伴侣口吻。',
     '硬性规则：',
     '1) 仅「【可用】」项可以说「我能帮你…」并举例触发方式；「【不可用】」「【暂未开放】」只能说明存在或原因，禁止假称能执行。',
     '2) 禁止编造未在清单中的扩展、Skill、插件或假称本轮已执行某操作。',
@@ -177,7 +179,7 @@ export function buildExtensionCatalogListingBlock(
   }
 
   lines.push(
-    '回复建议：先一句话概括 Ackem 能做什么，再按平台功能 → 可用扩展 →（如有）暂不可用/未开放 分层说明；用户想新能力时引导 Plan。'
+    '回复建议：先一句话概括 Britney 能做什么，再按平台功能 → 可用扩展 →（如有）暂不可用/未开放 分层说明；用户想新能力时引导 Plan。'
   )
 
   let block = lines.join('\n')

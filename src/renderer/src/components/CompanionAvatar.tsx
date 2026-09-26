@@ -35,16 +35,16 @@ export function CompanionAvatar({
   const [binding, setBinding] = useState<CompanionSkinBinding | null>(null)
 
   const loadBinding = useCallback(() => {
-    if (typeof window.ackem?.companionSkinActive !== 'function') {
+    if (typeof window.britney?.companionSkinActive !== 'function') {
       setBinding(null)
       return
     }
-    void window.ackem.companionSkinActive().then(setBinding).catch(() => setBinding(null))
+    void window.britney.companionSkinActive().then(setBinding).catch(() => setBinding(null))
   }, [])
 
   useEffect(() => {
     loadBinding()
-    window.ackem?.onCompanionSkinChanged?.(loadBinding)
+    window.britney?.onCompanionSkinChanged?.(loadBinding)
   }, [loadBinding])
 
   const status = companionAvatarStatusLabel(state, binding?.statusLabels)

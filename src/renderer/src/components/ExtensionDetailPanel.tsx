@@ -99,7 +99,7 @@ export function ExtensionDetailPanel({
             <button
               type="button"
               onClick={() => {
-                void window.ackem.openforu.openSurfaceWindow(item.id).then((r) => {
+                void window.britney.openforu.openSurfaceWindow(item.id).then((r) => {
                   if (!r.ok) window.alert(r.message)
                 })
               }}
@@ -131,7 +131,7 @@ export function ExtensionDetailPanel({
 
       {isCore && (
         <p className="mt-3 rounded-lg bg-accent/10 px-3 py-2 text-xs text-accent/90">
-          此为 Ackem 内置基础能力，默认开启且不可在扩展中心关闭。
+          此为 Britney 内置基础能力，默认开启且不可在扩展中心关闭。
         </p>
       )}
 
@@ -171,7 +171,7 @@ export function ExtensionDetailPanel({
         <p className="mt-3 rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-200">
           上次运行异常：{item.lastError}
           <br />
-          可点击「启用」从磁盘重载并重试（无需重启 Ackem）。
+          可点击「启用」从磁盘重载并重试（无需重启 Britney）。
         </p>
       )}
 

@@ -11,7 +11,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   override componentDidCatch(err: Error, info: ErrorInfo): void {
-    console.error('[Ackem renderer]', err, info.componentStack)
+    console.error('[Britney renderer]', err, info.componentStack)
   }
 
   override render(): ReactNode {

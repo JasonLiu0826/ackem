@@ -140,12 +140,12 @@ export const DESKTOP_AGENT_CAPABILITY_CATALOG: DesktopAgentCapabilityDef[] = [
     requiresSetting: 'desktopAgentAllowDownload'
   },
   {
-    id: 'import_ackem',
-    label: '导入 Ackem',
+    id: 'import_britney',
+    label: '导入 Britney',
     uiGroup: '知识库',
     handler: 'use_computer',
-    exampleQueries: ['导入到ackem', '把这个文件加入知识库', '导入本地文档'],
-    routingHint: '用 use_computer import_to_ackem 或先确认路径再导入。'
+    exampleQueries: ['导入到britney', '把这个文件加入知识库', '导入本地文档'],
+    routingHint: '用 use_computer import_to_britney 或先确认路径再导入。'
   },
   {
     id: 'capability_help',

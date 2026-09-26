@@ -69,7 +69,7 @@ export function resolveSurfaceDispatch(
 
 /** 注入主聊天 LLM：窗口已由宿主打开，禁止编造 UI */
 export const SURFACE_OPENED_LLM_HINT =
-  '【Surface·硬性】Ackem 主进程已打开该扩展的独立窗口。可简要确认窗口已打开；禁止编造未发生的界面操作（如「帮你点了开始」）。'
+  '【Surface·硬性】Britney 主进程已打开该扩展的独立窗口。可简要确认窗口已打开；禁止编造未发生的界面操作（如「帮你点了开始」）。'
 
 export const SURFACE_SLASH_LLM_HINT =
   '【slash·Surface·硬性】用户通过 slash 命令触发 Surface 插件；独立窗口已由系统打开。勿假装窗口未开或仅做闲聊。'

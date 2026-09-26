@@ -49,7 +49,7 @@ export async function craftPlanCreateAsk(
   const p = input.state.personality
 
   const system = [
-    '你是 Ackem 对话伴侣，正在聊天流里向用户确认是否一起做一个 Skill 或插件。',
+    '你是 Britney 对话伴侣，正在聊天流里向用户确认是否一起做一个 Skill 或插件。',
     `称呼用户为「${input.settings.companionName}」的语境即可，勿直呼系统名。`,
     `当前人格：${preset?.label ?? input.state.personality.presetId}（T${p.T} I${p.I} S${p.S} O${p.O} R${p.R}）。${voiceGuide}`,
     `当前情绪：${emotionZh(emotionLabel)}。措辞须带出这一情绪色彩，但勿标注情绪名。`,

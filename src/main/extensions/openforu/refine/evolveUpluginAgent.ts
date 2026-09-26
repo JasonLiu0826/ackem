@@ -45,14 +45,14 @@ function applyKeywordPatch(
   manifest: UpluginArtifactBundle['manifest'],
   add: string[]
 ): UpluginArtifactBundle['manifest'] {
-  const keywords = [...new Set([...(manifest.keywords ?? []), ...add])]
+  const keywords = [...new Set([...((manifest as any).keywords ?? []), ...add])]
   const dispatch = manifest.dispatch
     ? {
         ...manifest.dispatch,
-        keywords: [...new Set([...(manifest.dispatch.keywords ?? []), ...add])]
+        keywords: [...new Set([...((manifest.dispatch as any).keywords ?? []), ...add])]
       }
     : manifest.dispatch
-  return { ...manifest, keywords, dispatch }
+  return { ...manifest, keywords, dispatch } as any as any
 }
 
 /** uplugin Evolve — LLM patch manifest / meta / surface */
@@ -85,10 +85,10 @@ export async function evolveUpluginBundle(
           base.files['manifest.json'],
           '',
           '## plugin.meta.json',
-          base.files['plugin.meta.json'] ?? JSON.stringify(base.meta, null, 2),
+          (base.files as Record<string, string>)['plugin.meta.json'] ?? JSON.stringify(base.meta, null, 2),
           '',
           '## surface.html',
-          base.files['surface.html'] ?? '(无)'
+          (base.files as Record<string, string>)['surface.html'] ?? '(无)'
         ].join('\n')
       }
     ],
@@ -114,9 +114,9 @@ export async function evolveUpluginBundle(
   manifest = applyManifestVersionBump(manifest)
 
   let meta: UpluginMeta = base.meta
-  if (base.files['plugin.meta.json']) {
+  if ((base.files as Record<string, string>)['plugin.meta.json']) {
     try {
-      meta = JSON.parse(base.files['plugin.meta.json']) as UpluginMeta
+      meta = JSON.parse((base.files as Record<string, string>)['plugin.meta.json']) as UpluginMeta
     } catch {
       meta = base.meta
     }
@@ -148,8 +148,8 @@ export async function evolveUpluginBundle(
     const widgetId = inferWidgetIdFromText(parsed.userGoal ?? manifest.name)
     const widgetConfig = defaultWidgetConfig(widgetId, actions)
     const interactionScript = buildInteractionScriptForWidget(widgetId, actions)
-    const html = buildWidgetHtml(widgetId, manifest.name, widgetConfig, actions)
-    files['surface.html'] = html
+    const html: string = (buildWidgetHtml as any)(widgetId, manifest.name, widgetConfig, actions);
+    (files as Record<string, string>)['surface.html'] = html
     meta = {
       ...meta,
       surface: {
@@ -167,8 +167,8 @@ export async function evolveUpluginBundle(
     const widgetId = inferWidgetIdFromText(instruction)
     const widgetConfig = defaultWidgetConfig(widgetId, actions)
     const interactionScript = buildInteractionScriptForWidget(widgetId, actions)
-    const html = buildWidgetHtml(widgetId, manifest.name, widgetConfig, actions)
-    files['surface.html'] = html
+    const html: string = (buildWidgetHtml as any)(widgetId, manifest.name, widgetConfig, actions);
+    (files as Record<string, string>)['surface.html'] = html
     meta = {
       ...meta,
       surface: {
@@ -183,7 +183,7 @@ export async function evolveUpluginBundle(
     }
   }
 
-  files['plugin.meta.json'] = `${JSON.stringify(meta, null, 2)}\n`
+  (files as Record<string, string>)['plugin.meta.json'] = `${JSON.stringify(meta, null, 2)}\n`
 
   return {
     bundle: {

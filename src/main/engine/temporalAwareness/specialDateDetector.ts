@@ -9,7 +9,7 @@ import { computeTimeDepth, type TimeDepthResult, isAnniversaryWindowActive } fro
 import { t } from '../../i18n'
 
 export interface SpecialDate {
-  type: 'ackem_birthday' | 'first_met_anniversary' | 'birthday' | 'milestone' | 'holiday' | 'relationship' | 'recurring_memory'
+  type: 'britney_birthday' | 'first_met_anniversary' | 'birthday' | 'milestone' | 'holiday' | 'relationship' | 'recurring_memory'
   title: string
   subject?: string
   daysSince?: number
@@ -34,22 +34,22 @@ export interface AnchorEntry {
 export function detectSpecialDates(args: {
   today: Date
   firstMetDate: string | null
-  ackemBirthday?: string | null
+  britneyBirthday?: string | null
   birthdays: BirthdayEntry[]
   temporalAnchors: AnchorEntry[]
 }): SpecialDate[] {
   const todayMMDD = `${String(args.today.getMonth() + 1).padStart(2, '0')}-${String(args.today.getDate()).padStart(2, '0')}`
   const results: SpecialDate[] = []
 
-  // ═══ 源0: Ackem 自己的生日 ═══
-  if (args.ackemBirthday) {
-    const ackemMMDD = args.ackemBirthday.slice(5, 10)
-    if (ackemMMDD === todayMMDD) {
-      const timeDepth = computeTimeDepth(args.ackemBirthday, args.today)
+  // ═══ 源0: Britney 自己的生日 ═══
+  if (args.britneyBirthday) {
+    const britneyMMDD = args.britneyBirthday.slice(5, 10)
+    if (britneyMMDD === todayMMDD) {
+      const timeDepth = computeTimeDepth(args.britneyBirthday, args.today)
       const yearsSince = timeDepth?.yearsSince ?? 0
       results.push({
-        type: 'ackem_birthday',
-        title: t(yearsSince === 1 ? 'specialDate.ackemBirthday.1' : 'specialDate.ackemBirthday.n', { n: yearsSince }),
+        type: 'britney_birthday',
+        title: t(yearsSince === 1 ? 'specialDate.britneyBirthday.1' : 'specialDate.britneyBirthday.n', { n: yearsSince }),
         yearsSince,
         emotionalIntensity: Math.min(1.0, 0.7 + yearsSince * 0.05),
       })
@@ -122,7 +122,7 @@ export function detectSpecialDates(args: {
 
   // ═══ 排序 ═══
   const typeOrder: Record<string, number> = {
-    ackem_birthday: 0,
+    britney_birthday: 0,
     first_met_anniversary: 0,
     relationship: 0,
     birthday: 1,

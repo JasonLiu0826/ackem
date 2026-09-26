@@ -1,5 +1,5 @@
 // [canon/originEscalationGuard] — OEG v1：创造者叙事深度与 loop 防护
-// 引用：../engine/ackemParams, ../engine/types, ./creatorMemory
+// 引用：../engine/britneyParams, ../engine/types, ./creatorMemory
 
 import {
   ORIGIN_COOLDOWN_TURNS,
@@ -12,7 +12,7 @@ import {
   ORIGIN_STREAK_DEEP,
   ORIGIN_STREAK_EXPLORE,
   ORIGIN_STREAK_GUARD,
-} from '../engine/ackemParams'
+} from '../engine/britneyParams'
 import type { OriginExposure, OriginExposureState } from '../engine/types'
 import type { FatherReferenceSignal } from './creatorMemory'
 
@@ -52,7 +52,7 @@ export function shouldSuppressOriginProactiveTopics(exposure: OriginExposure): b
 export function buildOriginGuardBlock(): string {
   return [
     `${ORIGIN_GUARD_MARKER} · 强制回归用户】`,
-    '已连续多轮聊 Ackem 出身/创造者。本回合最多一句带过 Jason，然后转向当前用户。',
+    '已连续多轮聊 Britney 出身/创造者。本回合最多一句带过 Jason，然后转向当前用户。',
     '可温和问：「你今天好像一直在问我的起点，是发生什么让你在意了吗？」',
     '禁止展开新的创作故事或记忆片段。',
   ].join('\n')
@@ -60,7 +60,7 @@ export function buildOriginGuardBlock(): string {
 
 /**
  * 根据创造者指称信号推进 OEG 状态。
- * 仅 `ackem_creator` 计 streak；其余指称重置 streak。
+ * 仅 `britney_creator` 计 streak；其余指称重置 streak。
  */
 export function advanceOriginExposure(
   prev: OriginExposure | undefined,
@@ -77,7 +77,7 @@ export function advanceOriginExposure(
     return { ...p, streak: 0, guardTriggered: false }
   }
 
-  if (fatherRef?.kind !== 'ackem_creator') {
+  if (fatherRef?.kind !== 'britney_creator') {
     return {
       state: 'NORMAL',
       streak: 0,
@@ -128,7 +128,7 @@ export function resolveOriginInjectionPolicy(
     }
   }
 
-  if (fatherRef?.kind !== 'ackem_creator') {
+  if (fatherRef?.kind !== 'britney_creator') {
     return {
       allowCanonM: false,
       maxEntries: 0,
@@ -170,13 +170,13 @@ export function resolveOriginInjectionPolicy(
 }
 
 /**
- * CANON-M-3：用户问 Ackem 创造者 / Jason 时，本轮对话不得写入用户 Tier B（ingest）。
+ * CANON-M-3：用户问 Britney 创造者 / Jason 时，本轮对话不得写入用户 Tier B（ingest）。
  * 创造者叙事只读 Canon-M，与用户 Tier B 隔离。
  */
 export function shouldSkipTierBIngestForOrigin(
   trace: { l3?: { originFatherRef?: string | null } }
 ): boolean {
-  return trace.l3?.originFatherRef === 'ackem_creator'
+  return trace.l3?.originFatherRef === 'britney_creator'
 }
 
 /** 统计 psyche 块内 Canon-M 条目行数（测试/trace 用） */

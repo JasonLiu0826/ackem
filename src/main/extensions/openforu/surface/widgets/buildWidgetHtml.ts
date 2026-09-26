@@ -13,7 +13,7 @@ function escapeHtml(text: string): string {
 
 const IR_BOOT = `
 (function () {
-  var api = window.ackem && window.ackem.surface;
+  var api = window.britney && window.britney.surface;
   if (!api) {
     var el = document.getElementById('status');
     if (el) el.textContent = '（surface IR 未加载）';

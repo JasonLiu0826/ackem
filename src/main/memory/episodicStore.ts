@@ -1,12 +1,12 @@
 // [episodicStore] — 情节记忆存储
 // 职责：episodes.v1.json CRUD、检索
 // 对标 MemGPT episodic memory / Character.AI conversation memory
-// 引用：../engine/types, ../engine/ackemParams
+// 引用：../engine/types, ../engine/britneyParams
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { randomUUID } from 'node:crypto'
-import { EPISODE_MAX_KEYWORDS, EPISODE_INTENSITY_WEIGHT, EPISODE_MIN_SCORE, EPISODE_RECENCY_DECAY, EPISODE_RETRIEVAL_MAX, EPISODE_SUMMARY_MAX_CHARS } from '../engine/ackemParams'
+import { EPISODE_MAX_KEYWORDS, EPISODE_INTENSITY_WEIGHT, EPISODE_MIN_SCORE, EPISODE_RECENCY_DECAY, EPISODE_RETRIEVAL_MAX, EPISODE_SUMMARY_MAX_CHARS } from '../engine/britneyParams'
 import {
   countEpisodesInDb,
   loadEpisodesFromDb,

@@ -59,7 +59,7 @@ export function syncBundleFromDesignSpec(
     fixes.push(`dirName→${slug}`)
   }
 
-  const keywords = mergeKeywordLists(spec.trigger.keywords, bundle.manifest.keywords)
+  const keywords = mergeKeywordLists(spec.trigger.keywords, (bundle.manifest as any).keywords)
   if (keywords.length) {
     const dispatch = bundle.manifest.dispatch ?? {
       mode: spec.trigger.mode || 'dispatched',
@@ -74,12 +74,12 @@ export function syncBundleFromDesignSpec(
 
     const slash = effectiveSlashFromSpec(spec)
     if (slash.length) {
-      dispatch.slash = [...new Set([...(dispatch.slash ?? []), ...slash])]
+      (dispatch as any).slash = [...new Set([...((dispatch as any).slash ?? []), ...slash])]
     }
 
-    bundle.manifest.dispatch = dispatch
-    if (bundle.kind === 'uskill' || bundle.manifest.triggers?.includes('keyword')) {
-      bundle.manifest.keywords = [...dispatch.keywords]
+    (bundle.manifest as any).dispatch = dispatch
+    if (bundle.kind === 'uskill' || (bundle.manifest as any).triggers?.includes('keyword')) {
+      (bundle.manifest as any).keywords = [...dispatch.keywords]
     }
     fixes.push('trigger.keywords+slash')
   }

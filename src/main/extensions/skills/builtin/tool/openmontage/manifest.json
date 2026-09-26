@@ -1,0 +1,64 @@
+{
+  "id": "ackem/openmontage@1.0.0",
+  "name": "AI 视频制作",
+  "version": "1.0.0",
+  "category": "skill",
+  "skillType": "tool",
+  "description": "通过 OpenMontage 制作 AI 视频：自动生成脚本、选择风格、一键制作短视频",
+  "author": "JasonLiu0826",
+  "license": "AGPL-3.0",
+  "main": "skill.ts",
+  "engineVersion": ">=0.1.0 <1.0.0",
+  "triggers": ["llm_function_call"],
+  "permissions": ["engine_read", "network_outbound"],
+  "timeoutMs": 120000,
+  "adultModeSafe": true,
+  "functionDef": {
+    "name": "openmontage",
+    "description": "AI 视频制作工具。可以：1) 根据主题自动生成视频脚本 2) 从已确认的脚本制作视频 3) 直接根据描述制作视频 4) 查看可用的视频风格和流水线 5) 查询制作进度。当用户想做视频、生成短片、制作短视频时调用。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "description": "操作类型",
+          "enum": ["generate_script", "produce", "produce_from_script", "list_styles", "list_pipelines", "check_status", "list_scripts"]
+        },
+        "topic": {
+          "type": "string",
+          "description": "视频主题或想法描述（generate_script/produce 时必填）"
+        },
+        "style": {
+          "type": "string",
+          "description": "视频风格：cinematic(电影感)/landscape(风景)/emotional(情感)/motivational(励志)/poetic(诗意)，默认 cinematic"
+        },
+        "duration_sec": {
+          "type": "number",
+          "description": "视频时长（秒），10-120，默认 30"
+        },
+        "script": {
+          "type": "string",
+          "description": "视频脚本文本（produce 直接制作时使用）"
+        },
+        "script_id": {
+          "type": "string",
+          "description": "已生成的脚本 ID（produce_from_script 时必填）"
+        },
+        "task_id": {
+          "type": "string",
+          "description": "制作任务 ID（check_status 时使用）"
+        },
+        "title": {
+          "type": "string",
+          "description": "视频标题，默认 untitled"
+        },
+        "feedback": {
+          "type": "string",
+          "description": "对脚本的修改意见（自然语言）"
+        }
+      },
+      "required": ["action"]
+    }
+  },
+  "tags": ["builtin", "video", "openmontage", "dramaclaw", "creative"]
+}

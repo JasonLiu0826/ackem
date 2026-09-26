@@ -50,7 +50,7 @@ export async function requestDesktopAgentConfirm(
   input: Omit<DesktopAgentConfirmRequest, 'requestId'>,
   opts?: { timeoutMs?: number; skip?: boolean }
 ): Promise<DesktopAgentConfirmDecision> {
-  if (opts?.skip || process.env.ACKEM_AUTO_APPROVE_DESKTOP_AGENT === '1') {
+  if (opts?.skip || process.env.BRITNEY_AUTO_APPROVE_DESKTOP_AGENT === '1') {
     return 'allowed'
   }
   if (input.hardBlockReason) {

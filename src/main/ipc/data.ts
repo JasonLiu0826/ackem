@@ -39,7 +39,7 @@ import {
   onReadinessChange,
 } from '../embedding/embeddingReadiness'
 import { createLogger } from '../logger'
-import { ACKEM_CANON } from '../canon/ackemCanon'
+import { BRITNEY_CANON } from '../canon/britneyCanon'
 import { loadCreatorMemoryStore } from '../canon/creatorMemory'
 import { embeddingSettingsChanged, onlyDesktopAgentSettingsChanged } from '../../shared/settingsChange'
 
@@ -79,9 +79,9 @@ onReadinessChange(() => broadcastEmbeddingReadiness())
 export function registerDataIpc(): void {
   ipcMain.handle('settings:get', () => loadSettings())
   ipcMain.handle('canon:get', () => ({
-    name: ACKEM_CANON.name,
-    birthDate: ACKEM_CANON.birthDate,
-    creator: { ...ACKEM_CANON.creator },
+    name: BRITNEY_CANON.name,
+    birthDate: BRITNEY_CANON.birthDate,
+    creator: { ...BRITNEY_CANON.creator },
   }))
   ipcMain.handle('canon:creator-memory:get', () => {
     const root = resolveDataRoot(loadSettings())

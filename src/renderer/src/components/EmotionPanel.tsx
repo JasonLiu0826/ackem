@@ -114,8 +114,8 @@ export function EmotionPanel(): JSX.Element {
     setError(null)
     try {
       const [s, profile] = await Promise.all([
-        window.ackem.getState() as Promise<EngineState>,
-        window.ackem.profileGet()
+        window.britney.getState() as Promise<EngineState>,
+        window.britney.profileGet()
       ])
       setState(s)
       setProfileMode(profile.mode)
@@ -214,11 +214,11 @@ export function EmotionPanel(): JSX.Element {
             <DesireStackView
               stack={s.desireStack}
               onDismiss={async (desireId) => {
-                await window.ackem.desireDismiss(desireId)
+                await window.britney.desireDismiss(desireId)
                 void refresh()
               }}
               onClearActive={async () => {
-                await window.ackem.desireClearActive()
+                await window.britney.desireClearActive()
                 void refresh()
               }}
             />

@@ -1,6 +1,6 @@
 export type ThemeMode = 'light' | 'dark'
 
-const STORAGE_KEY = 'ackem-ui-theme'
+const STORAGE_KEY = 'britney-ui-theme'
 
 export function getStoredTheme(): ThemeMode | null {
   try {
@@ -31,8 +31,8 @@ export function applyTheme(mode: ThemeMode, options?: { broadcast?: boolean }): 
     /* ignore */
   }
   if (options?.broadcast === false) return
-  if (typeof window !== 'undefined' && window.ackem?.ui?.setTheme) {
-    void window.ackem.ui.setTheme(mode)
+  if (typeof window !== 'undefined' && window.britney?.ui?.setTheme) {
+    void window.britney.ui.setTheme(mode)
   }
 }
 
@@ -44,13 +44,13 @@ export function toggleTheme(current: ThemeMode): ThemeMode {
 
 /** 主进程为权威来源，同步桌宠与主面板（localStorage 不跨 pet.html / index.html 共享） */
 export function initThemeSync(): void {
-  if (typeof window === 'undefined' || !window.ackem?.ui?.onThemeChanged) return
+  if (typeof window === 'undefined' || !window.britney?.ui?.onThemeChanged) return
 
-  window.ackem.ui.onThemeChanged((mode) => {
+  window.britney.ui.onThemeChanged((mode) => {
     applyTheme(mode, { broadcast: false })
   })
 
-  void window.ackem.ui.getTheme().then((mode) => {
+  void window.britney.ui.getTheme().then((mode) => {
     applyTheme(mode, { broadcast: false })
   })
 }

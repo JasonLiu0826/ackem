@@ -1,0 +1,16 @@
+{
+  "name": "britney-sync-worker",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:create": "wrangler d1 create britney-sync",
+    "db:schema": "wrangler d1 execute britney-sync --file=schema.sql"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241218.0",
+    "typescript": "^5.6.3",
+    "wrangler": "^3.99.0"
+  }
+}

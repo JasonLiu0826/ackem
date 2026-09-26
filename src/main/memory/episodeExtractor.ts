@@ -1,7 +1,7 @@
 // [episodeExtractor] — 情节摘要提取器
-// 引用：../engine/types, ../engine/ackemParams, ../llmClient, ../prompt/memory-episode
+// 引用：../engine/types, ../engine/britneyParams, ../llmClient, ../prompt/memory-episode
 
-import { EPISODE_EXTRACT_MSG_TRUNC, EPISODE_SUMMARY_MAX_CHARS } from '../engine/ackemParams'
+import { EPISODE_EXTRACT_MSG_TRUNC, EPISODE_SUMMARY_MAX_CHARS } from '../engine/britneyParams'
 import type { LlmClient } from '../engine/types'
 import { EPISODE_SYSTEM_PROMPT, EPISODE_TEMPERATURE } from '../prompt/memory-episode'
 

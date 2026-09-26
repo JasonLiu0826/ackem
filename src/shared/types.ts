@@ -123,7 +123,7 @@ export type AppSettings = {
   desktopAgentAllowInstall?: boolean
   desktopAgentAllowDocumentRead?: boolean
   desktopAgentAllowDelete?: boolean
-  /** 默认下载目录；空则 ~/Downloads/AckemDownloads */
+  /** 默认下载目录；空则 ~/Downloads/BritneyDownloads */
   desktopAgentDownloadDir?: string
   /** 软件更新下载线路 */
   updateChannel?: 'auto' | 'github' | 'gitee'
@@ -131,4 +131,7 @@ export type AppSettings = {
   updateSkippedVersion?: string
   /** 上次检查更新时间 ISO */
   updateLastCheckAt?: string
+  agnesApiKey?: string
+  agnesImageModel?: string
+  agnesBaseUrl?: string
 }

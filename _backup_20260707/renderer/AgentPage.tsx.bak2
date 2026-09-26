@@ -1,0 +1,211 @@
+import { useCallback, useEffect, useState } from 'react'
+import { t } from '../lib/i18n'
+import { useAppStore } from '../store/appStore'
+import {
+  isDesktopAgentApiAvailable,
+  desktopAgentApiMissingMessage
+} from '../lib/desktopAgentClient'
+import { isDesktopAgentGrayscalePreview } from '../../../shared/desktopAgentFeature'
+import { isDesktopAgentSettingsReady } from '../../../shared/desktopAgent'
+
+type AgentJob = {
+  id: string
+  goal: string
+  status: 'running' | 'completed' | 'failed'
+  startedAt: string
+  finishedAt?: string
+}
+
+export function AgentPage(): JSX.Element {
+  const settings = useAppStore((s) => s.settings)
+  const pushToast = useAppStore((s) => s.pushToast)
+  const setTab = useAppStore((s) => s.setTab)
+  const openSettingsAt = useAppStore((s) => s.openSettingsAt)
+
+  const [agentEnabled, setAgentEnabled] = useState(false)
+  const [settingsReady, setSettingsReady] = useState(false)
+  const [recentJobs, setRecentJobs] = useState<AgentJob[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const activeSessionId = settings?.activeSessionId || 'default'
+  const previewOnly = isDesktopAgentGrayscalePreview()
+  const apiAvailable = isDesktopAgentApiAvailable()
+
+  useEffect(() => {
+    if (!settings) return
+    setSettingsReady(isDesktopAgentSettingsReady(settings))
+    if (!apiAvailable) {
+      setLoading(false)
+      return
+    }
+    void window.britney.desktopAgent.sessionMode.get(activeSessionId).then((r) => {
+      setAgentEnabled(r.enabled && r.settingsReady)
+      setSettingsReady(r.settingsReady)
+      setLoading(false)
+    }).catch(() => setLoading(false))
+  }, [settings, activeSessionId, apiAvailable])
+
+  const handleToggle = useCallback(async (next: boolean) => {
+    if (previewOnly) return
+    if (!apiAvailable) {
+      pushToast(desktopAgentApiMissingMessage())
+      return
+    }
+    const res = await window.britney.desktopAgent.sessionMode.set(activeSessionId, next)
+    if (!res.ok) {
+      pushToast(res.error ?? '无法切换电脑助手模式')
+      return
+    }
+    setAgentEnabled(res.enabled === true)
+    pushToast(next ? '🤖 电脑助手已开启' : '电脑助手已关闭')
+  }, [activeSessionId, previewOnly, apiAvailable, pushToast])
+
+  const goToSettings = useCallback(() => {
+    openSettingsAt('settings-desktop-agent')
+    setTab('settings')
+  }, [openSettingsAt, setTab])
+
+  if (loading) {
+    return (
+      <div className="flex flex-1 items-center justify-center bg-surface text-sm text-ink-muted">
+        正在加载助手状态…
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex h-full min-h-0 flex-1 flex-col bg-surface overflow-y-auto">
+      {/* Header */}
+      <header className="glass-panel flex items-center justify-between border-b border-surface-inset/60 px-6 py-4">
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">🤖</span>
+          <div>
+            <h1 className="font-display text-lg font-semibold text-ink">Britney Agent</h1>
+            <p className="text-xs text-ink-muted mt-0.5">桌面智能助手 · 自主执行复杂任务</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {agentEnabled && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-success/15 px-2.5 py-1 text-[10px] font-medium text-success">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
+              运行中
+            </span>
+          )}
+        </div>
+      </header>
+
+      <div className="flex-1 px-6 py-6 space-y-6 max-w-[720px] mx-auto w-full">
+        {/* Status Card */}
+        <div className="glass-panel rounded-2xl p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`h-3 w-3 rounded-full ${agentEnabled ? 'bg-success animate-pulse' : 'bg-ink-muted/30'}`} />
+              <span className="text-sm font-medium text-ink">
+                {agentEnabled ? '助手已就绪' : '助手未启用'}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => void handleToggle(!agentEnabled)}
+              disabled={previewOnly || !settingsReady}
+              className={[
+                'relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200',
+                agentEnabled ? 'bg-accent' : 'bg-surface-inset',
+                (previewOnly || !settingsReady) ? 'opacity-50 cursor-not-allowed' : ''
+              ].filter(Boolean).join(' ')}
+            >
+              <span
+                className={[
+                  'inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform duration-200',
+                  agentEnabled ? 'translate-x-6' : 'translate-x-1'
+                ].join(' ')}
+              />
+            </button>
+          </div>
+
+          {!settingsReady && (
+            <div className="rounded-xl border border-warning/30 bg-warning/5 px-4 py-3 text-xs text-warning">
+              ⚠️ 请先在设置中配置 API 密钥和模型
+              <button
+                type="button"
+                onClick={goToSettings}
+                className="ml-2 underline hover:text-warning/80"
+              >
+                前往设置 →
+              </button>
+            </div>
+          )}
+
+          {previewOnly && (
+            <div className="rounded-xl border border-surface-inset/60 bg-surface-inset/20 px-4 py-3 text-xs text-ink-muted">
+              🚧 电脑助手功能暂未开放，敬请期待
+            </div>
+          )}
+        </div>
+
+        {/* Capabilities */}
+        <div className="glass-panel rounded-2xl p-5">
+          <h2 className="text-sm font-semibold text-ink mb-4">🎯 助手能力</h2>
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { icon: '🖥️', title: '应用操控', desc: '打开、操作桌面应用' },
+              { icon: '📁', title: '文件管理', desc: '读写文件、整理目录' },
+              { icon: '🌐', title: '网页浏览', desc: '搜索信息、提取内容' },
+              { icon: '⬇️', title: '下载安装', desc: '下载并安装软件' },
+              { icon: '📋', title: '任务规划', desc: '拆解复杂任务逐步执行' },
+              { icon: '🔍', title: '智能调研', desc: '深度搜索并汇总报告' }
+            ].map(({ icon, title, desc }) => (
+              <div
+                key={title}
+                className="flex items-start gap-3 rounded-xl bg-surface-inset/30 px-3.5 py-3"
+              >
+                <span className="text-lg mt-0.5">{icon}</span>
+                <div>
+                  <p className="text-xs font-medium text-ink">{title}</p>
+                  <p className="text-[11px] text-ink-muted mt-0.5">{desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* How to Use */}
+        <div className="glass-panel rounded-2xl p-5">
+          <h2 className="text-sm font-semibold text-ink mb-3">💡 使用方法</h2>
+          <div className="space-y-2.5 text-xs text-ink-muted leading-relaxed">
+            <p>
+              <span className="text-ink font-medium">1.</span> 开启上方开关激活助手
+            </p>
+            <p>
+              <span className="text-ink font-medium">2.</span> 在对话页输入框左侧点击 🤖 图标切换到助手模式
+            </p>
+            <p>
+              <span className="text-ink font-medium">3.</span> 描述你想要完成的任务，助手会自动规划并执行
+            </p>
+            <p>
+              <span className="text-ink font-medium">4.</span> 执行过程中可以随时审批或拒绝危险操作
+            </p>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={() => { setTab('chat') }}
+            className="flex-1 glass-panel rounded-xl px-4 py-3 text-center text-sm text-ink hover:bg-surface-raised/50 transition-colors"
+          >
+            💬 前往对话
+          </button>
+          <button
+            type="button"
+            onClick={goToSettings}
+            className="flex-1 glass-panel rounded-xl px-4 py-3 text-center text-sm text-ink hover:bg-surface-raised/50 transition-colors"
+          >
+            ⚙ 助手设置
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}

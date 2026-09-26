@@ -34,8 +34,8 @@ export function UpdateSettingsPanel(): JSX.Element {
 
   const loadMeta = useCallback(async () => {
     const [ver, pref] = await Promise.all([
-      window.ackem.getAppVersion(),
-      window.ackem.getUpdateChannelPreference()
+      window.britney.getAppVersion(),
+      window.britney.getUpdateChannelPreference()
     ])
     setAppVersion(ver)
     setChannel(pref)
@@ -45,7 +45,7 @@ export function UpdateSettingsPanel(): JSX.Element {
     setChecking(true)
     setError(null)
     try {
-      const result = await window.ackem.checkUpdate()
+      const result = await window.britney.checkUpdate()
       setCheck(result)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
@@ -70,7 +70,7 @@ export function UpdateSettingsPanel(): JSX.Element {
 
   const onChannelChange = async (next: UpdateChannel) => {
     setChannel(next)
-    await window.ackem.setUpdateChannelPreference(next)
+    await window.britney.setUpdateChannelPreference(next)
   }
 
   const onConfirmUpdate = async () => {
@@ -78,7 +78,7 @@ export function UpdateSettingsPanel(): JSX.Element {
     setStarting(true)
     setError(null)
     try {
-      const res = await window.ackem.startUpdate({
+      const res = await window.britney.startUpdate({
         channel,
         targetVersion: selectedRelease.version,
         downloadUrl: selectedRelease.downloadUrl,

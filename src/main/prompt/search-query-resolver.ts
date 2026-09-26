@@ -14,7 +14,7 @@ export const SEARCH_RESOLVE_SYSTEM_ZH = `你是搜索意图解析器。根据用
 · 不要编造用户未提及的主题
 · 禁止输出单字或不足 4 字的歧义查询
 · 如果用户最近在聊某个话题，优先关联该话题
-· 用户用「你」指 Ackem 并与 Cursor/Codex 等对比时：search_query 应查 **Ackem 伴侣应用** 与对方产品，**禁止**把 DeepSeek/GPT/Claude 等底层模型名当作 Ackem 的搜索词
+· 用户用「你」指 Britney 并与 Cursor/Codex 等对比时：search_query 应查 **Britney 伴侣应用** 与对方产品，**禁止**把 DeepSeek/GPT/Claude 等底层模型名当作 Britney 的搜索词
 
 ── 输出 ──
 仅输出一行 JSON，不要 markdown：{"search_query":"...","display_label":"短标题","intent_summary":"一句话意图"}`

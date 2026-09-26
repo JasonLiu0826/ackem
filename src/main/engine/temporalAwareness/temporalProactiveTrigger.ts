@@ -22,7 +22,7 @@ export interface TemporalHint {
 }
 
 const EXPIRY_DAYS: Record<string, number> = {
-  ackem_birthday: 30,
+  britney_birthday: 30,
   birthday: 30,
   first_met_anniversary: 60,
   holiday: 7,
@@ -32,7 +32,7 @@ const EXPIRY_DAYS: Record<string, number> = {
 }
 
 const HINT_SORT_ORDER: Record<string, number> = {
-  ackem_birthday: 0,
+  britney_birthday: 0,
   first_met_anniversary: 1,
   relationship: 2,
   birthday: 3,
@@ -43,7 +43,7 @@ const HINT_SORT_ORDER: Record<string, number> = {
 
 function specialDateHintPriority(type: SpecialDate['type']): 'high' | 'normal' | 'low' {
   switch (type) {
-    case 'ackem_birthday':
+    case 'britney_birthday':
     case 'first_met_anniversary':
     case 'birthday':
     case 'relationship':

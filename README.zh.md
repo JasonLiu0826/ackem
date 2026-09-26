@@ -1,4 +1,4 @@
-# 💫 Ackem
+# 💫 Britney
 
 ![Version](https://img.shields.io/badge/Version-1.0.0-orange?style=for-the-badge)
 ![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)
@@ -7,15 +7,15 @@
 ![OpenAI Compatible](https://img.shields.io/badge/API-OpenAI--Compatible-412991?style=for-the-badge&logo=openai&logoColor=white)
 ![Electron](https://img.shields.io/badge/Built_with-Electron-47848F?style=for-the-badge&logo=electron&logoColor=white)
 
-**Ackem** · **A**.C.K.E.M — 保持情感记忆的自主伙伴  
+**Britney** · **A**.C.K.E.M — 保持情感记忆的自主伙伴  
 *Autonomous Companion Keeping Emotional Memory*
 
-**Ackem v1.0.0** — 运行在你 Windows 电脑上的 **本地优先** AI 伴侣。自备大模型（云端或本机），Ackem 负责对话、记忆、情绪与关系、桌宠陪伴 — **数据都在本机硬盘**。
+**Britney v1.0.0** — 运行在你 Windows 电脑上的 **本地优先** AI 伴侣。自备大模型（云端或本机），Britney 负责对话、记忆、情绪与关系、桌宠陪伴 — **数据都在本机硬盘**。
 
-> **源码**：[GitHub](https://github.com/JasonLiu0826/Ackem) · [Gitee 镜像](https://gitee.com/jason_2005/ackem)  
-> **下载**：[GitHub Releases](https://github.com/JasonLiu0826/Ackem/releases) · [Gitee Releases](https://gitee.com/jason_2005/ackem/releases)  
-> **构建**：`npm run dist:green` → `dist/release/Ackem-1.0.0-win-x64/` · [路径说明](./docs/CODEBASE-PATHS.zh.md) · [文档语言](./docs/I18N.zh.md)  
-> **状态：** Ackem 目前仍处于**测试与快速迭代**阶段。个人维护，测试覆盖面有限，使用中可能遇到预期之外的情况或细节瑕疵；一般不会出现频繁闪退或严重卡顿，但完善度仍在持续改进。欢迎 [提交 Issue](https://github.com/JasonLiu0826/Ackem/issues) 反馈。
+> **源码**：[GitHub](https://github.com/JasonLiu0826/Britney) · [Gitee 镜像](https://gitee.com/jason_2005/britney)  
+> **下载**：[GitHub Releases](https://github.com/JasonLiu0826/Britney/releases) · [Gitee Releases](https://gitee.com/jason_2005/britney/releases)  
+> **构建**：`npm run dist:green` → `dist/release/Britney-1.0.0-win-x64/` · [路径说明](./docs/CODEBASE-PATHS.zh.md) · [文档语言](./docs/I18N.zh.md)  
+> **状态：** Britney 目前仍处于**测试与快速迭代**阶段。个人维护，测试覆盖面有限，使用中可能遇到预期之外的情况或细节瑕疵；一般不会出现频繁闪退或严重卡顿，但完善度仍在持续改进。欢迎 [提交 Issue](https://github.com/JasonLiu0826/Britney/issues) 反馈。
 
 English: [README.md](./README.md) · [Privacy & data](./docs/privacy-and-data.md)
 
@@ -23,7 +23,7 @@ English: [README.md](./README.md) · [Privacy & data](./docs/privacy-and-data.md
 
 ## 一句话了解
 
-Ackem **不是**网页聊天框，而是常驻桌面的 Windows 应用：系统托盘、可选桌宠、结构化记忆，以及能记住上下文的 AI 伴侣。
+Britney **不是**网页聊天框，而是常驻桌面的 Windows 应用：系统托盘、可选桌宠、结构化记忆，以及能记住上下文的 AI 伴侣。
 
 | | |
 |---|---|
@@ -78,7 +78,7 @@ Ackem **不是**网页聊天框，而是常驻桌面的 Windows 应用：系统�
 
 <p align="center">
   <img src="./docs/images/01-download-open.gif" alt="下载并打开" width="640" />
-  <br /><em>下载 zip → 解压 → 启动 Ackem.exe → 等待加载 → 进入主界面</em>
+  <br /><em>下载 zip → 解压 → 启动 Britney.exe → 等待加载 → 进入主界面</em>
 </p>
 
 <p align="center">
@@ -92,9 +92,9 @@ Ackem **不是**网页聊天框，而是常驻桌面的 Windows 应用：系统�
 
 ## 详细介绍
 
-### Ackem 是什么？
+### Britney 是什么？
 
-Ackem 是 **本地优先** 的 Windows 桌面程序：你配置大模型接口，Ackem 负责 **对话、记忆、情绪与关系状态、桌宠陪伴**，数据保存在 **你自己的电脑** 上。
+Britney 是 **本地优先** 的 Windows 桌面程序：你配置大模型接口，Britney 负责 **对话、记忆、情绪与关系状态、桌宠陪伴**，数据保存在 **你自己的电脑** 上。
 
 ### 你可以用它做什么
 
@@ -107,7 +107,7 @@ Ackem 是 **本地优先** 的 Windows 桌面程序：你配置大模型接口�
 
 ### 数据在哪里
 
-绿色版默认把全部个人数据放在 **exe 同级的 `data/`**：聊天记录、记忆、日记、设置里的 API Key 等。**官方 zip 不含 `data/`**，首次运行才在本机生成空目录。无默认上传到 Ackem 服务器的遥测。
+绿色版默认把全部个人数据放在 **exe 同级的 `data/`**：聊天记录、记忆、日记、设置里的 API Key 等。**官方 zip 不含 `data/`**，首次运行才在本机生成空目录。无默认上传到 Britney 服务器的遥测。
 
 备份、迁移、删除：[docs/memory-format.zh.md](./docs/memory-format.zh.md) · [docs/distribution-windows.zh.md](./docs/distribution-windows.zh.md)
 
@@ -133,33 +133,20 @@ Ackem 是 **本地优先** 的 Windows 桌面程序：你配置大模型接口�
 
 ### 步骤
 
-1. **下载** — [GitHub Releases](https://github.com/JasonLiu0826/Ackem/releases) 或 [Gitee Releases](https://gitee.com/jason_2005/ackem/releases) 获取 `Ackem-v1.0.0-win-x64.zip`
+1. **下载** — [GitHub Releases](https://github.com/JasonLiu0826/Britney/releases) 或 [Gitee Releases](https://gitee.com/jason_2005/britney/releases) 获取 `Britney-v1.0.0-win-x64.zip`
 2. **解压** — 完整解压到 SSD 目录（勿在 zip 内直接运行）
-3. **启动** — 双击 `Ackem.exe` 或 `启动 Ackem.bat`；首次约 10–30 秒（见 [加载界面](#界面与演示)）
+3. **启动** — 双击 `Britney.exe` 或 `启动 Britney.bat`；首次约 10–30 秒（见 [加载界面](#界面与演示)）
 4. **合规确认** — 勾选隐私与数据处理条款（见 [合规截图](#界面与演示)）
 5. **配置模型** — **设置 → 模型与 API**：Base URL、API Key（云端必填）、模型 ID
 6. **首次对话** — 发一条消息确认回复；可选导入 txt/md 记忆
 
 > **分享 zip 前：** 切勿把个人 `data/` 文件夹打进压缩包 — 其中含对话、记忆与密钥。
 
-### macOS（社区构建 · 非官方） {#macos-community-build-unofficial}
-
-> **官方支持范围：** 仅 Windows 绿色版。以下 Mac 包由社区贡献者 [@deufe](https://github.com/deufe) 构建，**非**核心团队维护或完整实机验证。详见 [Issue #4](https://github.com/JasonLiu0826/ackem/issues/4)。
-
-| 文件 | 架构 | 下载 |
-|------|------|------|
-| `Ackem-1.0.0-mac-arm64.dmg` | Apple Silicon（M 系列） | [v3 DMG](https://github.com/deufe/ackem/releases/download/v1.0.0-mac-community-v3/Ackem-1.0.0-mac-arm64.dmg) |
-| `Ackem-1.0.0-mac-x64.dmg` | Intel Mac | [v3 DMG](https://github.com/deufe/ackem/releases/download/v1.0.0-mac-community-v3/Ackem-1.0.0-mac-x64.dmg) |
-
-**请仅使用 v3**（v1/v2 已过时）。SHA256 与安装步骤：[v1.0.0 Release 说明](https://github.com/JasonLiu0826/ackem/releases/tag/v1.0.0) · [附录文档](./docs/releases/v1.0.0-mac-community-appendix.md)
-
-**首次打开（Gatekeeper）：** 无 Apple 签名。拖入「应用程序」后执行 `xattr -cr /Applications/Ackem.app`，再 **右键 → 打开** 一次。应用内自动更新 **仅支持 Windows**。
-
 ---
 
 ## 开发者
 
-> Ackem 是 **Electron 应用**，渲染进程依赖 `window.ackem`（preload IPC）。  
+> Britney 是 **Electron 应用**，渲染进程依赖 `window.britney`（preload IPC）。  
 > 请用 **`npm run dev`** 启动，不要在浏览器单独打开 Vite 地址。
 
 ### 环境
@@ -169,7 +156,7 @@ Ackem 是 **本地优先** 的 Windows 桌面程序：你配置大模型接口�
 ### 日常开发
 
 ```bash
-cd Ackem-v0.0.0
+cd Britney-v0.0.0
 npm install
 npm run dev
 ```
@@ -206,7 +193,7 @@ npm run test:renderer
 | ⑥ | 扩展 | Skill/Plugin/Dispatch/OpenForU | [05-extension-system.md](./docs/developer/architecture/05-extension-system.md) |
 | ⑦ | 时间 | 时间感知、作息曲线、重逢、感慨 | [06-time-system.md](./docs/developer/architecture/06-time-system.md) |
 | — | 数据层 | SQLite 模式、Repository、迁移 | [07-data-layer.md](./docs/developer/architecture/07-data-layer.md) |
-| — | IPC 接口 | `window.ackem.*` preload 桥、推送事件 | [08-ipc-api.md](./docs/developer/architecture/08-ipc-api.md) |
+| — | IPC 接口 | `window.britney.*` preload 桥、推送事件 | [08-ipc-api.md](./docs/developer/architecture/08-ipc-api.md) |
 
 索引：[docs/developer/architecture/README.md](./docs/developer/architecture/README.md)
 
@@ -259,8 +246,6 @@ npm run test:renderer
 ### 贡献者协议
 
 向本项目提交贡献，即表示您同意 [贡献者许可协议（CLA）](./CLA.md)。
-
-已认可贡献者：[CONTRIBUTORS.zh.md](./CONTRIBUTORS.zh.md)
 
 版权所有 (C) 2026 Jason Liu (JasonLiu0826)
 

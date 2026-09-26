@@ -1,0 +1,134 @@
+// [shared/types] — 跨进程共享类型定义
+// 仅包含纯类型，不依赖 Node.js 或 DOM API
+
+export type PresetGender = 'female' | 'male'
+
+export type LlmProvider = 'openai' | 'anthropic'
+
+export type DataRootMode = 'portable' | 'localappdata'
+
+export type ApiKeyHeaderMode = 'bearer' | 'x-api-key'
+
+export type PersonalityConfigMode = 'manual' | 'inferred'
+
+/** 主人开源六维（0–100） */
+export type UserSixDimensions = {
+  E: number
+  A: number
+  D: number
+  P: number
+  N: number
+  O: number
+  /** 推断依据文件（相对 dataRoot） */
+  sourceFiles: string[]
+  inferredAt: string
+  summary?: string
+}
+
+/** 伴侣 TISOR 推断建议 */
+export type CompanionSuggestion = {
+  T: number
+  I: number
+  S: number
+  O: number
+  R: number
+  confidence: number
+  rationale: string
+}
+
+/** 知情同意文案版本，须与 docs/架构总览_5_24更新.md 同步 */
+export const INFERENCE_CONSENT_VERSION = 1
+
+export type AppSettings = {
+  dataRootMode: DataRootMode
+  llmProvider: LlmProvider
+  openaiBaseUrl: string
+  openaiApiKey: string
+  anthropicBaseUrl: string
+  anthropicApiVersion: string
+  anthropicMaxTokens: number
+  model: string
+  timeoutMs: number
+  ageConfirmed18: boolean
+  adultContentMode: boolean
+  /** 成人记忆隐私：enhanced=关闭成人模式后 intimate/explicit 不注入 */
+  adultPrivacyLevel?: 'standard' | 'enhanced'
+  tierBDiaryDays: number
+  singleFileSoftLimitBytes: number
+  memoryBudgetChars: number
+  companionName: string
+  companionSystemHint: string
+  companionGender: PresetGender
+  personalityPresetId: string
+  /** 性格配置：手动 preset 或从导入推断 */
+  personalityConfigMode: PersonalityConfigMode
+  /** 知情同意文案版本（推断 IPC 校验用） */
+  inferenceConsentVersion: number
+  apiKeyHeaderMode: ApiKeyHeaderMode
+  llmExtraHeadersJson: string
+  disableChatTools: boolean
+  activeSessionId?: string
+  /** MC Bot 上次连接的主机 */
+  mcBotHost?: string
+  /** MC Bot 上次连接的端口 */
+  mcBotPort?: number
+  /** MC Bot 账号名 */
+  mcBotUsername?: string
+  /** MC 日志文件路径 */
+  mcLogPath?: string
+  /** 当前覆盖伴侣形象的 skin 插件 id；空=内置 Canvas 几何形象 */
+  activeCompanionSkinPluginId?: string
+  /** OpenForU 专用模型（与聊天模型隔离） */
+  openforuBaseUrl?: string
+  openforuApiKey?: string
+  openforuModel?: string
+  openforuTemperature?: number
+  openforuMaxTokens?: number
+  /** Agent Core 主循环；AC-0 起默认 true */
+  openforuAgentCoreEnabled?: boolean
+  /** AC-1：auto | deterministic | hybrid_skill | hybrid_inject */
+  openforuGenerateStrategy?: import('./openforuAgentTypes').OpenForUGenerateStrategySetting
+  /** 天气感知 Skill 默认城市（空则使用 Shanghai） */
+  weatherCity?: string
+  // ── i18n ──
+  /** 界面语言 */
+  locale?: 'zh' | 'en'
+  // ── Embedding 模型配置 ──
+  /** 当前激活的本地 embedding 模型 ID；'none' = 不加载本地模型 */
+  embeddingActiveModel?: 'bge-small-zh' | 'bge-small-en' | 'm3e-small' | 'bge-base-zh' | 'none'
+  /** 远程 embedding API 地址（可选） */
+  embeddingRemoteUrl?: string
+  /** 远程 embedding 模型名（可选） */
+  embeddingRemoteModel?: string
+  /** 异步多消息（多波 API）总开关；关则回退单轮 + [SPLIT] */
+  asyncMultiMessageEnabled?: boolean
+  /** Wave0 使用本地 OpenAI 兼容端点（Ollama / LM Studio） */
+  localChatEnabled?: boolean
+  localChatBaseUrl?: string
+  localChatModel?: string
+  /** Wave0 短句 token 上限 */
+  localChatMaxTokens?: number
+  /** 启用微信 iLink 消息通道（需已扫码绑定） */
+  weixinChannelEnabled?: boolean
+  /** 微信主动触达（3h 双端空闲 + 进程在线 + 非睡觉时段） */
+  weixinProactiveEnabled?: boolean
+  /** 桌面主动骚扰：随机 1/2/4/10 分钟发消息（与渐进式空闲主动并存，默认关） */
+  companionHarassEnabled?: boolean
+  /** ── 电脑助手（实验）── */
+  desktopAgentEnabled?: boolean
+  desktopAgentRiskAccepted?: boolean
+  desktopAgentAllowAppControl?: boolean
+  desktopAgentAllowFileWrite?: boolean
+  desktopAgentAllowDownload?: boolean
+  desktopAgentAllowInstall?: boolean
+  desktopAgentAllowDocumentRead?: boolean
+  desktopAgentAllowDelete?: boolean
+  /** 默认下载目录；空则 ~/Downloads/BritneyDownloads */
+  desktopAgentDownloadDir?: string
+  /** 软件更新下载线路 */
+  updateChannel?: 'auto' | 'github' | 'gitee'
+  /** 用户跳过的版本号 */
+  updateSkippedVersion?: string
+  /** 上次检查更新时间 ISO */
+  updateLastCheckAt?: string
+}

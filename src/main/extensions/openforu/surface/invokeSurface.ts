@@ -1,6 +1,6 @@
 import type { ExtensionsCoordinator } from '../../coordinator'
 import type { EngineSnapshot } from '../../protocols'
-import type { SurfaceInvokeDispatchMeta } from '../../../shared/extensionSurface'
+import type { SurfaceInvokeDispatchMeta } from '../../../../shared/extensionSurface'
 import { executeDispatchedExtension } from '../../dispatch/dispatchExecutor'
 import { executeOpenExtensionSurface } from './executeOpenSurface'
 import { readUpluginSurfaceConfig } from './surfaceMeta'

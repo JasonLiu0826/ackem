@@ -1,3 +1,4 @@
+import { MemoryConsolidator } from '../memory/consolidator'
 // [ipc/memory] — 记忆、情节、知识图谱、档案、镜中记忆、日记、离线思维
 
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
@@ -25,7 +26,7 @@ import { saveState } from '../engine/state-persistence'
 import {
   CONTRADICTION_MIN_WEIGHT,
   CONTRADICTION_SIMILARITY_THRESHOLD
-} from '../engine/ackemParams'
+} from '../engine/britneyParams'
 import {
   clearChatHistoryFiles,
   currentDataRoot,

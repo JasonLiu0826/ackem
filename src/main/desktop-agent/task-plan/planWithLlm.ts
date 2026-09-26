@@ -12,7 +12,7 @@ const log = createLogger('task-plan.llm')
 
 function buildPlannerSystem(desktopPath: string): string {
   return [
-    '你是 Ackem 电脑助手的任务规划器。只输出一个 JSON 对象，禁止 markdown 与任何解释文字。',
+    '你是 Britney 电脑助手的任务规划器。只输出一个 JSON 对象，禁止 markdown 与任何解释文字。',
     '字段：',
     '- goalSummary: string，一句话说明用户要什么',
     '- steps: array，按顺序的步骤；每步含 id, label, action, path, options(可选)',
