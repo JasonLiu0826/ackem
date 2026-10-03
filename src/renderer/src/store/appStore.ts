@@ -9,7 +9,7 @@ import type { SettingsSectionId } from '../components/settings/settingsUi'
 
 export type Tab =
   | 'chat'
-  /** 壳内 AckemCode：ackemcode 的 GUI */
+  /** 壳内 AckemCode：parts/ackemcode 的 GUI */
   | 'code'
   /** 朋友圈/社会页类型保留，主页不再挂载 */
   | 'social'

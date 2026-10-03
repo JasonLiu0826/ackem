@@ -1,0 +1,28 @@
+{
+  "vendors": [
+    {
+      "id": "openai",
+      "name": "OpenAI",
+      "apiBaseUrl": "https://api.openai.com/v1",
+      "models": ["gpt-4.1", "gpt-4o", "gpt-4o-mini"]
+    },
+    {
+      "id": "deepseek",
+      "name": "DeepSeek",
+      "apiBaseUrl": "https://api.deepseek.com/v1",
+      "models": ["deepseek-flash", "deepseek-v4-flash", "deepseek-v4-pro", "deepseek-chat"]
+    },
+    {
+      "id": "anthropic-compat",
+      "name": "Anthropic (compat gateway)",
+      "apiBaseUrl": "https://api.anthropic.com/v1",
+      "models": ["claude-sonnet-5", "claude-opus-5"]
+    },
+    {
+      "id": "custom",
+      "name": "Custom (OpenAI-compatible)",
+      "apiBaseUrl": "",
+      "models": []
+    }
+  ]
+}

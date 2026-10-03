@@ -54,7 +54,7 @@ export default defineConfig({
     },
     server: {
       fs: {
-        allow: [resolve('.'), resolve('ackemcode')]
+        allow: [resolve('.'), resolve('parts/ackemcode')]
       }
     },
     plugins: [react()],

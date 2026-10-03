@@ -173,6 +173,12 @@ export function applyAckemCodeReceipt(
     return { ok: true, eventIds: [], duplicate: true, run: current }
   }
 
+  // 权限等待中的杂项流事件（token_usage/thinking/status 等，无 trusted receipt）不得把等待状态
+  // 降级为 unknown：等待仍在继续，恢复由 permission allow 后的 running/done 推进。
+  if (event.type === 'unverified' && !trusted && current.status === 'waiting_permission') {
+    return { ok: true, eventIds: [], duplicate: true, run: current }
+  }
+
   const reason = event.type === 'unverified' ? event.reason : event.type === 'disconnected' ? 'disconnected' : 'unverified'
   return toUnknown(coordinator, receipt.runId, reason, receipt.at, dataRoot, reason)
 }

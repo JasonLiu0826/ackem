@@ -14,7 +14,7 @@ export function ackemCodeBaseUrl(): string {
   return process.env.ACKEMCODE_URL || `http://127.0.0.1:${DEFAULT_PORT}`
 }
 
-/** ACKEMCODE_ROOT，否则仓库根目录 ackemcode。 */
+/** ACKEMCODE_ROOT，否则壳内 parts/ackemcode，再回退 vendor 快照。 */
 export function resolveCodeRoot(): string | undefined {
   const fromEnv = process.env.ACKEMCODE_ROOT?.trim()
   if (fromEnv && existsSync(join(fromEnv, 'src', 'server', 'index.ts'))) {
@@ -22,7 +22,6 @@ export function resolveCodeRoot(): string | undefined {
   }
   const candidates: string[] = []
   const push = (root: string) => {
-    candidates.push(join(root, 'ackemcode'))
     candidates.push(join(root, 'parts', 'ackemcode'))
     candidates.push(join(root, 'vendor', 'ackemcode'))
   }

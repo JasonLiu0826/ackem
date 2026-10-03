@@ -4,6 +4,9 @@ dist
 .DS_Store
 *.log
 data
+!parts/ackemcode/data/
+parts/ackemcode/data/**
+!parts/ackemcode/data/llm-vendors.json
 .test-cache
 .env
 .env.*

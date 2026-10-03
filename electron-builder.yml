@@ -60,8 +60,8 @@ extraResources:
     to: assets/weixin-stickers
     filter:
       - "**/*"
-  # AckemCode 任务运行时。打包后落在 {exe}/resources/ackemcode
-  - from: ackemcode
+  # AckemCode 任务运行时。开发目录是 parts/ackemcode，打包后落在 resources/ackemcode
+  - from: parts/ackemcode
     to: ackemcode
     filter:
       - "**/*"

@@ -12,6 +12,7 @@ This file summarizes bundled and runtime dependencies. For npm packages, run `np
 | Component | License | Notes |
 |-----------|---------|-------|
 | Ackem source & compiled app | AGPL-3.0 | This repository |
+| AckemCode core (`parts/ackemcode`) | AGPL-3.0 | Same copyright holder (Jason Liu). That tree has no separate LICENSE file and no `license` field. It is part of this repository, not a third-party drop. `src/cli/ink` is Ackem-owned selection code; its README describes a simplified selection model and does not vendor Ink or Claude Code. |
 | Electron runtime | MIT / BSD (see below) | Shipped in green release |
 
 ---
