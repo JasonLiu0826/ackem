@@ -5,7 +5,7 @@
 // 引用：../engine/types
 
 import { VECTOR_SEARCH_MIN_SCORE } from '../engine/ackemParams'
-import type { MemoryFact } from '../engine/types'
+import type { MemoryFact } from './semantic/types.js'
 
 type SparseVec = Map<number, number>
 

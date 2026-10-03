@@ -3,6 +3,7 @@ import { t } from '../lib/i18n'
 
 const ITEMS: { icon: string; label: string; tab: Tab }[] = [
   { icon: '💬', label: '对话', tab: 'chat' },
+  { icon: '⌨', label: '编程', tab: 'code' },
   { icon: '🧠', label: '记忆', tab: 'memory' },
   { icon: '📔', label: '日记', tab: 'diary' },
   { icon: '🎮', label: '游戏', tab: 'gamemode' },
@@ -29,8 +30,9 @@ export function ArcMenu({ open, onClose, onSelect }: Props): JSX.Element | null 
       />
       <div className="pointer-events-none absolute left-1/2 top-[38%] z-50 h-0 w-0 -translate-x-1/2">
         {ITEMS.map((item, i) => {
-          const angle = (-Math.PI / 2) + ((i - 2.5) / 5) * (Math.PI * 0.85)
-          const r = 72
+          const n = ITEMS.length
+          const angle = -Math.PI / 2 + ((i - (n - 1) / 2) / (n - 1)) * (Math.PI * 0.9)
+          const r = 96
           const x = Math.cos(angle) * r
           const y = Math.sin(angle) * r
           return (

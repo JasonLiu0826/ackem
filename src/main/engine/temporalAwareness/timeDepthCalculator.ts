@@ -18,15 +18,27 @@ export interface TimeDepthResult {
   daysSince: number
 }
 
-export function computeTimeDepth(firstMetDate: string | null, today: Date): TimeDepthResult | null {
+function civilDateMs(localDate: string): number | null {
+  const parsed = parseLocalDate(localDate)
+  if (!parsed) return null
+  return Date.UTC(parsed.year, parsed.month - 1, parsed.day)
+}
+
+export function computeTimeDepth(
+  firstMetDate: string | null,
+  todayLocal: string | Date
+): TimeDepthResult | null {
   if (!firstMetDate) return null
 
-  // 手动解析 ISO 日期字符串为本地时间，避免 new Date(string) 按 UTC 解析导致的差一错误
   const parsed = parseLocalDate(firstMetDate)
   if (!parsed) return null
 
-  const firstMs = new Date(parsed.year, parsed.month - 1, parsed.day).getTime()
-  const todayMs = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime()
+  const firstMs = civilDateMs(firstMetDate)
+  const todayMs =
+    todayLocal instanceof Date
+      ? Date.UTC(todayLocal.getFullYear(), todayLocal.getMonth(), todayLocal.getDate())
+      : civilDateMs(todayLocal)
+  if (firstMs == null || todayMs == null) return null
   const daysSince = Math.floor((todayMs - firstMs) / 86400000)
   if (daysSince < 0 || isNaN(daysSince)) return null
 
@@ -84,8 +96,11 @@ export function computeTimeDepth(firstMetDate: string | null, today: Date): Time
 }
 
 /** 整周年 ±15 天窗口内且已满 1 年 — detectSpecialDates 与 moodBias 快速路径共用 */
-export function isAnniversaryWindowActive(firstMetDate: string | null, today: Date): boolean {
-  const timeDepth = computeTimeDepth(firstMetDate, today)
+export function isAnniversaryWindowActive(
+  firstMetDate: string | null,
+  todayLocal: string | Date
+): boolean {
+  const timeDepth = computeTimeDepth(firstMetDate, todayLocal)
   if (!timeDepth?.isExactYear) return false
   const anniversaryYears = Math.max(timeDepth.yearsSince, Math.round(timeDepth.daysSince / 365.2425))
   return anniversaryYears >= 1

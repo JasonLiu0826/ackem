@@ -29,7 +29,9 @@ const MODE_LABEL: Record<DispatchConfig['mode'], string> = {
   dispatched: '对话触发',
   autonomous: '后台自动',
   always_on: '常驻',
-  manual: '手动'
+  manual: '手动',
+  engine_event: '引擎事件',
+  scheduled: '定时'
 }
 
 const STATUS_LABEL: Record<DispatchCatalogEntry['status'], string> = {
@@ -37,7 +39,8 @@ const STATUS_LABEL: Record<DispatchCatalogEntry['status'], string> = {
   installed: '已安装未启用',
   planned: '规划中',
   disabled: '已停用',
-  error: '异常'
+  error: '异常',
+  deprecated: '已弃用'
 }
 
 export type ExtensionCatalogListingOptions = {

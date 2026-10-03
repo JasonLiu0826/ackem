@@ -45,32 +45,12 @@ export function vetCreatorContradictingFact(f: {
     }
   }
 
-  // 把 Jason 标成 Ackem 的父亲 / 爸爸（Canon：Jason 仅为创造者）
-  if (
-    /(Ackem|伴侣|AI).*(的)?(父亲|爸爸).*(是|为|叫).*(Jason|JasonLiu0826)/i.test(blob) ||
-    /(Jason|JasonLiu0826).*(是|为).*(Ackem|伴侣|AI).*(的)?(父亲|爸爸)/i.test(blob)
-  ) {
-    return { reject: true, reason: 'jason_labeled_ackem_father' }
-  }
-
   // 显式否定 Canon 创造者
   if (
     /(创造者|父亲).*(不是|并非|另有其人).*(Jason|JasonLiu0826)/i.test(blob) ||
     new RegExp(`创造者.*不是.*${ACKEM_CANON.creator.name}`, 'i').test(blob)
   ) {
     return { reject: true, reason: 'denies_canon_creator' }
-  }
-
-  // 把 Ackem 创造者 Jason 写成已故 / 不在人世
-  const ackemJasonCtx =
-    /(Ackem|伴侣|AI).*(的)?(创造者|父亲|爸爸)/i.test(blob) ||
-    /(创造者|父亲|爸爸).*(Jason|JasonLiu0826)/i.test(blob) ||
-    /Jason.*(创造者|父亲|造)/i.test(blob)
-  if (
-    ackemJasonCtx &&
-    /(死了|去世了|过世了|不在了|已逝|已故|离世|亡故|passed away|deceased|no longer alive)/i.test(blob)
-  ) {
-    return { reject: true, reason: 'canon_creator_marked_dead' }
   }
 
   return { reject: false }

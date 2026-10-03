@@ -4,7 +4,7 @@
 // 引用：../engine/ackemParams, ../engine/types
 
 import { SEMANTIC_KEYWORD_WEIGHT_MULTIPLIER, SEMANTIC_MIN_KEYWORD_LENGTH, SEMANTIC_SEARCH_MIN_SIMILARITY, SEMANTIC_SEARCH_TOP_K } from '../engine/ackemParams'
-import type { MemoryFact } from '../engine/types'
+import type { MemoryFact } from './semantic/types.js'
 
 function extractKeywords(text: string): string[] {
   return text

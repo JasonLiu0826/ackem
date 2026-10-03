@@ -4,7 +4,11 @@
  */
 import { randomUUID } from 'node:crypto'
 import { getDatabase } from '../db/database'
-import type { MemoryFact } from '../engine/types'
+import type { MemoryFact } from './semantic/types.js'
+import { loadSettings } from '../settings'
+import { getClock } from './temporal/clock.js'
+import { resolveUserTimezone } from './temporal/timezonePolicy.js'
+import { zonedLocalDate } from './temporal/zonedDate.js'
 
 export type TemporalAnchorType = 'fuzzy' | 'recurring' | 'milestone' | 'relationship'
 
@@ -71,18 +75,23 @@ export function shouldWriteTemporalAnchor(args: {
 export function writeTemporalAnchor(
   dataRoot: string,
   fact: MemoryFact,
-  anchorType: TemporalAnchorType
+  anchorType: TemporalAnchorType,
+  options?: { observedAt?: Date; timeZone?: string }
 ): void {
   try {
     const db = getDatabase(dataRoot)
     if (!db) return
-    const now = new Date().toISOString()
+    const observedAt = options?.observedAt ?? getClock().now()
+    const timeZone =
+      options?.timeZone ?? resolveUserTimezone(loadSettings().timezone).timezone
+    const anchorDate = zonedLocalDate(observedAt, timeZone)
+    const now = observedAt.toISOString()
     db.prepare(
       `INSERT OR IGNORE INTO temporal_anchors (id, anchor_date, anchor_type, linked_fact_ids, emotional_valence, emotional_intensity, domain, summary, created_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).run(
       randomUUID(),
-      now.slice(0, 10),
+      anchorDate,
       anchorType,
       JSON.stringify([fact.id]),
       fact.emotionalContext.valence,

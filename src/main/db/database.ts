@@ -5,7 +5,14 @@ import Database from 'better-sqlite3'
 import { mkdirSync, rmSync } from 'node:fs'
 import { dirname } from 'node:path'
 import { databasePath } from './paths'
-import { SCHEMA_V1_SQL, SCHEMA_VERSION } from './schemaV1'
+import { SCHEMA_V1_SQL } from './schemaV1'
+import { CURRENT_SCHEMA_VERSION } from './schemaVersion'
+import { migrateSchemaV13 } from './schemaV13'
+import { migrateSchemaV14 } from './schemaV14'
+import { migrateSchemaV15 } from './schemaV15'
+import { migrateSchemaV16 } from './schemaV16'
+import { migrateSchemaV17 } from './schemaV17'
+import { migrateSchemaV18 } from './schemaV18'
 import { SCHEMA_V2_SQL } from './schemaV2'
 import { SCHEMA_V3_SQL } from './schemaV3'
 import { SCHEMA_V4_SQL } from './schemaV4'
@@ -15,8 +22,13 @@ import { SCHEMA_V7_SQL } from './schemaV7'
 import { SCHEMA_V8_SQL } from './schemaV8'
 import { SCHEMA_V9_SQL } from './schemaV9'
 import { SCHEMA_V10_SQL } from './schemaV10'
+import { createLogger } from '../logger'
+import { migrateSchemaV11 } from './schemaV11'
+import { migrateSchemaV12 } from './schemaV12'
 import { importLegacyDataIfNeeded } from './importLegacy'
+import { scheduleTransactionLatencySample } from '../memory/audit/auditMetricsStore.js'
 
+const log = createLogger('database')
 const pools = new Map<string, Database.Database>()
 const legacyImported = new Set<string>()
 
@@ -84,7 +96,43 @@ function runMigrations(db: Database.Database): void {
     db.exec(SCHEMA_V10_SQL)
     setSchemaVersion(db, 10)
   }
+  if (current < 11) {
+    migrateSchemaV11(db)
+    setSchemaVersion(db, 11)
+  }
+  if (current < 12) {
+    migrateSchemaV12(db)
+    setSchemaVersion(db, 12)
+  }
+  if (current < 13) {
+    migrateSchemaV13(db)
+    setSchemaVersion(db, 13)
+  }
+  if (current < 14) {
+    migrateSchemaV14(db)
+    setSchemaVersion(db, 14)
+  }
+  if (current < 15) {
+    migrateSchemaV15(db)
+    setSchemaVersion(db, 15)
+  }
+  if (current < 16) {
+    migrateSchemaV16(db)
+    setSchemaVersion(db, 16)
+  }
+  if (current < 17) {
+    migrateSchemaV17(db)
+    setSchemaVersion(db, 17)
+  }
+  if (current < 18) {
+    migrateSchemaV18(db)
+    setSchemaVersion(db, CURRENT_SCHEMA_VERSION)
+  }
 }
+
+export { CURRENT_SCHEMA_VERSION }
+
+let openFailLogged = false
 
 /** 打开或复用 dataRoot 下的 ackem.db；失败时返回 null（调用方回退 JSON） */
 export function getDatabase(dataRoot: string): Database.Database | null {
@@ -104,7 +152,19 @@ export function getDatabase(dataRoot: string): Database.Database | null {
       importLegacyDataIfNeeded(dataRoot)
     }
     return db
-  } catch {
+  } catch (e) {
+    if (!openFailLogged) {
+      openFailLogged = true
+      const msg = e instanceof Error ? e.message : String(e)
+      log.error('open/migrate failed; SQLite unavailable (social agents require DB)', {
+        error: msg,
+      })
+      if (/NODE_MODULE_VERSION/i.test(msg)) {
+        log.error(
+          'better-sqlite3 ABI mismatch. Electron 运行时: npx electron-builder install-app-deps；Vitest/Node 集成测试: npm rebuild better-sqlite3（二者 ABI 不同，按场景切换）'
+        )
+      }
+    }
     return null
   }
 }
@@ -137,8 +197,11 @@ export function closeAllDatabases(): void {
 export function withTransaction<T>(dataRoot: string, fn: (db: Database.Database) => T): T | null {
   const db = getDatabase(dataRoot)
   if (!db) return null
+  const t0 = performance.now()
   const run = db.transaction(() => fn(db))
-  return run()
+  const out = run()
+  scheduleTransactionLatencySample(dataRoot, performance.now() - t0)
+  return out
 }
 
 /** 归档 / memory:clearAll：清空结构化表，保留 schema_meta 与 FTS 壳 */
@@ -147,6 +210,13 @@ export function clearStructuredData(dataRoot: string): void {
   if (!db) return
   withTransaction(dataRoot, (d) => {
     d.exec(`
+      DELETE FROM memory_fact_evidence;
+      DELETE FROM memory_episode_evidence;
+      DELETE FROM memory_tombstones;
+      DELETE FROM memory_jobs;
+      DELETE FROM memory_action_runs;
+      DELETE FROM memory_event_payloads;
+      DELETE FROM memory_events;
       DELETE FROM memory_associations;
       DELETE FROM temporal_anchors;
       DELETE FROM fact_embeddings;
@@ -168,6 +238,8 @@ export function clearStructuredData(dataRoot: string): void {
       DELETE FROM decision_log;
       DELETE FROM memory_facts_fts;
       DELETE FROM episodes_fts;
+      DELETE FROM social_graph;
+      DELETE FROM agents;
     `)
   })
 }

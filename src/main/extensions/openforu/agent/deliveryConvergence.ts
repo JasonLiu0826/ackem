@@ -14,6 +14,7 @@ import { executeDeployFromBundle } from './deployAgent'
 import { verifyDeployedExtension } from './verifyAgent'
 import { getExtensionsCoordinator } from '../../runtime'
 import type { ArtifactBundle } from './bundleTypes'
+import type { DeploySessionStore } from './deployAgent'
 import type { AgentRunMeta, GenerateStrategy } from './types'
 import {
   DEFAULT_MAX_DELIVERY_ROUNDS,
@@ -25,11 +26,9 @@ import {
   snapshotExtensionBeforeChange
 } from '../refine/revisionStore'
 
-export type DeliveryConvergenceDeps = {
+export type DeliveryConvergenceDeps = DeploySessionStore & {
   dataRoot: string
   loadSession: (sessionId: string) => PlanSession | null
-  saveSession: (session: PlanSession) => void
-  writeStaging: (session: PlanSession) => void
 }
 
 export type DeliveryConvergenceResult = {
@@ -84,7 +83,7 @@ async function runSmokeVerify(
   }
   const verify = await verifyDeployedExtension({ extensionId, session, coordinator })
   if (!verify.ok && !verify.skipped) {
-    if (bundleKind === 'uskill') await loader.deactivateUskill(extensionId)
+    if (bundleKind === 'uskill') await loader.deactivateUskil(extensionId)
     else await loader.deactivateUplugin(extensionId)
   }
   return {

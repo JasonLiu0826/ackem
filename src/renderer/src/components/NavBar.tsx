@@ -7,6 +7,7 @@ import { useAppStore, type Tab } from '../store/appStore'
 
 const items: { id: Tab; labelKey: string; icon: string }[] = [
   { id: 'chat', labelKey: 'nav.chat', icon: '💬' },
+  { id: 'code', labelKey: 'nav.code', icon: '⌨' },
   { id: 'memory', labelKey: 'nav.memory', icon: '🧠' },
   { id: 'diary', labelKey: 'nav.diary', icon: '📔' },
   { id: 'gamemode', labelKey: 'nav.gamemode', icon: '🎮' },

@@ -8,15 +8,15 @@ export const TTS_VOICE_MANIFEST: PluginManifest = {
   version: '0.1.0',
   category: 'plugin',
   pluginType: 'tool',
-  implementationStatus: 'dev',
+  implementationStatus: 'preview',
   description:
     '语音对话管线：ASR (faster-whisper) + TTS (CosyVoice/edge-tts) + 情绪指令映射。剧院模式下半双工语音对话。',
   author: 'JasonLiu0826',
   license: 'AGPL-3.0',
   main: 'bootstrap.ts',
   engineVersion: '>=0.1.0 <1.0.0',
-  permissions: ['readonly', 'network'],
-  fallbackPermissions: ['readonly', 'network'],
+  permissions: ['readonly', 'network_outbound'],
+  fallbackPermissions: ['readonly', 'network_outbound'],
   tags: ['builtin', 'voice', 'asr', 'tts', 'w8'],
   dispatch: {
     mode: 'manual',

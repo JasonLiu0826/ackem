@@ -1,0 +1,1 @@
+export function postTemplate(name:string,aff:number,aro:number){if(aro>.45)return `${name} 今天有点坐不住，想把这份热闹分享出来。`;if(aff<-.35)return `${name} 想安静一会儿，晚点再和世界说话。`;if(aff>.35)return `${name} 记下了一件让人开心的小事。`;return `${name} 在平常的一天里留下一句心情。`}

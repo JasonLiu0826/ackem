@@ -23,7 +23,7 @@ export interface CompanionSkinBinding {
   entry: string
   statusLabels?: Partial<Record<CompanionAvatarState, string>>
   /** FIX-026/027：实装完成度，供设置页诚实标注 */
-  implementationStatus?: 'complete' | 'stub' | 'preview'
+  implementationStatus?: 'complete' | 'stub' | 'preview' | 'planned' | 'deprecated'
 }
 
 export const DEFAULT_AVATAR_STATUS: Record<CompanionAvatarState, string> = {

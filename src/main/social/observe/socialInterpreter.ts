@@ -1,0 +1,1 @@
+export function interpretSocialEvent(type:string,payload:any){if(type==='jealousy')return `${payload?.name??'她'}开始在意你的偏爱。`;if(type==='state_change')return `${payload?.name??'她'}的关系发生了变化。`;return String(payload?.text??'社会里发生了一件事。')}

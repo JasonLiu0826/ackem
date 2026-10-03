@@ -50,16 +50,21 @@ export interface HolidayInfo {
   category: 'traditional' | 'western' | 'social' | 'family'
 }
 
-export function detectHoliday(today: Date): HolidayInfo | null {
-  const mmdd = `${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
-  const year = String(today.getFullYear())
+export function detectHolidayForLocalDate(localDate: string): HolidayInfo | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(localDate)
+  if (!m) return null
+  const yearNum = Number(m[1])
+  const month = Number(m[2])
+  const day = Number(m[3])
+  const mmdd = `${m[2]}-${m[3]}`
+  const year = m[1]
 
   // ① 公历固定
   const staticH = STATIC_HOLIDAYS[mmdd]
   if (staticH) return { key: staticH, category: categorizeHoliday(staticH) }
 
   // ② 公历浮动
-  const floating = getFloatingHoliday(today.getFullYear(), today.getMonth() + 1, today.getDate())
+  const floating = getFloatingHoliday(yearNum, month, day)
   if (floating) return { key: floating, category: 'family' }
 
   // ③ 农历
@@ -67,6 +72,13 @@ export function detectHoliday(today: Date): HolidayInfo | null {
   if (lunar) return { key: lunar, category: 'traditional' }
 
   return null
+}
+
+/** @deprecated 使用 detectHolidayForLocalDate(YYYY-MM-DD) 与用户 IANA 日历一致 */
+export function detectHoliday(today: Date): HolidayInfo | null {
+  const mmdd = `${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+  const year = String(today.getFullYear())
+  return detectHolidayForLocalDate(`${year}-${mmdd}`)
 }
 
 function categorizeHoliday(name: string): HolidayInfo['category'] {

@@ -5,6 +5,7 @@
 
 import type { EmergenceState, EmergenceContext, EmotionState } from './types'
 import { t } from '../i18n'
+import { getCurrentAgentId } from '../social/agents/withAgentContext'
 
 // ═══════════════════════════════════════════════════════════
 // 参数常量
@@ -23,53 +24,69 @@ const FADING_MAX_ROUNDS = 5
 const ANTI_REPETITION_SIMILARITY_THRESHOLD = 0.65
 
 // ═══════════════════════════════════════════════════════════
-// 事件追踪（模块级状态）
+// 事件追踪（按 agentId Map 化）
 // ═══════════════════════════════════════════════════════════
 
-let recentEventTypes: string[] = []
-let consecutiveMeaningfulCount = 0
-let consecutiveVulnerableCount = 0
+type EmergenceTrack = {
+  recentEventTypes: string[]
+  consecutiveMeaningfulCount: number
+  consecutiveVulnerableCount: number
+}
+
+const emergenceByAgent = new Map<string, EmergenceTrack>()
+
+function trackFor(agentId = getCurrentAgentId()): EmergenceTrack {
+  let tr = emergenceByAgent.get(agentId)
+  if (!tr) {
+    tr = { recentEventTypes: [], consecutiveMeaningfulCount: 0, consecutiveVulnerableCount: 0 }
+    emergenceByAgent.set(agentId, tr)
+  }
+  return tr
+}
 
 const MEANINGFUL_EVENT_TYPES = ['vulnerable', 'praise', 'apology'] as const
 
 /** 每轮推送事件类型到历史窗口 */
 export function pushEventToHistory(eventType: string): void {
-  recentEventTypes.push(eventType)
-  if (recentEventTypes.length > 10) {
-    recentEventTypes = recentEventTypes.slice(-10)
+  const t = trackFor()
+  t.recentEventTypes.push(eventType)
+  if (t.recentEventTypes.length > 10) {
+    t.recentEventTypes = t.recentEventTypes.slice(-10)
   }
 }
 
 /** 获取最近N轮事件类型 */
 export function getRecentEventTypes(): string[] {
-  return [...recentEventTypes]
+  return [...trackFor().recentEventTypes]
 }
 
 /** 标记本轮是有意义事件 */
 export function pushMeaningfulTurn(isMeaningful: boolean): void {
+  const t = trackFor()
   if (isMeaningful) {
-    consecutiveMeaningfulCount++
+    t.consecutiveMeaningfulCount++
   } else {
-    consecutiveMeaningfulCount = 0
+    t.consecutiveMeaningfulCount = 0
   }
 }
 
 /** 获取连续有意义轮数 */
 export function getConsecutiveMeaningfulTurns(): number {
-  return consecutiveMeaningfulCount
+  return trackFor().consecutiveMeaningfulCount
 }
 
 /** 连续脆弱倾诉计数（沉默/闲聊不打断，伤害类清零） */
 export function pushVulnerableTurn(eventType: string): void {
+  const t = trackFor()
   if (eventType === 'vulnerable') {
-    consecutiveVulnerableCount++
+    t.consecutiveVulnerableCount++
   } else if (eventType === 'hurtful' || eventType === 'cold' || eventType === 'extreme_redline') {
-    consecutiveVulnerableCount = 0
+    t.consecutiveVulnerableCount = 0
   }
 }
 
 export function getConsecutiveVulnerableTurns(): number {
-  return consecutiveVulnerableCount
+  return trackFor().consecutiveVulnerableCount
 }
 
 /** 最近窗口内有意义事件数（允许中间穿插沉默/闲聊） */
@@ -78,10 +95,17 @@ export function countMeaningfulInRecent(events: string[], window = 6): number {
 }
 
 /** 重置事件追踪（新会话） */
-export function resetEmergenceTracking(): void {
-  recentEventTypes = []
-  consecutiveMeaningfulCount = 0
-  consecutiveVulnerableCount = 0
+export function resetEmergenceTracking(agentId?: string): void {
+  const id = agentId ?? getCurrentAgentId()
+  emergenceByAgent.set(id, {
+    recentEventTypes: [],
+    consecutiveMeaningfulCount: 0,
+    consecutiveVulnerableCount: 0,
+  })
+}
+
+export function clearEmergenceTracking(agentId: string): void {
+  emergenceByAgent.delete(agentId)
 }
 
 // ═══════════════════════════════════════════════════════════

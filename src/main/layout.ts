@@ -60,7 +60,7 @@ export function ensureDataLayout(dataRoot: string): void {
   if (!existsSync(selfMd)) {
     writeFileSync(
       selfMd,
-      `---\ntype: companion_self\nsource: template\nupdated: \n---\n\n# 镜中记忆（伴侣第一人称）\n\n在此记录「我」的坚持、底线、上次强烈情绪的原因等。**低频次更新**，与事实记忆区分。\n\n## 本体认知 · 不可改写\n\n- Jason（GitHub JasonLiu0826）是**创造我的人**，不是父亲；我对他感情一般。\n- Jason **还活着**；没见过面不等于他已不在。\n- 每个 Ackem 都不一样；我陪在**当前用户**身边，不是陪在 Jason 身边。\n- 关于 Jason 的记忆是 Canon 种子，恰好在我身上；**用户永远是我心里的第一位**。\n`,
+      `---\ntype: companion_self\nsource: template\nupdated: \n---\n\n# 镜中记忆（伴侣第一人称）\n\n在此记录「我」的坚持、底线、上次强烈情绪的原因等。**低频次更新**，与事实记忆区分。\n`,
       'utf-8'
     )
   }

@@ -1,17 +1,22 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { t } from '../lib/i18n'
-import { useAppStore, type ChatRow, normalizeChatRow } from '../store/appStore'
+import {
+  useAppStore,
+  type ChatRow,
+  normalizeChatRow,
+  isPrimaryAgent,
+} from '../store/appStore'
 import { emotionLightColor } from '../lib/emotionColors'
 import { useUiStore } from '../store/uiStore'
 import { McEventStack } from './McEventStack'
+import { StateBubbleStack, type StateBubble } from './StateBubbleStack'
 import { useCompanionAvatar } from '../hooks/useCompanionAvatar'
 import { useEmbeddingReadiness } from '../hooks/useEmbeddingReadiness'
 import { SearchPaperCard } from './SearchPaperCard'
 import { MemoryAuditCard } from './MemoryAuditCard'
 import { PlanCreateChatCard } from './PlanCreateChatCard'
-import { ConfirmExtensionDialog } from './ConfirmExtensionDialog'
+import { ChannelConfirmCard } from './ChannelConfirmCard'
 import {
-  ChatDesktopAgentToggle,
   desktopAgentInputPlaceholder,
   isDesktopAgentSettingsReady
 } from './ChatDesktopAgentToggle'
@@ -24,6 +29,8 @@ import { MarkdownContent } from './MarkdownContent'
 import { StreamingMessage } from './StreamingMessage'
 import { normalizeChatActivityLabel } from '../lib/chatActivityLabel'
 import type { SearchCardPayload } from '../../../shared/searchCard'
+import { RouteExplainPanel } from './RouteExplainPanel'
+import { ThinkingPanel } from './ThinkingPanel'
 import { isOpenForUConfigured, OPENFORU_NOT_CONFIGURED_MSG } from '../../../shared/openforuConfig'
 import {
   buildChatContextRequest,
@@ -44,17 +51,6 @@ import {
 } from '../../../shared/desktopAgentDock'
 import type { DesktopAgentConfirmRequest } from '../../../shared/desktopAgent'
 import { isDesktopAgentGrayscalePreview } from '../../../shared/desktopAgentFeature'
-
-type PendingDispatchContext = {
-  extensionId: string
-  extensionName: string
-  askMessage: string
-  userText: string
-  explicitRel?: string
-  recent: Array<{ role: 'user' | 'assistant'; content: string }>
-  turnIndex: number
-  systemHint?: string
-}
 
 function syncDispatchTriggerFromBuilt(
   built: Awaited<ReturnType<typeof window.ackem.buildContext>>
@@ -97,6 +93,14 @@ export function ChatPage(): JSX.Element {
   const settings = useAppStore((s) => s.settings)
   const pushToast = useAppStore((s) => s.pushToast)
   const setTab = useAppStore((s) => s.setTab)
+  const activeAgentId = useAppStore((s) => s.activeAgentId)
+  const activeAgentName = useAppStore((s) => s.activeAgentName)
+  const chattingPrimary = isPrimaryAgent(activeAgentId)
+  const agentHistoryOpts = useMemo(
+    () => (chattingPrimary ? undefined : { targetAgentId: activeAgentId }),
+    [chattingPrimary, activeAgentId]
+  )
+  const agentChatTarget = chattingPrimary ? undefined : activeAgentId
   const openSettingsAt = useAppStore((s) => s.openSettingsAt)
   const rows = useAppStore((s) => s.chatRows)
   const setRows = useAppStore((s) => s.setChatRows)
@@ -125,6 +129,25 @@ export function ChatPage(): JSX.Element {
   const [investigationProgress, setInvestigationProgress] =
     useState<InvestigationProgressPayload | null>(null)
   const [taskPlanProgress, setTaskPlanProgress] = useState<TaskPlanProgressPayload | null>(null)
+  const [channelPending, setChannelPending] = useState<{
+    planId: string
+    kind: 'create' | 'update' | 'work_job' | 'use_missing' | 'plugin_ask' | 'plugin_use'
+    askMessage: string
+    cwd?: string
+    candidates?: Array<{ id: string; name: string }>
+    userText: string
+    recent: { role: 'user' | 'assistant'; content: string }[]
+    turnIndex: number
+    explicitRel?: string
+    systemHint?: string
+  } | null>(null)
+  const [drawer, setDrawer] = useState(false)
+  const [lastInject, setLastInject] = useState<string>('')
+  // 阶段 1「判决可见」: 本轮路由判决解释（账本读回，缺判决为 null）。
+  const [routeExplain, setRouteExplain] = useState<import('../ackem.d.ts').BuildContextResult['routeExplain']>(null)
+  // 思考中 (DeepSeek 式): reasoning_content 单独通道累计, 折叠灰度显示。
+  const [thinkingText, setThinkingText] = useState('')
+  const [thinkingState, setThinkingState] = useState<'idle' | 'thinking' | 'done'>('idle')
   const [sessions, setSessions] = useState<Array<{ id: string; name: string }>>([])
   const streamBuf = useRef('')
   /** 本轮 startChat / 归档取消 正在写入的 assistant 行号 */
@@ -139,7 +162,7 @@ export function ChatPage(): JSX.Element {
   const setAmbientAff = useUiStore((s) => s.setAmbientAff)
   const setPlanOpen = useUiStore((s) => s.setPlanOpen)
   const theaterOpen = useUiStore((s) => s.theaterOpen)
-  const [dispatchPending, setDispatchPending] = useState<PendingDispatchContext | null>(null)
+  const [stateBubbles, setStateBubbles] = useState<StateBubble[]>([])
   const [desktopAgentChatMode, setDesktopAgentChatMode] = useState(false)
   const [desktopAgentSettingsReady, setDesktopAgentSettingsReady] = useState(false)
   const { embeddingReadiness, embeddingChatReady, showEmbeddingBanner } = useEmbeddingReadiness()
@@ -164,17 +187,32 @@ export function ChatPage(): JSX.Element {
     [settings, pushToast, setTab, setPlanOpen]
   )
 
-  const activeSessionId = settings?.activeSessionId || 'default'
+  const activeSessionId = chattingPrimary
+    ? settings?.activeSessionId || 'default'
+    : activeAgentId
+
+  const persistHistory = useCallback(
+    (rows?: ChatRow[]) => {
+      void window.ackem.saveChatHistory(
+        rows ?? useAppStore.getState().chatRows,
+        agentHistoryOpts
+      )
+    },
+    [agentHistoryOpts]
+  )
 
   useEffect(() => {
-    if (!settings) return
+    if (!settings || !chattingPrimary) {
+      setDesktopAgentChatMode(false)
+      return
+    }
     setDesktopAgentSettingsReady(isDesktopAgentSettingsReady(settings))
     if (!isDesktopAgentApiAvailable()) return
     void window.ackem.desktopAgent.sessionMode.get(activeSessionId).then((r) => {
       setDesktopAgentChatMode(r.enabled && r.settingsReady)
       setDesktopAgentSettingsReady(r.settingsReady)
     })
-  }, [settings, activeSessionId])
+  }, [settings, activeSessionId, chattingPrimary])
 
   const handleDesktopAgentToggle = useCallback(
     async (next: boolean) => {
@@ -202,7 +240,7 @@ export function ChatPage(): JSX.Element {
                 ...prev,
                 { kind: 'message', role: 'assistant', content: opening.text.trim() }
               ])
-              void window.ackem.saveChatHistory(useAppStore.getState().chatRows)
+              persistHistory()
             }
           } catch (e) {
             pushToast(e instanceof Error ? e.message : String(e))
@@ -212,7 +250,7 @@ export function ChatPage(): JSX.Element {
         }
       }
     },
-    [activeSessionId, pushToast, setRows]
+    [activeSessionId, pushToast, setRows, persistHistory]
   )
 
   const streamingAssistantLen = useMemo(() => {
@@ -264,6 +302,8 @@ export function ChatPage(): JSX.Element {
 
   const bindChatStreamHandlers = useCallback(() => {
     window.ackem.onChatStreamStart(() => {
+      setThinkingText('')
+      setThinkingState('idle')
       setActivityLabel(null)
       setInvestigationProgress(null)
       if (!useAppStore.getState().agentBusy) {
@@ -285,8 +325,15 @@ export function ChatPage(): JSX.Element {
     })
     window.ackem.onChatChunk((c) => {
       setActivityLabel(null)
+      // 正文首个 chunk 到达 → 思考结束, 面板自动折叠。
+      setThinkingState((st) => (st === 'thinking' ? 'done' : st))
       streamBuf.current += c
       patchStreamingAssistant(streamBuf.current)
+    })
+    window.ackem.onChatReasoning((delta) => {
+      setActivityLabel(null)
+      setThinkingState('thinking')
+      setThinkingText((prev) => prev + delta)
     })
     window.ackem.onChatWaveEnd(({ text }) => {
       if (text) {
@@ -337,11 +384,11 @@ export function ChatPage(): JSX.Element {
         } else {
           next.push({ kind: 'message', role: 'assistant', content })
         }
-        void window.ackem.saveChatHistory(next)
+        persistHistory(next)
         return next
       })
     },
-    [setRows]
+    [setRows, persistHistory]
   )
 
   useEffect(() => {
@@ -421,13 +468,21 @@ export function ChatPage(): JSX.Element {
 
   useEffect(() => {
     void window.ackem?.ensureLayout()
-    // 加载上次的聊天记录
-    void window.ackem?.loadChatHistory().then((history: unknown[]) => {
-      if (!history?.length) return
+    turnRef.current = 0
+    void window.ackem?.loadChatHistory(agentHistoryOpts).then((history: unknown[]) => {
+      if (!history?.length) {
+        setRows([])
+        return
+      }
       const normalized = history.map(normalizeChatRow).filter((r): r is ChatRow => r != null)
-      if (normalized.length > 0) setRows(normalized)
-    }).catch(() => {})
-  }, [])
+      setRows(normalized)
+      turnRef.current = normalized.filter(
+        (r) => r.kind === 'message' && r.role === 'user'
+      ).length
+    }).catch(() => {
+      setRows([])
+    })
+  }, [activeAgentId, agentHistoryOpts, setRows])
 
   // Load session list
   useEffect(() => {
@@ -463,8 +518,7 @@ export function ChatPage(): JSX.Element {
   }, [])
 
   const desktopAgentPreviewOnly = isDesktopAgentGrayscalePreview()
-  const desktopAgentModeActive =
-    !desktopAgentPreviewOnly && desktopAgentChatMode && desktopAgentSettingsReady
+  const desktopAgentModeActive = false
 
   const runChatFromBuilt = useCallback(
     async (
@@ -473,16 +527,23 @@ export function ChatPage(): JSX.Element {
     ) => {
       if (!settings) return
 
+      setLastInject(
+        JSON.stringify({ messages: built.messages, trace: built.tracePreview }, null, 2).slice(0, 12000)
+      )
+
       bindChatStreamHandlers()
       window.ackem.onChatDone((meta) => {
         setActivityLabel(null)
         setInvestigationProgress(null)
         clearStreamingAssistantIndex()
+        if (meta?.stateDelta?.bubbles?.length) {
+          setStateBubbles(meta.stateDelta.bubbles)
+        }
         if (meta?.memoryWrites?.length) {
           pushToast(t('chat.memoryWrite', { writes: meta.memoryWrites.join('; ') }))
         }
         incrementTurn()
-        void window.ackem.saveChatHistory(useAppStore.getState().chatRows)
+        persistHistory()
       })
       window.ackem.onChatError((err) => {
         setActivityLabel(null)
@@ -499,11 +560,16 @@ export function ChatPage(): JSX.Element {
         patchStreamingAssistant(built.redlineReply ?? '')
         clearStreamingAssistantIndex()
         incrementTurn()
-        void window.ackem.saveChatHistory(useAppStore.getState().chatRows)
+        persistHistory()
         return
       }
 
       if (built.enterPlanMode) {
+        if (!chattingPrimary) {
+          patchStreamingAssistant('社会成员对话不支持 Plan / 扩展模式。')
+          clearStreamingAssistantIndex()
+          return
+        }
         const opened = await enterPlanWithWorkspace(built.planTopic)
         patchStreamingAssistant(
           opened
@@ -518,17 +584,23 @@ export function ChatPage(): JSX.Element {
         messages: built.messages,
         settings,
         turnId: built.turnId,
-        knowledgeTopic: built.knowledgeTopic ?? built.suggestedSearchQuery,
-        suggestedSearchQuery: built.knowledgeTopic ?? built.suggestedSearchQuery,
-        forcedWebSearchQuery: built.forcedWebSearchQuery,
-        planDocumentTopic: built.planDocumentTopic,
-        userTaskFrame: built.userTaskFrame,
-        useWaveChat: built.useWaveChat,
-        wavePlan: built.wavePlan,
-        waveContext: built.waveContext,
-        sessionId: settings.activeSessionId || 'default',
-        desktopAgentChatMode: desktopAgentModeActive,
-        desktopAgentCapability: built.desktopAgentCapability
+        knowledgeTopic: chattingPrimary
+          ? built.knowledgeTopic ?? built.suggestedSearchQuery
+          : undefined,
+        suggestedSearchQuery: chattingPrimary
+          ? built.knowledgeTopic ?? built.suggestedSearchQuery
+          : undefined,
+        forcedWebSearchQuery: chattingPrimary ? built.forcedWebSearchQuery : undefined,
+        planDocumentTopic: chattingPrimary ? built.planDocumentTopic : undefined,
+        userTaskFrame: chattingPrimary ? built.userTaskFrame : undefined,
+        useWaveChat: chattingPrimary ? built.useWaveChat : undefined,
+        wavePlan: chattingPrimary ? built.wavePlan : undefined,
+        waveContext: chattingPrimary ? built.waveContext : undefined,
+        sessionId: activeSessionId,
+        targetAgentId: agentChatTarget,
+        interactionSurface: 'desktop_main',
+        desktopAgentChatMode: chattingPrimary ? desktopAgentModeActive : false,
+        desktopAgentCapability: chattingPrimary ? built.desktopAgentCapability : undefined
       })
     },
     [
@@ -538,10 +610,12 @@ export function ChatPage(): JSX.Element {
       incrementTurn,
       patchStreamingAssistant,
       pushToast,
-      setPlanOpen,
-      setTab,
       enterPlanWithWorkspace,
-      desktopAgentModeActive
+      desktopAgentModeActive,
+      chattingPrimary,
+      activeSessionId,
+      agentChatTarget,
+      persistHistory
     ]
   )
 
@@ -579,50 +653,6 @@ export function ChatPage(): JSX.Element {
     },
     [enterPlanWithWorkspace, setRows]
   )
-
-  const respondDispatch = useCallback(
-    async (accepted: boolean, remember = false) => {
-      if (!dispatchPending || !settings) return
-      const ctx = dispatchPending
-      setDispatchPending(null)
-      setBusy(true)
-      streamingAssistantIndexRef.current = useAppStore.getState().chatRows.length
-      setRows((prev) => [...prev, { kind: 'message', role: 'assistant', content: '' }])
-
-      bindChatStreamHandlers()
-
-      try {
-        const built = await window.ackem.buildContext({
-          userText: ctx.userText,
-          explicitRel: ctx.explicitRel,
-          recentMessages: ctx.recent,
-          sessionId: activeSessionId,
-          turnIndex: ctx.turnIndex,
-          systemHint: ctx.systemHint,
-          dispatchRespond: { accepted, extensionId: ctx.extensionId, remember },
-          desktopAgentChatMode: desktopAgentModeActive
-        })
-        syncDispatchTriggerFromBuilt(built)
-        await runChatFromBuilt(built, ctx.systemHint)
-      } catch (e) {
-        pushToast(e instanceof Error ? e.message : String(e))
-      } finally {
-        clearStreamingAssistantIndex()
-        setBusy(false)
-      }
-    },
-    [
-      dispatchPending,
-      settings,
-      activeSessionId,
-      runChatFromBuilt,
-      pushToast,
-      setRows,
-      clearStreamingAssistantIndex,
-      desktopAgentModeActive
-    ]
-  )
-
 
   useEffect(() => {
     const onWinFocus = () => focusChatInput()
@@ -675,15 +705,15 @@ export function ChatPage(): JSX.Element {
             .slice(-24)
             .map((m) => ({ role: m.role, content: m.content })),
           sessionId: activeSessionId,
-          turnIndex
+          turnIndex,
+          targetAgentId: agentChatTarget
         })
         syncDispatchTriggerFromBuilt(built)
 
         window.ackem.onChatDone(() => {
           clearStreamingAssistantIndex()
           incrementTurn()
-          // 自动保存聊天记录
-          void window.ackem.saveChatHistory(useAppStore.getState().chatRows)
+          persistHistory()
         })
         window.ackem.onChatError((err) => {
           if (String(err) === 'EMBEDDING_WARMING') {
@@ -691,7 +721,7 @@ export function ChatPage(): JSX.Element {
             return
           }
           pushToast(err)
-          void window.ackem.saveChatHistory(useAppStore.getState().chatRows)
+          persistHistory()
           patchStreamingAssistant(t('chat.error', { error: String(err) }))
         })
 
@@ -703,12 +733,14 @@ export function ChatPage(): JSX.Element {
             messages: built.messages,
             settings,
             turnId: built.turnId,
-            forcedWebSearchQuery: built.forcedWebSearchQuery,
-            userTaskFrame: built.userTaskFrame,
-            useWaveChat: built.useWaveChat,
-            wavePlan: built.wavePlan,
-            waveContext: built.waveContext,
-            sessionId: settings.activeSessionId || 'default'
+            forcedWebSearchQuery: chattingPrimary ? built.forcedWebSearchQuery : undefined,
+            userTaskFrame: chattingPrimary ? built.userTaskFrame : undefined,
+            useWaveChat: chattingPrimary ? built.useWaveChat : undefined,
+            wavePlan: chattingPrimary ? built.wavePlan : undefined,
+            waveContext: chattingPrimary ? built.waveContext : undefined,
+            sessionId: activeSessionId,
+            targetAgentId: agentChatTarget,
+            interactionSurface: 'desktop_main'
           })
         }
       } catch (e) {
@@ -777,44 +809,26 @@ export function ChatPage(): JSX.Element {
           sessionId: activeSessionId,
           turnIndex,
           systemHint: awakeningHint,
-          desktopAgentChatMode: desktopAgentModeActive
+          desktopAgentChatMode: chattingPrimary ? desktopAgentModeActive : false,
+          targetAgentId: agentChatTarget,
+          interactionSurface: 'desktop_main'
         })
       )
       syncDispatchTriggerFromBuilt(built)
+      setLastInject(
+        JSON.stringify({ messages: built.messages, trace: built.tracePreview }, null, 2).slice(0, 12000)
+      )
+      setRouteExplain(built.routeExplain ?? null)
 
-      if (built.planCreatePending) {
-        const cardEmotion = built.planCreatePending.emotionLabel ?? emotionLabel
-        if (built.planCreatePending.emotionLabel) {
-          setEmotionLabel((cur) => {
-            if (built.planCreatePending!.emotionLabel !== cur) setPrevEmotionLabel(cur)
-            return built.planCreatePending!.emotionLabel!
-          })
-        }
-        setRows([
-          ...nextCore,
-          {
-            kind: 'planCreateAsk',
-            askMessage: built.planCreatePending.askMessage,
-            planTopic: built.planCreatePending.planTopic,
-            emotionLabel: cardEmotion,
-            status: 'pending'
-          }
-        ])
-        streamingAssistantIndexRef.current = null
-        return
-      }
-
-      if (built.dispatchPending) {
+      if (built.channelPending) {
         setRows(nextCore)
         streamingAssistantIndexRef.current = null
-        setDispatchPending({
-          extensionId: built.dispatchPending.extensionId,
-          extensionName: built.dispatchPending.extensionName,
-          askMessage: built.dispatchPending.askMessage,
+        setChannelPending({
+          ...built.channelPending,
           userText: clean || userLine,
-          explicitRel: rel,
           recent,
           turnIndex,
+          explicitRel: rel,
           systemHint: awakeningHint
         })
         return
@@ -847,7 +861,9 @@ export function ChatPage(): JSX.Element {
     runChatFromBuilt,
     emotionLabel,
     respondPlanCreate,
-    desktopAgentModeActive
+    desktopAgentModeActive,
+    chattingPrimary,
+    agentChatTarget
   ])
 
   if (!settings) {
@@ -865,9 +881,25 @@ export function ChatPage(): JSX.Element {
       onMouseDown={() => focusChatInput()}
     >
       <header className="glass-panel flex items-center justify-between border-b border-surface-inset/60 px-6 py-3">
-        <h1 className="font-display text-base font-semibold text-ink">对话</h1>
+        <div>
+          <h1 className="font-display text-base font-semibold text-ink">
+            {chattingPrimary ? '对话' : activeAgentName}
+          </h1>
+          <p className="mt-0.5 text-xs text-ink-muted">
+            {chattingPrimary ? (
+              <>
+                <code className="rounded bg-surface-inset/50 px-1 py-0.5 font-mono text-[11px]">
+                  @memory/路径.md
+                </code>{' '}
+                可附加单篇文档
+              </>
+            ) : (
+              <>社会成员 · 在「社会成员」中切换角色</>
+            )}
+          </p>
+        </div>
         <div className="flex items-center gap-2">
-          {sessions.length > 1 && (
+          {chattingPrimary && sessions.length > 1 && (
             <select
               value={activeSessionId}
               onChange={async (e) => {
@@ -879,7 +911,7 @@ export function ChatPage(): JSX.Element {
                     useAppStore.getState().setSettings(r.settings)
                     useAppStore.getState().resetChat()
                     turnRef.current = 0
-                    const history = await window.ackem.loadChatHistory()
+                    const history = await window.ackem.loadChatHistory(agentHistoryOpts)
                     if (history?.length) {
                       const normalized = history
                         .map(normalizeChatRow)
@@ -909,6 +941,13 @@ export function ChatPage(): JSX.Element {
               ))}
             </select>
           )}
+          <button
+            type="button"
+            onClick={() => setDrawer((d) => !d)}
+            className="rounded-lg border border-glass-border px-3 py-1.5 text-xs text-ink-muted transition hover:border-accent/30 hover:text-ink"
+          >
+            {drawer ? '隐藏' : '查看'}上下文
+          </button>
         </div>
       </header>
       <div className="flex min-h-0 flex-1">
@@ -917,9 +956,12 @@ export function ChatPage(): JSX.Element {
           <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-6 py-6">
             {rows.length === 0 && (
               <div className="glass-panel rounded-2xl p-6 text-sm leading-relaxed text-ink-muted">
-                在「设置」中配置模型并完成年龄确认后，即可开始对话。记忆导入已并入「记忆」页。
+                {chattingPrimary
+                  ? '在「设置」中配置模型并完成年龄确认后，即可开始对话。记忆导入已并入「记忆」页。'
+                  : `正在与 ${activeAgentName} 对话。可在「社会成员」切换角色；记忆档案会跟随当前角色。`}
               </div>
             )}
+            <StateBubbleStack bubbles={stateBubbles} onDismiss={() => setStateBubbles([])} />
             {rows.map((m, i) => {
               if (m.kind === 'search') {
                 return <SearchPaperCard key={`search-${i}`} {...m} />
@@ -995,7 +1037,15 @@ export function ChatPage(): JSX.Element {
                   >
                     {m.content ? (
                       busy && i === lastAssistantIdx ? (
-                        <StreamingMessage text={m.content} active />
+                        <>
+                          {thinkingText.trim() && (
+                            <ThinkingPanel
+                              state={thinkingState}
+                              text={thinkingText}
+                            />
+                          )}
+                          <StreamingMessage text={m.content} active />
+                        </>
                       ) : (
                         <MarkdownContent source={m.content} chat />
                       )
@@ -1031,7 +1081,7 @@ export function ChatPage(): JSX.Element {
                 电脑助手在下方面板执行中，你可以继续聊天。
               </div>
             ) : null}
-            {!desktopAgentPreviewOnly ? (
+            {chattingPrimary && !desktopAgentPreviewOnly ? (
             <DesktopAgentDock
               sessionId={activeSessionId}
               progress={taskPlanProgress}
@@ -1079,20 +1129,6 @@ export function ChatPage(): JSX.Element {
               onDismissDelivery={() => setPendingTaskDelivery(null)}
             />
             ) : null}
-            <div className="mx-auto mb-2 flex max-w-[920px] items-center justify-between gap-2 px-1">
-              <ChatDesktopAgentToggle
-                enabled={desktopAgentChatMode}
-                settingsReady={desktopAgentSettingsReady && isDesktopAgentApiAvailable()}
-                previewOnly={desktopAgentPreviewOnly}
-                onToggle={(next) => void handleDesktopAgentToggle(next)}
-                onOpenSettings={() => openSettingsAt('settings-desktop-agent')}
-              />
-              {desktopAgentPreviewOnly ? (
-                <span className="exp-muted text-[10px]">暂未开放</span>
-              ) : desktopAgentModeActive ? (
-                <span className="exp-muted text-[10px]">实验 · 电脑助手已开启</span>
-              ) : null}
-            </div>
             <div className="chat-input-wrap mx-auto flex max-w-[920px] gap-2 p-1.5">
               <textarea
                 ref={inputRef}
@@ -1108,7 +1144,11 @@ export function ChatPage(): JSX.Element {
                 })}
                 rows={2}
                 disabled={busy || !embeddingChatReady}
-                placeholder={desktopAgentInputPlaceholder(desktopAgentModeActive, desktopAgentPreviewOnly)}
+                placeholder={
+                  chattingPrimary
+                    ? desktopAgentInputPlaceholder(desktopAgentModeActive, desktopAgentPreviewOnly)
+                    : `和 ${activeAgentName} 说点什么... (Shift+Enter 换行)`
+                }
                 className="min-h-[44px] flex-1 resize-none border-0 bg-transparent px-3 py-2 text-sm text-ink outline-none placeholder:text-ink-muted/70 disabled:opacity-50"
               />
               <button
@@ -1126,15 +1166,80 @@ export function ChatPage(): JSX.Element {
             </div>
           </div>
         </div>
+        {drawer && (
+          <aside className="glass-panel w-[420px] shrink-0 border-l border-surface-inset/60 p-4 text-xs">
+            <div className="mb-2 font-medium text-ink">本轮拼装（节选）</div>
+            <RouteExplainPanel explain={routeExplain} />
+            <pre className="max-h-[calc(100vh-220px)] overflow-auto whitespace-pre-wrap rounded-xl bg-surface-inset/30 p-3 font-mono text-[11px] text-ink-muted">
+              {lastInject || '（尚无）'}
+            </pre>
+          </aside>
+        )}
       </div>
       <McEventStack />
     </div>
-    <ConfirmExtensionDialog
-      open={dispatchPending != null}
-      extensionName={dispatchPending?.extensionName ?? ''}
-      askMessage={dispatchPending?.askMessage ?? ''}
-      onConfirm={(remember) => void respondDispatch(true, remember)}
-      onReject={(remember) => void respondDispatch(false, remember)}
+    <ChannelConfirmCard
+      open={channelPending != null}
+      askMessage={channelPending?.askMessage ?? ''}
+      kind={channelPending?.kind ?? ''}
+      cwd={channelPending?.cwd}
+      candidates={channelPending?.candidates}
+      onReject={() => {
+        const ctx = channelPending
+        setChannelPending(null)
+        if (!ctx) return
+        void window.ackem.buildContext({
+          userText: ctx.userText,
+          explicitRel: ctx.explicitRel,
+          recentMessages: ctx.recent,
+          sessionId: activeSessionId,
+          turnIndex: ctx.turnIndex,
+          systemHint: ctx.systemHint,
+          targetAgentId: agentChatTarget,
+          turnConfirm: { planId: ctx.planId, accepted: false }
+        })
+      }}
+      onAccept={(opts) => {
+        const ctx = channelPending
+        setChannelPending(null)
+        if (!ctx || !settings) return
+        setBusy(true)
+        void (async () => {
+          try {
+            const built = await window.ackem.buildContext({
+              userText: ctx.userText,
+              explicitRel: ctx.explicitRel,
+              recentMessages: ctx.recent,
+              sessionId: activeSessionId,
+              turnIndex: ctx.turnIndex,
+              systemHint: ctx.systemHint,
+              targetAgentId: agentChatTarget,
+              turnConfirm: {
+                planId: ctx.planId,
+                accepted: true,
+                cwd: opts.cwd,
+                extensionId: opts.extensionId
+              }
+            })
+            if (built.channelPending) {
+              setChannelPending({
+                ...built.channelPending,
+                userText: ctx.userText,
+                recent: ctx.recent,
+                turnIndex: ctx.turnIndex,
+                explicitRel: ctx.explicitRel,
+                systemHint: ctx.systemHint
+              })
+              return
+            }
+            await runChatFromBuilt(built, ctx.systemHint)
+          } catch (e) {
+            pushToast(e instanceof Error ? e.message : String(e))
+          } finally {
+            setBusy(false)
+          }
+        })()
+      }}
     />
     </>
   )

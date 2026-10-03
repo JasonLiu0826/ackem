@@ -1,7 +1,7 @@
 /**
  * FIX-025 — 关联图冷启动：批量 strengthenOrCreate，弥补导入/新用户仅靠 ingest 共现建边不足。
  */
-import type { MemoryFact } from '../engine/types'
+import type { MemoryFact } from './semantic/types.js'
 import type { FactStore } from './factStore'
 import type { AssociationIndex, AssociationType } from './associationIndex'
 import { FactEmbeddingCache, cosineSimilarity } from './factEmbeddingCache'

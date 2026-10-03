@@ -1,4 +1,4 @@
-import type { UpdateChannel, UpdateCheckResult, UpdateStartRequest } from '../../shared/updateTypes'
+import type { AppSettings, CompanionSuggestion, LlmProvider, PresetGender, UserSixDimensions } from '../../shared/types'
 import type { CompanionSkinBinding } from '../../shared/companionSkin'
 import type { SearchCardPayload } from '../../shared/searchCard'
 import type { MemoryAuditCardPayload } from '../../shared/memoryAudit'
@@ -8,6 +8,171 @@ import type { PermissionRequestPayload } from '../../shared/openforuPermissions'
 
 export type { AppSettings, CompanionSuggestion, LlmProvider, PresetGender, UserSixDimensions }
 export type { OpenForUExtensionRow } from '../../shared/openforuExtensions'
+
+export type SocialAgentSummary = {
+  id: string
+  name: string
+  kind: 'primary' | 'social_member'
+  origin: 'builtin' | 'user'
+  deletable: boolean
+  presetId: string
+  gender: 'female' | 'male'
+  sessionId: string
+  se: number
+  sp: number
+  so: number
+  personaSource: string | null
+  avatarUrl: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export type SocialPresetOption = {
+  id: string
+  label: string
+  gender: PresetGender
+  requiresAdult18?: boolean
+  social3D: { se: number; sp: number; so: number }
+}
+
+export type SocialApi = {
+  listAgents: () => Promise<SocialAgentSummary[]>
+  getAgent: (agentId: string) => Promise<SocialAgentSummary | null>
+  getAgentCard: (agentId: string) => Promise<
+    | { ok: true; card: Record<string, unknown> }
+    | { ok: false; code: string; message: string }
+  >
+  parseCharacterCard: (args: {
+    format: 'md' | 'txt'
+    content: string
+    displayName?: string
+    roleOrTagline?: string
+    gender?: 'female' | 'male'
+  }) => Promise<
+    | {
+        ok: true
+        parsed: {
+          displayName: string
+          gender: 'female' | 'male'
+          roleOrTagline: string
+          personaMarkdown: string
+        }
+        top3Presets: Array<{ presetId: string; label: string; score: number }>
+      }
+    | { ok: false; code: string; message: string }
+  >
+  createAgent: (input: Record<string, unknown>) => Promise<
+    | { ok: true; agentId: string; warnings: Array<{ code: string; message: string }> }
+    | { ok: false; code: string; message: string }
+  >
+  updateAgent: (input: Record<string, unknown>) => Promise<
+    { ok: true } | { ok: false; code: string; message: string }
+  >
+  deleteAgent: (agentId: string) => Promise<
+    { ok: true } | { ok: false; code: string; message: string }
+  >
+  setAgentAvatar: (args: {
+    agentId: string
+    croppedBytes: Uint8Array
+    mime: 'image/webp' | 'image/png'
+    sourceBytes?: Uint8Array
+    sourceMime?: string
+    crop?: { x: number; y: number; width: number; height: number }
+  }) => Promise<
+    | { ok: true; avatarUrl: string | null }
+    | { ok: false; code: string; message: string }
+  >
+  clearAgentAvatar: (agentId: string) => Promise<
+    { ok: true } | { ok: false; code: string; message: string }
+  >
+  listPresetsForGender: (gender?: PresetGender) => Promise<SocialPresetOption[]>
+  parsePlatformCard: (zipBytes: Uint8Array) => Promise<
+    | { ok: true; agentId: string }
+    | { ok: false; code: string; message?: string }
+  >
+  getAgentAvatarDataUrl: (agentId: string) => Promise<
+    | { ok: true; dataUrl: string | null }
+    | { ok: false; code: string; message: string }
+  >
+  ensureSeeded: () => Promise<{ ok: true; seeded: number }>
+  getFeed: (args?: { limit?: number }) => Promise<{
+    posts: Array<{
+      id: string
+      authorId: string
+      authorName: string
+      avatarUrl: string | null
+      content: string
+      emotionLabel: string | null
+      createdAt: string
+      likes: number
+      comments: Array<{
+        id: string
+        actorKind: string
+        actorId: string
+        actorName: string
+        content: string
+        createdAt: string
+      }>
+      likedByMe: boolean
+    }>
+    hasMore: boolean
+    mode?: 'friends' | 'plaza'
+  }>
+  getAgentPosts: (args: { agentId: string; limit?: number }) => Promise<{ posts: unknown[] }>
+  likePost: (args: { postId: string }) => Promise<{ ok: boolean; likesCount?: number; code?: string }>
+  commentPost: (args: {
+    postId: string
+    content: string
+  }) => Promise<{ ok: boolean; commentId?: string; code?: string }>
+  requestFriend: (args: {
+    agentId: string
+  }) => Promise<{ success: boolean; status: string; message?: string }>
+  listFriends: () => Promise<{
+    friends: Array<{ agentId: string; agentName: string; since: string }>
+    total: number
+  }>
+  getFriendship: (args: { agentId: string }) => Promise<{ status: string | null }>
+  muteAgent: (args: { agentId: string }) => Promise<{ ok: boolean }>
+  blockAgent: (args: { agentId: string }) => Promise<{ ok: boolean }>
+  unmuteAgent: (args: { agentId: string }) => Promise<{ ok: boolean }>
+  unblockAgent: (args: { agentId: string }) => Promise<{ ok: boolean }>
+  listBlocks: () => Promise<{ blocks: unknown[] }>
+  getEvents: (args?: { limit?: number }) => Promise<{ events: unknown[] }>
+  getNotifications: () => Promise<{ count: number; items: unknown[] }>
+  toggle: (args: { enabled: boolean }) => Promise<{ success: boolean }>
+  getSocialSettings: () => Promise<{ enabled: boolean; contentMode: string; tickMs: number }>
+  setSocialSettings: (patch: Record<string, unknown>) => Promise<{
+    enabled: boolean
+    contentMode: string
+    tickMs: number
+  }>
+  listGroups: () => Promise<{ groups: unknown[] }>
+  createGroup: (args: { name: string; agentIds: string[] }) => Promise<{ ok: boolean; group?: unknown }>
+  requestJoinGroup: (args: {
+    groupId: string
+  }) => Promise<{ ok: boolean; status?: string }>
+  leaveGroup: (args: { groupId: string }) => Promise<{ ok: boolean }>
+  dissolveGroup: (args: { groupId: string }) => Promise<{ ok: boolean }>
+  getGroupMessages: (args: {
+    groupId: string
+    limit?: number
+  }) => Promise<{ messages: unknown[] }>
+  sendGroupMessage: (args: {
+    groupId: string
+    content: string
+  }) => Promise<{ ok: boolean; messageId?: string; replies?: string[] }>
+  getAchievements: () => Promise<{ defs: unknown[]; unlocked: unknown[] }>
+  runTickNow: () => Promise<{ ok: boolean; result?: unknown }>
+  getOfflineReplay: () => Promise<{
+    show: boolean
+    hours: number
+    narrative: string
+    eventCount?: number
+    postsCreated?: number
+    alreadyApplied?: boolean
+  }>
+  ackOfflineReplay: () => Promise<{ ok: boolean }>
+}
 
 export type McBotDebugSnapshot = {
   timestamp: string
@@ -43,15 +208,12 @@ export type BuildContextResult = {
   tracePreview?: unknown
   enterPlanMode?: boolean
   planTopic?: string
-  dispatchPending?: {
-    extensionId: string
-    extensionName: string
+  channelPending?: {
+    planId: string
+    kind: 'create' | 'update' | 'work_job' | 'use_missing' | 'plugin_ask' | 'plugin_use'
     askMessage: string
-  }
-  planCreatePending?: {
-    askMessage: string
-    planTopic?: string
-    emotionLabel?: string
+    cwd?: string
+    candidates?: Array<{ id: string; name: string }>
   }
   /** L0.5 知识整理主题（触发纸面卡，不联网） */
   knowledgeTopic?: string
@@ -76,6 +238,14 @@ export type BuildContextResult = {
   waveContext?: Record<string, unknown>
   sessionId?: string
   desktopAgentCapability?: import('../../shared/desktopAgentCapabilities').DesktopAgentCapabilityMatch
+  /** 阶段 1「判决可见」: 本轮路由判决的人话解释（账本读回，缺判决为 null）。 */
+  routeExplain?: {
+    found: boolean
+    finalChannel?: 'chat' | 'plugin' | 'work'
+    channelText?: string
+    summary?: string
+    layers?: Array<{ layer: string; ruleId: string; ms: number; text: string }>
+  } | null
 }
 
 export type OpenForUWorkspace = {
@@ -177,14 +347,6 @@ export type AckemApi = {
     getAllResources: () => Promise<{ zh: Record<string, string>; en: Record<string, string>; locale: string }>
   }
   getSettings: () => Promise<AppSettings>
-  getAppVersion: () => Promise<string>
-  checkUpdate: () => Promise<UpdateCheckResult>
-  startUpdate: (
-    req: UpdateStartRequest & { channel: UpdateChannel }
-  ) => Promise<{ ok: true; jobPath: string } | { ok: false; reason: string }>
-  openUpdateRelease: (url: string) => Promise<void>
-  getUpdateChannelPreference: () => Promise<UpdateChannel>
-  setUpdateChannelPreference: (channel: UpdateChannel) => Promise<UpdateChannel>
   getCanon: () => Promise<AckemCanonInfo>
   getCreatorMemory: () => Promise<CreatorMemoryUiBundle>
   setSettings: (patch: Partial<AppSettings>) => Promise<AppSettings>
@@ -199,11 +361,13 @@ export type AckemApi = {
     relPaths: string[]
     consentAck: boolean
     consentVersion: number
+    ownerAgentId?: string
   }) => Promise<import('../../shared/documentImport').ImportParseResult>
   importGetJob: (jobId: string) => Promise<import('../../shared/documentImport').ImportJob | null>
   importCommitJob: (args: {
     jobId: string
     disabledDraftIds?: string[]
+    ownerAgentId?: string
   }) => Promise<import('../../shared/documentImport').ImportCommitResult>
   rebuildIndex: () => Promise<{ chunks: number; builtAt: string }>
   search: (q: string, limit?: number) => Promise<
@@ -216,9 +380,18 @@ export type AckemApi = {
     sessionId?: string
     turnIndex?: number
     systemHint?: string
-    dispatchRespond?: { accepted: boolean; extensionId: string; remember?: boolean }
+    targetAgentId?: string
+    interactionSurface?: string
     desktopAgentChatMode?: boolean
+    turnConfirm?: { planId: string; accepted: boolean; cwd?: string; extensionId?: string }
   }) => Promise<BuildContextResult>
+  workbenchFollow: (args: {
+    chatSessionId?: string
+    text: string
+  }) => Promise<{ ok: boolean; reason?: string }>
+  codePart: {
+    ensure: () => Promise<{ ok: boolean; reason?: string }>
+  }
   readRel: (rel: string, maxBytes?: number) => Promise<{ ok: boolean; text?: string; error?: string }>
   writeAllowed: (
     rel: string,
@@ -238,6 +411,8 @@ export type AckemApi = {
     wavePlan?: import('../../shared/wavePlan').WavePlan
     waveContext?: Record<string, unknown>
     sessionId?: string
+    targetAgentId?: string
+    interactionSurface?: string
     desktopAgentChatMode?: boolean
     desktopAgentCapability?: import('../../shared/desktopAgentCapabilities').DesktopAgentCapabilityMatch
   }) => Promise<void>
@@ -276,22 +451,82 @@ export type AckemApi = {
   onChatSearchCard: (fn: (payload: SearchCardPayload) => void) => void
   onChatMemoryAudit: (fn: (payload: MemoryAuditCardPayload) => void) => void
   onDispatchProactive: (fn: (payload: { extensionId: string; message: string }) => void) => void
-  getState: () => Promise<unknown>
+  getState: (opts?: { targetAgentId?: string }) => Promise<unknown>
   resetState: () => Promise<unknown>
   traceLatest: (n?: number) => Promise<unknown>
-  memoryList: () => Promise<unknown[]>
+  memoryList: (opts?: { ownerAgentId?: string }) => Promise<unknown[]>
   memoryAuditReport: (opts?: {
     mode?: 'curated_audit' | 'self_report' | 'stats_only' | 'full_dump'
     includeAvoid?: boolean
     page?: number
   }) => Promise<{ report: unknown; card: MemoryAuditCardPayload }>
+  memoryWhyStored: (factId: string) => Promise<unknown>
+  memoryActionTimeline: (
+    sessionId: string,
+    limit?: number
+  ) => Promise<Array<{ eventId: string; eventType: string; status: string | null; observedAt: string; turnId: string | null }>>
+  memoryAuditMetrics: () => Promise<{
+    jobBacklog: number
+    deadJobs: number
+    projectionRepairCount: number
+    governanceDeleteCount: number
+    recallP95Ms?: number
+    transactionP95Ms?: number
+    reconcileCount: number
+  }>
+  memoryPermanentDeletePreview: (preview: {
+    targetKind: 'fact' | 'episode'
+    targetId: string
+    scope: 'memory_only' | 'memory_and_source'
+    summary: string
+  }) => Promise<{
+    ok: boolean
+    error?: string
+    verifiedSummary?: string
+    impactHint?: string
+    tombstoneExists?: boolean
+  }>
+  memoryPermanentDelete: (
+    preview: {
+      targetKind: 'fact' | 'episode'
+      targetId: string
+      scope: 'memory_only' | 'memory_and_source'
+      summary: string
+    },
+    turnId?: string | null,
+    confirmed?: boolean
+  ) => Promise<{
+    ok: boolean
+    errorCode?: string
+    impactHint?: string
+    invalidated: { facts: number; episodes: number; embeddings: number; associations: number }
+  }>
+  memoryLegacyBackfill: (opts?: { apply?: boolean; batchSize?: number; maxRounds?: number }) => Promise<{
+    dryRunReport: {
+      legacyFactCount: number
+      skippedWithModernEvidence: number
+      skippedAlreadyLegacyTagged: number
+      potentialConflicts: Array<{ subject: string; factIds: string[] }>
+      timeAmbiguity: Array<{ factId: string; createdAt: string; note: string }>
+    }
+    applied: { remaining: number } | null
+  }>
+  memoryControl: (
+    command: import('../../main/memory/contracts').MemoryControlCommand
+  ) => Promise<import('../../main/memory/contracts').MemoryControlResult>
+  memoryResolveControl: (
+    text: string,
+    candidateTargets: import('../../main/memory/contracts').MemoryTarget[]
+  ) => Promise<unknown>
   memoryUpdate: (
     id: string,
     patch: { summary?: string; weight?: number; confidence?: number; triggers?: string[] }
   ) => Promise<boolean>
   memoryRetire: (id: string) => Promise<boolean>
   memoryFeedback: (id: string, action: 'thumbs_up' | 'thumbs_down') => Promise<boolean>
-  memoryClearAll: () => Promise<{ ok: boolean }>
+  memoryClearAll: () => Promise<{ ok: boolean; error?: string }>
+  memoryClearOwner: (opts?: { ownerAgentId?: string }) =>
+    Promise<{ ok: boolean; error?: string }>
   appReload: () => Promise<{ ok: boolean }>
   uninstallInfo: () => Promise<{
     mode: 'dev' | 'portable' | 'installed'
@@ -376,7 +611,7 @@ export type AckemApi = {
     | { ok: false; error: string }
   >
   memoryConsolidate: () => Promise<{ added: number }>
-  associationList: () => Promise<Array<{
+  associationList: (opts?: { ownerAgentId?: string }) => Promise<Array<{
     id: string; fact_id_a: string; fact_id_b: string
     association_type: string; strength: number
     created_at: string; last_activated_at: string | null
@@ -388,14 +623,14 @@ export type AckemApi = {
     domain: string | null; summary: string | null
     created_at: string; last_triggered_at: string | null
   }>>
-  memoryStats: () => Promise<{
+  memoryStats: (opts?: { ownerAgentId?: string }) => Promise<{
     totalFacts: number; activeFacts: number; retiredFacts: number; coreFacts: number
     totalTriples: number; totalAssociations: number; totalEpisodes: number; totalAnchors: number
     byDomain: Array<{ domain: string; c: number }>
     bySubcategory: Array<{ subcategory: string; c: number }>
   } | null>
   onMemoryUpdated: (fn: (payload: { sessionId: string; turnIndex: number; newFactCount: number }) => void) => () => void
-  kgList: () => Promise<Array<{
+  kgList: (opts?: { ownerAgentId?: string }) => Promise<Array<{
     id: string; subject: string; predicate: string; object: string
     confidence: number; sourceFactIds: string[]; createdAt: string
   }>>
@@ -403,7 +638,7 @@ export type AckemApi = {
     id: string; subject: string; predicate: string; object: string
     confidence: number; sourceFactIds: string[]; createdAt: string
   }>>
-  episodeList: () => Promise<Array<{
+  episodeList: (opts?: { ownerAgentId?: string }) => Promise<Array<{
     id: string; summary: string; emotionalIntensity: number
     dominantEmotion: string; keywords: string[]
     prevEpisodeId: string | null; sourceSessionId: string
@@ -713,11 +948,12 @@ export type AckemApi = {
   sessionCreate: (name: string) => Promise<{ id: string; sessions: Array<{ id: string; name: string; createdAt: string; lastActive: string }> }>
   sessionSwitch: (sessionId: string) => Promise<{ ok: boolean; sessionId?: string; settings?: AppSettings; error?: string }>
   sessionDelete: (sessionId: string) => Promise<{ ok: boolean; sessions?: Array<{ id: string; name: string; createdAt: string; lastActive: string }>; error?: string }>
-  archiveList: () => Promise<{ files: Array<{ path: string; name: string; isDir: boolean; size: number }>; domains: string[]; lastExportAt: string | null }>
-  archiveRead: (relPath: string) => Promise<{ ok: boolean; text?: string; error?: string }>
-  archiveExport: () => Promise<{ filesWritten: number; factsExported: number; episodesExported: number; coreCount: number }>
-  loadChatHistory: () => Promise<unknown[]>
-  saveChatHistory: (rows: unknown[]) => Promise<void>
+  archiveList: (opts?: { ownerAgentId?: string }) => Promise<{ files: Array<{ path: string; name: string; isDir: boolean; size: number }>; domains: string[]; lastExportAt: string | null }>
+  archiveRead: (relPath: string, opts?: { ownerAgentId?: string }) => Promise<{ ok: boolean; text?: string; error?: string }>
+  archiveExport: (opts?: { ownerAgentId?: string }) => Promise<{ filesWritten: number; factsExported: number; episodesExported: number; coreCount: number }>
+  loadChatHistory: (opts?: { targetAgentId?: string }) => Promise<unknown[]>
+  saveChatHistory: (rows: unknown[], opts?: { targetAgentId?: string }) => Promise<void>
+  social: SocialApi
   // 桌面陪伴
   companionTimeContext: () => Promise<{ timeOfDay: string; hour: number; minute: number; weekday: number; isWeekend: boolean; greeting: string; atmosphereHint: string; topicHints: string[] }>
   companionPresence: () => Promise<{ mode: 'active' | 'quiet' | 'sleeping'; lastInteractionMs: number; idleDurationMs: number; timeOfDay: string }>
@@ -728,9 +964,15 @@ export type AckemApi = {
   onCompanionProactive: (fn: (payload: { message: string; timeContext: unknown }) => void) => void
   onDiaryAutoGenerated: (fn: (payload: { date: string; type: string }) => void) => void
   onChatChunk: (fn: (s: string) => void) => void
+  onChatReasoning: (fn: (s: string) => void) => void
   onChatStreamStart: (fn: () => void) => void
   onChatDone: (
-    fn: (meta?: { memoryWrites?: string[]; assistantText?: string; turnId?: string }) => void
+    fn: (meta?: {
+      memoryWrites?: string[]
+      assistantText?: string
+      turnId?: string
+      stateDelta?: { turnId?: string; bubbles: Array<{ key: string; label: string; delta: number; reason: string }> }
+    }) => void
   ) => void
   onChatError: (fn: (err: string) => void) => void
   onMcEvent: (fn: (payload: { event: unknown; reaction: unknown }) => void) => void
@@ -790,11 +1032,14 @@ export type AckemApi = {
     proactiveEnabled: boolean
     accountId?: string
     userId?: string
+    boundAgentId?: string
     lastError?: string | null
     tokenExpired: boolean
     embeddingReady?: boolean
   }>
-  weixinStartLogin: () => Promise<{ qrcode: string; qrcodeImgContent: string; qrcodeScanUrl?: string }>
+  weixinStartLogin: (args?: {
+    agentId?: string
+  }) => Promise<{ qrcode: string; qrcodeImgContent: string; qrcodeScanUrl?: string }>
   weixinPollLogin: (args: { qrcode: string; verifyCode?: string; baseUrl?: string }) => Promise<{
     ok: boolean
     status: string
@@ -807,6 +1052,18 @@ export type AckemApi = {
     needVerifyCode?: boolean
     error?: string
   }>
+  weixinSetBoundAgent: (args: { agentId: string }) => Promise<{
+    connected: boolean
+    enabled: boolean
+    polling: boolean
+    proactiveEnabled: boolean
+    accountId?: string
+    userId?: string
+    boundAgentId?: string
+    lastError?: string | null
+    tokenExpired: boolean
+    embeddingReady?: boolean
+  }>
   weixinDisconnect: () => Promise<{ ok: boolean }>
   weixinSetEnabled: (enabled: boolean) => Promise<{
     connected: boolean
@@ -815,6 +1072,7 @@ export type AckemApi = {
     proactiveEnabled: boolean
     accountId?: string
     userId?: string
+    boundAgentId?: string
     lastError?: string | null
     tokenExpired: boolean
   }>
@@ -825,6 +1083,7 @@ export type AckemApi = {
     proactiveEnabled: boolean
     accountId?: string
     userId?: string
+    boundAgentId?: string
     lastError?: string | null
     tokenExpired: boolean
   }>
@@ -835,6 +1094,7 @@ export type AckemApi = {
     proactiveEnabled: boolean
     accountId?: string
     userId?: string
+    boundAgentId?: string
     lastError?: string | null
     tokenExpired: boolean
   }>
@@ -846,6 +1106,7 @@ export type AckemApi = {
       proactiveEnabled: boolean
       accountId?: string
       userId?: string
+      boundAgentId?: string
       lastError?: string | null
       tokenExpired: boolean
     }) => void

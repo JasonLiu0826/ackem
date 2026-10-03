@@ -15,7 +15,7 @@ import {
   deleteAllEpisodesFromDb
 } from '../db/repos/episodes'
 import { dataRootFromFactsPath } from '../db/paths'
-import type { Episode } from '../engine/types'
+import type { Episode } from './episodes/types.js'
 
 type EpisodesFile = { version: string; episodes: Episode[] }
 

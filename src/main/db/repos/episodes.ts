@@ -1,4 +1,4 @@
-import type { Episode } from '../../engine/types'
+import type { Episode } from '../../memory/episodes/types.js'
 import { getDatabase, withTransaction } from '../database'
 import { rebuildEpisodesFts } from './fts'
 

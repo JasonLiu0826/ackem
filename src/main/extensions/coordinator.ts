@@ -5,10 +5,9 @@ import { randomUUID } from 'node:crypto'
 import type {
   DispatchCatalogEntry,
   EngineSnapshot,
-  ExtensionEvent,
-  SkillInvocation,
-  SkillResult
+  ExtensionEvent
 } from './protocols'
+import type { SkillInvocation, SkillResult } from './skills/types'
 import type { RuntimeContext } from '../context/types'
 import type { KnowledgeContextResolveInput } from './plugins/builtin/knowledge-presentation/plugin'
 import { PluginRegistry } from './plugins/registry'
@@ -38,6 +37,7 @@ import { publishExtensionTriggeredById } from '../extensionTriggerBus'
 import { WEATHER_SENSE_MANIFEST } from './skills/builtin/tool/weather-sense/manifest'
 import { isWeatherQuery } from './skills/builtin/tool/weather-sense/weatherIntent'
 import { readWeatherContextBlock } from './skills/builtin/tool/weather-sense/weatherCache'
+import { mergeInvocationLists } from '../channel/invocationHarvest'
 
 export class ExtensionsCoordinator {
   readonly gameMode = gameModeCoordinator
@@ -217,12 +217,16 @@ export class ExtensionsCoordinator {
     }
     for (const instance of this.plugins.listInstalled()) {
       if (!instance.manifest.dispatch) continue
+      const metaInvoke = this.openforu.getUplugin(instance.manifest.id)?.meta?.invocation
+      const invocation = mergeInvocationLists(instance.manifest.dispatch.invocation, metaInvoke)
       entries.push({
         id: instance.manifest.id,
         name: instance.manifest.name,
         category: 'plugin',
         status: instance.status,
-        dispatch: instance.manifest.dispatch
+        dispatch: invocation.length
+          ? { ...instance.manifest.dispatch, invocation }
+          : instance.manifest.dispatch
       })
     }
     if (sessionId) {
@@ -281,14 +285,16 @@ export class ExtensionsCoordinator {
   }
 
   getDispatchCatalogByMode(sessionId?: string): Record<
-    'autonomous' | 'always_on' | 'manual' | 'dispatched',
+    'autonomous' | 'always_on' | 'manual' | 'dispatched' | 'engine_event' | 'scheduled',
     DispatchCatalogEntry[]
   > {
     const grouped = {
       autonomous: [] as DispatchCatalogEntry[],
       always_on: [] as DispatchCatalogEntry[],
       manual: [] as DispatchCatalogEntry[],
-      dispatched: [] as DispatchCatalogEntry[]
+      dispatched: [] as DispatchCatalogEntry[],
+      engine_event: [] as DispatchCatalogEntry[],
+      scheduled: [] as DispatchCatalogEntry[]
     }
     for (const entry of this.getDispatchCatalog(sessionId)) {
       grouped[entry.dispatch.mode].push(entry)

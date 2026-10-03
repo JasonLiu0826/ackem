@@ -10,6 +10,8 @@ export function normalizeSettingsDraft(s: AppSettings): AppSettings {
     openforuModel: (s.openforuModel ?? '').trim(),
     model: s.model.trim(),
     openforuApiKey: (s.openforuApiKey ?? '').trim(),
+    ackemcodeBaseUrl: (s.ackemcodeBaseUrl ?? '').trim(),
+    ackemcodeModel: (s.ackemcodeModel ?? '').trim(),
     llmExtraHeadersJson: (s.llmExtraHeadersJson ?? '').trim()
   }
 }

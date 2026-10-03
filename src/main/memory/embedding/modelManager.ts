@@ -35,11 +35,6 @@ function resourcesModelsDir(): string {
     return join(process.cwd(), 'resources', 'models')
   }
   const exeDir = join(app.getPath('exe'), '..')
-  // macOS: extraResources 落在 Contents/Resources/models
-  if (process.platform === 'darwin') {
-    const macModels = join(exeDir, '..', 'Resources', 'models')
-    if (existsSync(macModels)) return macModels
-  }
   const primary = join(exeDir, 'resources', 'models')
   if (existsSync(primary)) return primary
   // extraResources: from resources → to resources → …/resources/resources/models/

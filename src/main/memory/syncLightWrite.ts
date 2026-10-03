@@ -3,7 +3,8 @@ import { KnowledgeGraph } from './knowledgeGraph'
 import { extractFactDrafts, factDraftsToRows } from './lightExtract'
 import { writeFactRows } from './factLanding'
 import { filterExtractedUserFacts } from './userFactGuard'
-import type { EmotionState, L1State, MemoryFact } from '../engine/types'
+import type { EmotionState, L1State } from '../engine/types'
+import type { MemoryFact } from './semantic/types.js'
 import type { AdultMemoryPrivacyLevel } from '../prompt/adult-mode'
 
 /** 同步轻量规则写入（毫秒级，供下一轮 context:build 立即可见） */

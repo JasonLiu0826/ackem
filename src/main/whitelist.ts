@@ -42,6 +42,7 @@ export function assertReadableUnderDataRoot(dataRoot: string, rel: string): stri
     'portrait/',
     'diary/',
     'companion/',
+    'agents/',
     'staging/',
     'imports/',
     'packs/',

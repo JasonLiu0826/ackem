@@ -16,7 +16,11 @@ import {
 } from './llm/modelRegistry.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-export const DATA_DIR = path.resolve(__dirname, '../../data')
+const dataDirOverride = process.env.ACKEMCODE_DATA_DIR?.trim()
+if (dataDirOverride && !path.isAbsolute(dataDirOverride)) {
+  throw new Error('ACKEMCODE_DATA_DIR must be an absolute path')
+}
+export const DATA_DIR = dataDirOverride ? path.resolve(dataDirOverride) : path.resolve(__dirname, '../../data')
 const SETTINGS_PATH = path.join(DATA_DIR, 'settings.json')
 const STANDALONE_PATH = path.join(DATA_DIR, 'settings.standalone.json')
 const INLINE_PATH = path.join(DATA_DIR, 'settings.inline.json')

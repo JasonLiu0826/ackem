@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import type { ChatMessage, PermissionMode } from '../shared/types.js'
+import type { ChatMessage, HostTurnReceipt, PermissionMode } from '../shared/types.js'
+import { parseHostTurnReceipt } from './hostTurnReceipt.js'
 import {
   flattenMessageContent,
   stripBinaryContentParts
@@ -33,7 +34,8 @@ export type ContextCollapseCommit = {
 }
 
 export type PersistedSession = {
-  version: 1
+  /** version 1 files load with hostTurnReceipt left undefined. */
+  version: 1 | 2
   id: string
   updatedAt: string
   mode: PermissionMode
@@ -46,6 +48,8 @@ export type PersistedSession = {
   snipRecords?: SnipRecord[]
   /** L3: collapsed tool bodies for resume consistency. */
   collapseCommits?: ContextCollapseCommit[]
+  /** Absent on version 1. Never synthesized into a terminal state. */
+  hostTurnReceipt?: HostTurnReceipt
 }
 
 export type SessionListItem = {
@@ -77,8 +81,9 @@ export async function ensureSessionsDir(): Promise<void> {
 
 export async function saveSession(snap: PersistedSession): Promise<void> {
   await ensureSessionsDir()
+  const hostTurnReceipt = parseHostTurnReceipt(snap.hostTurnReceipt)
   const payload: PersistedSession = {
-    version: 1,
+    version: 2,
     id: snap.id,
     updatedAt: new Date().toISOString(),
     mode: snap.mode,
@@ -91,7 +96,8 @@ export async function saveSession(snap: PersistedSession): Promise<void> {
     snipRecords: Array.isArray(snap.snipRecords) ? snap.snipRecords : undefined,
     collapseCommits: Array.isArray(snap.collapseCommits)
       ? (snap.collapseCommits as ContextCollapseCommit[])
-      : undefined
+      : undefined,
+    ...(hostTurnReceipt ? { hostTurnReceipt } : {})
   }
   const tmp = sessionPath(snap.id) + '.tmp'
   const dest = sessionPath(snap.id)
@@ -108,12 +114,15 @@ export async function loadSession(id: string): Promise<PersistedSession | null> 
     if (!parsed || parsed.id !== id) return null
     const sa = parsed.sessionAllows
     return {
-      version: 1,
+      version: parsed.version === 2 ? 2 : 1,
       id,
       updatedAt: typeof parsed.updatedAt === 'string' ? parsed.updatedAt : '',
       mode: (parsed.mode as PermissionMode) || 'default',
       todos: Array.isArray(parsed.todos) ? (parsed.todos as TodoItem[]) : [],
       history: Array.isArray(parsed.history) ? (parsed.history as ChatMessage[]) : [],
+      hostTurnReceipt: parseHostTurnReceipt(
+        (parsed as { hostTurnReceipt?: unknown }).hostTurnReceipt
+      ),
       sessionAllows:
         sa && typeof sa === 'object'
           ? {

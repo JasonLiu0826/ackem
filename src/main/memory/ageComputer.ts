@@ -2,7 +2,7 @@
 // 从 memory_facts.ageMeta 读取结构化年龄字段，动态计算当前年龄
 // 设计文档：docs/prompt/年龄动态计算设计_6_11.md
 
-import type { AgeMeta } from '../engine/types'
+import type { AgeMeta } from './semantic/types.js'
 import type { FactStore } from './factStore'
 
 /** 从 ageMeta 反推出生年份 */

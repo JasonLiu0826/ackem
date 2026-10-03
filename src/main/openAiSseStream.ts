@@ -50,6 +50,8 @@ function processSseLine(
       choices?: Array<{
         delta?: {
           content?: string
+          /** DeepSeek-R1 类思考模型的权衡文本 — 单独通道, 不进正文气泡。 */
+          reasoning_content?: string | null
           tool_calls?: Array<{
             index?: number
             id?: string
@@ -59,6 +61,10 @@ function processSseLine(
       }>
     }
     const delta = json.choices?.[0]?.delta
+    if (delta?.reasoning_content) {
+      // 思考中内容走独立事件 — 渲染层折叠灰度显示 (DeepSeek 式), 不进气泡。
+      webContents.send('chat:reasoning', delta.reasoning_content)
+    }
     if (delta?.content) {
       onStreamStart()
       onTextDelta?.(delta.content)

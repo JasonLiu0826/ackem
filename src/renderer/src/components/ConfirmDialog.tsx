@@ -8,6 +8,7 @@ type Props = {
   confirmLabel?: string
   cancelLabel?: string
   danger?: boolean
+  confirmDisabled?: boolean
   onConfirm: () => void
   onCancel: () => void
 }
@@ -20,6 +21,7 @@ export function ConfirmDialog({
   confirmLabel = '确定',
   cancelLabel = '取消',
   danger = false,
+  confirmDisabled = false,
   onConfirm,
   onCancel
 }: Props): JSX.Element | null {
@@ -79,9 +81,10 @@ export function ConfirmDialog({
           </button>
           <button
             type="button"
+            disabled={confirmDisabled}
             onClick={onConfirm}
             className={[
-              'flex-1 rounded-xl px-4 py-2.5 text-sm text-white transition-colors',
+              'flex-1 rounded-xl px-4 py-2.5 text-sm text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50',
               danger ? 'bg-red-500 hover:bg-red-600' : 'bg-accent hover:bg-accent-hover'
             ].join(' ')}
           >

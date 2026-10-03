@@ -1,9 +1,11 @@
 import { app, BrowserWindow, screen } from 'electron'
+import { join, dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { loadWindowIcon } from './appIcon'
-import { resolvePreloadPath, resolveRendererHtml } from './outPaths'
 import { getUiTheme } from './uiTheme'
 import { createLogger } from './logger'
 
+const __dirname = dirname(fileURLToPath(import.meta.url))
 const log = createLogger('petWindow')
 
 /** 每次打开桌宠时的默认尺寸（最小窗口，设计参考 360×540 可手动拉大） */
@@ -45,7 +47,7 @@ export function createPetWindow(): BrowserWindow {
     title: 'Ackem',
     icon: icon.isEmpty() ? undefined : icon,
     webPreferences: {
-      preload: resolvePreloadPath('index.cjs'),
+      preload: join(__dirname, '../preload/index.cjs'),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false
@@ -63,10 +65,10 @@ export function createPetWindow(): BrowserWindow {
     const petUrl = `${devUrl.replace(/\/$/, '')}/pet.html`
     void win.loadURL(petUrl).catch((err) => {
       log.error('pet loadURL failed', err)
-      void win.loadFile(resolveRendererHtml('pet.html'))
+      void win.loadFile(join(__dirname, '../renderer/pet.html'))
     })
   } else {
-    void win.loadFile(resolveRendererHtml('pet.html'))
+    void win.loadFile(join(__dirname, '../renderer/pet.html'))
   }
 
   petWindow = win

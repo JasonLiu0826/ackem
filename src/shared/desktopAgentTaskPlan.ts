@@ -1,4 +1,5 @@
 import type { DesktopAgentAction } from './desktopAgent'
+export type { DesktopAgentAction } from './desktopAgent'
 
 /** 单步验收规则（文件系统 + 审计日志） */
 export type TaskPlanVerification =

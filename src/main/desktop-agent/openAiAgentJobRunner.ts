@@ -244,7 +244,7 @@ export async function runOpenAiDesktopAgentJob(opts: {
             ...(round1Text.trim() ? [{ role: 'assistant', content: round1Text }] : []),
             {
               role: 'user',
-              content: buildPostToolTaskPlanNudge(taskPlan, audit) ?? gate.continuationUserMessage
+              content: buildPostToolTaskPlanNudge(taskPlan, audit) ?? '请继续完成未通过的步骤。'
             }
           ]
           continue

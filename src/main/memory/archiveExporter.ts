@@ -62,17 +62,36 @@ export interface ExportStats {
   coreCount: number
 }
 
+function archiveDirForOwner(dataRoot: string, ownerAgentId?: string): string {
+  if (ownerAgentId && ownerAgentId !== 'default') {
+    return join(dataRoot, 'agents', ownerAgentId, 'memory', 'archive')
+  }
+  return join(dataRoot, 'memory', 'archive')
+}
+
+function factBelongsToOwner(
+  fact: { ownerAgentId?: string },
+  ownerAgentId?: string
+): boolean {
+  if (!ownerAgentId || ownerAgentId === 'default') {
+    return !fact.ownerAgentId || fact.ownerAgentId === 'default'
+  }
+  return fact.ownerAgentId === ownerAgentId
+}
+
 export function exportMemoryArchive(
   dataRoot: string,
   factStore: FactStore,
-  episodicStore?: EpisodicStore
+  episodicStore?: EpisodicStore,
+  opts?: { ownerAgentId?: string }
 ): ExportStats {
-  const archiveDir = join(dataRoot, 'memory', 'archive')
+  const ownerAgentId = opts?.ownerAgentId
+  const archiveDir = archiveDirForOwner(dataRoot, ownerAgentId)
   mkdirSync(archiveDir, { recursive: true })
 
   factStore.load()
-  const active = factStore.listActive()
-  const coreFacts = factStore.getCoreFacts()
+  const active = factStore.listActive().filter((f) => factBelongsToOwner(f, ownerAgentId))
+  const coreFacts = factStore.getCoreFacts().filter((f) => factBelongsToOwner(f, ownerAgentId))
   const stats: ExportStats = { filesWritten: 0, factsExported: 0, episodesExported: 0, coreCount: coreFacts.length }
 
   // 按领域→子类分组
@@ -131,8 +150,8 @@ export function exportMemoryArchive(
     }
   }
 
-  // 情节记忆时间线
-  if (episodicStore) {
+  // 情节记忆时间线（目前仅主体 Ackem；社会成员跳过）
+  if (episodicStore && (!ownerAgentId || ownerAgentId === 'default')) {
     episodicStore.load()
     const episodes = episodicStore.listAll()
     if (episodes.length > 0) {
@@ -168,12 +187,14 @@ export function exportMemoryArchive(
   }
 
   // 总索引 README
-  let readme = `# 🗂️ Ackem 记忆档案\n\n`
+  const ownerLabel =
+    ownerAgentId && ownerAgentId !== 'default' ? `角色 ${ownerAgentId}` : 'Ackem'
+  let readme = `# 🗂️ ${ownerLabel} 记忆档案\n\n`
   readme += `> 自动生成 | ${new Date().toISOString().slice(0, 16).replace('T', ' ')}\n`
   readme += `> 总事实：${active.length} 条 | 核心记忆：${coreFacts.length} 条 | 情节：${stats.episodesExported} 段\n\n`
   readme += `---\n\n`
   readme += `## 如何使用这个档案\n\n`
-  readme += `- 这是 Ackem 对你的所有记忆的结构化归档\n`
+  readme += `- 这是 ${ownerLabel} 相关记忆的结构化归档\n`
   readme += `- 按领域分目录，每个子类一个 .md 文件\n`
   readme += `- 你可以直接打开任何文件阅读、修改\n`
   readme += `- 修改后，在 Ackem 中点击「重建索引」即可让修改生效\n`

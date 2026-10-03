@@ -1,0 +1,7 @@
+import { getDatabase } from '../database'
+export type FriendCirclePost={id:string;author_id:string;content:string;emotion_label?:string|null;emotion_valence?:number|null;created_at:string;last_interaction_at?:string|null;offline_generated:number;content_source:string;provenance_json?:string|null}
+const dbFor=(root:string)=>{const db=getDatabase(root);if(!db)throw new Error('DATABASE_UNAVAILABLE');return db}
+export function createPost(root:string,post:FriendCirclePost):void{dbFor(root).prepare(`INSERT INTO friend_circle VALUES(?,?,?,?,?,?,?,?,?,?)`).run(post.id,post.author_id,post.content,post.emotion_label??null,post.emotion_valence??null,post.created_at,post.last_interaction_at??null,post.offline_generated,post.content_source,post.provenance_json??null)}
+export function getPost(root:string,id:string):FriendCirclePost|null{return dbFor(root).prepare('SELECT * FROM friend_circle WHERE id=?').get(id) as FriendCirclePost??null}
+export function listPosts(root:string,authorId?:string,limit=50):FriendCirclePost[]{return (authorId?dbFor(root).prepare('SELECT * FROM friend_circle WHERE author_id=? ORDER BY created_at DESC LIMIT ?').all(authorId,limit):dbFor(root).prepare('SELECT * FROM friend_circle ORDER BY created_at DESC LIMIT ?').all(limit)) as FriendCirclePost[]}
+export function countRecentPosts(root:string,authorId:string,since:string):number{return Number((dbFor(root).prepare('SELECT count(*) c FROM friend_circle WHERE author_id=? AND created_at>=?').get(authorId,since) as {c:number}).c)}

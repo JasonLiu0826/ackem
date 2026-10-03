@@ -8,6 +8,7 @@ import {
   templateDesktopProactiveMessage
 } from '../extensions/plugins/builtin/desktop-companion/proactiveNotificationMessage'
 import { createLogger } from '../logger'
+import { loadMergedRecentMessages } from '../chat/unifiedChatHistory'
 import {
   buildProactivePersonalityBlock,
   pickCompanionProactiveKind,
@@ -61,6 +62,7 @@ async function tryLlmCompanionProactive(args: {
   presetId: string
   kind: ProactiveMessageKind
   harass?: boolean
+  recentContext?: string
 }): Promise<string | null> {
   try {
     const tc = getTimeContext()
@@ -72,6 +74,7 @@ async function tryLlmCompanionProactive(args: {
       harass: args.harass
     })
     const factLine = args.fact ? `\n可轻点提到：${args.fact}` : ''
+    const contextLine = args.recentContext ? `\n最近对话参考：${args.recentContext}` : ''
     const topics =
       tc.topicHints.length > 0 ? `\n时段可自然聊到：${tc.topicHints.join('、')}` : ''
     const channelLine = args.harass
@@ -99,7 +102,7 @@ async function tryLlmCompanionProactive(args: {
             `信任 ${args.relationship.trust}；好感 ${args.emotion.aff}；` +
             `安全感 ${args.emotion.sec ?? 0}；` +
             `情绪 ${args.emotion.primaryLabel ?? '平静'}；${tc.greeting}。` +
-            `任务：${KIND_HINT[args.kind]}。${factLine}${topics}\n` +
+            `任务：${KIND_HINT[args.kind]}。${factLine}${contextLine}${topics}\n` +
             '请直接写正文：'
         }
       ],
@@ -136,6 +139,23 @@ export async function composeCompanionProactiveMessage(
 
   const presetId = input.settings.personalityPresetId
   const fact = pickRecentFactFromRoot(input.dataRoot)
+  const ratio = input.settings.proactiveContextRatio ?? 0.7
+  let recentContext: string | undefined
+  if (ratio > 0) {
+    const recent = loadMergedRecentMessages(input.dataRoot, 8, input.sessionId)
+    if (recent.length > 0) {
+      const lines = recent.map((m) => {
+        const ch = m.channel === 'weixin' ? '微信' : '电脑'
+        return `[${ch}]${m.role === 'user' ? '用户' : '我'}:${m.content.slice(0, 60)}`
+      })
+      const factChars = Math.round(120 * (1 - ratio))
+      const chatChars = Math.round(120 * ratio)
+      recentContext = lines.join(' | ').slice(0, chatChars)
+      if (fact && factChars > 0) {
+        recentContext = `${recentContext} | 记忆:${fact.slice(0, factChars)}`
+      }
+    }
+  }
   const kind = pickCompanionProactiveKind({
     fact,
     aff: state.emotion.aff,
@@ -151,7 +171,8 @@ export async function composeCompanionProactiveMessage(
     fact,
     presetId,
     kind,
-    harass: input.harass
+    harass: input.harass,
+    recentContext,
   })
 
   if (!raw?.trim()) {

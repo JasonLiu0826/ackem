@@ -9,7 +9,6 @@ import {
 } from '../channels/weixin/auth'
 import {
   getWeixinChannelStatus,
-  markWeixinTokenExpired,
   onWeixinAccountSaved,
   applyWeixinProactiveEnabled,
   restartWeixinChannelIfNeeded,
@@ -17,7 +16,18 @@ import {
   startWeixinChannel,
   stopWeixinChannel
 } from '../channels/weixin/index'
-import { loadWeixinAccount } from '../channels/weixin/store'
+import {
+  loadWeixinAccount,
+  setPendingWeixinBoundAgent,
+  setWeixinBoundAgent
+} from '../channels/weixin/store'
+import { PRIMARY_AGENT_ID } from '../social/agents/agentPaths'
+import { broadcastToRenderers } from '../rendererBroadcast'
+
+function normalizeAgentId(raw?: string): string {
+  const t = typeof raw === 'string' ? raw.trim() : ''
+  return t.length > 0 ? t : PRIMARY_AGENT_ID
+}
 
 function finalizeWeixinLogin(dataRoot: string, result: Awaited<ReturnType<typeof pollWeixinLogin>>) {
   if (result.ok && result.account) {
@@ -38,8 +48,10 @@ export function registerWeixinIpc(): void {
     }
   })
 
-  ipcMain.handle('weixin:startLogin', async () => {
+  ipcMain.handle('weixin:startLogin', async (_e, args?: { agentId?: string }) => {
     const root = resolveDataRoot(loadSettings())
+    const agentId = normalizeAgentId(args?.agentId)
+    setPendingWeixinBoundAgent(root, agentId)
     return startWeixinLogin(root)
   })
 
@@ -58,6 +70,18 @@ export function registerWeixinIpc(): void {
     const result = await pollWeixinLogin(root, args.qrcode, args.verifyCode)
     finalizeWeixinLogin(root, result)
     return result
+  })
+
+  ipcMain.handle('weixin:setBoundAgent', async (_e, args: { agentId?: string }) => {
+    const root = resolveDataRoot(loadSettings())
+    const agentId = normalizeAgentId(args?.agentId)
+    setWeixinBoundAgent(root, agentId)
+    const status = {
+      ...getWeixinChannelStatus(root),
+      embeddingReady: isEmbeddingReadyForChat()
+    }
+    broadcastToRenderers('weixin:status-changed', status)
+    return status
   })
 
   ipcMain.handle('weixin:disconnect', async () => {

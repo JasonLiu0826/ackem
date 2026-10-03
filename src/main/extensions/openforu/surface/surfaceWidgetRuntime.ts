@@ -124,8 +124,8 @@ function startTick(extensionId: string): void {
     if (!st.running) return
     const remaining = Number(st.remainingMs ?? 0) - 1000
     st.remainingMs = Math.max(0, remaining)
-    st.display = formatMs(st.remainingMs)
-    if (st.remainingMs <= 0) {
+    st.display = formatMs(Math.max(0, remaining))
+    if (remaining <= 0) {
       st.running = false
       st.phase = 'idle'
       st.phaseLabel = '完成'
@@ -136,48 +136,70 @@ function startTick(extensionId: string): void {
   }, 1000)
 }
 
-function handlePomodoroInvoke(session: Session, action: string): void {
+function payloadRecord(payload: unknown): Record<string, unknown> {
+  return payload && typeof payload === 'object' && !Array.isArray(payload)
+    ? (payload as Record<string, unknown>)
+    : {}
+}
+
+function clampMinutes(raw: unknown, fallback: number): number {
+  const n = Number(raw)
+  if (!Number.isFinite(n) || n < 1 || n > 180) return fallback
+  return Math.round(n)
+}
+
+function handlePomodoroInvoke(session: Session, action: string, payload?: unknown): void {
   const st = session.state
   const startAliases = ['开始', 'start', '专注', '开始专注']
-  const resetAliases = ['重置', 'reset', '停止']
+  const resetAliases = ['重置', 'reset', '停止', '停掉', '停下', 'stop']
+  const extra = payloadRecord(payload)
 
   if (matchAction(action, startAliases)) {
     clearTimer(session)
+    const mins = clampMinutes(extra.durationMin ?? extra.focusMinutes, Number(st.focusMinutes ?? 25))
+    st.focusMinutes = mins
     st.running = true
     st.phase = 'focus'
     st.phaseLabel = '专注中'
     st.activeAction = action
-    st.remainingMs = Number(st.focusMinutes ?? 25) * 60_000
-    st.display = formatMs(st.remainingMs)
-    st.statusText = '专注计时中'
+    st.remainingMs = mins * 60_000
+    st.display = formatMs(Number(st.remainingMs))
+    st.statusText = `专注计时中（${mins} 分钟）`
     startTick(session.extensionId)
     return
   }
   if (matchAction(action, resetAliases)) {
     clearTimer(session)
     Object.assign(st, initPomodoroState(session.config))
+    st.running = false
     st.activeAction = action
+    st.statusText = '已停止'
     return
   }
   st.statusText = `未知操作：${action}`
 }
 
-function handleCountdownInvoke(session: Session, action: string): void {
+function handleCountdownInvoke(session: Session, action: string, payload?: unknown): void {
   const st = session.state
+  const extra = payloadRecord(payload)
   if (matchAction(action, ['开始', 'start'])) {
     clearTimer(session)
+    const mins = clampMinutes(extra.durationMin, Number(st.durationSec ?? 300) / 60)
+    if (extra.durationMin != null) st.durationSec = mins * 60
     st.running = true
     st.activeAction = action
     st.remainingMs = Number(st.durationSec ?? 300) * 1000
-    st.display = formatMs(st.remainingMs)
+    st.display = formatMs(Number(st.remainingMs))
     st.statusText = '倒计时中'
     startTick(session.extensionId)
     return
   }
-  if (matchAction(action, ['重置', 'reset'])) {
+  if (matchAction(action, ['重置', 'reset', '停止', '停掉', '停下', 'stop'])) {
     clearTimer(session)
     Object.assign(st, initCountdownState(session.config))
+    st.running = false
     st.activeAction = action
+    st.statusText = '已停止'
   }
 }
 
@@ -250,7 +272,7 @@ export function getSurfaceWidgetState(extensionId: string): WidgetSurfaceState |
 export function invokeSurfaceWidget(
   extensionId: string,
   action: string,
-  _payload?: unknown
+  payload?: unknown
 ): { ok: boolean; state?: WidgetSurfaceState; error?: string } {
   const session = sessions.get(extensionId)
   if (!session) {
@@ -259,10 +281,10 @@ export function invokeSurfaceWidget(
 
   switch (session.widgetId) {
     case 'timer.pomodoro':
-      handlePomodoroInvoke(session, action)
+      handlePomodoroInvoke(session, action, payload)
       break
     case 'timer.countdown':
-      handleCountdownInvoke(session, action)
+      handleCountdownInvoke(session, action, payload)
       break
     case 'counter.simple':
       handleCounterInvoke(session, action)

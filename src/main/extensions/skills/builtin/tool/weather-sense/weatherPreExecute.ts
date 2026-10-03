@@ -1,4 +1,4 @@
-import type { ExtensionsCoordinator } from '../../../coordinator'
+import type { ExtensionsCoordinator } from '../../../../coordinator'
 import { WEATHER_SENSE_MANIFEST } from './manifest'
 import { isWeatherQuery } from './weatherIntent'
 
@@ -6,7 +6,7 @@ import { isWeatherQuery } from './weatherIntent'
 export async function preExecuteWeatherQuery(
   coordinator: ExtensionsCoordinator,
   userText: string
-): Promise<string | null> {
+): Promise<{ ok: true; summary: string } | null> {
   if (!isWeatherQuery(userText)) return null
   if (coordinator.skills.get(WEATHER_SENSE_MANIFEST.id)?.status !== 'active') return null
 
@@ -22,5 +22,5 @@ export async function preExecuteWeatherQuery(
   const result = await coordinator.skills.execute(invocation)
   if (!result.ok || !result.output) return null
 
-  return `[天气查询结果] ${result.output}。请据此回答，勿调用 web_search。`
+  return { ok: true, summary: `[天气查询结果] ${result.output}。请据此回答，勿调用 web_search。` }
 }

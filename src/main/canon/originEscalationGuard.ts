@@ -52,14 +52,14 @@ export function shouldSuppressOriginProactiveTopics(exposure: OriginExposure): b
 export function buildOriginGuardBlock(): string {
   return [
     `${ORIGIN_GUARD_MARKER} · 强制回归用户】`,
-    '已连续多轮聊 Ackem 出身/创造者。本回合最多一句带过 Jason，然后转向当前用户。',
+    '已连续多轮聊 Ackem 出身/父亲。本回合最多一句带过 Jason，然后转向当前用户。',
     '可温和问：「你今天好像一直在问我的起点，是发生什么让你在意了吗？」',
     '禁止展开新的创作故事或记忆片段。',
   ].join('\n')
 }
 
 /**
- * 根据创造者指称信号推进 OEG 状态。
+ * 根据父亲指称信号推进 OEG 状态。
  * 仅 `ackem_creator` 计 streak；其余指称重置 streak。
  */
 export function advanceOriginExposure(

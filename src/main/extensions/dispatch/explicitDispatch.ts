@@ -1,5 +1,3 @@
-import type { DispatchCatalogEntry } from '../protocols'
-import { messageMatchesKeywords } from './candidateCollector'
 import { wantsOrganizeAsCard } from '../plugins/builtin/knowledge-presentation/intent'
 
 /** 用户明确要「做一个扩展制品」，而非一次性代劳 */
@@ -94,35 +92,5 @@ export function extractExplicitCreateTopic(message: string): string | undefined 
       .trim()
     if (topic.length >= 2 && topic.length <= 16) return topic
   }
-  return undefined
-}
-
-const INVOKE_PREFIX_RE = /^(打开|启动|开始|运行|启用|使用|调用|搜索|搜一下|查一下)/
-
-export function matchExplicitInvoke(
-  message: string,
-  catalog: DispatchCatalogEntry[]
-): DispatchCatalogEntry | undefined {
-  const trimmed = message.trim()
-  if (!INVOKE_PREFIX_RE.test(trimmed) && !messageMatchesKeywords(trimmed, ['搜索', '搜一下', '查一下'])) {
-    return undefined
-  }
-
-  for (const entry of catalog) {
-    if (entry.status !== 'active') continue
-    if (entry.rejectedInSession) continue
-
-    const habitHits = entry.dispatch.habits.some((habit) => {
-      const tokens = habit.match(/['「]([^'」]+)['」]/g)
-      if (tokens) {
-        return tokens.some((t) => trimmed.includes(t.replace(/['「」]/g, '')))
-      }
-      return trimmed.includes(habit.slice(0, Math.min(8, habit.length)))
-    })
-
-    if (habitHits) return entry
-    if (messageMatchesKeywords(trimmed, entry.dispatch.keywords)) return entry
-  }
-
   return undefined
 }

@@ -1,14 +1,21 @@
 import { useCallback, useState } from 'react'
 import { useAppStore } from '../store/appStore'
 import { t } from '../lib/i18n'
+import { MemoryGovernancePanel } from './MemoryGovernancePanel'
 
 type Hit = { score: number; id: string; relPath: string; preview: string; mtimeMs: number }
 
 export function MemoryPage(): JSX.Element {
   const pushToast = useAppStore((s) => s.pushToast)
+  const activeAgentName = useAppStore((s) => s.activeAgentName)
+  const activeAgentId = useAppStore((s) => s.activeAgentId)
+  const isPrimary = !activeAgentId || activeAgentId === 'default'
   const [q, setQ] = useState('')
   const [hits, setHits] = useState<Hit[]>([])
   const [preview, setPreview] = useState<{ rel: string; text: string } | null>(null)
+  const [governanceFactId, setGovernanceFactId] = useState('')
+  const sessionId =
+    !activeAgentId || activeAgentId === 'default' ? 'default' : `social_${activeAgentId}`
 
   const runSearch = useCallback(async () => {
     const term = q.trim()
@@ -38,6 +45,11 @@ export function MemoryPage(): JSX.Element {
       <header className="border-b border-surface-inset bg-surface-raised px-6 py-4">
         <h1 className="text-base font-semibold text-ink">{t('viz.memoryTitle')}</h1>
         <p className="mt-0.5 text-xs text-ink-muted">{t('viz.memorySubtitle')}</p>
+        {!isPrimary && (
+          <p className="mt-2 text-[11px] text-amber-200/90">
+            文档搜索目前是全局索引，不会按「{activeAgentName}」过滤。角色专属记忆请看「档案 / 数据 / 图谱」等页。
+          </p>
+        )}
       </header>
       <div className="flex min-h-0 flex-1">
         <div className="flex min-w-0 flex-1 flex-col border-r border-surface-inset">
@@ -112,6 +124,22 @@ export function MemoryPage(): JSX.Element {
           )}
         </aside>
       </div>
+      <div className="border-t border-surface-inset px-6 py-3">
+        <label className="text-[11px] text-ink-muted">
+          治理目标 fact ID
+          <input
+            value={governanceFactId}
+            onChange={(e) => setGovernanceFactId(e.target.value.trim())}
+            placeholder="fact-uuid"
+            className="field-input mt-1 block w-full max-w-md rounded-lg py-1.5 text-xs"
+          />
+        </label>
+      </div>
+      <MemoryGovernancePanel
+        sessionId={sessionId}
+        factId={governanceFactId || undefined}
+        onToast={(msg) => pushToast(msg)}
+      />
     </div>
   )
 }

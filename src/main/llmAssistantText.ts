@@ -25,6 +25,8 @@ export function resolveAssistantMessageText(message?: {
   const reasoning = (message.reasoning_content ?? '').trim()
   if (!reasoning) return ''
 
-  const json = extractJsonPayloadFromText(reasoning)
-  return json ?? reasoning
+  // 思考模型的 reasoning_content 不是正文: 只回退「reasoning 中可提取的
+  // JSON」(thinking 模型把答案塞进 reasoning 的场景), 绝不把 reasoning
+  // 原文当正文返回——否则内部权衡文本会漏进气泡/主动消息/日记。
+  return extractJsonPayloadFromText(reasoning) ?? ''
 }

@@ -3,18 +3,41 @@ import { FactStore, defaultFactsPath } from './memory/factStore'
 import { KnowledgeGraph, defaultKgPath } from './memory/knowledgeGraph'
 import { workingMemory } from './memory/workingMemory'
 import type { AppSettings } from './settings'
-import { setPendingTurn, takePendingTurn, type PendingChatTurn } from './turnPending'
+import { readPendingSurface, setPendingTurn, takePendingTurn, type PendingChatTurn } from './turnPending'
+import { finalizeChatTurn } from './chat/turnCoordinator'
 import type { Event, FullState, TurnTrace } from './engine/types'
-import { enqueueMemoryWrite } from './memory/memoryWriteJob'
 import { writeSyncLightFacts } from './memory/syncLightWrite'
-import { writeCompanionReplyLog } from './memory/companionReplyLog'
 import { finalizeNewFacts } from './memory/finalizeNewFacts'
 import { resolveTierBIngestSkip } from './memory/tierBIngestPolicy'
 import { getAssociationIndex } from './engineCache'
 import { createLogger } from './logger'
 import { resolveAdultMemoryPrivacyLevel } from './prompt/adult-mode'
+import { mirrorAssistantToWeixin } from './channels/weixin/mirrorOutbound'
+import { buildTurnStateDelta } from './engine/stateDelta'
+import { broadcastToRenderers } from './rendererBroadcast'
+import { mirrorFactToCompanionStore } from './memory/companionFactStore'
+import { withAgentContext } from './social/agents/withAgentContext'
+import { agentIdFromSessionId } from './social/agents/agentPaths'
+import {
+  channelToInteractionSurface,
+  type InteractionSurface
+} from './memory/provenance'
 
 const log = createLogger('postChatTurn')
+
+function resolvePendingOwnerAndSurface(p: PendingChatTurn): {
+  ownerAgentId: string
+  interactionSurface: InteractionSurface
+} {
+  const ownerAgentId =
+    p.ownerAgentId ?? agentIdFromSessionId(p.sessionId ?? 'default')
+  const interactionSurface = channelToInteractionSurface(
+    readPendingSurface(p),
+    p.interactionSurface,
+    ownerAgentId
+  )
+  return { ownerAgentId, interactionSurface }
+}
 
 /** skipLlm / 红线 / dispatch 短路：登记 pending 并 finalize（记忆 ingest + working memory） */
 export async function registerAndFinalizeSkipTurn(args: {
@@ -25,10 +48,14 @@ export async function registerAndFinalizeSkipTurn(args: {
   userMsg: string
   assistantText: string
   newState: FullState
+  prevState?: FullState
   trace: TurnTrace
   event: Event
   settings: AppSettings
   skipIngest?: boolean
+  surface?: 'desktop' | 'weixin'
+  interactionSurface?: InteractionSurface
+  ownerAgentId?: string
 }): Promise<void> {
   const {
     turnId,
@@ -38,6 +65,7 @@ export async function registerAndFinalizeSkipTurn(args: {
     userMsg,
     assistantText,
     newState,
+    prevState,
     trace,
     event,
     settings,
@@ -50,18 +78,31 @@ export async function registerAndFinalizeSkipTurn(args: {
     workingMemory.push(sessionId, { turnIndex, userText: userMsg, assistantText: '' })
   }
 
+  const surface = args.surface ?? 'desktop'
+  const ownerAgentId = args.ownerAgentId ?? agentIdFromSessionId(sessionId)
+  const interactionSurface = channelToInteractionSurface(
+    surface,
+    args.interactionSurface,
+    ownerAgentId
+  )
+
   setPendingTurn(turnId, {
     dataRoot,
     sessionId,
+    turnId,
     turnIndex,
     userMsg,
     newState,
+    prevState,
     skipIngest,
     trace,
     event,
+    surface,
+    interactionSurface,
+    ownerAgentId,
   })
 
-  void finalizeTurnAfterStream({ turnId, dataRoot, assistantText, settings })
+  await finalizeTurnAfterStream({ turnId, dataRoot, assistantText, settings })
 }
 
 const CORRECTION_TRIGGERS = [
@@ -80,9 +121,50 @@ export async function finalizeTurnAfterStream(args: {
   const p = takePendingTurn(turnId)
   if (!p) return
 
+  finalizeChatTurn({
+    dataRoot,
+    sessionId: p.sessionId,
+    turnId,
+    userText: p.userMsg,
+    assistantText,
+    surface: readPendingSurface(p),
+    deriveContext: {
+      turnIndex: p.turnIndex,
+      skipIngest: p.skipIngest,
+      skipLlmExtraction: p.skipLlmExtraction,
+      surface: readPendingSurface(p),
+      ownerAgentId: p.ownerAgentId ?? agentIdFromSessionId(p.sessionId),
+      l0Event: {
+        type: p.event.type,
+        intensity: p.event.intensity,
+        sincerity: p.event.sincerity,
+        isExtremeRedline: p.event.isExtremeRedline,
+        isAdultContent: p.event.isAdultContent,
+        adultSubtype: p.event.adultSubtype
+      },
+      prefetchedFacts: p.prefetchedFacts?.map((f) => ({
+        domain: f.domain,
+        subcategory: f.subcategory,
+        subject: f.subject,
+        summary: f.summary
+      })),
+      stateSnapshot: {
+        relationship: p.newState.relationship as unknown as Record<string, unknown>,
+        emotion: p.newState.emotion as unknown as Record<string, unknown>,
+        totalTurns: p.newState.counters.totalTurns
+      }
+    }
+  })
+
   try {
-    const syncFactIds = await finalizeTurnSyncPhase({ p, dataRoot, assistantText, settings })
-    enqueueMemoryWrite({ pending: p, dataRoot, assistantText, settings, syncFactIds })
+    const { ownerAgentId, interactionSurface } = resolvePendingOwnerAndSurface(p)
+    const syncFactIds = await withAgentContext(
+      ownerAgentId,
+      () => finalizeTurnSyncPhase({ p, dataRoot, assistantText, settings, turnId }),
+      { interactionSurface }
+    )
+    const { nudgeMemoryJobRunner } = await import('./memory/jobs/memoryJobRunnerRegistry.js')
+    nudgeMemoryJobRunner(dataRoot)
   } finally {
     void triggerVoiceTtsAfterTurn({
       assistantText,
@@ -97,8 +179,9 @@ async function finalizeTurnSyncPhase(args: {
   dataRoot: string
   assistantText: string
   settings: AppSettings
+  turnId?: string
 }): Promise<string[]> {
-  const { p, dataRoot, assistantText, settings } = args
+  const { p, dataRoot, assistantText, settings, turnId } = args
 
   const sid = p.sessionId ?? 'default'
   const recentExchanges = workingMemory.getRecent(sid)
@@ -108,6 +191,21 @@ async function finalizeTurnSyncPhase(args: {
   }
 
   saveState(dataRoot, p.newState, sid)
+  const surface = readPendingSurface(p)
+
+  if (p.prevState) {
+    const stateDelta = buildTurnStateDelta(p.prevState, p.newState, p.event)
+    broadcastToRenderers('chat:state-delta', { sessionId: sid, stateDelta })
+  }
+
+  if (surface === 'desktop' && settings.weixinMirrorEnabled !== false && turnId) {
+    void mirrorAssistantToWeixin({
+      dataRoot,
+      text: assistantText,
+      turnId,
+      presetId: settings.personalityPresetId,
+    })
+  }
 
   const { lastActivatedAssociationIds } = await import('./memory/retriever')
   const assocIndex = getAssociationIndex(dataRoot)
@@ -149,31 +247,17 @@ async function finalizeTurnSyncPhase(args: {
       assistantText
     })
 
-    const syncFactIds = [
-      ...writeSyncLightFacts({
-        dataRoot,
-        sessionId: p.sessionId,
-        turnIndex: p.turnIndex,
-        userMsg: p.userMsg,
-        l1: p.newState.relationship,
-        l2: p.newState.emotion,
-        store,
-        kg,
-        adultPrivacyLevel,
-      }),
-      ...writeCompanionReplyLog({
-        dataRoot,
-        sessionId: p.sessionId,
-        turnIndex: p.turnIndex,
-        userMsg: p.userMsg,
-        assistantText,
-        l1: p.newState.relationship,
-        l2: p.newState.emotion,
-        store,
-        kg,
-        adultPrivacyLevel,
-      }),
-    ]
+    const syncFactIds = writeSyncLightFacts({
+      dataRoot,
+      sessionId: p.sessionId,
+      turnIndex: p.turnIndex,
+      userMsg: p.userMsg,
+      l1: p.newState.relationship,
+      l2: p.newState.emotion,
+      store,
+      kg,
+      adultPrivacyLevel,
+    })
 
     const uniqueSyncIds = [...new Set(syncFactIds)]
     if (uniqueSyncIds.length > 0) {
@@ -190,6 +274,18 @@ async function finalizeTurnSyncPhase(args: {
         newFactIds: uniqueSyncIds,
         facts,
       })
+
+      store.load()
+      for (const id of uniqueSyncIds) {
+        const fact = store.listActive().find((f) => f.id === id)
+        if (fact) {
+          mirrorFactToCompanionStore(dataRoot, fact, {
+            channel: readPendingSurface(p),
+            memorySide: fact.subcategory.includes('companion') ? 'ackem' : 'user',
+            occurredAt: fact.occurredAt ?? fact.createdAt,
+          })
+        }
+      }
     }
 
     return uniqueSyncIds

@@ -1,5 +1,6 @@
 import type { DispatchConfig, DispatchMode, DispatchedSubtype } from '../protocols'
 import { attachSlashToDispatch } from '../dispatch/slashDispatch'
+import { seedPluginInvocation } from '../../channel/invocationHarvest'
 import type { PlanDispatchDraft, PlanSession, PlanSummary } from '../../../shared/planSession'
 import { extensionIdToSlug } from '../../../shared/planDesignSpec'
 
@@ -64,7 +65,8 @@ export function buildDispatchFromDraft(
     time: {
       active_hours: '08:00-22:00',
       cooldown_minutes: 10
-    }
+    },
+    invocation: seedPluginInvocation({ name: summaryText, keywords })
   }
 
   if (mode === 'dispatched') {

@@ -42,6 +42,8 @@ import { createLogger } from '../logger'
 import { ACKEM_CANON } from '../canon/ackemCanon'
 import { loadCreatorMemoryStore } from '../canon/creatorMemory'
 import { embeddingSettingsChanged, onlyDesktopAgentSettingsChanged } from '../../shared/settingsChange'
+import { resolveCodeRoot } from '../ackemcode/ensureDaemon'
+import { syncRuntimeLlm } from '../ackemcode/syncRuntimeLlm'
 
 const log = createLogger('ipc-data')
 
@@ -65,6 +67,8 @@ function runSettingsPostSaveHooks(
   if (prev.companionHarassEnabled !== s.companionHarassEnabled) {
     syncCompanionHarassScheduler()
   }
+  const codeRoot = resolveCodeRoot()
+  if (codeRoot) syncRuntimeLlm(codeRoot)
 }
 
 function broadcastEmbeddingReadiness(): void {
@@ -202,7 +206,12 @@ export function registerDataIpc(): void {
     'import:parseDocuments',
     async (
       _e,
-      args: { relPaths: string[]; consentAck: boolean; consentVersion: number }
+      args: {
+        relPaths: string[]
+        consentAck: boolean
+        consentVersion: number
+        ownerAgentId?: string
+      }
     ) => {
       const root = currentDataRoot()
       const settings = loadSettings()
@@ -215,6 +224,7 @@ export function registerDataIpc(): void {
         relPaths: args.relPaths ?? [],
         consentAck: Boolean(args.consentAck),
         consentVersion: args.consentVersion ?? 0,
+        ownerAgentId: args.ownerAgentId,
       })
     }
   )
@@ -227,7 +237,10 @@ export function registerDataIpc(): void {
 
   ipcMain.handle(
     'import:commitJob',
-    async (_e, args: { jobId: string; disabledDraftIds?: string[] }) => {
+    async (
+      _e,
+      args: { jobId: string; disabledDraftIds?: string[]; ownerAgentId?: string }
+    ) => {
       const root = currentDataRoot()
       const settings = loadSettings()
       const { commitImportJob } = await import('../memory/documentImport/commitImportJob.js')
@@ -236,6 +249,7 @@ export function registerDataIpc(): void {
         settings,
         jobId: args.jobId,
         disabledDraftIds: args.disabledDraftIds,
+        ownerAgentId: args.ownerAgentId,
       })
     }
   )

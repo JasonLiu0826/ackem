@@ -125,7 +125,7 @@ export async function evolveUpluginBundle(
     meta = { ...meta, injectTemplate: parsed.injectTemplate.trim() }
   }
 
-  const files = { ...base.files, 'manifest.json': `${JSON.stringify(manifest, null, 2)}\n` }
+  const files: Record<string, string> = { ...base.files, 'manifest.json': `${JSON.stringify(manifest, null, 2)}\n` }
 
   const brief: PlanUiDesignBrief | undefined =
     parsed.userGoal && parsed.primaryActions?.length

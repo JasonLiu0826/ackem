@@ -13,6 +13,7 @@ import {
 import { buildInteractionScriptForWidget } from '../../../../shared/openforuInteraction'
 import { buildWidgetHtml } from '../surface/widgets/buildWidgetHtml'
 import type { ArtifactBundle } from '../agent/bundleTypes'
+import type { DispatchConfig, DispatchMode } from '../../protocols'
 import { syncBundleFiles } from '../agent/bundleSync'
 
 function parseVersion(id: string): string {
@@ -29,6 +30,14 @@ function mergeKeywordLists(...lists: (string[] | undefined)[]): string[] {
     }
   }
   return out
+}
+
+const DISPATCH_MODES: DispatchMode[] = [
+  'autonomous', 'always_on', 'manual', 'dispatched', 'engine_event', 'scheduled'
+]
+
+function dispatchMode(raw: string): DispatchMode {
+  return DISPATCH_MODES.find((mode) => mode === raw) ?? 'dispatched'
 }
 
 function effectiveSlashFromSpec(spec: PlanDesignSpec): string[] {
@@ -61,8 +70,9 @@ export function syncBundleFromDesignSpec(
 
   const keywords = mergeKeywordLists(spec.trigger.keywords, bundle.manifest.keywords)
   if (keywords.length) {
-    const dispatch = bundle.manifest.dispatch ?? {
-      mode: spec.trigger.mode || 'dispatched',
+    const dispatch: DispatchConfig = bundle.manifest.dispatch ?? {
+      mode: dispatchMode(spec.trigger.mode),
+      time: {},
       habits: ['用户通过关键词或 slash 触发'],
       scenarios: ['使用该扩展时'],
       summary: spec.purpose || spec.displayName,
@@ -70,7 +80,7 @@ export function syncBundleFromDesignSpec(
     }
     dispatch.keywords = mergeKeywordLists(keywords, dispatch.keywords)
     dispatch.summary = dispatch.summary?.trim() || spec.purpose || spec.displayName
-    dispatch.mode = dispatch.mode || spec.trigger.mode || 'dispatched'
+    dispatch.mode = dispatch.mode || dispatchMode(spec.trigger.mode)
 
     const slash = effectiveSlashFromSpec(spec)
     if (slash.length) {
@@ -78,7 +88,7 @@ export function syncBundleFromDesignSpec(
     }
 
     bundle.manifest.dispatch = dispatch
-    if (bundle.kind === 'uskill' || bundle.manifest.triggers?.includes('keyword')) {
+    if (bundle.kind === 'uskill' || bundle.manifest.dispatch?.mode === 'dispatched') {
       bundle.manifest.keywords = [...dispatch.keywords]
     }
     fixes.push('trigger.keywords+slash')

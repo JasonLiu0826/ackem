@@ -50,6 +50,8 @@ export type ImportJob = {
   status: ImportJobStatus
   files: string[]
   createdAt: string
+  /** 写入目标角色；缺省为 Ackem 主体 default */
+  ownerAgentId?: string
   facts: ImportFactDraft[]
   episodes: ImportEpisodeDraft[]
   anchors: ImportAnchorDraft[]

@@ -14,7 +14,7 @@ import {
   normalizePlanSession,
   planSessionMeta,
   type PlanSession,
-  type PlanSessionMeta
+  type PlanSessionMetaPayload
 } from '../../../shared/planSession'
 import {
   countPlanUserTurns,
@@ -53,7 +53,7 @@ export type { PlanMessage } from '../../../shared/planSession'
 
 export type PlanSessionPayload = {
   messages: PlanSession['messages']
-} & PlanSessionMeta
+} & PlanSessionMetaPayload
 
 function openforuDir(dataRoot: string): string {
   return join(dataRoot, 'openforu')

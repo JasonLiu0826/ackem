@@ -6,7 +6,10 @@ import type { AppSettings, DataRootMode, LlmProvider, PresetGender } from '../sh
 import { clampOpenForUTemperature, OPENFORU_DEFAULT_MAX_TOKENS } from '../shared/openforuConfig'
 export type { AppSettings, DataRootMode, LlmProvider, PresetGender }
 
-type SettingsFile = AppSettings & { _encryptedApiKey?: string }
+type SettingsFile = AppSettings & {
+  _encryptedApiKey?: string
+  _encryptedAckemcodeApiKey?: string
+}
 
 const ENCRYPTED_PLACEHOLDER = '[encrypted]'
 
@@ -42,6 +45,10 @@ const defaultSettings: AppSettings = {
   openforuMaxTokens: 128_000,
   openforuAgentCoreEnabled: true,
   openforuGenerateStrategy: 'auto',
+  ackemcodeIndependentLlm: false,
+  ackemcodeBaseUrl: '',
+  ackemcodeApiKey: '',
+  ackemcodeModel: '',
   locale: 'zh',
   embeddingActiveModel: 'bge-small-zh',
   asyncMultiMessageEnabled: false,
@@ -60,9 +67,23 @@ const defaultSettings: AppSettings = {
   desktopAgentAllowDocumentRead: false,
   desktopAgentAllowDelete: false,
   desktopAgentDownloadDir: '',
-  updateChannel: 'auto',
-  updateSkippedVersion: '',
-  updateLastCheckAt: ''
+  proactiveFrequency: 'medium',
+  proactiveDisplayMode: 'both',
+  proactiveContextRatio: 0.7,
+  proactiveUserQuietMs: 60_000,
+  proactiveEnabled: true,
+  weixinMirrorEnabled: true,
+  llmProfiles: [],
+  activeChatProfileId: '',
+  activeOpenForUProfileId: '__follow_chat__',
+  activeImageGenProfileId: '',
+  imageGenEnabled: false,
+  imageGenProvider: 'unset',
+  imageGenBaseUrl: '',
+  imageGenModel: '',
+  imageGenApiKey: '',
+  imageGenDefaultSize: '1024x1024',
+  imageGenPromptEnhancementEnabled: false,
 }
 
 function settingsPath(): string {
@@ -111,14 +132,19 @@ function readRawSettingsFile(path: string): SettingsFile | null {
   }
 }
 
-function resolveApiKey(parsed: SettingsFile): string {
-  if (parsed._encryptedApiKey && encryptionAvailable()) {
-    return decryptKey(parsed._encryptedApiKey)
+function resolveStoredKey(
+  parsed: SettingsFile,
+  encryptedField: '_encryptedApiKey' | '_encryptedAckemcodeApiKey',
+  plainField: 'openaiApiKey' | 'ackemcodeApiKey'
+): string {
+  const encrypted = parsed[encryptedField]
+  if (encrypted && encryptionAvailable()) {
+    return decryptKey(encrypted)
   }
-  if (parsed._encryptedApiKey) {
+  if (encrypted) {
     return ''
   }
-  const plain = (parsed.openaiApiKey || '').trim()
+  const plain = (parsed[plainField] || '').trim()
   if (plain && plain !== ENCRYPTED_PLACEHOLDER) {
     return plain
   }
@@ -132,16 +158,57 @@ function hasStoredApiKey(parsed: SettingsFile): boolean {
 }
 
 function normalizeSettingsFile(parsed: SettingsFile): AppSettings {
-  const openaiApiKey = resolveApiKey(parsed)
-  const { _encryptedApiKey: _drop, ...rest } = parsed
+  const openaiApiKey = resolveStoredKey(parsed, '_encryptedApiKey', 'openaiApiKey')
+  const ackemcodeApiKey = resolveStoredKey(parsed, '_encryptedAckemcodeApiKey', 'ackemcodeApiKey')
+  const { _encryptedApiKey: _drop, _encryptedAckemcodeApiKey: _dropCode, ...rest } = parsed
   void _drop
+  void _dropCode
   return {
     ...defaultSettings,
     ...rest,
     openaiApiKey,
+    ackemcodeApiKey,
     asyncMultiMessageEnabled: false,
     openforuMaxTokens: OPENFORU_DEFAULT_MAX_TOKENS
   } as AppSettings
+}
+
+function sealSecret(args: {
+  merged: SettingsFile
+  rawOnDisk: SettingsFile | null
+  currentPlain: string
+  patchValue: string | undefined
+  plainField: 'openaiApiKey' | 'ackemcodeApiKey'
+  encryptedField: '_encryptedApiKey' | '_encryptedAckemcodeApiKey'
+}): void {
+  const { merged, rawOnDisk, currentPlain, patchValue, plainField, encryptedField } = args
+  const keyInput = patchValue !== undefined ? patchValue : currentPlain
+  const trimmedKey = (keyInput || '').trim()
+
+  if (trimmedKey && trimmedKey !== ENCRYPTED_PLACEHOLDER && encryptionAvailable()) {
+    merged[encryptedField] = encryptKey(trimmedKey)
+    merged[plainField] = ENCRYPTED_PLACEHOLDER
+    return
+  }
+  if (trimmedKey === ENCRYPTED_PLACEHOLDER || !trimmedKey) {
+    const stored = rawOnDisk?.[encryptedField]
+    if (stored) {
+      merged[encryptedField] = stored
+      merged[plainField] = ENCRYPTED_PLACEHOLDER
+    } else if (currentPlain && encryptionAvailable()) {
+      merged[encryptedField] = encryptKey(currentPlain)
+      merged[plainField] = ENCRYPTED_PLACEHOLDER
+    } else if (currentPlain) {
+      delete merged[encryptedField]
+      merged[plainField] = currentPlain
+    } else {
+      delete merged[encryptedField]
+      merged[plainField] = ''
+    }
+    return
+  }
+  delete merged[encryptedField]
+  merged[plainField] = trimmedKey
 }
 
 function writeSettingsFile(parsed: SettingsFile): void {
@@ -197,6 +264,9 @@ function trimSettingsFields(input: Partial<AppSettings>): Partial<AppSettings> {
   if (typeof out.openforuModel === 'string') out.openforuModel = out.openforuModel.trim()
   if (typeof out.model === 'string') out.model = out.model.trim()
   if (typeof out.openforuApiKey === 'string') out.openforuApiKey = out.openforuApiKey.trim()
+  if (typeof out.ackemcodeBaseUrl === 'string') out.ackemcodeBaseUrl = out.ackemcodeBaseUrl.trim()
+  if (typeof out.ackemcodeModel === 'string') out.ackemcodeModel = out.ackemcodeModel.trim()
+  if (typeof out.ackemcodeApiKey === 'string') out.ackemcodeApiKey = out.ackemcodeApiKey.trim()
   if (typeof out.llmExtraHeadersJson === 'string') out.llmExtraHeadersJson = out.llmExtraHeadersJson.trim()
   return out
 }
@@ -215,28 +285,22 @@ export function saveSettings(next: Partial<AppSettings>): AppSettings {
     openforuMaxTokens: OPENFORU_DEFAULT_MAX_TOKENS
   }
 
-  const keyInput = patch.openaiApiKey !== undefined ? patch.openaiApiKey : current.openaiApiKey
-  const trimmedKey = (keyInput || '').trim()
-
-  if (trimmedKey && trimmedKey !== ENCRYPTED_PLACEHOLDER && encryptionAvailable()) {
-    merged._encryptedApiKey = encryptKey(trimmedKey)
-    merged.openaiApiKey = ENCRYPTED_PLACEHOLDER
-  } else if (trimmedKey === ENCRYPTED_PLACEHOLDER || !trimmedKey) {
-    // 用户未改 Key：保留磁盘上已有的加密 blob
-    if (rawOnDisk?._encryptedApiKey) {
-      merged._encryptedApiKey = rawOnDisk._encryptedApiKey
-      merged.openaiApiKey = ENCRYPTED_PLACEHOLDER
-    } else if (current.openaiApiKey) {
-      merged._encryptedApiKey = encryptKey(current.openaiApiKey)
-      merged.openaiApiKey = ENCRYPTED_PLACEHOLDER
-    } else {
-      delete merged._encryptedApiKey
-      merged.openaiApiKey = ''
-    }
-  } else if (!encryptionAvailable()) {
-    delete merged._encryptedApiKey
-    merged.openaiApiKey = trimmedKey
-  }
+  sealSecret({
+    merged,
+    rawOnDisk,
+    currentPlain: current.openaiApiKey,
+    patchValue: patch.openaiApiKey,
+    plainField: 'openaiApiKey',
+    encryptedField: '_encryptedApiKey'
+  })
+  sealSecret({
+    merged,
+    rawOnDisk,
+    currentPlain: current.ackemcodeApiKey ?? '',
+    patchValue: patch.ackemcodeApiKey,
+    plainField: 'ackemcodeApiKey',
+    encryptedField: '_encryptedAckemcodeApiKey'
+  })
 
   writeSettingsFile(merged)
   return normalizeSettingsFile(merged)

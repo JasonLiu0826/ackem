@@ -1,5 +1,3 @@
-export const SCHEMA_VERSION = 3
-
 export const SCHEMA_V1_SQL = `
 CREATE TABLE IF NOT EXISTS schema_meta (
   key   TEXT PRIMARY KEY,

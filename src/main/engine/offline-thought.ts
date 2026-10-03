@@ -3,7 +3,7 @@
 import { randomUUID } from 'node:crypto'
 import type { OfflineThought, TurnTrace, L1State, EmotionState } from './types'
 
-import type { MemoryFact } from './types'
+import type { MemoryFact } from '../memory/semantic/types.js'
 
 /** 从最近的trace中提炼离线思维话题 */
 export function generateOfflineThoughts(

@@ -37,7 +37,10 @@ export function registerBundledNativeDllPaths(): void {
   if (!ortBin) return
 
   try {
-    app.addDllDirectory(ortBin)
+    const addDllDirectory = (app as typeof app & { addDllDirectory?: (path: string) => void })
+      .addDllDirectory
+    if (typeof addDllDirectory !== 'function') throw new Error('addDllDirectory unavailable')
+    addDllDirectory.call(app, ortBin)
   } catch {
     process.env.PATH = `${ortBin};${process.env.PATH ?? ''}`
   }

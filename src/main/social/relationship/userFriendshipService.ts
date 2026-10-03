@@ -1,0 +1,5 @@
+import { getFriendship,upsertFriendship } from '../../db/repos/userFriendshipsRepo'
+import { SOCIAL,socialId } from '../types'
+export function shouldAcceptFriendship(trust:number,aff:number,se:number){return trust>=SOCIAL.FRIEND_TRUST_PASS||(trust>=SOCIAL.FRIEND_TRUST_SOFT&&aff>0&&se>=40)}
+export function requestFriendship(root:string,agentId:string,user='local'){const old=getFriendship(root,agentId,user);if(old?.status==='rejected'&&Date.now()-Date.parse(old.responded_at??old.requested_at)<SOCIAL.FRIEND_REJECT_COOLDOWN_MS)throw new Error('FRIEND_REJECT_COOLDOWN');const now=new Date().toISOString();const x={id:old?.id??socialId('friend'),user_id:user,agent_id:agentId,status:'pending' as const,requested_at:now,responded_at:null};upsertFriendship(root,x);return x}
+export function decideFriendship(root:string,agentId:string,state:{trust:number;aff:number;se:number},user='local'){const old=requestFriendship(root,agentId,user);const accepted=shouldAcceptFriendship(state.trust,state.aff,state.se);const x={...old,status:accepted?'accepted' as const:'rejected' as const,responded_at:new Date().toISOString()};upsertFriendship(root,x);return x}

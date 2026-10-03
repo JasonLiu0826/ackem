@@ -285,7 +285,11 @@ export const enResources: Record<string, string> = {
   'settings.mobile.weixin.guideHint': 'Follow in order.',
   'settings.mobile.weixin.step1': 'Configure LLM in Settings → Model & API and confirm age gate.',
   'settings.mobile.weixin.step2': 'Wait until embedding warmup finishes (no amber banner on chat).',
-  'settings.mobile.weixin.step3': 'Tap “Connect WeChat” and scan the QR with WeChat.',
+  'settings.mobile.weixin.step3': 'Pick a role first, then tap “Connect WeChat” and scan the QR.',
+  'settings.mobile.weixin.boundAgentLabel': 'Chat role',
+  'settings.mobile.weixin.boundAgentHint': 'WeChat messages go to the selected role’s memory and chat; rebind anytime without rescanning.',
+  'settings.mobile.weixin.pickAgent': 'Choose role',
+  'settings.mobile.weixin.scanHintFor': 'Scan with WeChat to chat as “{name}”',
   'settings.mobile.weixin.step4': 'If phone asks for a code, enter it here.',
   'settings.mobile.weixin.step5': 'Turn on “Enable WeChat channel” and send a text from phone.',
   'settings.mobile.weixin.step6': 'Keep Ackem running (minimize to tray; do not quit).',
@@ -345,7 +349,7 @@ export const enResources: Record<string, string> = {
   'settings.male': 'Male',
   'settings.switchedPersonality': 'Switched personality: {label}',
   'settings.modelAndApi': 'Model & API',
-  'settings.modelAndApiDesc': 'LLM and API settings for everyday chat.',
+  'settings.modelAndApiDesc': 'Which model chat uses, and which model the built-in coder uses.',
   'settings.desktopAgent': 'Not yet available · Desktop agent',
   'settings.desktopAgentDesc':
     'In development — settings are visible only; desktop actions stay disabled until release.',
@@ -357,7 +361,13 @@ export const enResources: Record<string, string> = {
   'settings.voice': 'Voice',
   'settings.voiceDesc': 'ASR and TTS settings.',
   'settings.chatModel': 'Chat Model',
-  'settings.chatModelHint': 'Used for daily conversation and memory extraction.',
+  'settings.chatModelHint': 'Used for daily conversation and memory extraction. Coding uses this too, unless you set it separately.',
+  'settings.ackemcodeModel': 'Coding (AckemCode)',
+  'settings.ackemcodeModelHint': 'The model used when editing code and running tasks.',
+  'settings.ackemcodeIndependent': 'Configure AckemCode separately',
+  'settings.ackemcodeIndependentHint': 'When on, coding can use a different URL, key, and model.',
+  'settings.ackemcodeSharedHint': 'Coding currently shares the chat model above.',
+  'settings.ackemcodeAnthropicHint': 'Coding calls an OpenAI-compatible API. If chat uses Anthropic, turn on a separate config.',
   'settings.protocolNote': 'Protocol Notes (OpenAI Compatible / Anthropic)',
   'settings.protocolDesc': 'OpenAI compatible works with Ollama, LM Studio, vLLM; Anthropic uses Messages API. If Base URL already contains /chat/completions or /messages, it won\'t be auto-appended.',
   'settings.llmProvider': 'LLM Provider',
@@ -432,44 +442,24 @@ export const enResources: Record<string, string> = {
   'settings.noContradiction': 'No contradictions detected',
   'settings.dangerousOps': 'Dangerous Operations',
   'settings.archiveHint': 'Archiving clears memory, chat history and engine state; keeps API and personality settings. Irreversible.',
+  'settings.clearOwnerHint': 'Clears one social member’s memory and chat only; Ackem primary is unaffected. Role card and personality are kept.',
   'settings.processing': 'Processing...',
   'settings.archiveAction': 'Archive (Clear Memory & Chat)',
+  'settings.clearOwnerAction': 'Clear Selected Role Memory',
+  'settings.clearOwnerTitle': 'Clear which role’s memory?',
+  'settings.clearOwnerDesc': 'Clears that role’s facts, archive, and chat history. Irreversible.',
+  'settings.clearOwnerEmpty': 'No social members yet. Add a role on the Social page first.',
+  'settings.clearOwnerConfirm': 'Clear this role',
+  'settings.clearOwnerCancel': 'Cancel',
+  'settings.clearOwnerDone': 'Cleared memory for “{name}”',
+  'settings.clearOwnerFailed': 'Clear failed',
+  'settings.clearOwnerNeedSelect': 'Select a role to clear first',
   'settings.safety': 'Safety & Compliance',
   'settings.safetyDesc': 'Age confirmation and adult content mode.',
   'settings.ossNotice': 'Open Source Notice',
   'settings.ossNoticeDesc': 'Ackem open-source license and user notice.',
   'settings.ossNoticeBodyTitle': 'Notice',
-  'settings.ossNoticePlaceholder': `Ackem v1.0.0 · 2026-06-28
-
-[Open-source license]
-Released under GNU Affero GPL v3 (AGPL-3.0). Copyright © 2026 Jason Liu (JasonLiu0826).
-Derivatives must use the same license; network/SaaS use requires offering complete source code.
-Full license: https://github.com/JasonLiu0826/Ackem/blob/main/LICENSE
-
-[Permitted use]
-· Personal learning and non-commercial use
-· Forking when derivatives remain AGPL-3.0
-· Academic use with attribution
-
-[Commercial license]
-Closed-source products, SaaS without source, or private enterprise deployment requires a separate license.
-Contact: jasonliu_lyf_2005@qq.com
-
-[Third-party components]
-Built on Electron, Chromium, Node.js, and npm libraries; may bundle embedding models and voice runtimes.
-See NOTICE.md and LICENSE.electron.txt in the release folder.
-
-[Contributors]
-Opening a pull request means you agree to CLA v1.1.
-https://github.com/JasonLiu0826/Ackem/blob/main/CLA.md
-
-[Privacy and data]
-Chats, memory, and imports stay on your device; conversation content is not uploaded by default.
-Portable: .\\data\\  ·  User dir: %LOCALAPPDATA%\\Ackem\\
-Back up the entire data folder (including ackem.db).
-
-[Official releases do not include]
-User data/, API keys, .env, or developer secrets; configure credentials in Settings after install.`,
+  'settings.ossNoticePlaceholder': 'Content coming soon. Open-source license and user notice will appear here.',
   'settings.compliance': 'Compliance Statement',
   'settings.ageConfirmed': 'Age confirmation saved',
   'settings.ageCancelled': 'Age confirmation cancelled',
@@ -514,37 +504,7 @@ User data/, API keys, .env, or developer secrets; configure credentials in Setti
   'settings.debugPanelHint': 'View engine trace and runtime logs',
   'settings.about': 'About Ackem',
   'settings.version': 'Version',
-  'settings.versionValue': '1.0.0 (Open Source Local)',
-  'settings.versionSuffix': ' (Open Source Local)',
-  'settings.update': 'Updates',
-  'settings.updateDesc': 'Download the full portable build from GitHub or Gitee Releases. Your data/ memories and settings are preserved.',
-  'settings.updateCurrent': 'Current version',
-  'settings.updateCurrentHint': 'Packaged builds can check GitHub / Gitee for the latest Release.',
-  'settings.updateRemote': 'Remote versions',
-  'settings.updateLastCheck': 'Last check',
-  'settings.updateAvailable': 'Update available',
-  'settings.updateUpToDate': 'Up to date',
-  'settings.updateChannel': 'Download channel',
-  'settings.updateChannelAuto': 'Auto',
-  'settings.updateChannelGithub': 'GitHub',
-  'settings.updateChannelGitee': 'Gitee',
-  'settings.updateChannelError': 'Unavailable: {error}',
-  'settings.updateSelectedLine': 'Will use {channel} · v{version}',
-  'settings.updateReleaseNotes': 'Release notes',
-  'settings.updateCheck': 'Check for updates',
-  'settings.updateChecking': 'Checking…',
-  'settings.updateNow': 'Update now',
-  'settings.updateStarting': 'Starting updater…',
-  'settings.updateDevOnly': 'In-app updates require the packaged green build (not npm run dev).',
-  'settings.updateConfirmTitle': 'Confirm update',
-  'settings.updateConfirmBody': 'Ackem will quit and open the update terminal. The full package will be downloaded and program files replaced; memories and API settings are not deleted.',
-  'settings.updateConfirmYes': 'Continue',
-  'settings.updateConfirmNo': 'Cancel',
-  'settings.updateErrorNotPackaged': 'In-app updates are only available in the packaged green build.',
-  'settings.updateErrorNotWritable': 'Install folder is not writable.',
-  'settings.updateErrorInZip': 'Extract the zip fully before running; do not run inside the archive.',
-  'settings.updateErrorNoRelease': 'No downloadable Release asset found.',
-  'settings.updateErrorGeneric': 'Could not start update. Try again or download manually.',
+  'settings.versionValue': '0.1.0 (Open Source Local)',
   'settings.data': 'Data',
   'settings.dataDesc': 'Conversations and memories saved only on local machine',
   'settings.telemetry': 'Telemetry',
@@ -553,7 +513,7 @@ User data/, API keys, .env, or developer secrets; configure credentials in Setti
   'settings.canonCreator': 'Creator',
   'settings.canonCreatorValue': 'Jason (GitHub JasonLiu0826, globally unique)',
   'settings.creatorMemoryTitle': 'Creator memory (Canon-M)',
-  'settings.creatorMemoryHint': 'Ackem’s neutral Canon seed memories about creator Jason. Read-only; injected in chat by context rotation, never written to user Tier B.',
+  'settings.creatorMemoryHint': 'Ackem’s non-decaying memories of creator Jason. Read-only; injected in chat by context rotation, never written to user Tier B.',
   'settings.creatorMemoryReadOnly': 'Read-only',
   'settings.creatorMemoryEmpty': 'creator-memory.json not seeded yet',
   'settings.creatorMemoryCategory.identity': 'Identity',
@@ -587,6 +547,8 @@ User data/, API keys, .env, or developer secrets; configure credentials in Setti
 
   // ═══ Main nav (FIX-035) ═══
   'nav.chat': 'Chat',
+  'nav.code': 'Code',
+  'nav.social': 'Social',
   'nav.memory': 'Memory',
   'nav.diary': 'Diary',
   'nav.gamemode': 'Games',

@@ -137,22 +137,6 @@ export function useChatSend() {
         )
         useAppStore.getState().setDispatchTriggerStatus(built.dispatchTriggered ?? null)
 
-        if (built.planCreatePending) {
-          const nextCore = rowsWithPlaceholder.slice(0, -1) as ChatRow[]
-          setRows([
-            ...nextCore,
-            {
-              kind: 'planCreateAsk',
-              askMessage: built.planCreatePending.askMessage,
-              planTopic: built.planCreatePending.planTopic,
-              emotionLabel: built.planCreatePending.emotionLabel ?? '',
-              status: 'pending',
-            },
-          ])
-          streamingIdx.current = null
-          return
-        }
-
         if (built.skipLlm && built.redlineReply) {
           patchAssistant(built.redlineReply ?? '')
           streamingIdx.current = null

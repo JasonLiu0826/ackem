@@ -117,6 +117,8 @@ export function buildChatContextRequest(params: {
   turnIndex: number
   systemHint?: string
   desktopAgentChatMode?: boolean
+  targetAgentId?: string
+  interactionSurface?: string
 }) {
   return {
     userText: params.clean || params.userLine,
@@ -125,7 +127,9 @@ export function buildChatContextRequest(params: {
     sessionId: params.sessionId,
     turnIndex: params.turnIndex,
     ...(params.systemHint ? { systemHint: params.systemHint } : {}),
-    ...(params.desktopAgentChatMode ? { desktopAgentChatMode: true } : {})
+    ...(params.desktopAgentChatMode ? { desktopAgentChatMode: true } : {}),
+    ...(params.targetAgentId ? { targetAgentId: params.targetAgentId } : {}),
+    ...(params.interactionSurface ? { interactionSurface: params.interactionSurface } : {})
   }
 }
 

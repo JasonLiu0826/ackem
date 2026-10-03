@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { hasChatHistoryRow, loadChatHistoryFromDb } from '../../../../db/repos/chatHistory.js'
 
 type StoredChatRow = {
   kind?: string
@@ -47,15 +48,19 @@ export function loadDiaryChatExchanges(
   const maxPairs = options?.maxPairs ?? DEFAULT_MAX_PAIRS
   const maxChars = options?.maxCharsPerMsg ?? DEFAULT_MAX_CHARS
 
-  const file = join(dataRoot, 'companion', `chat-history-${sessionId || 'default'}.json`)
-  if (!existsSync(file)) return []
-
+  const sid = sessionId || 'default'
   let rows: StoredChatRow[]
-  try {
-    rows = JSON.parse(readFileSync(file, 'utf-8')) as StoredChatRow[]
-    if (!Array.isArray(rows)) return []
-  } catch {
-    return []
+  if (hasChatHistoryRow(dataRoot, sid)) {
+    rows = loadChatHistoryFromDb(dataRoot, sid) as StoredChatRow[]
+  } else {
+    const file = join(dataRoot, 'companion', `chat-history-${sid}.json`)
+    if (!existsSync(file)) return []
+    try {
+      rows = JSON.parse(readFileSync(file, 'utf-8')) as StoredChatRow[]
+      if (!Array.isArray(rows)) return []
+    } catch {
+      return []
+    }
   }
 
   const messages = rows

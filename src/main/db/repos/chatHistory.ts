@@ -1,5 +1,14 @@
 import { getDatabase } from '../database'
 
+export function hasChatHistoryRow(dataRoot: string, sessionId: string): boolean {
+  const db = getDatabase(dataRoot)
+  if (!db) return false
+  const row = db.prepare(`SELECT 1 AS ok FROM chat_history WHERE session_id = ? LIMIT 1`).get(sessionId) as
+    | { ok: number }
+    | undefined
+  return row?.ok === 1
+}
+
 export function loadChatHistoryFromDb(dataRoot: string, sessionId: string): unknown[] {
   const db = getDatabase(dataRoot)
   if (!db) return []

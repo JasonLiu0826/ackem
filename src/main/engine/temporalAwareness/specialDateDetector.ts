@@ -4,7 +4,7 @@
 // 设计文档：docs/plan/时间敏感主动记忆系统设计_6_11.md §3.1
 
 import type { HolidayInfo } from './holidayDetector'
-import { detectHoliday } from './holidayDetector'
+import { detectHolidayForLocalDate } from './holidayDetector'
 import { computeTimeDepth, type TimeDepthResult, isAnniversaryWindowActive } from './timeDepthCalculator'
 import { t } from '../../i18n'
 
@@ -32,20 +32,21 @@ export interface AnchorEntry {
 }
 
 export function detectSpecialDates(args: {
-  today: Date
+  /** 用户 IANA 时区下的今日 civil 日期 YYYY-MM-DD */
+  localDate: string
   firstMetDate: string | null
   ackemBirthday?: string | null
   birthdays: BirthdayEntry[]
   temporalAnchors: AnchorEntry[]
 }): SpecialDate[] {
-  const todayMMDD = `${String(args.today.getMonth() + 1).padStart(2, '0')}-${String(args.today.getDate()).padStart(2, '0')}`
+  const todayMMDD = args.localDate.slice(5, 10)
   const results: SpecialDate[] = []
 
   // ═══ 源0: Ackem 自己的生日 ═══
   if (args.ackemBirthday) {
     const ackemMMDD = args.ackemBirthday.slice(5, 10)
     if (ackemMMDD === todayMMDD) {
-      const timeDepth = computeTimeDepth(args.ackemBirthday, args.today)
+      const timeDepth = computeTimeDepth(args.ackemBirthday, args.localDate)
       const yearsSince = timeDepth?.yearsSince ?? 0
       results.push({
         type: 'ackem_birthday',
@@ -57,8 +58,8 @@ export function detectSpecialDates(args: {
   }
 
   // ═══ 源1: 相识周年（computeTimeDepth ±15 天窗口，与 moodBias 快速路径一致） ═══
-  if (isAnniversaryWindowActive(args.firstMetDate, args.today)) {
-    const timeDepth = computeTimeDepth(args.firstMetDate, args.today)!
+  if (isAnniversaryWindowActive(args.firstMetDate, args.localDate)) {
+    const timeDepth = computeTimeDepth(args.firstMetDate, args.localDate)!
     const anniversaryYears = Math.max(timeDepth.yearsSince, Math.round(timeDepth.daysSince / 365.2425))
     if (anniversaryYears >= 1) {
       results.push({
@@ -111,7 +112,7 @@ export function detectSpecialDates(args: {
   }
 
   // ═══ 源4: 节假日 ═══
-  const holiday = detectHoliday(args.today)
+  const holiday = detectHolidayForLocalDate(args.localDate)
   if (holiday) {
     results.push({
       type: 'holiday',

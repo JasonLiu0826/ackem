@@ -4,7 +4,8 @@
 // 引用：../engine/types, ./factStore, ./contradictionDetector
 
 import { SELF_EDIT_LOG_KEEP, SELF_EDIT_LOG_MAX, SELF_EDIT_REINFORCE_WEIGHT_BOOST } from '../engine/ackemParams'
-import type { ContradictionCheck, LlmClient, MemoryFact } from '../engine/types'
+import type { ContradictionCheck, LlmClient } from '../engine/types'
+import type { MemoryFact } from './semantic/types.js'
 import type { FactStore } from './factStore'
 import { ContradictionDetector } from './contradictionDetector'
 

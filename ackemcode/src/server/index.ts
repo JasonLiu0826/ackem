@@ -4,10 +4,12 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { nanoid } from 'nanoid'
 import type {
+  AckemTask,
   AgentEvent,
   AgentTier,
   ChatMessage,
   EffortLevel,
+  HostTurnReceipt,
   PermissionDecisionKind,
   PermissionMode
 } from '../shared/types.js'
@@ -85,8 +87,18 @@ import {
   isValidSessionId,
   listSessions,
   loadSession,
-  saveSession
+  saveSession,
+  type PersistedSession
 } from './sessionStore.js'
+import {
+  applyHostTurnSignal,
+  beginHostTurn,
+  commitDurableReceipt,
+  HOST_RUN_DUPLICATE,
+  isSameHostRun,
+  HOST_TURN_RECEIPT_NOT_PERSISTED,
+  publishHostEvent
+} from './hostTurnReceipt.js'
 import { mergeCollapseCommits } from './agent/compact/contextCollapseCommits.js'
 import { mcpManager, mcpElicitationBroker } from './mcp/index.js'
 import {
@@ -218,9 +230,26 @@ type Session = {
   abort?: AbortController
   /** Live SSE writer while a chat stream is open (abort_ack / mode_changed). */
   sseEmit?: (event: AgentEvent) => void
+  /** Host task envelope from Ackem (work / factory). */
+  ackemTask?: AckemTask
+  /** Latest host turn receipt. Undefined until a chat supplies hostRunId. */
+  hostTurnReceipt?: HostTurnReceipt
 }
 
 const sessions = new Map<string, Session>()
+
+function parseAckemTask(raw: unknown): AckemTask | undefined {
+  if (!raw || typeof raw !== 'object') return undefined
+  const o = raw as Record<string, unknown>
+  if (o.kind !== 'work.job' && o.kind !== 'openforu.create' && o.kind !== 'openforu.update') {
+    return undefined
+  }
+  return {
+    kind: o.kind,
+    summary: typeof o.summary === 'string' ? o.summary.slice(0, 200) : '',
+    tag: typeof o.tag === 'string' && o.tag.trim() ? o.tag.trim() : null
+  }
+}
 
 function planBridgeFor(
   session: Session,
@@ -592,6 +621,7 @@ async function pumpIdleSessionQueue(session: Session): Promise<void> {
         getCron: () => session.cron,
         personaSlot: session.personaSlot,
         sessionId: session.id,
+        ackemTask: session.ackemTask,
         fileHistory: session.fileHistory,
         messageQueue: session.messageQueue,
         agentRegistry: session.agentRegistry,
@@ -681,27 +711,74 @@ function newSessionSkeleton(id: string): Session {
   return session
 }
 
+const persistTail = new Map<string, Promise<void>>()
+
+function captureSession(session: Session): PersistedSession {
+  return {
+    version: 2,
+    id: session.id,
+    updatedAt: new Date().toISOString(),
+    mode: session.mode,
+    todos: session.todos,
+    history: session.history,
+    sessionAllows: session.permissions.exportSessionMemory(),
+    snipRecords: session.snipRecords.length ? session.snipRecords : undefined,
+    collapseCommits: session.collapseCommits.length ? session.collapseCommits : undefined,
+    ...(session.hostTurnReceipt ? { hostTurnReceipt: { ...session.hostTurnReceipt } } : {})
+  }
+}
+
 async function persist(session: Session): Promise<void> {
+  const payload = captureSession(session)
+  const prev = persistTail.get(session.id) ?? Promise.resolve()
+  const job = prev.catch(() => undefined).then(async () => {
+    try {
+      await Promise.all([session.agentRegistry.flush(), session.taskStore.flush()])
+      await saveSession(payload)
+    } catch (e) {
+      console.error('session persist failed', session.id, e)
+    }
+  })
+  persistTail.set(session.id, job)
+  return job
+}
+
+/** Receipt writes must surface disk errors. A swallowed failure is not a trusted receipt. */
+async function persistHostTurn(session: Session): Promise<void> {
+  const payload = captureSession(session)
+  const prev = persistTail.get(session.id) ?? Promise.resolve()
+  const job = prev.catch(() => undefined).then(async () => {
+    await Promise.all([session.agentRegistry.flush(), session.taskStore.flush()])
+    await saveSession(payload)
+  })
+  persistTail.set(session.id, job)
+  return job
+}
+
+const receiptTail = new Map<string, Promise<void>>()
+
+function withReceiptLock<T>(sessionId: string, fn: () => Promise<T>): Promise<T> {
+  const prev = receiptTail.get(sessionId) ?? Promise.resolve()
+  const run = prev.catch(() => undefined).then(fn)
+  receiptTail.set(
+    sessionId,
+    run.then(
+      () => undefined,
+      () => undefined
+    )
+  )
+  return run
+}
+
+async function writeHostReceipt(session: Session, receipt: HostTurnReceipt): Promise<void> {
+  const prior = session.hostTurnReceipt
+  session.hostTurnReceipt = receipt
   try {
-    await Promise.all([
-      session.agentRegistry.flush(),
-      session.taskStore.flush()
-    ])
-    await saveSession({
-      version: 1,
-      id: session.id,
-      updatedAt: new Date().toISOString(),
-      mode: session.mode,
-      todos: session.todos,
-      history: session.history,
-      sessionAllows: session.permissions.exportSessionMemory(),
-      snipRecords: session.snipRecords.length ? session.snipRecords : undefined,
-      collapseCommits: session.collapseCommits.length
-        ? session.collapseCommits
-        : undefined
-    })
+    await persistHostTurn(session)
   } catch (e) {
-    console.error('session persist failed', session.id, e)
+    session.hostTurnReceipt = prior
+    console.error('host turn receipt persist failed', session.id, e)
+    throw e
   }
 }
 
@@ -744,7 +821,8 @@ async function hydrateFromDisk(id: string): Promise<Session | null> {
     ...newPlanSessionFields(),
     turnRunning: false,
     snipRecords: [...snipRecords],
-    collapseCommits: [...collapseCommits]
+    collapseCommits: [...collapseCommits],
+    hostTurnReceipt: disk.hostTurnReceipt
   }
   // R9: restore durable cron jobs across process / session resume
   await session.cron.hydrateDurable().catch(() => 0)
@@ -798,7 +876,33 @@ async function getOrCreateSession(id?: string): Promise<Session> {
   return session
 }
 
-const app = express()
+/** Puts a session in the mid-turn state so /chat can be tested without an LLM. */
+export async function seedRunningChatForTests(input: {
+  sessionId: string
+  hostRunId: string
+}): Promise<{ queueLength: () => number; wasAborted: () => boolean }> {
+  const session = await getOrCreateSession(input.sessionId)
+  let aborted = false
+  session.turnRunning = true
+  session.hostTurnReceipt = {
+    hostRunId: input.hostRunId,
+    state: 'running',
+    revision: 1,
+    startedAt: '2026-09-28T01:00:00.000Z',
+    updatedAt: '2026-09-28T01:00:00.000Z'
+  }
+  const controller = new AbortController()
+  controller.signal.addEventListener('abort', () => {
+    aborted = true
+  })
+  session.abort = controller
+  return {
+    queueLength: () => session.messageQueue.length,
+    wasAborted: () => aborted
+  }
+}
+
+export const app = express()
 app.use(cors())
 app.use(express.json({ limit: '4mb' }))
 
@@ -1386,6 +1490,7 @@ app.post('/api/session', async (req, res) => {
     sessionId?: string
     cwd?: string
     permissionMode?: PermissionMode
+    ackemTask?: unknown
   }
   const want = typeof body.sessionId === 'string' ? body.sessionId.trim() : ''
   const session = await getOrCreateSession(want || undefined)
@@ -1404,6 +1509,11 @@ app.post('/api/session', async (req, res) => {
   ) {
     session.mode = body.permissionMode
   }
+  const ackemTask = parseAckemTask(body.ackemTask)
+  if (ackemTask) {
+    session.ackemTask = ackemTask
+    console.log('[ackemTask]', session.id, ackemTask.kind, ackemTask.summary)
+  }
   const restored = Boolean(want && session.id === want && session.history.length > 0)
   res.json({
     sessionId: session.id,
@@ -1411,7 +1521,8 @@ app.post('/api/session', async (req, res) => {
     mode: session.mode,
     todos: session.todos,
     historyLength: session.history.length,
-    cwd: session.runtimeCwd || null
+    cwd: session.runtimeCwd || null,
+    ackemTask: session.ackemTask ?? null
   })
 })
 
@@ -1426,6 +1537,7 @@ app.get('/api/session/:id', async (req, res) => {
     sessionId: session.id,
     mode: session.mode,
     todos: session.todos,
+    ackemTask: session.ackemTask ?? null,
     tasks: session.taskStore.listForTool(),
     history: session.history,
     personaSlot: session.personaSlot,
@@ -1443,7 +1555,8 @@ app.get('/api/session/:id', async (req, res) => {
     })),
     cronNextFireAt: session.cron.getNextFireTime(),
     cronSchedulerRunning: session.cronScheduler.isRunning(),
-    runtimeCwd: session.runtimeCwd || null
+    runtimeCwd: session.runtimeCwd || null,
+    hostTurnReceipt: session.hostTurnReceipt ?? null
   })
 })
 
@@ -1698,6 +1811,18 @@ app.post('/api/session/:id/permission', async (req, res) => {
       typeof toolName === 'string' ? toolName : '*'
     )
   }
+  if (ok && session.hostTurnReceipt?.state === 'requires_action') {
+    await withReceiptLock(session.id, async () => {
+      const next = applyHostTurnSignal(session.hostTurnReceipt, {
+        kind: 'resume',
+        at: new Date().toISOString()
+      })
+      const committed = await commitDurableReceipt(session.hostTurnReceipt, next, (receipt) =>
+        writeHostReceipt(session, receipt)
+      )
+      session.hostTurnReceipt = committed.receipt
+    })
+  }
   res.json({ ok, persistedRule, persistError })
 })
 
@@ -1918,6 +2043,18 @@ app.post('/api/session/:id/abort', async (req, res) => {
     rewound,
     filesChanged
   }
+  if (session.hostTurnReceipt) {
+    await withReceiptLock(session.id, async () => {
+      const next = applyHostTurnSignal(session.hostTurnReceipt, {
+        kind: 'aborted',
+        at: new Date().toISOString()
+      })
+      const committed = await commitDurableReceipt(session.hostTurnReceipt, next, (receipt) =>
+        writeHostReceipt(session, receipt)
+      )
+      session.hostTurnReceipt = committed.receipt
+    })
+  }
   session.sseEmit?.(ack)
   session.abort?.abort()
   res.json({ ok: true, abort_ack: ack })
@@ -2103,8 +2240,10 @@ const handleSessionChat = async (req: express.Request, res: express.Response) =>
   ).retryRewound
   const body = req.body as {
     text?: string
+    hostRunId?: string
     priority?: QueuePriority
     mode?: QueueMode
+    follow?: boolean
     attachments?: Array<{
       path: string
       kind: 'file' | 'dir' | 'image'
@@ -2117,14 +2256,28 @@ const handleSessionChat = async (req: express.Request, res: express.Response) =>
   }
 
   const trimmed = body.text.trim()
+  const hostRunId = typeof body.hostRunId === 'string' ? body.hostRunId.trim().slice(0, 200) : ''
   const priority: QueuePriority =
     body.priority === 'now' || body.priority === 'later' ? body.priority : 'next'
   const mode = body.mode
+  const followUp = body.follow === true
+
+  // Same hostRunId must not queue or interrupt the turn already using that receipt.
+  // A workbench follow is a continuation of that run: enqueue it, do not start again.
+  if (session.turnRunning && !retryRewound && isSameHostRun(session.hostTurnReceipt, hostRunId) && !followUp) {
+    res.status(409).json({
+      ok: false,
+      error: HOST_RUN_DUPLICATE,
+      queued: false,
+      interrupted: false
+    })
+    return
+  }
 
   // S07: mid-turn enqueue (CC message queue). priority=now → interrupt.
   if (session.turnRunning && !retryRewound) {
     try {
-      const item = session.messageQueue.enqueue(trimmed, { priority, mode })
+      const item = session.messageQueue.enqueue(trimmed, { priority: followUp ? 'next' : priority, mode })
       let interrupted = false
       if (item.priority === 'now' && session.abort) {
         session.abort.abort('interrupt')
@@ -2179,8 +2332,25 @@ const handleSessionChat = async (req: express.Request, res: express.Response) =>
   res.setHeader('Connection', 'keep-alive')
   res.flushHeaders?.()
 
+  let clientClosed = false
+  let emitTail = Promise.resolve()
   const send = (event: AgentEvent) => {
-    res.write(`data: ${JSON.stringify(event)}\n\n`)
+    emitTail = emitTail.then(() =>
+      withReceiptLock(session.id, async () => {
+        const published = await publishHostEvent(
+          session.hostTurnReceipt,
+          event,
+          new Date().toISOString(),
+          (receipt) => writeHostReceipt(session, receipt)
+        )
+        session.hostTurnReceipt = published.receipt
+        if (!clientClosed) res.write(`data: ${JSON.stringify(published.event)}\n\n`)
+        if (published.disconnect) {
+          clientClosed = true
+          session.abort?.abort()
+        }
+      })
+    )
   }
   session.sseEmit = send
   if (retryRewound) {
@@ -2207,7 +2377,6 @@ const handleSessionChat = async (req: express.Request, res: express.Response) =>
       session.id
     )
   }
-  let clientClosed = false
 
   req.on('close', () => {
     clientClosed = true
@@ -2233,6 +2402,23 @@ const handleSessionChat = async (req: express.Request, res: express.Response) =>
   }
 
   try {
+    if (hostRunId) {
+      const begun = await withReceiptLock(session.id, () =>
+        beginHostTurn(session.hostTurnReceipt, hostRunId, new Date().toISOString(), (receipt) =>
+          writeHostReceipt(session, receipt)
+        )
+      )
+      session.hostTurnReceipt = begun.receipt
+      if (!begun.proceed) {
+        if (begun.reason !== 'duplicate') session.abort?.abort()
+        send({
+          type: 'error',
+          message: begun.reason === 'duplicate' ? HOST_RUN_DUPLICATE : HOST_TURN_RECEIPT_NOT_PERSISTED
+        })
+        await emitTail
+        return
+      }
+    }
     if (session.mode === 'default') {
       session.mode = settings.permissionMode
     }
@@ -2338,6 +2524,7 @@ const handleSessionChat = async (req: express.Request, res: express.Response) =>
         getCron: () => session.cron,
         personaSlot: session.personaSlot,
         sessionId: session.id,
+        ackemTask: session.ackemTask,
         fileHistory: session.fileHistory,
         messageQueue: session.messageQueue,
         agentRegistry: session.agentRegistry,
@@ -2402,6 +2589,7 @@ const handleSessionChat = async (req: express.Request, res: express.Response) =>
   } finally {
     session.turnRunning = false
     if (session.sseEmit === send) session.sseEmit = undefined
+    await emitTail
     res.end()
     // S07: await idle drain so turnRunning settles before clients poll (no setImmediate race).
     if (session.messageQueue.length) {
@@ -2588,7 +2776,7 @@ app.post('/api/skills/install', async (req, res) => {
 const clientDist = path.resolve(__dirname, '../../dist/client')
 app.use(express.static(clientDist))
 
-app.listen(PORT, () => {
+if (process.env.ACKEMCODE_NO_LISTEN !== '1') app.listen(PORT, () => {
   console.log(`AckemCode daemon http://127.0.0.1:${PORT}`)
   void loadSettings()
     .then(async (s) => {

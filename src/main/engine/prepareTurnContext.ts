@@ -4,12 +4,19 @@ import { getCachedTemporalEmbeddings } from '../embedding/preLlmWarmup'
 import { computeConversationEmbed } from '../embedding/scoring'
 import { detectTemporalSignal } from '../memory/temporalSignalExtractor'
 import { computeRelevanceHint } from '../memory/scheduler'
-import { getTimeContext } from '../extensions/plugins/builtin/desktop-companion/desktop-companion'
+import { deriveTimeOfDay } from '../memory/temporal/timeOfDay.js'
 import type { FullState } from './types'
 import type { FactStore } from '../memory/factStore'
 import type { MemoryRetriever, RetrievalResult } from '../memory/retriever'
 import type { TemporalSemanticSignal } from '../memory/temporalSignalExtractor'
 import type { IndexSnapshot } from '../indexer'
+import { loadSettings } from '../settings'
+import { getClock } from '../memory/temporal/clock.js'
+import { resolveUserTimezone } from '../memory/temporal/timezonePolicy.js'
+import { zonedDateParts, zonedLocalDate } from '../memory/temporal/zonedDate.js'
+import { composeRecall } from '../memory/recall/recallComposer.js'
+import { resolveRecallComposerMode, type RecallComposerMode } from '../memory/recall/recallConfig.js'
+import type { RecallBundle } from '../memory/contracts.js'
 
 export type PreparedTurnContext = {
   queryEmbed?: number[]
@@ -19,6 +26,10 @@ export type PreparedTurnContext = {
   retrieval: RetrievalResult
   embedMs: number
   retrieveMs: number
+  recallMs?: number
+  recallComposerMode?: RecallComposerMode
+  /** Populated in shadow mode: composer output without merging into tierBBlock. */
+  recallComposerShadow?: RecallBundle
 }
 
 export async function prepareTurnContext(args: {
@@ -51,19 +62,25 @@ export async function prepareTurnContext(args: {
   const retrievalBudget = Math.max(1500, memoryBudgetChars - WORKING_MEMORY_CHAR_BUDGET)
   const relevanceHint = computeRelevanceHint(state.relationship, state.emotion, turnIndex)
   const gapHours = (Date.now() - new Date(state.lastActive).getTime()) / 3600000
-  const nowDate = new Date()
+  const nowDate = getClock().now()
+  const tzResolved = resolveUserTimezone(loadSettings().timezone)
+  const timeZone = tzResolved.timezone
+  const zoned = zonedDateParts(nowDate, timeZone)
+  const localDate = zonedLocalDate(nowDate, timeZone)
   const temporalCtx = {
-    timeOfDay: getTimeContext().timeOfDay,
-    isWeekend: [0, 6].includes(nowDate.getDay()),
-    month: nowDate.getMonth() + 1,
+    timeOfDay: deriveTimeOfDay(zoned.hour),
+    isWeekend: zoned.weekday === 0 || zoned.weekday === 6,
+    month: zoned.month,
     season: (() => {
-      const m = nowDate.getMonth() + 1
+      const m = zoned.month
       return m === 12 || m <= 2 ? 'winter' : m <= 5 ? 'spring' : m <= 8 ? 'summer' : 'autumn'
     })(),
-    hour: nowDate.getHours(),
-    weekday: nowDate.getDay(),
+    hour: zoned.hour,
+    weekday: zoned.weekday,
     gapHours,
-    localDate: nowDate.toISOString().slice(0, 10),
+    localDate,
+    observedAt: nowDate.toISOString(),
+    timeZone,
   }
 
   let embeddingProvider = getCachedEmbeddingProvider(dataRoot)
@@ -103,7 +120,7 @@ export async function prepareTurnContext(args: {
   const embedMs = Date.now() - tEmbed
 
   const tRetrieve = Date.now()
-  const retrieval = await retriever.retrieve(
+  let retrieval = await retriever.retrieve(
     msg,
     relevanceHint,
     retrievalBudget,
@@ -118,6 +135,35 @@ export async function prepareTurnContext(args: {
   )
   const retrieveMs = Date.now() - tRetrieve
 
+  const recallComposerMode = resolveRecallComposerMode()
+  const recallBudget = Math.min(900, Math.max(400, Math.floor(retrievalBudget * 0.35)))
+  let recallMs = 0
+  let recallComposerShadow: RecallBundle | undefined
+
+  if (recallComposerMode !== 'off') {
+    const tRecall = Date.now()
+    const recallBundle = await composeRecall(dataRoot, {
+      sessionId,
+      text: msg,
+      observedAt: temporalCtx.observedAt,
+      timezone: temporalCtx.timeZone,
+      budgetChars: recallBudget,
+      deadlineMs: 50
+    })
+    recallMs = Date.now() - tRecall
+
+    if (recallComposerMode === 'shadow') {
+      recallComposerShadow = recallBundle
+    } else if (recallBundle.promptBlock.trim()) {
+      const merged =
+        `【Recall Composer】\n${recallBundle.promptBlock.trim()}\n\n${retrieval.tierBBlock}`.trim()
+      retrieval = {
+        ...retrieval,
+        tierBBlock: merged.slice(0, retrievalBudget + recallBudget)
+      }
+    }
+  }
+
   return {
     queryEmbed,
     conversationEmbed,
@@ -126,5 +172,8 @@ export async function prepareTurnContext(args: {
     retrieval,
     embedMs,
     retrieveMs,
+    recallMs,
+    recallComposerMode,
+    recallComposerShadow
   }
 }

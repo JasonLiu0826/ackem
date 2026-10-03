@@ -5,6 +5,7 @@ import { resolveDataRoot } from './paths'
 import { ExtensionsCoordinator } from './extensions/coordinator'
 import { setExtensionsCoordinator } from './extensions/runtime'
 import { startDispatchScheduler } from './extensions/dispatch/scheduler'
+import { startRouteReportScheduler } from './chat/routeReportScheduler'
 import { buildEngineSnapshot, buildMemoryMeta } from './extensions/snapshot'
 import { createGameModeHostBridge } from './extensions/gamemode/host-bridge'
 import { MinecraftProvider } from './extensions/gamemode/providers/minecraft/provider'
@@ -19,9 +20,11 @@ import { registerMemoryIpc } from './ipc/memory'
 import { registerSessionIpc } from './ipc/session'
 import { registerProfileIpc } from './ipc/profile'
 import { registerWeixinIpc } from './ipc/weixin'
+import { registerSocialIpc } from './ipc/social'
+import { registerSocialFeedIpc } from './ipc/socialFeed'
+import { registerCodePartIpc } from './ipc/codePart'
 import { registerDesktopAgentIpc } from './desktop-agent/ipc'
 import { registerSurfaceIpc } from './extensionSurfaceHost'
-import { registerUpdateIpc } from './ipc/update'
 import { ensureVoiceIpc } from './extensions/plugins/builtin/tool/tts-voice/bootstrap'
 import { initLocale } from './i18n'
 import {
@@ -71,6 +74,7 @@ export function registerIpc(): void {
       const snap = buildEngineSnapshot(state, settings)
       await extCoordinator.boot(snap)
       minecraftProvider.ensureWsServer(19532)
+      startRouteReportScheduler(root)
       startDispatchScheduler({
         coordinator: extCoordinator,
         getSnapshot: () => {
@@ -96,7 +100,10 @@ export function registerIpc(): void {
   registerProfileIpc()
   registerSessionIpc()
   registerWeixinIpc()
+  registerSocialIpc()
+  registerSocialFeedIpc()
   registerDesktopAgentIpc()
+  registerCodePartIpc()
 
   registerMcIpc(
     {
@@ -112,5 +119,4 @@ export function registerIpc(): void {
 
   registerDesktopCompanionIpc()
   registerSurfaceIpc()
-  registerUpdateIpc()
 }

@@ -1,4 +1,4 @@
-import type { EffortLevel, PermissionMode, AgentTier } from '../../shared/types.js'
+import type { AckemTask, EffortLevel, PermissionMode, AgentTier } from '../../shared/types.js'
 import { effortHint } from '../../shared/types.js'
 import type { LoadedSkill } from '../skills/loadSkills.js'
 import { formatSkillsListing } from '../skills/loadSkills.js'
@@ -44,6 +44,27 @@ export type BuildSystemPromptOpts = {
   hooks?: import('../hooks/types.js').HooksConfig
   disableAllHooks?: boolean
   sessionId?: string
+  /** Host (Ackem) task: 任务 / 造插件 — not companion chat. */
+  ackemTask?: AckemTask
+}
+
+function formatAckemTaskBlock(task?: AckemTask): string {
+  if (!task) return ''
+  const kindLabel =
+    task.kind === 'openforu.create'
+      ? '造一只以后还能喊的插件（openforu.create）'
+      : task.kind === 'openforu.update'
+        ? '改一只已有插件（openforu.update）'
+        : '一项本机任务（work.job）'
+  const tagLine = task.tag ? `\ntag: ${task.tag}` : ''
+  return `## Host task
+This session is an Ackem **task** (任务), not companion chat.
+kind: ${task.kind} — ${kindLabel}
+${task.summary || '(no summary)'}${tagLine}
+Stay in this working directory. Do not claim the plugin is installed into Ackem's pocket.
+Do not speak as the companion. Do not say 工人.
+
+`
 }
 
 function buildSubAgentPromptSection(
@@ -142,6 +163,7 @@ export async function buildSystemPrompt(
     }))
   const contextExtra = formatContextSections(ctx)
   const subAgentSection = buildSubAgentPromptSection(agentsOn, tier, exploreN)
+  const hostTaskBlock = formatAckemTaskBlock(opts.ackemTask)
 
   return `You are AckemCode, a local coding agent in a desktop panel.
 
@@ -152,7 +174,7 @@ ${capabilitiesBounds({ productName: 'AckemCode', homeDir: '~/.ackemcode' })}
 Working directory: ${opts.cwd}
 OS: ${process.platform}
 
-${effortHint(opts.effort)}
+${hostTaskBlock}${effortHint(opts.effort)}
 
 ## Available tools (be honest — only these)
 - read_file — always extract text from PDF / Word (.docx) / PowerPoint (.pptx) / Excel (.xlsx). For PDFs use pages="1-5" (max 20; default first 10). Scan pages OCR if Tesseract is available (text models). Vision models also get page JPEGs as OpenAI image_url (DeepSeek deepseek-flash accepts images). Anthropic hosts may get a native PDF. png/jpg/gif/webp attach as images for vision models only.

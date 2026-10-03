@@ -7,11 +7,12 @@ export const MANIFEST: PluginManifest = {
   "version": "0.0.1",
   "category": "plugin",
   "pluginType": "tool",
-  "description": "[P-16] 分发层面 manifest+沙箱；非运行时权限扩展",
+  "description": "社区扩展市场（当前版本未开放；贡献者请 PR 到 ackem/ 官方扩展）",
   "author": "JasonLiu0826",
   "license": "AGPL-3.0",
   "main": "stub.ts",
   "engineVersion": ">=0.1.0 <1.0.0",
+  "implementationStatus": "planned",
   "permissions": [
     "readonly"
   ],

@@ -2,7 +2,8 @@
 // 职责：LLM 判断两条相似事实是否语义冲突，并建议解决策略
 // 引用：../engine/types, ../prompt/memory-contradiction, ../llmClient
 
-import type { ContradictionCheck, LlmClient, MemoryFact } from '../engine/types'
+import type { ContradictionCheck, LlmClient } from '../engine/types'
+import type { MemoryFact } from './semantic/types.js'
 import { CONTRADICTION_SYSTEM, CONTRADICTION_TEMPERATURE, buildContradictionPrompt } from '../prompt/memory-contradiction'
 
 export class ContradictionDetector {

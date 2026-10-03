@@ -134,6 +134,36 @@ export class AssociationIndex {
     }
   }
 
+  /**
+   * Task 10: drop all associations touching these facts (update/retire/supersede).
+   * Memory index and SQLite stay consistent.
+   */
+  invalidateFacts(factIds: string[]): void {
+    const unique = [...new Set(factIds.filter(Boolean))]
+    if (unique.length === 0) return
+    const toRemove = new Set<string>()
+    for (const factId of unique) {
+      for (const assoc of [...(this.byFact.get(factId) ?? [])]) {
+        toRemove.add(assoc.id)
+      }
+    }
+    for (const id of toRemove) {
+      this.remove(id)
+    }
+    if (!this.dataRoot) return
+    const db = getDatabase(this.dataRoot)
+    if (!db) return
+    const del = db.prepare(
+      `DELETE FROM memory_associations WHERE fact_id_a = ? OR fact_id_b = ?`
+    )
+    const tx = db.transaction((ids: string[]) => {
+      for (const factId of ids) {
+        del.run(factId, factId)
+      }
+    })
+    tx(unique)
+  }
+
   /** 删除关联 */
   remove(assocId: string): void {
     const assoc = this.byId.get(assocId)

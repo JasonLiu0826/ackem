@@ -1,6 +1,8 @@
 import { BrowserWindow, ipcMain } from 'electron'
+import { join, dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
 import { loadWindowIcon } from './appIcon'
-import { resolvePreloadPath } from './outPaths'
 import { createLogger } from './logger'
 import {
   bindSurfaceWidgetWebContents,
@@ -9,6 +11,7 @@ import {
   unregisterSurfaceWidgetSession
 } from './extensions/openforu/surface/surfaceWidgetRuntime'
 
+const __dirname = dirname(fileURLToPath(import.meta.url))
 const log = createLogger('extensionSurface')
 
 const surfaceWindows = new Map<string, BrowserWindow>()
@@ -23,7 +26,7 @@ export type OpenExtensionSurfaceInput = {
 }
 
 function surfacePreloadPath(): string {
-  return resolvePreloadPath('surfacePreload.cjs')
+  return join(__dirname, '../preload/surfacePreload.cjs')
 }
 
 export function registerSurfaceIpc(): void {

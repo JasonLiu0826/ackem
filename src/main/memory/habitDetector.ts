@@ -2,7 +2,7 @@
 // 职责：检测用户的时间行为模式（如"总是在周六晚上感到孤独"）
 // 引用：./factStore, ../engine/types
 
-import type { MemoryFact } from '../engine/types'
+import type { MemoryFact } from './semantic/types.js'
 import type { FactStore } from './factStore'
 
 export interface TimeHabit {

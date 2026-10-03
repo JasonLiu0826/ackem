@@ -113,7 +113,7 @@ function buildSkillConfig(
 }
 
 /** 从已确认 Plan 会话生成 uskill 产物（OF-04 v1：确定性生成，不依赖 LLM） */
-export function generateUskillFromSession(session: PlanSession): AgentGenerationResult {
+export function generateUskillFromSession(session: PlanSession): Omit<AgentGenerationResult, 'manifest'> & { manifest: SkillManifest } {
   const log: string[] = []
   assertPlanConfirmed(session)
   const artifactKind = resolvePlanArtifactKind(session)
@@ -171,7 +171,8 @@ export function generateUskillFromSession(session: PlanSession): AgentGeneration
   }
 }
 
-export type GeneratedUskillBundle = AgentGenerationResult & {
+export type GeneratedUskillBundle = Omit<AgentGenerationResult, 'manifest'> & {
+  manifest: SkillManifest
   skillConfig: UskilConfig
   dirName: string
 }

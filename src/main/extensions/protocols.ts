@@ -243,19 +243,13 @@ export interface DispatchConfig {
   keywords: string[]
   /** 保底启动：`/番茄钟` 等，命中即 auto_invoke（不经过 LLM） */
   slash?: string[]
+  /** 调用式，仅唯一命中为高分。支持 {n} {duration} {query} */
+  invocation?: string[]
   personality_hint?: DispatchPersonalityHint
 }
 
-export type DispatchDecision =
-  | 'chat'
-  | 'plan'
-  | 'ask_plan'
-  | 'auto_invoke'
-  | 'ask_invoke'
-  | 'silent'
-  | 'evolve'
-  | 'open_surface'
-  | 'invoke_surface'
+/** 插件执行收据。选路只认 ChannelPlan；这里只记录本轮是否调过扩展。 */
+export type DispatchDecision = 'chat' | 'auto_invoke'
 
 export type SurfaceInvokeDispatchMeta = {
   mode: 'open' | 'open_and_inject'
@@ -285,7 +279,7 @@ export interface DispatchCatalogEntry {
   id: string
   name: string
   category: ExtensionEventCategory
-  status: 'planned' | 'installed' | 'active' | 'disabled' | 'error'
+  status: 'planned' | 'deprecated' | 'installed' | 'active' | 'disabled' | 'error'
   dispatch: DispatchConfig
   lastTriggeredAt?: number
   rejectedInSession?: boolean

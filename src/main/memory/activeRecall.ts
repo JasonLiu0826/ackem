@@ -6,7 +6,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { ACTIVE_RECALL_MIN_INTERVAL, ACTIVE_RECALL_PROBABILITY } from '../engine/ackemParams'
-import type { MemoryFact } from '../engine/types'
+import type { MemoryFact } from './semantic/types.js'
 import type { FactStore } from './factStore'
 import { cosineSimilarity } from './factEmbeddingCache'
 

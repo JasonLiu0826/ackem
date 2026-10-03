@@ -1,6 +1,6 @@
 // 注册规划中 Skill 占位 manifest（无 handler，status=planned）
 
-import type { SkillRegistry } from '../../registry'
+import type { SkillRegistry } from '../registry'
 import { normalizePlannedCatalogManifest } from '../../placeholderManifest'
 import { MANIFEST as petInteraction } from './system_event/pet-interaction/manifest'
 import { MANIFEST as sharedExperience } from './engine_event/shared-experience/manifest'

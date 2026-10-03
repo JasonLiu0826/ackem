@@ -1,5 +1,7 @@
 import type { MemoryAuditMode } from './memoryAuditIntent'
 
+export type { MemoryAuditMode } from './memoryAuditIntent'
+
 export type MemoryAuditFactRow = {
   id: string
   domain: string
@@ -62,4 +64,6 @@ export type MemoryAuditCardPayload = {
   copyText: string
   stats: MemoryAuditReport['stats']
   domainStats: MemoryAuditDomainStat[]
+  /** When set, MemoryAuditCard exposes governance permanent-delete control. */
+  governanceFactId?: string
 }

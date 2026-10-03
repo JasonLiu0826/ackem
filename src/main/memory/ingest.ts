@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto'
+
 // [ingest] — 记忆摄入管线
 // 职责：抽事实、写入 FactStore、自动退役
 // 引用：./factExtractor, ./factStore, ./memoryBinding, ../engine/types, ../llmClient
@@ -8,7 +10,7 @@ import { EpisodeExtractor } from './episodeExtractor'
 import { extractTriples } from './tripleExtractor'
 import { MemorySelfEditor } from './memorySelfEditor'
 import { exportMemoryArchive } from './archiveExporter'
-import { AUTO_RETIRE_CHECK_INTERVAL, CONTRADICTION_SIMILARITY_THRESHOLD, EPISODE_INTERVAL_TURNS, EPISODE_INTERVAL_TURNS_LOW, EPISODE_EMOTION_INTENSITY_THRESHOLD } from '../engine/ackemParams'
+import { AUTO_RETIRE_CHECK_INTERVAL, CONTRADICTION_SIMILARITY_THRESHOLD } from '../engine/ackemParams'
 import { getLastConsolidationTurn, setLastConsolidationTurn } from '../engine/state-persistence'
 import { traceLatest } from '../engine/tracer'
 import { countRawActiveFactsInStore, evaluateAutoConsolidation } from './autoConsolidationPolicy'
@@ -17,7 +19,8 @@ import { detectAnchorType, shouldWriteTemporalAnchor, writeTemporalAnchor } from
 import type { FactStore } from './factStore'
 import type { EpisodicStore } from './episodicStore'
 import type { KnowledgeGraph } from './knowledgeGraph'
-import type { L1State, EmotionState, LlmClient, MemoryFact } from '../engine/types'
+import type { L1State, EmotionState, LlmClient } from '../engine/types'
+import type { MemoryFact } from './semantic/types.js'
 import type { AssociationIndex } from './associationIndex'
 import { cosineSimilarity } from './factEmbeddingCache'
 import { seedAssociationsForNewFacts } from './associationColdStart'
@@ -26,6 +29,11 @@ import { vetCreatorContradictingFact } from '../canon/canonCreatorIngestGuard'
 import { filterExtractedUserFacts } from './userFactGuard'
 import { createLogger } from '../logger'
 import type { AdultMemoryPrivacyLevel } from '../prompt/adult-mode'
+import type { MemoryEvent } from './contracts.js'
+import { deriveEventBatch, type DeriveEventBatchInput } from './derivation/deriveEventBatch.js'
+import { shouldProposeEpisode, userMarkedEpisodeImportant } from './episodes/episodePolicy.js'
+import { buildEpisodeRecord } from './episodes/episodeBuilder.js'
+import { insertEpisodeWithEvidence } from './episodes/episodeRepository.js'
 
 const log = createLogger('ingest')
 
@@ -43,9 +51,13 @@ export type PrefetchedFact = {
 export type IngestTurnOptions = {
   skipLlmExtraction?: boolean
   prefetchedFacts?: PrefetchedFact[]
+  /** Persist the LLM decision before any derived fact is written. */
+  onFactsExtracted?: (facts: PrefetchedFact[]) => void | Promise<void>
   /** 同步阶段已写入轻量规则事实，异步 job 仅跑 LLM 抽取 */
   lightDraftsFromSync?: boolean
   adultPrivacyLevel?: AdultMemoryPrivacyLevel
+  episodeEvidenceEventIds?: string[]
+  terminalWorkSucceeded?: boolean
 }
 
 export class MemoryIngestPipeline {
@@ -101,6 +113,7 @@ export class MemoryIngestPipeline {
         l1,
         l2
       )
+      await options?.onFactsExtracted?.(ex.facts)
     }
 
     if (options?.lightDraftsFromSync) {
@@ -302,42 +315,58 @@ export class MemoryIngestPipeline {
       } catch { /* mirror audit is best-effort */ }
     }
 
-    // 情节记忆 — 自适应频率：取周期内最大情绪强度（非当前轮）
     episodeEmotionMax = Math.max(episodeEmotionMax, emo.intensity)
-    const episodeInterval = episodeEmotionMax > EPISODE_EMOTION_INTENSITY_THRESHOLD
-      ? EPISODE_INTERVAL_TURNS : EPISODE_INTERVAL_TURNS_LOW
-    if (
+    const evidenceIds = options?.episodeEvidenceEventIds ?? []
+    const proposeEpisode =
       episodicStore &&
       recentExchangesForEpisode &&
-      recentExchangesForEpisode.length >= 3 &&
-      totalTurnsForRetire > 0 &&
-      totalTurnsForRetire % episodeInterval === 0
-    ) {
+      shouldProposeEpisode({
+        exchangeCount: recentExchangesForEpisode.length,
+        emotionIntensity: episodeEmotionMax,
+        evidenceEventIds: evidenceIds,
+        userMarkedImportant: userMarkedEpisodeImportant(userMsg),
+        terminalWorkSucceeded: options?.terminalWorkSucceeded
+      })
+    if (proposeEpisode) {
       try {
         const result = await this.episodeExtractor.extract(
-          recentExchangesForEpisode,
-          { start: turnIndex - recentExchangesForEpisode.length + 1, end: turnIndex },
+          recentExchangesForEpisode!,
+          { start: turnIndex - recentExchangesForEpisode!.length + 1, end: turnIndex },
           llm
         )
         if (result) {
-          episodicStore.load()
-          const prev = episodicStore.latest()
-          episodicStore.add({
-            summary: result.summary,
-            emotionalIntensity: result.emotionalIntensity,
-            dominantEmotion: result.dominantEmotion,
-            keywords: result.keywords,
+          episodicStore!.load()
+          const prev = episodicStore!.latest()
+          const createdAt = new Date().toISOString()
+          const ep = buildEpisodeRecord(result, {
+            episodeId: randomUUID(),
             prevEpisodeId: prev?.id ?? null,
             sourceSessionId: sessionId,
-            startTurn: turnIndex - recentExchangesForEpisode.length + 1,
-            endTurn: turnIndex
+            startTurn: turnIndex - recentExchangesForEpisode!.length + 1,
+            endTurn: turnIndex,
+            createdAt
           })
+          insertEpisodeWithEvidence(dataRoot, ep, evidenceIds, createdAt)
+          episodicStore!.load()
         }
       } catch { /* episode generation is best-effort */ }
-      episodeEmotionMax = 0 // 重置周期最大情绪
+      episodeEmotionMax = 0
     }
   }
 }
 
 /** 情节周期内最大情绪强度（自适应频率用） */
 let episodeEmotionMax = 0
+
+/**
+ * Task 11 adapter: legacy chat/ingest context → nature-aware event batch input (plan B).
+ * Does not treat assistant text as trusted evidence by itself.
+ */
+export function legacyTurnToDeriveBatchInput(args: {
+  events: MemoryEvent[]
+  llmDrafts?: unknown
+}): DeriveEventBatchInput {
+  return { events: args.events, llmDrafts: args.llmDrafts }
+}
+
+export { deriveEventBatch }

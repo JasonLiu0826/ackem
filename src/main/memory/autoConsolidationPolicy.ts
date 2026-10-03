@@ -8,7 +8,8 @@ import {
   CONSOLIDATION_MIN_FACTS,
   CONSOLIDATION_MIN_TURNS,
 } from '../engine/ackemParams'
-import type { MemoryFact, TurnTrace } from '../engine/types'
+import type { TurnTrace } from '../engine/types'
+import type { MemoryFact } from './semantic/types.js'
 import type { FactStore } from './factStore'
 
 const MEANINGFUL_L0 = new Set(['vulnerable', 'praise', 'apology', 'hurtful'])

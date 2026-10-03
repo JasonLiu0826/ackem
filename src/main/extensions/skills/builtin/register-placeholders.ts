@@ -1,7 +1,7 @@
 // 内置 Skill 注册表
 // stub.ts 非运行时 — 见 extensions/STUB_FILES.md（FIX-033）
 
-import type { SkillRegistry } from '../../registry'
+import type { SkillRegistry } from '../registry'
 import { registerBuiltinWebSearch } from './tool/web-search/register'
 import { registerBuiltinPlanDocument } from './tool/plan-document/register'
 import { registerBuiltinMarkdownTable } from './tool/markdown-table/register'

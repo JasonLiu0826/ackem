@@ -8,6 +8,8 @@ import type { LlmClient } from '../engine/types'
 import type { FactStore } from './factStore'
 import { buildUserNameLine } from './userName'
 import { buildAgeLine } from './ageComputer'
+import { getDatabase } from '../db/database.js'
+import { isUserDossierPromptBlocked } from './governance/dossierHygiene.js'
 
 const DOSSIER_PATH = 'companion/user-dossier.md'
 
@@ -29,10 +31,23 @@ const DOSSIER_DOMAINS: Record<string, string[]> = {
 /** 动态层子类：情绪、项目、健康等短期状态 */
 const DYNAMIC_SUBS = new Set(['NOW', 'MOOD', 'PROJECTS', 'HEALTH'])
 
+function factIdsTombstoned(dataRoot: string): Set<string> {
+  const db = getDatabase(dataRoot)
+  if (!db) return new Set()
+  const rows = db
+    .prepare(`SELECT scope_id FROM memory_tombstones WHERE scope_type = 'fact'`)
+    .all() as Array<{ scope_id: string }>
+  return new Set(rows.map((r) => r.scope_id))
+}
+
 function getDossierFacts(factStore: FactStore, dynamicOnly: boolean): string[] {
   factStore.load()
+  const dataRoot = factStore.getDataRoot()
+  const tombstoned = factIdsTombstoned(dataRoot)
   const all = factStore
     .listActive()
+    .filter((f) => !tombstoned.has(f.id))
+    .filter((f) => f.status === 'active')
     .filter((f) => {
       const subs = DOSSIER_DOMAINS[f.domain]
       return subs ? subs.includes(f.subcategory) : false
@@ -208,6 +223,7 @@ export async function updateDynamicLayer(
 
 /** 获取档案内容（注入到 system prompt） */
 export function loadUserDossier(dataRoot: string): string {
+  if (isUserDossierPromptBlocked(dataRoot)) return ''
   const p = defaultDossierPath(dataRoot)
   if (!existsSync(p)) return ''
   const content = readFileSync(p, 'utf-8')

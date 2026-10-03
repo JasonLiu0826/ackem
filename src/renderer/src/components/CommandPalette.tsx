@@ -29,6 +29,7 @@ export function CommandPalette(): JSX.Element | null {
   const cmds: Cmd[] = useMemo(
     () => [
       { id: 'chat', label: '打开对话', run: () => setTab('chat') },
+      { id: 'code', label: '打开编程', run: () => setTab('code') },
       { id: 'memory', label: '打开记忆', run: () => setTab('memory') },
       { id: 'diary', label: '打开日记', run: () => setTab('diary') },
       { id: 'settings', label: '打开设置', run: () => setTab('settings') },

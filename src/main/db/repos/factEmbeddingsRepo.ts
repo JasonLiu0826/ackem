@@ -1,5 +1,5 @@
 import type Database from 'better-sqlite3'
-import type { MemoryFact } from '../../engine/types'
+import type { MemoryFact } from '../../memory/semantic/types.js'
 
 const KV_NAMESPACE = 'fact_embeddings'
 
@@ -105,4 +105,27 @@ export function deleteStaleFactEmbeddings(
 export function deleteFactEmbeddingsForModel(db: Database.Database, modelSig: string): void {
   db.prepare(`DELETE FROM fact_embeddings WHERE model_sig = ?`).run(modelSig)
   db.prepare(`DELETE FROM kv_store WHERE namespace = ? AND key = ?`).run(KV_NAMESPACE, modelSig)
+}
+
+export function deleteFactEmbeddingsByIds(
+  db: Database.Database,
+  modelSig: string,
+  factIds: string[]
+): void {
+  if (factIds.length === 0) return
+  const del = db.prepare(`DELETE FROM fact_embeddings WHERE fact_id = ? AND model_sig = ?`)
+  const tx = db.transaction((ids: string[]) => {
+    for (const id of ids) del.run(id, modelSig)
+  })
+  tx(factIds)
+}
+
+/** Remove vectors for facts across all models (embedding provider unavailable). */
+export function deleteFactEmbeddingsAllModels(db: Database.Database, factIds: string[]): void {
+  if (factIds.length === 0) return
+  const del = db.prepare(`DELETE FROM fact_embeddings WHERE fact_id = ?`)
+  const tx = db.transaction((ids: string[]) => {
+    for (const id of ids) del.run(id)
+  })
+  tx(factIds)
 }

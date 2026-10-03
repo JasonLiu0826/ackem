@@ -3,7 +3,7 @@
 import type { WebContents } from 'electron'
 import type { AppSettings } from '../../../../settings'
 import { createLlmJsonClient } from '../../../../llmClient'
-import type { SearchCardPayload } from '../../../../shared/searchCard'
+import type { SearchCardPayload } from '../../../../../shared/searchCard'
 import { buildKnowledgeL3Directive, extractL3ExpressionContext } from './l3Context'
 import { extractOrganizeTopicFromMessage } from './intent'
 import { pluginActivityLabel } from '../../../../chatStatusLabels'

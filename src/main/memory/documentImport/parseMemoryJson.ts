@@ -12,10 +12,20 @@ import type {
   MemoryJsonEpisodeInput,
   MemoryJsonFactInput,
   MemoryJsonFactsFile,
-  MemoryJsonParseResult,
+  MemoryJsonParseStats,
 } from '../../../shared/memoryJsonImport'
 import { MEMORY_JSON_BUNDLE_SCHEMA } from '../../../shared/memoryJsonImport'
 import { newDraftId } from './parseImportChunk'
+
+type MemoryJsonParseResult =
+  | { ok: false; error: string }
+  | {
+      ok: true
+      facts: ImportFactDraft[]
+      episodes: ImportEpisodeDraft[]
+      anchors: ImportAnchorDraft[]
+      stats: MemoryJsonParseStats
+    }
 
 const SUBCATEGORY_ALIASES: Record<string, Subcategory> = {
   BASIC_PROFILE: 'BASIC_PROFILE',
@@ -200,10 +210,17 @@ function unwrapPayload(parsed: unknown): {
 
 function previewMerge(
   factStore: FactStore,
-  draft: Omit<ImportFactDraft, 'draftId' | 'enabled'>
+  draft: Omit<ImportFactDraft, 'draftId' | 'enabled'>,
+  ownerAgentId: string
 ): Pick<ImportFactDraft, 'mergeWithExistingId' | 'mergeWithSummary'> {
   factStore.load()
-  const similar = factStore.findSimilarFacts(draft.subcategory, draft.subject, draft.summary, 0.35)
+  const similar = factStore.findSimilarFacts(
+    draft.subcategory,
+    draft.subject,
+    draft.summary,
+    0.35,
+    ownerAgentId
+  )
   const existing = similar[0]
   if (!existing) return {}
   return {
@@ -216,8 +233,10 @@ export function parseMemoryJsonText(args: {
   text: string
   sourceFile: string
   factStore: FactStore
+  ownerAgentId?: string
 }): MemoryJsonParseResult {
   const warnings: string[] = []
+  const ownerAgentId = args.ownerAgentId?.trim() || 'default'
   let parsed: unknown
   try {
     parsed = JSON.parse(args.text)
@@ -251,11 +270,15 @@ export function parseMemoryJsonText(args: {
       factsSkipped += 1
       continue
     }
-    const merge = previewMerge(args.factStore, {
-      ...base,
-      sourceFile: args.sourceFile,
-      chunkIndex: 0,
-    })
+    const merge = previewMerge(
+      args.factStore,
+      {
+        ...base,
+        sourceFile: args.sourceFile,
+        chunkIndex: 0,
+      },
+      ownerAgentId
+    )
     facts.push({
       draftId: newDraftId(),
       ...base,

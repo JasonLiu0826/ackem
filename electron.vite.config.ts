@@ -52,6 +52,11 @@ export default defineConfig({
         '@renderer': resolve('src/renderer/src')
       }
     },
+    server: {
+      fs: {
+        allow: [resolve('.'), resolve('ackemcode')]
+      }
+    },
     plugins: [react()],
     build: {
       rollupOptions: {
@@ -59,7 +64,8 @@ export default defineConfig({
           index: resolve('src/renderer/index.html'),
           startup: resolve('src/renderer/startup.html'),
           pet: resolve('src/renderer/pet.html'),
-          updater: resolve('src/renderer/updater.html')
+          updater: resolve('src/renderer/updater.html'),
+          code: resolve('src/renderer/code.html')
         }
       }
     }

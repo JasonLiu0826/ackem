@@ -39,6 +39,7 @@ import { streamChatWaves } from './chat/waveChat'
 import { createPacedStreamEmitter } from './chat/pacedStreamEmitter'
 import { finalizePaperCardCompanionReply } from './paperCard/finalizeCompanionReply'
 import { isDesktopAgentToolingActive } from '../shared/desktopAgent'
+import { INVESTIGATION_SYNTHESIZE_MIN_TOKENS } from '../shared/investigation'
 import {
   useComputerAnthropicTool,
   parseUseComputerArgs,
@@ -230,7 +231,8 @@ export async function streamAnthropicMessages(
   const url = resolveAnthropicMessagesUrl(settings)
   const controller = new AbortController()
   const desktopAgentChatMode = body.desktopAgentChatMode === true
-  const agentActive = isDesktopAgentToolingActive(settings, desktopAgentChatMode)
+  // 桌面助手已退役：本机活走通道 work，不再把电脑工具交给伴侣循环。
+  const agentActive = false
   const agentTimeoutMs = agentActive ? 900_000 : settings.timeoutMs || 120_000
   const abortTimer = setTimeout(() => controller.abort(), agentTimeoutMs)
   let assistantAcc = ''

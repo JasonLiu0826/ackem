@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { join } from 'node:path'
 import { assembleMessages } from '../context'
+import { assembleSocialMemberMessages } from '../context/promptAssembly'
 import { streamChatCompletion } from '../chat'
 import { isEmbeddingReadyForChat } from '../embedding/embeddingReadiness'
 import { runPreLlmTurn, activeRecall } from '../engine/orchestrator'
@@ -28,6 +29,11 @@ import {
   runWeixinStructuredTurn
 } from './weixin/structuredTurn'
 import { finalizeTurnAfterStream } from '../postChatTurn'
+import { PRIMARY_AGENT_ID, sessionIdForAgent } from '../social/agents/agentPaths'
+import { isPrimaryCompanion, isSocialMember } from '../social/agents/guards'
+import { withAgentContext } from '../social/agents/withAgentContext'
+import { getRegisteredAgent } from '../social/agents/agentRegistry'
+import { channelToInteractionSurface } from '../memory/provenance'
 
 const log = createLogger('companion-turn')
 
@@ -73,9 +79,46 @@ export async function runCompanionTurn(input: CompanionTurnInput): Promise<Compa
 
   const root = resolveDataRoot(settings)
   ensureDataLayout(root)
-  activeRecall.setPersistencePath(join(root, 'memory', 'recall-history.json'))
 
+  const targetAgentId =
+    typeof input.targetAgentId === 'string' && input.targetAgentId.trim()
+      ? input.targetAgentId.trim()
+      : PRIMARY_AGENT_ID
+  const sessionId = sessionIdForAgent(targetAgentId)
+  const interactionSurface = channelToInteractionSurface(
+    input.channel === 'weixin' ? 'weixin' : 'desktop',
+    undefined,
+    targetAgentId
+  )
+
+  return withAgentContext(
+    targetAgentId,
+    () => runCompanionTurnInner({ ...input, sessionId, userText }, targetAgentId, root, settings),
+    { interactionSurface }
+  )
+}
+
+async function runCompanionTurnInner(
+  input: CompanionTurnInput & { userText: string },
+  targetAgentId: string,
+  root: string,
+  settings: AppSettings
+): Promise<CompanionTurnResult> {
+  const userText = input.userText
   const sessionId = input.sessionId
+  const social = isSocialMember(targetAgentId, root)
+  const interactionSurface = channelToInteractionSurface(
+    input.channel === 'weixin' ? 'weixin' : 'desktop',
+    undefined,
+    targetAgentId
+  )
+
+  if (isPrimaryCompanion(targetAgentId)) {
+    activeRecall.setPersistencePath(join(root, 'memory', 'recall-history.json'))
+  } else {
+    activeRecall.setPersistencePath(join(root, 'agents', targetAgentId, 'recall-history.json'))
+  }
+
   const snap = getOrRebuildIndex()
   let state = mergeEngineStateForSession(root, settings, sessionId)
   await getOrInitEmbeddingProvider(root)
@@ -117,7 +160,7 @@ export async function runCompanionTurn(input: CompanionTurnInput): Promise<Compa
   })
 
   const turnId = randomUUID()
-  workingMemory.push(sessionId, { turnIndex, userText, assistantText: '' })
+  const prevState = structuredClone(state)
 
   if (pre.skipLlm) {
     const assistantText = pre.redlineReply ?? ''
@@ -131,10 +174,14 @@ export async function runCompanionTurn(input: CompanionTurnInput): Promise<Compa
         userMsg: userText,
         assistantText,
         newState: pre.newState,
+        prevState,
         trace: pre.trace,
         event: pre.event,
         settings,
-        skipIngest: shouldSkipTierBIngestForOrigin(pre.trace)
+        skipIngest: shouldSkipTierBIngestForOrigin(pre.trace),
+        surface: input.channel === 'weixin' ? 'weixin' : 'desktop',
+        interactionSurface,
+        ownerAgentId: targetAgentId
       })
     }
     return {
@@ -150,6 +197,8 @@ export async function runCompanionTurn(input: CompanionTurnInput): Promise<Compa
     }
   }
 
+  workingMemory.push(sessionId, { turnIndex, userText, assistantText: '' })
+
   saveState(root, pre.newState, sessionId)
   state = pre.newState
 
@@ -159,25 +208,43 @@ export async function runCompanionTurn(input: CompanionTurnInput): Promise<Compa
     turnIndex,
     userMsg: userText,
     newState: pre.newState,
+    prevState,
     skipIngest: shouldSkipTierBIngestForOrigin(pre.trace),
     trace: pre.trace,
-    event: pre.event
+    event: pre.event,
+    surface: input.channel === 'weixin' ? 'weixin' : 'desktop',
+    interactionSurface,
+    ownerAgentId: targetAgentId
   })
 
-  const userInfoBlock = buildUserInfoBlock(root, store)
-  let psycheBlock = pre.psycheBlock
-  if (input.channel === 'weixin') {
-    psycheBlock += buildWeixinPsycheHint(settings.personalityPresetId)
+  const agentRow = social ? getRegisteredAgent(root, targetAgentId) : null
+  let messages: unknown[]
+  if (social && agentRow) {
+    messages = assembleSocialMemberMessages({
+      agentId: targetAgentId,
+      displayName: agentRow.name,
+      psycheBlock: pre.psycheBlock,
+      tierBBlock: pre.tierBBlock,
+      recentMessages,
+      userText,
+      settings
+    })
+  } else {
+    const userInfoBlock = buildUserInfoBlock(root, store)
+    let psycheBlock = pre.psycheBlock
+    if (input.channel === 'weixin') {
+      psycheBlock += buildWeixinPsycheHint(settings.personalityPresetId)
+    }
+    messages = assembleMessages({
+      userText,
+      recentMessages,
+      index: snap,
+      settings,
+      psycheBlock,
+      tierBBlock: pre.tierBBlock,
+      userInfoBlock
+    })
   }
-  const messages = assembleMessages({
-    userText,
-    recentMessages,
-    index: snap,
-    settings,
-    psycheBlock,
-    tierBBlock: pre.tierBBlock,
-    userInfoBlock
-  })
 
   const deliveryHints = {
     presetId: settings.personalityPresetId,
@@ -186,7 +253,8 @@ export async function runCompanionTurn(input: CompanionTurnInput): Promise<Compa
     intensity: pre.trace?.l0?.intensity
   }
 
-  if (input.channel === 'weixin') {
+  // 结构化知识/Plan 仅 Ackem；社会成员走普通对话
+  if (input.channel === 'weixin' && !social) {
     const structuredIntent = resolveWeixinStructuredIntent({
       userText,
       sessionId,
@@ -199,7 +267,7 @@ export async function runCompanionTurn(input: CompanionTurnInput): Promise<Compa
         const structured = await runWeixinStructuredTurn({
           intent: structuredIntent,
           settings,
-          messages,
+          messages: messages as Parameters<typeof runWeixinStructuredTurn>[0]['messages'],
           userText
         })
 
@@ -248,7 +316,9 @@ export async function runCompanionTurn(input: CompanionTurnInput): Promise<Compa
       settings: { ...settings, disableChatTools: true, asyncMultiMessageEnabled: false },
       turnId,
       intensityMod: pre.intensityMod ?? 1,
-      sessionId
+      sessionId,
+      targetAgentId: social ? targetAgentId : undefined,
+      interactionSurface
     },
     root
   )

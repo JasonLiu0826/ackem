@@ -8,6 +8,8 @@ export type UpluginMeta = {
   generatedBy?: string
   grantedPermissions?: string[]
   surface?: ExtensionSurfaceConfig
+  /** 调用式，并进 catalog。仅唯一命中为高分。 */
+  invocation?: string[]
 }
 
 export function buildUpluginInjectTemplate(

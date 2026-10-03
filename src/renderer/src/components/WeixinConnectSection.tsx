@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import type { SocialAgentSummary } from '../ackem'
 import { t } from '../lib/i18n'
 import {
   SettingsBlock,
@@ -14,12 +15,15 @@ type WeixinStatus = {
   proactiveEnabled: boolean
   accountId?: string
   userId?: string
+  boundAgentId?: string
   lastError?: string | null
   tokenExpired: boolean
   embeddingReady?: boolean
 }
 
 type LoginPhase = 'idle' | 'qr' | 'verify' | 'done'
+
+type AgentOption = { id: string; name: string }
 
 function weixinStatusLabel(status: string): string {
   const key = `settings.mobile.weixin.status.${status}`
@@ -35,26 +39,46 @@ export function WeixinConnectSection(): JSX.Element {
   const [verifyCode, setVerifyCode] = useState('')
   const [loginHint, setLoginHint] = useState('')
   const [busy, setBusy] = useState(false)
+  const [agents, setAgents] = useState<AgentOption[]>([{ id: 'default', name: 'Ackem' }])
+  const [selectedAgentId, setSelectedAgentId] = useState('default')
   const pollRef = useRef<number | null>(null)
 
   const refreshStatus = useCallback(async () => {
     try {
       const s = await window.ackem.weixinGetStatus()
       setStatus(s)
+      if (s.boundAgentId) setSelectedAgentId(s.boundAgentId)
       if (s.connected) setPhase('done')
     } catch {
       /* ignore */
     }
   }, [])
 
+  const loadAgents = useCallback(async () => {
+    try {
+      const list = await window.ackem.social.listAgents()
+      const social = list.filter((a: SocialAgentSummary) => a.kind === 'social_member')
+      setAgents([
+        { id: 'default', name: 'Ackem' },
+        ...social.map((a) => ({ id: a.id, name: a.name }))
+      ])
+    } catch {
+      setAgents([{ id: 'default', name: 'Ackem' }])
+    }
+  }, [])
+
   useEffect(() => {
     void refreshStatus()
-    const unsub = window.ackem.onWeixinStatusChanged?.((s) => setStatus(s))
+    void loadAgents()
+    const unsub = window.ackem.onWeixinStatusChanged?.((s) => {
+      setStatus(s)
+      if (s.boundAgentId) setSelectedAgentId(s.boundAgentId)
+    })
     return () => {
       unsub?.()
       if (pollRef.current != null) window.clearInterval(pollRef.current)
     }
-  }, [refreshStatus])
+  }, [refreshStatus, loadAgents])
 
   const stopPoll = () => {
     if (pollRef.current != null) {
@@ -96,11 +120,25 @@ export function WeixinConnectSection(): JSX.Element {
     setBusy(true)
     setLoginHint('')
     try {
-      const res = await window.ackem.weixinStartLogin()
+      const res = await window.ackem.weixinStartLogin({ agentId: selectedAgentId })
       setQrcode(res.qrcode)
       setQrImg(res.qrcodeImgContent)
       setPhase('qr')
       startPollLogin(res.qrcode)
+    } catch (e) {
+      setLoginHint(e instanceof Error ? e.message : String(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const changeBoundAgent = async (agentId: string) => {
+    setSelectedAgentId(agentId)
+    if (!status?.connected) return
+    setBusy(true)
+    try {
+      await window.ackem.weixinSetBoundAgent({ agentId })
+      await refreshStatus()
     } catch (e) {
       setLoginHint(e instanceof Error ? e.message : String(e))
     } finally {
@@ -151,6 +189,10 @@ export function WeixinConnectSection(): JSX.Element {
 
   const connected = status?.connected ?? false
   const badgeTone = connected ? 'ok' : status?.tokenExpired ? 'warn' : 'neutral'
+  const boundName =
+    agents.find((a) => a.id === (status?.boundAgentId ?? selectedAgentId))?.name ??
+    status?.boundAgentId ??
+    selectedAgentId
 
   return (
     <SettingsGroup
@@ -200,6 +242,11 @@ export function WeixinConnectSection(): JSX.Element {
             {t('settings.mobile.weixin.accountLabel')}: {status.accountId}
           </p>
         ) : null}
+        {connected ? (
+          <p className="text-xs text-ink-muted">
+            {t('settings.mobile.weixin.boundAgentLabel')}: {boundName}
+          </p>
+        ) : null}
       </SettingsBlock>
 
       <SettingsBlock title={t('settings.mobile.weixin.guideTitle')} hint={t('settings.mobile.weixin.guideHint')}>
@@ -222,7 +269,30 @@ export function WeixinConnectSection(): JSX.Element {
         </div>
       </SettingsBlock>
 
-      <SettingsBlock title={t('settings.mobile.weixin.connectTitle')}>
+      <SettingsBlock
+        title={t('settings.mobile.weixin.connectTitle')}
+        hint={t('settings.mobile.weixin.boundAgentHint')}
+      >
+        <label className="mb-3 block text-xs text-ink-muted">
+          {t('settings.mobile.weixin.pickAgent')}
+          <select
+            className="field-input mt-1 w-full max-w-sm"
+            value={selectedAgentId}
+            disabled={busy || phase === 'qr' || phase === 'verify'}
+            onChange={(e) => {
+              const id = e.target.value
+              if (connected) void changeBoundAgent(id)
+              else setSelectedAgentId(id)
+            }}
+          >
+            {agents.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.name}
+              </option>
+            ))}
+          </select>
+        </label>
+
         {phase === 'idle' && !connected ? (
           <button type="button" className="btn-primary text-sm" disabled={busy} onClick={() => void beginLogin()}>
             {busy ? t('settings.mobile.weixin.working') : t('settings.mobile.weixin.startConnect')}
@@ -231,7 +301,9 @@ export function WeixinConnectSection(): JSX.Element {
 
         {phase === 'qr' ? (
           <div className="space-y-3">
-            <p className="text-sm text-ink-muted">{t('settings.mobile.weixin.scanHint')}</p>
+            <p className="text-sm text-ink-muted">
+              {t('settings.mobile.weixin.scanHintFor', { name: boundName })}
+            </p>
             {qrImg ? (
               <div className="flex justify-center rounded-xl bg-white p-4">
                 <img src={qrImg} alt="WeChat QR" className="max-h-64 max-w-full" />

@@ -1,9 +1,9 @@
+import type Database from 'better-sqlite3'
 import { getDatabase } from '../database'
 
 export function rebuildFactsFts(dataRoot: string): void {
   const db = getDatabase(dataRoot)
   if (!db) return
-  db.exec(`DELETE FROM memory_facts_fts`)
   const rows = db
     .prepare(`SELECT id, subject, summary, triggers_text FROM memory_facts WHERE status = 'active'`)
     .all() as { id: string; subject: string; summary: string; triggers_text: string }[]
@@ -12,6 +12,7 @@ export function rebuildFactsFts(dataRoot: string): void {
      VALUES (?, ?, ?, ?)`
   )
   const run = db.transaction(() => {
+    db.exec(`DELETE FROM memory_facts_fts`)
     for (const r of rows) {
       ins.run(r.id, r.subject, r.summary, r.triggers_text ?? '')
     }
@@ -67,6 +68,37 @@ export function deleteFactFts(dataRoot: string, factId: string): void {
   const db = getDatabase(dataRoot)
   if (!db) return
   db.prepare(`DELETE FROM memory_facts_fts WHERE fact_id = ?`).run(factId)
+}
+
+/** Incremental FTS sync inside the same SQLite transaction as memory_facts. */
+export function upsertFactFtsInTx(
+  db: Database.Database,
+  factId: string,
+  subject: string,
+  summary: string,
+  triggersText: string,
+  status: 'active' | 'retired'
+): void {
+  db.prepare(`DELETE FROM memory_facts_fts WHERE fact_id = ?`).run(factId)
+  if (status === 'active') {
+    db.prepare(
+      `INSERT INTO memory_facts_fts(fact_id, subject, summary, triggers_text) VALUES (?, ?, ?, ?)`
+    ).run(factId, subject, summary, triggersText)
+  }
+}
+
+/** Incremental FTS sync for one active fact (delete + insert). */
+export function upsertFactFts(
+  dataRoot: string,
+  factId: string,
+  subject: string,
+  summary: string,
+  triggersText: string,
+  status: 'active' | 'retired'
+): void {
+  const db = getDatabase(dataRoot)
+  if (!db) return
+  upsertFactFtsInTx(db, factId, subject, summary, triggersText, status)
 }
 
 /** 单条插入情节 FTS 索引 */

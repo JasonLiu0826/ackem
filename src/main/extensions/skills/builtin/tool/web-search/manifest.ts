@@ -21,6 +21,7 @@ const WEB_SEARCH_DISPATCH: DispatchConfig = {
   ],
   summary: '通过 Bing 搜索网页获取实时信息，供 companion 引用后回答。',
   keywords: ['搜索', '搜一下', '查一下', '百度', 'google', 'bing', '新闻', '最新'],
+  invocation: ['帮我搜 {query}'],
   personality_hint: 'neutral'
 }
 

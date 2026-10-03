@@ -6,6 +6,11 @@
 
 import type { Event, EventType } from './types'
 import { getLocale } from '../i18n'
+import {
+  matchesColdAny,
+  matchesHurtfulAny,
+  matchesPhraseAny,
+} from './interpreterMatchPolicy'
 
 // ═══ 中文关键词 ═══
 
@@ -377,19 +382,19 @@ export function interpretInput(msg: string, effectiveTrust: number, adultMode: b
     if (adultResult) return adultResult
   }
 
-  if (hasAny(t, kw.apology)) type = 'apology'
-  else if (hasAny(t, kw.sexualHarassment)) type = 'hurtful'
-  else if (hasAny(t, kw.ethicalViolation)) type = 'hurtful'
-  else if (hasAny(t, kw.vulnerable) && !hasAny(t, kw.vulnerableToPraiseOverride)) type = 'vulnerable'
-  else if (hasAny(t, kw.hurtful)) type = 'hurtful'
-  else if (hasAny(t, kw.praise) && !hasNegationForPraise(t)) type = 'praise'
-  else if (hasAny(t, kw.tease) || /哈哈|呵呵|😏|🙄|haha|hehe|lol/.test(t)) {
+  if (matchesPhraseAny(t, kw.apology)) type = 'apology'
+  else if (matchesPhraseAny(t, kw.sexualHarassment)) type = 'hurtful'
+  else if (matchesPhraseAny(t, kw.ethicalViolation)) type = 'hurtful'
+  else if (matchesPhraseAny(t, kw.vulnerable) && !matchesPhraseAny(t, kw.vulnerableToPraiseOverride)) type = 'vulnerable'
+  else if (matchesHurtfulAny(t, kw.hurtful)) type = 'hurtful'
+  else if (matchesPhraseAny(t, kw.praise) && !hasNegationForPraise(t)) type = 'praise'
+  else if (matchesPhraseAny(t, kw.tease) || /哈哈|呵呵|😏|🙄|haha|hehe|lol/.test(t)) {
     type = effectiveTrust >= 45 ? 'tease' : 'cold'
   } else if (t.includes('?') || t.includes('？') || t.includes('吗') || t.includes('么') || t.includes('呢')
     || /\b(is|are|do|does|can|could|would|will|should|how|what|when|where|why|who)\b/i.test(t)) type = 'question'
-  else if (hasAny(t, kw.cold) && t.length <= 20) type = 'cold'
-  else if (t.length > 80 && !hasAny(t, kw.praise) && !hasAny(t, kw.vulnerable)) type = 'casual_chat'
-  else if (hasAny(t, kw.cold)) type = 'cold'
+  else if (matchesColdAny(t, kw.cold) && t.length <= 20) type = 'cold'
+  else if (t.length > 80 && !matchesPhraseAny(t, kw.praise) && !matchesPhraseAny(t, kw.vulnerable)) type = 'casual_chat'
+  else if (matchesColdAny(t, kw.cold)) type = 'cold'
 
   const intensity = estimateIntensity(t, type)
   const sincerity = estimateSincerity(t, type)

@@ -31,10 +31,10 @@ export function getLocale(): Locale {
  * @param params 可选插值参数（如 { n: 3 }）
  */
 export function t(key: string, params?: Record<string, string | number>): string {
-  const resources = currentLocale === 'en' ? enMerged : zhMerged
-  let value = resources[key]
+  const resources: Record<string, string> = currentLocale === 'en' ? enMerged : zhMerged
+  let value: string = resources[key]
   if (!value) {
-    value = zhMerged[key] ?? key
+    value = (zhMerged as Record<string, string>)[key] ?? key
   }
   if (params) {
     for (const [k, v] of Object.entries(params)) {

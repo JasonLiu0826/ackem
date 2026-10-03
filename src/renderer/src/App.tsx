@@ -11,6 +11,7 @@ import { TracePanel } from './components/TracePanel'
 import { DiaryPage } from './components/DiaryPage'
 import { GameModePage } from './components/GameModePage'
 import { ExtensionCenterPage } from './components/ExtensionCenterPage'
+import { CodePane } from './components/CodePane'
 import { TheaterView } from './components/TheaterView'
 import { CommandPalette } from './components/CommandPalette'
 import { PlanPanel } from './components/PlanPanel'
@@ -29,6 +30,7 @@ import { dismissBootSplash, setBootSplashStatus, signalBootSplashReady } from '.
 
 function MemoryRouter(): JSX.Element {
   const [view, setView] = useState<'archive' | 'search' | 'timeline' | 'import' | 'kggraph' | 'assoc' | 'heatmap' | 'decay'>('archive')
+  const activeAgentName = useAppStore((s) => s.activeAgentName)
   const tabCls = (active: boolean) =>
     ['page-subtab', active ? 'page-subtab--active' : ''].filter(Boolean).join(' ')
   const memoryTabs = [
@@ -41,14 +43,29 @@ function MemoryRouter(): JSX.Element {
     { id: 'heatmap' as const, labelKey: 'nav.memory.heatmap' },
     { id: 'decay' as const, labelKey: 'nav.memory.decay' }
   ]
+  const roleScoped =
+    view === 'archive' ||
+    view === 'timeline' ||
+    view === 'import' ||
+    view === 'kggraph' ||
+    view === 'assoc' ||
+    view === 'heatmap' ||
+    view === 'decay'
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-surface">
-      <div className="flex gap-0 border-b border-surface-inset glass-panel px-4 overflow-x-auto">
+      <div className="flex items-center gap-3 border-b border-surface-inset glass-panel px-4">
+        <div className="flex min-w-0 flex-1 gap-0 overflow-x-auto">
         {memoryTabs.map(({ id, labelKey }) => (
           <button key={id} type="button" onClick={() => setView(id)} className={tabCls(view === id)}>
             {t(labelKey)}
           </button>
         ))}
+        </div>
+        <span className="shrink-0 py-2 text-[11px] text-ink-muted whitespace-nowrap">
+          {roleScoped
+            ? `当前角色 · ${activeAgentName || 'Ackem'}`
+            : `文档搜索（全局）· 对话角色 ${activeAgentName || 'Ackem'}`}
+        </span>
       </div>
       {view === 'archive' && <ArchivePage />}
       {view === 'search' && <MemoryPage />}
@@ -224,6 +241,7 @@ export default function App(): JSX.Element {
               </aside>
             </div>
           )}
+          {tab === 'code' && <CodePane />}
           {tab === 'memory' && <MemoryRouter />}
           {tab === 'diary' && <DiaryPage />}
           {tab === 'gamemode' && <GameModePage />}

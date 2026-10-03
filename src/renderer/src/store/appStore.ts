@@ -9,6 +9,10 @@ import type { SettingsSectionId } from '../components/settings/settingsUi'
 
 export type Tab =
   | 'chat'
+  /** 壳内 AckemCode：ackemcode 的 GUI */
+  | 'code'
+  /** 朋友圈/社会页类型保留，主页不再挂载 */
+  | 'social'
   | 'memory'
   | 'diary'
   | 'gamemode'
@@ -17,6 +21,13 @@ export type Tab =
   /** 由设置/记忆子入口进入，不在主导航展示 */
   | 'trace'
   | 'import'
+
+/** Ackem 主体 agentId（与 main/social/agents/agentPaths.PRIMARY_AGENT_ID 一致） */
+export const PRIMARY_AGENT_ID = 'default'
+
+export function isPrimaryAgent(agentId: string | null | undefined): boolean {
+  return !agentId || agentId === PRIMARY_AGENT_ID
+}
 
 export type SettingsDeepLink = {
   section: SettingsSectionId
@@ -124,6 +135,9 @@ type State = {
   tab: Tab
   /** 游戏陪伴：当前选中的 gameId，null 表示游戏列表 */
   selectedGameId: string | null
+  /** 主对话 / 记忆档案当前绑定的角色（default = Ackem） */
+  activeAgentId: string
+  activeAgentName: string
   settings: AppSettings | null
   toast: Toast | null
   chatRows: ChatRow[]
@@ -149,6 +163,8 @@ type State = {
   openSettingsAt: (section: SettingsSectionId, anchorId?: string) => void
   clearSettingsDeepLink: () => void
   setSelectedGameId: (id: string | null) => void
+  /** 切换主对话角色；换人时重置聊天线程 */
+  setActiveAgent: (id: string, name?: string) => void
   setSettings: (s: AppSettings | null) => void
   setChatRows: (rows: ChatRow[] | ((prev: ChatRow[]) => ChatRow[])) => void
   clearChatRows: () => void
@@ -170,6 +186,8 @@ let tid = 0
 export const useAppStore = create<State>((set) => ({
   tab: 'chat',
   selectedGameId: null,
+  activeAgentId: PRIMARY_AGENT_ID,
+  activeAgentName: 'Ackem',
   settings: null,
   toast: null,
   chatRows: [],
@@ -184,11 +202,31 @@ export const useAppStore = create<State>((set) => ({
   chatBusy: false,
   agentBusy: false,
   settingsDeepLink: null,
-  setTab: (tab) => set({ tab }),
+  setTab: (tab) => set({ tab: tab === 'social' ? 'chat' : tab }),
   openSettingsAt: (section, anchorId) =>
     set({ tab: 'settings', settingsDeepLink: { section, anchorId } }),
   clearSettingsDeepLink: () => set({ settingsDeepLink: null }),
   setSelectedGameId: (selectedGameId) => set({ selectedGameId }),
+  setActiveAgent: (id, name) =>
+    set((s) => {
+      const nextId = id?.trim() || PRIMARY_AGENT_ID
+      const nextName =
+        name?.trim() ||
+        (nextId === PRIMARY_AGENT_ID ? 'Ackem' : s.activeAgentName || nextId)
+      if (s.activeAgentId === nextId) {
+        return { activeAgentName: nextName }
+      }
+      return {
+        activeAgentId: nextId,
+        activeAgentName: nextName,
+        chatRows: [],
+        chatResetKey: s.chatResetKey + 1,
+        dispatchTriggerStatus: null,
+        chatBusy: false,
+        agentBusy: false,
+        chatTurnCount: 0
+      }
+    }),
   setSettings: (settings) => set({ settings }),
   setChatRows: (chatRows) =>
     set((s) => ({

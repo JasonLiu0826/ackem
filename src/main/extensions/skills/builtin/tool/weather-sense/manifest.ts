@@ -29,6 +29,7 @@ const WEATHER_DISPATCH: DispatchConfig = {
   scenarios: ['聊天中自然引用当地天气', '减少为简单天气问题调用 web-search'],
   summary: '后台定时拉取 Open-Meteo 天气缓存，供伴侣在对话中引用。',
   keywords: ['天气', '下雨', '温度', '冷不冷', '带伞', '气温'],
+  invocation: ["what's the weather", '天气怎么样'],
   personality_hint: 'gentle_care'
 }
 

@@ -1,4 +1,4 @@
-// [retriever] — 记忆检索器
+// [retriever] — 记忆检索器（legacy tierB；Task 12 Recall Composer 在 prepareTurnContext 前置拼接，shadow 期双路并存）
 // 职责：触发词、事实检索、chunk 片段、memory_echo
 // 输入：query、FactStore、IndexSnapshot
 // 输出：tierBBlock、MemoryEcho、trace
@@ -6,7 +6,8 @@
 
 import { searchChunks, type IndexSnapshot } from '../indexer'
 import { CHUNK_SEARCH_MAX_RESULTS, CORE_MEMORY_CHAR_BUDGET, EPISODE_CHAR_BUDGET, EMBEDDING_MIN_SCORE, EMBEDDING_SEARCH_ENABLED, EMBEDDING_SEARCH_TOP_K, MIN_CONFIDENCE_FOR_INJECTION, SEMANTIC_SEARCH_ENABLED, SEMANTIC_SEARCH_TOP_K, TIER_B_CHAR_BUDGET, TRIGGER_MATCH_BOOST, VECTOR_SEARCH_ENABLED, VECTOR_SEARCH_TOP_K } from '../engine/ackemParams'
-import type { MemoryEcho, MemoryFact } from '../engine/types'
+import type { MemoryEcho } from '../engine/types'
+import type { MemoryFact } from './semantic/types.js'
 import type { FactStore } from './factStore'
 import type { EpisodicStore } from './episodicStore'
 import type { KnowledgeGraph } from './knowledgeGraph'
@@ -19,6 +20,18 @@ import { computeTemporalBoost } from './temporalContextModulator'
 import type { TemporalSemanticSignal } from './temporalSignalExtractor'
 import { filterFactsForSession } from './sessionFacts'
 import { normalizeAckemBrandText } from '../../shared/ackemBrand'
+import { filterFactsForRetrieval } from './retrievalScope'
+import { surfaceLabel } from './provenance'
+import { getCurrentAgentId, getCurrentInteractionSurface } from '../social/agents/withAgentContext'
+import { isPrimaryCompanion } from '../social/agents/guards'
+import type { InteractionSurface } from './provenance'
+import { loadSettings } from '../settings'
+import { getClock } from './temporal/clock.js'
+import { localDateWindow, monthDayWindowRanges } from './temporal/calendarWindow.js'
+import { resolveUserTimezone } from './temporal/timezonePolicy.js'
+import { zonedLocalDate, zonedMonthDay } from './temporal/zonedDate.js'
+import { getDatabase } from '../db/database.js'
+import { loadTombstoneIndex } from './governance/tombstoneIndex.js'
 
 export type RetrievalResult = {
   tierBBlock: string
@@ -42,8 +55,14 @@ export type RetrievalResult = {
 
 /** 上一轮激活的关联 ID 列表（供 postChatTurn 纠错使用） */
 export let lastActivatedAssociationIds: string[] = []
-/** 共现激活频率门控计数器 */
-let cooccurrenceTicks = 0
+/** 共现激活频率门控计数器（按 agentId 分行） */
+const cooccurrenceTicksByAgent = new Map<string, number>()
+
+function nextCooccurrenceTick(agentId: string): number {
+  const n = (cooccurrenceTicksByAgent.get(agentId) ?? 0) + 1
+  cooccurrenceTicksByAgent.set(agentId, n)
+  return n
+}
 
 export class MemoryRetriever {
   constructor(
@@ -69,12 +88,27 @@ export class MemoryRetriever {
     adultMode: boolean = false
   ): Promise<RetrievalResult> {
     const now = Date.now()
-    const visibleFacts = this.factStore
-      .listActive()
-      .filter((f) => adultMode || (f.privacyLevel ?? 'normal') === 'normal')
-    const sessionFacts = sessionId
-      ? filterFactsForSession(visibleFacts, sessionId)
-      : visibleFacts
+    const agentId = getCurrentAgentId()
+    const interactionSurface: InteractionSurface =
+      getCurrentInteractionSurface() ??
+      (isPrimaryCompanion(agentId) ? 'desktop_main' : 'social_private')
+    const ownerScoped = filterFactsForRetrieval(this.factStore.listActive(), {
+      ownerAgentId: agentId,
+      sessionId: sessionId ?? (isPrimaryCompanion(agentId) ? 'default' : `social_${agentId}`),
+      interactionSurface,
+      adultMode,
+    })
+    const visibleFacts = ownerScoped.filter(
+      (f) => adultMode || (f.privacyLevel ?? 'normal') === 'normal'
+    )
+    const tombDb = getDatabase(this.factStore.getDataRoot())
+    const tomb = tombDb ? loadTombstoneIndex(tombDb) : { facts: new Set<string>(), episodes: new Set<string>(), events: new Set<string>() }
+    const governanceVisible = (f: MemoryFact) =>
+      f.status === 'active' && !tomb.facts.has(f.id) && (f.sensitivity ?? 'normal') !== 'avoid'
+
+    const sessionFacts = (sessionId ? filterFactsForSession(visibleFacts, sessionId) : visibleFacts).filter(
+      governanceVisible
+    )
     const sessionFactIds = new Set(sessionFacts.map((f) => f.id))
     const inSession = (f: MemoryFact) => sessionFactIds.has(f.id)
 
@@ -219,23 +253,23 @@ export class MemoryRetriever {
     /** 锚点 SQL 命中的关联事实（与 mergedIds 去重独立，供 KPI/trace） */
     const anchorResolvedFacts: MemoryFact[] = []
     const anchorDataRoot = this.factStore.getDataRoot()
-    const nowDate = new Date()
-    const todayMMDD = nowDate.toISOString().slice(5, 10)
+    const nowDate = getClock().now()
+    const memoryTimeZone = resolveUserTimezone(loadSettings().timezone).timezone
+    const proactiveRanges = monthDayWindowRanges(nowDate, memoryTimeZone, 7, 7)
+    const proactiveRangeSql = proactiveRanges.map(() => 'SUBSTR(anchor_date, 6, 5) BETWEEN ? AND ?').join(' OR ')
+    const monthAgo = new Date(nowDate.getTime() - 30 * 86400000).toISOString()
     try {
       const { getDatabase } = await import('../db/database')
       const db = getDatabase(anchorDataRoot)
       if (db) {
-        const weekAgo = new Date(nowDate.getTime() - 7 * 86400000).toISOString().slice(5, 10)
-        const weekAhead = new Date(nowDate.getTime() + 7 * 86400000).toISOString().slice(5, 10)
-        const monthAgo = new Date(nowDate.getTime() - 30 * 86400000).toISOString()
         const proactiveAnchors = db.prepare(
           `SELECT linked_fact_ids, emotional_valence, emotional_intensity
            FROM temporal_anchors
            WHERE anchor_type = 'recurring'
-             AND SUBSTR(anchor_date, 6, 5) BETWEEN ? AND ?
+             AND (${proactiveRangeSql})
              AND (last_triggered_at IS NULL OR last_triggered_at < ?)
            ORDER BY emotional_intensity DESC LIMIT 3`
-        ).all(weekAgo, weekAhead, monthAgo) as Array<{ linked_fact_ids: string; emotional_valence: number; emotional_intensity: number }>
+        ).all(...proactiveRanges.flatMap((r) => [r.start, r.end]), monthAgo) as Array<{ linked_fact_ids: string; emotional_valence: number; emotional_intensity: number }>
 
         const seenTemporal = new Set(mergedIds)
         for (const anchor of proactiveAnchors) {
@@ -258,26 +292,21 @@ export class MemoryRetriever {
       const { getDatabase } = await import('../db/database')
       const db = getDatabase(anchorDataRoot)
       if (db) {
-        const now = new Date()
-        const today = now.toISOString().slice(5, 10) // MM-DD
-        const yearAgo = now.toISOString().slice(0, 10) // YYYY-MM-DD
-
-        // 策略 1：周期性锚点（生日/纪念日/节假日）—— 同月同日 ±30 天
-        const monthDay = today // MM-DD
-        const dayStart = new Date(now.getTime() - 30 * 86400000).toISOString().slice(5, 10)
-        const dayEnd = new Date(now.getTime() + 30 * 86400000).toISOString().slice(5, 10)
+        const now = getClock().now()
+        const recurringRanges = monthDayWindowRanges(now, memoryTimeZone, 30, 30)
+        const recurringRangeSql = recurringRanges.map(() => 'SUBSTR(anchor_date, 6, 5) BETWEEN ? AND ?').join(' OR ')
         const recurringAnchors = db.prepare(
           `SELECT linked_fact_ids, emotional_valence, emotional_intensity, anchor_date
            FROM temporal_anchors
            WHERE anchor_type = 'recurring'
-             AND SUBSTR(anchor_date, 6, 5) >= ?
-             AND SUBSTR(anchor_date, 6, 5) <= ?
+             AND (${recurringRangeSql})
            ORDER BY emotional_intensity DESC
            LIMIT 5`
-        ).all(dayStart, dayEnd) as Array<{ linked_fact_ids: string; emotional_valence: number; emotional_intensity: number; anchor_date: string }>
+        ).all(...recurringRanges.flatMap((r) => [r.start, r.end])) as Array<{ linked_fact_ids: string; emotional_valence: number; emotional_intensity: number; anchor_date: string }>
 
-        // 策略 2：模糊时间锚点（最近/那时候）—— 最近 3 个月
-        const threeMonthsAgo = new Date(now.getTime() - 90 * 86400000).toISOString().slice(0, 10)
+        // 策略 2：模糊时间锚点（最近/那时候）—— 最近 3 个月（本地日历）
+        const fuzzyWindow = localDateWindow(now, memoryTimeZone, 90, 0)
+        const threeMonthsAgo = fuzzyWindow.from
         const fuzzyAnchors = db.prepare(
           `SELECT linked_fact_ids, emotional_valence, emotional_intensity
            FROM temporal_anchors
@@ -360,7 +389,7 @@ export class MemoryRetriever {
 
     // ══ 关联共现激活：同轮检索到的语义相近事实自动 strengthen ══
     // 频率门控：每 3 轮激活一次（避免高频对话中 strength 增长过快）
-    if (this.associationIndex && (++cooccurrenceTicks % 3 === 0)) {
+    if (this.associationIndex && (nextCooccurrenceTick(agentId) % 3 === 0)) {
       const rankedPreview = [...factsForEcho].sort((a, b) =>
         this.factStore.scoreRelevance(b, now, currentValence, currentAff) -
         this.factStore.scoreRelevance(a, now, currentValence, currentAff)
@@ -420,8 +449,7 @@ export class MemoryRetriever {
 
     const memoryEcho = this.factStore.computeMemoryEcho(ranked)
 
-    // 主动遗忘过滤：avoid 事实不注入 Tier B（但可参与检索/排序/memoryEcho）
-    const injectable = ranked.filter(f => !f.sensitivity || f.sensitivity === 'normal')
+    const injectable = ranked.filter(governanceVisible)
 
     // 统一预算控制器：所有子块从同一个预算中分配，按优先级依次填充
     // 优先级：核心记忆 > 事实检索 > chunk片段 > 知识图谱 > 情节记忆
@@ -436,9 +464,9 @@ export class MemoryRetriever {
 
     // 1. 核心记忆（优先级最高，上限 2000 或剩余预算的一半）
     let coreBlock = ''
-    const coreFacts = sessionId
-      ? filterFactsForSession(this.factStore.getCoreFacts(), sessionId)
-      : this.factStore.getCoreFacts()
+    const coreFacts = (
+      sessionId ? filterFactsForSession(this.factStore.getCoreFacts(), sessionId) : this.factStore.getCoreFacts()
+    ).filter(governanceVisible)
     if (coreFacts.length > 0 && remaining > 100) {
       const coreBudget = Math.min(CORE_MEMORY_CHAR_BUDGET, Math.floor(remaining * 0.4))
       const coreLines: string[] = []
@@ -466,7 +494,8 @@ export class MemoryRetriever {
       if (isAssoc) annotation = ' ↳ 关联扩散'
       else if (isTemporalSemantic) annotation = ' ↳ 时间语义'
       else if (isTemporal) annotation = ' ↳ 时间锚点'
-      const line = normalizeAckemBrandText(`· ${f.subject}：${f.summary}${annotation}`)
+      const surf = surfaceLabel(f.interactionSurface)
+      const line = normalizeAckemBrandText(`· [${surf}] ${f.subject}：${f.summary}${annotation}`)
       if (remaining - (line.length + 2) < 200) break // 至少留 200 给后续块
       if (line.length + 2 > remaining) break
       lines.push(line)
@@ -490,6 +519,20 @@ export class MemoryRetriever {
     let kgBlock = ''
     if (this.kg && remaining > 150) {
       kgBlock = this.kg.buildContextBlock(query)
+      if (tombDb && tomb.facts.size > 0) {
+        const blocked: string[] = []
+        const stmt = tombDb.prepare(`SELECT summary FROM memory_facts WHERE id = ?`)
+        for (const factId of tomb.facts) {
+          const row = stmt.get(factId) as { summary: string } | undefined
+          if (row?.summary) blocked.push(row.summary)
+        }
+        if (blocked.length > 0) {
+          kgBlock = kgBlock
+            .split('\n')
+            .filter((line) => !blocked.some((s) => line.includes(s)))
+            .join('\n')
+        }
+      }
       if (kgBlock.length > remaining) {
         kgBlock = kgBlock.slice(0, remaining - 3) + '...'
       }
@@ -501,7 +544,7 @@ export class MemoryRetriever {
     let episodesUsed = 0
     if (this.episodicStore && remaining > 150) {
       this.episodicStore.load()
-      let episodes = this.episodicStore.retrieve(query)
+      let episodes = this.episodicStore.retrieve(query).filter((ep) => !tomb.episodes.has(ep.id))
       if (sessionId) {
         const sid = sessionId.trim() || 'default'
         episodes = episodes.filter((ep) => {

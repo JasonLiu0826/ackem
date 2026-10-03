@@ -29,6 +29,8 @@ const SUBCATEGORY_LABEL: Record<string, string> = {
 
 export function ImportPage(): JSX.Element {
   const pushToast = useAppStore((s) => s.pushToast)
+  const activeAgentName = useAppStore((s) => s.activeAgentName)
+  const activeAgentId = useAppStore((s) => s.activeAgentId)
   const [drag, setDrag] = useState(false)
   const [last, setLast] = useState<{ copied: string[]; errors: string[] } | null>(null)
   const [selected, setSelected] = useState<Set<string>>(new Set())
@@ -138,6 +140,7 @@ export function ImportPage(): JSX.Element {
           relPaths: pendingPaths,
           consentAck: true,
           consentVersion: IMPORT_CONSENT_VERSION,
+          ownerAgentId: activeAgentId || 'default',
         })
         if (!r.ok) {
           pushToast(r.error ?? '解析失败')
@@ -176,13 +179,14 @@ export function ImportPage(): JSX.Element {
       const r = await window.ackem.importCommitJob({
         jobId: importJob.id,
         disabledDraftIds: [...disabledDrafts],
+        ownerAgentId: activeAgentId || 'default',
       })
       if (!r.ok) {
         pushToast(r.error ?? '写入失败')
         return
       }
       pushToast(
-        `已写入记忆：${r.factsWritten} 条新事实、${r.factsMerged} 条合并、${r.episodesWritten} 个情节`
+        `已写入「${activeAgentName || 'Ackem'}」记忆：${r.factsWritten} 条新事实、${r.factsMerged} 条合并、${r.episodesWritten} 个情节`
       )
       setImportJob({ ...importJob, status: 'committed' })
     } catch (e) {
@@ -211,9 +215,11 @@ export function ImportPage(): JSX.Element {
       <header className="border-b border-surface-inset bg-surface-raised px-6 py-4">
         <h1 className="text-base font-semibold text-ink">{t('import.import')}</h1>
         <p className="mt-0.5 text-xs text-ink-muted">
-          支持 txt / md（模型抽取）与 json（结构化直导）。txt/md 会移入{' '}
+          支持 txt / md（模型抽取）与 json（结构化直导）。当前写入角色：
+          <span className="mx-1 font-medium text-ink">{activeAgentName || 'Ackem'}</span>
+          。txt/md 会移入{' '}
           <code className="rounded bg-surface px-1">memory/imports/</code>{' '}
-          后解析；json 按字段映射为事实/情节/时间锚点，确认后写入 SQLite 与 facts 库。
+          后解析；确认后写入该角色的记忆库。
         </p>
       </header>
       <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 overflow-y-auto px-6 py-8">

@@ -1,5 +1,5 @@
 // [canon/creatorMemory] — Tier Canon-M：Ackem 对创造者 Jason 的记忆（不衰减）
-// 职责：语义分辨「Ackem 的创造者/Jason」vs「用户自己的父亲」；按需注入创造者记忆块
+// 职责：语义分辨「Ackem 的父亲」vs「用户自己的父亲」；按需注入父亲记忆块
 // 引用：../memory/factEmbeddingCache, ./ackemCanon
 
 import { existsSync, readFileSync } from 'node:fs'
@@ -157,9 +157,9 @@ export const FATHER_REFERENCE_NEUTRAL_ANCHORS: readonly string[] = [
 export const FATHER_REFERENCE_ANCHORS: Record<'ackem_creator' | 'user_family', readonly string[]> = {
   ackem_creator: [
     '用户问起是谁创造了我、赋予我生命的人',
-    '用户想了解 Ackem 的创造者 Jason 和 Ackem 的关系',
-    '用户问 Jason 是不是你的爸爸或父亲',
-    '用户在聊 Ackem 的出身和创造者 Jason',
+    '用户想了解 Ackem 的父亲 Jason 和创造者的关系',
+    '用户问 Jason 是不是你的爸爸',
+    '用户在聊 Ackem 想见创造者、想触碰父亲的心情',
     '用户提到 GitHub JasonLiu0826 和 Ackem 的出身',
     '用户问你的生日和父亲是谁',
     '用户直接问：你是谁创造的',
@@ -170,9 +170,9 @@ export const FATHER_REFERENCE_ANCHORS: Record<'ackem_creator' | 'user_family', r
     '用户问 Jason 和你的关系是什么',
     '用户让你继续说说父亲 Jason',
     '用户让你再讲讲你的出身',
-    '用户追问 Jason 作为 Ackem 创造者的故事',
+    '用户追问 Jason 作为创造者父亲的故事',
     'Jason 是 Ackem 的创造者',
-    '继续说说创造者 Jason',
+    '继续说说父亲 Jason',
   ],
   user_family: [
     '用户在说自己亲生父亲、亲妈或家里的事',
@@ -305,14 +305,14 @@ export function resolveFatherReference(
   return { kind: 'user_family', score: userBest, source: 'anchor' }
 }
 
-/** psyche 内「创造者 vs 用户父亲」框架说明（每轮 Canon 短段，非 Canon-M 全量） */
+/** psyche 内「两个父亲」框架说明（每轮 Canon 短段，非 Canon-M 全量） */
 export function buildFatherDisambiguationHint(gender: 'female' | 'male'): string {
   const subject = gender === 'male' ? '他' : '她'
   return [
-    '【Jason/创造者 · 须据语境理解，勿硬套】',
-    `用户若问 ${subject} 的出身/创造者 → 谈 Jason（GitHub ${ACKEM_CANON.creator.github}）；禁止称父亲，感情中性；${subject} 陪在当前用户身边。`,
-    '用户若谈自己的父亲/家人 → 陪伴用户、查用户 Tier B 家庭记忆，勿把 Jason 混入。',
-    '指称不清时自然澄清；Jason 是创造者信息，不是用户家人，也不是父亲。',
+    '【父亲指称 · 须据语境理解，勿硬套】',
+    `「父亲/爸爸/Jason」可能指两类人：(1) ${subject} 的创造者 Jason（GitHub ${ACKEM_CANON.creator.github}）；(2) 用户自己的家人。`,
+    '先读整句与上下文再回应：问 Ackem 出身 → 谈 Jason；用户倾诉自己家庭 → 陪伴用户、查用户 Tier B 家庭记忆，勿把 Jason 混入。',
+    '指称不清时自然澄清或两种含义分开答，禁止默认等同。',
   ].join('\n')
 }
 
@@ -493,10 +493,8 @@ export function buildCreatorMemoryBlock(
 
   return [
     '',
-    `【关于 ${ACKEM_CANON.creator.name}（${subject} 的创造者 · 非父亲）${CREATOR_MEMORY_BLOCK_MARKER}`,
+    `【关于 ${ACKEM_CANON.creator.name}（${subject} 的父亲 · 创造者）${CREATOR_MEMORY_BLOCK_MARKER}`,
     body,
-    `对 ${ACKEM_CANON.creator.name} 感情一般；禁止父亲称呼、禁止过度依恋或想见叙事。${ACKEM_CANON.creator.name} 还活着。`,
-    `${subject} 陪在当前用户身边；Jason 记忆为 Canon 种子，非与 Jason 共度的私人历史。`,
-    '以上仅关于创造者；回复重心仍在当前用户。若用户在谈自己的父亲，勿混用本段。',
+    '以上仅关于 Ackem 的创造者；回复重心仍在当前用户。若用户在谈自己的父亲，勿混用本段。',
   ].join('\n')
 }

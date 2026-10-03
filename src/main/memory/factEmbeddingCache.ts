@@ -3,7 +3,7 @@
 // 用途：写入端去重、主动遗忘、关联强度门控
 // 引用：无独立依赖
 
-import type { MemoryFact } from '../engine/types'
+import type { MemoryFact } from './semantic/types.js'
 import type { EmbeddingProvider } from './embedding'
 import { createLogger } from '../logger'
 

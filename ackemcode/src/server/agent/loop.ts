@@ -1,5 +1,6 @@
 import { nanoid } from 'nanoid'
 import type {
+  AckemTask,
   AgentEvent,
   ChatMessage,
   AckemCodeSettings,
@@ -774,6 +775,8 @@ export async function runAgentTurn(opts: {
     w: import('../tools/worktree/worktree.js').WorktreeSession | null
   ) => void
   sessionId?: string
+  /** Host (Ackem) task envelope — forwarded into the system prompt. */
+  ackemTask?: AckemTask
   /** SessionStart hook source (CC sessionStart.ts) */
   sessionStartSource?: 'startup' | 'resume' | 'clear' | 'compact' | 'prompt'
   personaSlot?: string
@@ -1012,7 +1015,8 @@ export async function runAgentTurn(opts: {
         autoMemoryEnabled: settings.autoMemoryEnabled,
         hooks: hooksConfig,
         disableAllHooks: hooksDisabled,
-        sessionId
+        sessionId,
+        ackemTask: opts.ackemTask
       })
     },
     ...opts.history.filter((m) => m.role !== 'system'),

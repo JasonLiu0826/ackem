@@ -11,6 +11,8 @@ const DOMAIN_LABELS: Record<string, string> = {
 
 export function ArchivePage(): JSX.Element {
   const pushToast = useAppStore((s) => s.pushToast)
+  const activeAgentId = useAppStore((s) => s.activeAgentId)
+  const activeAgentName = useAppStore((s) => s.activeAgentName)
   const [files, setFiles] = useState<ArchiveFile[]>([])
   const [domains, setDomains] = useState<string[]>([])
   const [lastExportAt, setLastExportAt] = useState<string | null>(null)
@@ -20,34 +22,43 @@ export function ArchivePage(): JSX.Element {
   const [exporting, setExporting] = useState(false)
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
 
+  const ownerOpts = useCallback(
+    () => ({ ownerAgentId: activeAgentId || 'default' }),
+    [activeAgentId]
+  )
+
   const loadList = useCallback(async () => {
     setLoading(true)
     try {
-      const r = await window.ackem.archiveList()
+      const r = await window.ackem.archiveList(ownerOpts())
       setFiles(r.files)
       setDomains(r.domains)
       setLastExportAt(r.lastExportAt)
     } catch { /* ignore */ }
     finally { setLoading(false) }
-  }, [])
+  }, [ownerOpts])
 
-  useEffect(() => { void loadList() }, [loadList])
+  useEffect(() => {
+    setSelectedFile(null)
+    setContent('')
+    void loadList()
+  }, [loadList, activeAgentId])
 
   useEffect(() => {
     const off = window.ackem.onMemoryUpdated?.(() => {
       void loadList()
       if (selectedFile) {
-        void window.ackem.archiveRead(selectedFile).then((r) => {
+        void window.ackem.archiveRead(selectedFile, ownerOpts()).then((r) => {
           if (r.ok && r.text) setContent(r.text)
         })
       }
     })
     return () => off?.()
-  }, [loadList, selectedFile])
+  }, [loadList, selectedFile, ownerOpts])
 
   const openFile = async (path: string) => {
     setSelectedFile(path)
-    const r = await window.ackem.archiveRead(path)
+    const r = await window.ackem.archiveRead(path, ownerOpts())
     if (r.ok && r.text) setContent(r.text)
     else setContent(r.error ?? '读取失败')
   }
@@ -62,7 +73,7 @@ export function ArchivePage(): JSX.Element {
   const handleExport = async () => {
     setExporting(true)
     try {
-      const r = await window.ackem.archiveExport()
+      const r = await window.ackem.archiveExport(ownerOpts())
       pushToast(`导出完成：${r.factsExported} 条事实、${r.episodesExported} 段情节、${r.coreCount} 条核心记忆`)
       await loadList()
     } catch (e) {
@@ -77,7 +88,9 @@ export function ArchivePage(): JSX.Element {
     <div className="flex h-full min-h-0 flex-1 flex-col bg-surface">
       <header className="flex items-center justify-between border-b border-surface-inset bg-surface-raised px-6 py-4">
         <div>
-          <h1 className="text-base font-semibold text-ink">记忆档案</h1>
+          <h1 className="text-base font-semibold text-ink">
+            记忆档案 · {activeAgentName || 'Ackem'}
+          </h1>
           <p className="mt-0.5 text-xs text-ink-muted">
             {domains.length > 0
               ? `${domains.length} 个领域 · ${files.filter(f => !f.isDir).length} 个文件 · 人类可读`

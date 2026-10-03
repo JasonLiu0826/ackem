@@ -47,12 +47,22 @@ function ensureMemoryPath(dataRoot: string, rel: string): { ok: true; memoryRel:
   return { ok: false, error: 'path must be under imports/ or memory/' }
 }
 
-function previewMerge(factStore: FactStore, draft: Omit<ImportFactDraft, 'draftId' | 'enabled'>): {
+function previewMerge(
+  factStore: FactStore,
+  draft: Omit<ImportFactDraft, 'draftId' | 'enabled'>,
+  ownerAgentId: string
+): {
   mergeWithExistingId?: string
   mergeWithSummary?: string
 } {
   factStore.load()
-  const similar = factStore.findSimilarFacts(draft.subcategory, draft.subject, draft.summary, 0.35)
+  const similar = factStore.findSimilarFacts(
+    draft.subcategory,
+    draft.subject,
+    draft.summary,
+    0.35,
+    ownerAgentId
+  )
   const existing = similar[0]
   if (!existing) return {}
   return {
@@ -67,6 +77,7 @@ export async function parseDocumentsToImportJob(args: {
   relPaths: string[]
   consentAck: boolean
   consentVersion: number
+  ownerAgentId?: string
 }): Promise<ImportParseResult> {
   if (!args.consentAck) {
     return { ok: false, error: '须先确认知情同意' }
@@ -78,12 +89,15 @@ export async function parseDocumentsToImportJob(args: {
     return { ok: false, error: '未选择文件' }
   }
 
+  const ownerAgentId = (args.ownerAgentId?.trim() || 'default') as string
+
   const jobId = randomUUID()
   const job: ImportJob = {
     id: jobId,
     status: 'parsing',
     files: [],
     createdAt: new Date().toISOString(),
+    ownerAgentId,
     facts: [],
     episodes: [],
     anchors: [],
@@ -123,7 +137,12 @@ export async function parseDocumentsToImportJob(args: {
       job.files.push(memoryRel)
 
       if (isMemoryJsonImportPath(memoryRel)) {
-        const parsed = parseMemoryJsonText({ text, sourceFile: memoryRel, factStore })
+        const parsed = parseMemoryJsonText({
+          text,
+          sourceFile: memoryRel,
+          factStore,
+          ownerAgentId,
+        })
         if (!parsed.ok) {
           return { ok: false, error: `${memoryRel}: ${parsed.error}` }
         }
@@ -158,7 +177,7 @@ export async function parseDocumentsToImportJob(args: {
             chunkIndex: ci,
             confidence: Math.min(f.confidence ?? 0.65, 0.78),
           }
-          const merge = previewMerge(factStore, base)
+          const merge = previewMerge(factStore, base, ownerAgentId)
           if (merge.mergeWithExistingId) job.stats.factsMergedPreview += 1
           job.facts.push({
             draftId: newDraftId(),

@@ -1,6 +1,7 @@
 import type { WebContents } from 'electron'
 import type { AppSettings } from './settings'
 import { finalizeTurnAfterStream } from './postChatTurn'
+import { sendChatDone } from './chatDonePayload'
 import { buildLlmHeaders, resolveChatCompletionsUrl, shouldSendTools } from './llmEndpoint'
 import { buildToolFollowUpRequestBody, buildToolResultsFallback } from './toolFollowUp'
 import { streamAnthropicMessages } from './anthropicMessages'
@@ -87,6 +88,8 @@ import {
   DESKTOP_AGENT_TASK_START_ACK
 } from './desktop-agent/agentJobRouting'
 import { isContinueTaskPlanIntent } from './desktop-agent/task-plan/taskPlanStore'
+import { outputGuard } from './channel/outputGuard'
+import { peekChannelPlan } from './channel/lastPlan'
 
 const log = createLogger('chat')
 
@@ -213,7 +216,8 @@ export async function streamChatCompletion(
   const url = resolveChatCompletionsUrl(settings)
   const controller = new AbortController()
   const desktopAgentChatMode = body.desktopAgentChatMode === true
-  const agentActive = isDesktopAgentToolingActive(settings, desktopAgentChatMode)
+  // 桌面助手已退役：本机活走通道 work，不再把电脑工具交给伴侣循环。
+  const agentActive = false
   const chatSessionId = typeof body.sessionId === 'string' ? body.sessionId : 'default'
   const agentTimeoutMs = agentActive ? 900_000 : settings.timeoutMs || 120_000
   const abortTimer = setTimeout(() => controller.abort(), agentTimeoutMs)
@@ -305,7 +309,7 @@ export async function streamChatCompletion(
         (text) => webContents.send('chat:status', text)
       )
       webContents.send('chat:replace', companion)
-      webContents.send('chat:done', {
+      sendChatDone(webContents, {
         memoryWrites: [`KNOWLEDGE 整理「${knowledgeTopic}」`],
         assistantText: companion,
         turnId: turnIdOnly
@@ -340,7 +344,7 @@ export async function streamChatCompletion(
         (text) => webContents.send('chat:status', text)
       )
       webContents.send('chat:replace', companion)
-      webContents.send('chat:done', {
+      sendChatDone(webContents, {
         memoryWrites: [`PLAN 计划书「${planDocumentTopic}」`],
         assistantText: companion,
         turnId: turnIdOnly
@@ -382,7 +386,7 @@ export async function streamChatCompletion(
       } else {
         webContents.send('chat:replace', mockText)
       }
-      webContents.send('chat:done', {
+      sendChatDone(webContents, {
         memoryWrites: [],
         assistantText: mockText,
         turnId
@@ -413,7 +417,7 @@ export async function streamChatCompletion(
     ) {
       notifyChatStreamStart(webContents)
       webContents.send('chat:replace', DESKTOP_AGENT_TASK_START_ACK)
-      webContents.send('chat:done', {
+      sendChatDone(webContents, {
         memoryWrites: [],
         assistantText: DESKTOP_AGENT_TASK_START_ACK,
         turnId
@@ -600,7 +604,7 @@ export async function streamChatCompletion(
               ...(round1Text.trim() ? [{ role: 'assistant', content: round1Text }] : []),
               {
                 role: 'user',
-                content: buildPostToolTaskPlanNudge(taskPlan, audit) ?? gate.continuationUserMessage
+                content: buildPostToolTaskPlanNudge(taskPlan, audit) ?? '请继续完成未通过的步骤。'
               }
             ]
             continue
@@ -836,7 +840,16 @@ export async function streamChatCompletion(
       webContents.send('chat:replace', assistantAcc)
     }
 
-    webContents.send('chat:done', {
+    const rememberedPlan = peekChannelPlan(chatSessionId)
+    if (rememberedPlan) {
+      const guarded = outputGuard(assistantAcc, rememberedPlan.plan, rememberedPlan.executed)
+      if (guarded !== assistantAcc) {
+        assistantAcc = guarded
+        webContents.send('chat:replace', assistantAcc)
+      }
+    }
+
+    sendChatDone(webContents, {
       memoryWrites: writes,
       assistantText: assistantAcc,
       turnId: turnIdLoop

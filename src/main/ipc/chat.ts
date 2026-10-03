@@ -2,9 +2,9 @@
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { randomUUID } from 'node:crypto'
-import { ipcMain } from 'electron'
+import { ipcMain, type IpcMainInvokeEvent } from 'electron'
 import { assembleMessages, mergeExtensionContextInjections } from '../context'
+import { assembleSocialMemberMessages } from '../context/promptAssembly'
 import { streamChatCompletion } from '../chat'
 import { markChatStreamEnd, markChatStreamStart } from '../desktop-agent/deliveryCoordinator'
 import { recordDesktopAckemActivity } from '../channels/weixin/activity'
@@ -17,62 +17,56 @@ import {
 } from '../engine/desire'
 import { activeRecall, runPreLlmTurn, type PreLlmResult } from '../engine/orchestrator'
 import { shouldSkipTierBIngestForOrigin } from '../canon/originEscalationGuard'
+import { STATE_JSON_VERSION } from '../engine/ackemParams'
 import { prepareTurnContext } from '../engine/prepareTurnContext'
 import type { DispatchResult } from '../extensions/protocols'
 
 /** 主动策略 Loop：缓存最近一轮的 intensityMod，供 chat:start 注入 */
 let lastIntensityMod = 1.0
+import { catalogRevisionOf, toCatalogEntry } from '../channel/matchCatalog'
+import { followPinnedWork } from '../channel/executeChannel'
+import { runMemoryAuditShortcutTurn } from '../chat/memoryAuditShortcut'
+import { surfaceVerdictLedgerFailure } from '../chat/routeVerdict'
 import {
-  runDispatchPipeline,
-  rejectDispatchExtension,
-  acceptDispatchExtension
-} from '../extensions/dispatch/contextPipeline'
-import { craftPlanCreateAsk } from '../extensions/openforu/craftPlanCreateAsk'
-import { executeEvolveExtension } from '../extensions/openforu/agent/executeEvolveExtension'
-import { executeOpenExtensionSurface } from '../extensions/openforu/surface/executeOpenSurface'
+  startSpeculative,
+  adoptSpeculative,
+  cutSpeculative,
+  cutNotificationPayload,
+  speculativeEnabled
+} from '../chat/speculativeManager'
+import { createPersistentProvisionalProjection } from '../chat/companionStream'
+import { explainRouteVerdictForTurn } from '../chat/routeKpi'
+import { interpretInput } from '../engine/interpreter'
 import { resolveDispatchHonestyGuard } from '../extensions/dispatch/dispatchHonestyGuard'
 import {
   buildExtensionCatalogListingBlock,
   isExtensionCapabilityListingQuery
 } from '../extensions/dispatch/extensionCapabilityListing'
-import { executeDispatchedExtension } from '../extensions/dispatch/dispatchExecutor'
 import { resolveDispatchTriggerStatus } from '../../shared/dispatchTrigger'
 import {
   clearExtensionTriggerTurn,
   consumeExtensionTriggerTurn
 } from '../extensionTriggerBus'
-import { resolveForcedWebSearchQuery } from '../extensions/plugins/builtin/knowledge-presentation/intent'
-import { enrichQueryForRecency } from '../extensions/plugins/builtin/knowledge-presentation/presentation/recencyContext'
-import { isWeatherQuery } from '../extensions/skills/builtin/tool/weather-sense/weatherIntent'
-import { preExecuteWeatherQuery } from '../extensions/skills/builtin/tool/weather-sense/weatherPreExecute'
-import { skillToolActivityLabel } from '../chatStatusLabels'
 import { detectPlanDocumentIntent } from '../planDocument/intent'
 import { detectMemoryAuditIntent } from '../../shared/memoryAuditIntent'
-import { isDesktopAgentSettingsReady } from '../../shared/desktopAgent'
-import { isDesktopAgentSessionActive } from '../../shared/desktopAgentModePolicy'
-import {
-  applyDesktopAgentModeToWorkIntent,
-  shouldForceWebSearchInDesktopAgentSession
-} from '../desktop-agent/modePolicy'
-import {
-  buildDesktopAgentCatalogSection,
-  buildDesktopAgentModeSystemHint
-} from '../../shared/desktopAgentCapabilityHint'
-import { buildCapabilityRoutingSystemHint } from '../../shared/desktopAgentCapabilities'
-import type { DesktopAgentCapabilityMatch } from '../../shared/desktopAgentCapabilities'
-import { resolveDesktopAgentCapability, invalidateDesktopAgentCapabilityRouteIndex } from '../desktop-agent/routing/resolveCapability'
-import { executeMemoryAuditTurn } from '../memory/memoryAudit/executeMemoryAuditTurn'
 import { resolveUserTaskFrame, buildTaskFrameSystemHint } from '../taskFrame'
-import { loadChatHistoryFromDb, saveChatHistoryToDb } from '../db/repos/chatHistory'
-import { saveState, defaultFullState } from '../engine/state-persistence'
+import { loadUnifiedChatRows } from '../chat/unifiedChatHistory'
+import { saveChatHistoryToDb } from '../db/repos/chatHistory'
+import { touchProactiveUserActivity } from '../companion/proactiveScheduler'
+import { engineSessionId } from '../session/canonical'
+import { saveState, defaultFullState, loadState } from '../engine/state-persistence'
 import { traceLatest } from '../engine/tracer'
 import { workingMemory } from '../memory/workingMemory'
-import { getOrCreateEngineCache, getOrInitEmbeddingProvider, ensureFactEmbeddingsReady, getCachedEmbeddingProvider } from '../engineCache'
+import { getOrCreateEngineCache, getOrInitEmbeddingProvider, ensureFactEmbeddingsReady } from '../engineCache'
 import { isEmbeddingReadyForChat } from '../embedding/embeddingReadiness'
 import { buildEngineSnapshot, buildMemoryMetaFromFacts } from '../extensions/snapshot'
 import { buildUserInfoBlock } from '../memory/userDossier'
 import { shouldAskUserName, getAskNamePrompt } from '../memory/userName'
 import { setPendingTurn } from '../turnPending'
+import { beginChatTurn } from '../chat/turnCoordinator'
+import { orchestrateChannelTurn } from '../chat/orchestrateChannelTurn'
+import { completeMemoryAuditShortcut } from '../chat/memoryAuditShortcut'
+import { isDesktopAgentToolingActive } from '../../shared/desktopAgent'
 import { registerAndFinalizeSkipTurn } from '../postChatTurn'
 import { probeLocalChat } from '../chat/waveEndpoint'
 import { startDeferredEnrich } from '../chat/deferredContext'
@@ -95,8 +89,212 @@ import {
   mergeEngineState,
   resolveDataRoot,
 } from './shared'
+import { isSocialMember } from '../social/agents/guards'
+import { PRIMARY_AGENT_ID, sessionIdForAgent } from '../social/agents/agentPaths'
+import { withAgentContext } from '../social/agents/withAgentContext'
+import { getRegisteredAgent } from '../social/agents/agentRegistry'
+import {
+  channelToInteractionSurface,
+  isInteractionSurface,
+  type InteractionSurface
+} from '../memory/provenance'
+import type { AgentRow } from '../db/repos/agentsRepo'
+import type { FullState } from '../engine/types'
 
 const log = createLogger('ipc-chat')
+
+function resolveInteractionSurface(
+  raw: unknown,
+  channel: 'desktop' | 'weixin' = 'desktop',
+  targetAgentId?: string
+): InteractionSurface {
+  return channelToInteractionSurface(
+    channel,
+    typeof raw === 'string' && isInteractionSurface(raw) ? raw : undefined,
+    targetAgentId
+  )
+}
+
+function resolveTargetAgentId(id?: string): string {
+  const t = id?.trim()
+  return t && t.length > 0 ? t : PRIMARY_AGENT_ID
+}
+
+function mergeSocialMemberState(
+  root: string,
+  settings: ReturnType<typeof loadSettings>,
+  row: AgentRow
+): FullState {
+  const sessionId = sessionIdForAgent(row.id)
+  const pers = defaultPersonalitySlice({
+    companionGender: row.gender,
+    personalityPresetId: row.preset_id,
+  })
+  const loaded = loadState(root, sessionId)
+  if (!loaded) return defaultFullState(pers)
+  const s = { ...loaded }
+  if (!s.counters) s.counters = { totalTurns: 0, sharedEventsCount: 0, consecutiveMeaningfulTurns: 0 }
+  s.personality = pers
+  s.personalityBaseline = { T: pers.T, I: pers.I, S: pers.S, O: pers.O, R: pers.R }
+  if (!s.userProfile) {
+    s.userProfile = defaultFullState(pers).userProfile
+  }
+  if (!s.externalAtmosphere) {
+    s.externalAtmosphere = { level: 0, label: 'neutral' }
+  }
+  if (!s.desireStack) {
+    s.desireStack = { slots: [null, null, null, null, null] }
+  }
+  if (!s.offlineThoughts) {
+    s.offlineThoughts = []
+  }
+  if (s.version !== STATE_JSON_VERSION) s.version = STATE_JSON_VERSION
+  void settings
+  void sessionId
+  return s
+}
+
+async function buildSocialMemberContext(
+  event: IpcMainInvokeEvent,
+  args: ContextBuildInvoke,
+  targetAgentId: string,
+  settings: ReturnType<typeof loadSettings>,
+  root: string
+) {
+  const agentRow = getRegisteredAgent(root, targetAgentId)
+  if (!agentRow) {
+    throw Object.assign(new Error('AGENT_NOT_FOUND'), { code: 'AGENT_NOT_FOUND' })
+  }
+  const sessionId = sessionIdForAgent(targetAgentId)
+  const chatTurn = beginChatTurn({
+    dataRoot: root,
+    sessionId,
+    userText: args.userText,
+    surface: 'desktop',
+    timezoneOverride: null,
+  })
+  const turnId = chatTurn.turnId
+  activeRecall.setPersistencePath(join(root, 'agents', targetAgentId, 'recall-history.json'))
+  const snap = getOrRebuildIndex()
+  const state = mergeSocialMemberState(root, settings, agentRow)
+  await getOrInitEmbeddingProvider(root)
+  const cache = getOrCreateEngineCache(root, snap)
+  const { store, retriever } = cache
+  const recentUserMsgs = (args.recentMessages ?? [])
+    .filter((m) => m.role === 'user')
+    .map((m) => m.content)
+
+  await ensureFactEmbeddingsReady(cache)
+  const preparedTurn = await prepareTurnContext({
+    msg: args.userText,
+    state,
+    factStore: store,
+    retriever,
+    sessionId,
+    turnIndex: args.turnIndex ?? 0,
+    memoryBudgetChars: settings.memoryBudgetChars,
+    recentUserMessages: recentUserMsgs,
+    dataRoot: root,
+    index: snap,
+    adultMode: settings.adultContentMode && settings.ageConfirmed18,
+  })
+
+  const pre = await runPreLlmTurn({
+    msg: args.userText,
+    prev: state,
+    factStore: store,
+    retriever,
+    sessionId,
+    dataRoot: root,
+    turnIndex: args.turnIndex ?? 0,
+    memoryBudgetChars: settings.memoryBudgetChars,
+    adultMode: settings.adultContentMode && settings.ageConfirmed18,
+    recentUserMessages: recentUserMsgs,
+    recentMessages: args.recentMessages,
+    preparedTurn,
+  })
+
+  lastIntensityMod = pre.intensityMod ?? 1.0
+  workingMemory.push(sessionId, {
+    turnIndex: args.turnIndex ?? 0,
+    userText: args.userText,
+    assistantText: '',
+  })
+
+  if (pre.skipLlm) {
+    saveState(root, pre.newState, sessionId)
+    const redline = pre.redlineReply ?? ''
+    if (redline) {
+      await finalizeSkipTurn({
+        turnId,
+        root,
+        sessionId,
+        turnIndex: args.turnIndex ?? 0,
+        userMsg: args.userText,
+        assistantText: redline,
+        pre,
+        prevState: state,
+        settings,
+      })
+    }
+    return {
+      messages: assembleSocialMemberMessages({
+        agentId: targetAgentId,
+        displayName: agentRow.name,
+        psycheBlock: pre.psycheBlock,
+        tierBBlock: '',
+        recentMessages: args.recentMessages ?? [],
+        userText: args.userText,
+        settings,
+      }),
+      skipLlm: true,
+      redlineReply: pre.redlineReply,
+      tracePreview: pre.trace,
+      turnId,
+      sessionId,
+      memoryFinalized: Boolean(redline),
+    }
+  }
+
+  saveState(root, pre.newState, sessionId)
+  setPendingTurn(turnId, {
+    dataRoot: root,
+    sessionId,
+    turnIndex: args.turnIndex ?? 0,
+    userMsg: args.userText,
+    newState: pre.newState,
+    prevState: structuredClone(state),
+    skipIngest: shouldSkipTierBIngestForOrigin(pre.trace),
+    trace: pre.trace,
+    event: pre.event,
+    surface: 'desktop',
+    interactionSurface: resolveInteractionSurface(
+      args.interactionSurface,
+      'desktop',
+      targetAgentId
+    ),
+    ownerAgentId: targetAgentId,
+  })
+
+  const messages = assembleSocialMemberMessages({
+    agentId: targetAgentId,
+    displayName: agentRow.name,
+    psycheBlock: pre.psycheBlock,
+    tierBBlock: pre.tierBBlock,
+    recentMessages: args.recentMessages ?? [],
+    userText: args.userText,
+    settings,
+  })
+
+  void event
+  return {
+    messages,
+    skipLlm: false,
+    turnId,
+    tracePreview: pre.trace,
+    sessionId,
+  }
+}
 
 async function finalizeSkipTurn(args: {
   turnId: string
@@ -106,6 +304,7 @@ async function finalizeSkipTurn(args: {
   userMsg: string
   assistantText: string
   pre: PreLlmResult
+  prevState: import('../engine/types').FullState
   settings: ReturnType<typeof loadSettings>
   skipIngest?: boolean
 }): Promise<void> {
@@ -117,6 +316,7 @@ async function finalizeSkipTurn(args: {
     userMsg: args.userMsg,
     assistantText: args.assistantText,
     newState: args.pre.newState,
+    prevState: args.prevState,
     trace: args.pre.trace,
     event: args.pre.event,
     settings: args.settings,
@@ -128,14 +328,6 @@ function applyDispatchToPre(pre: PreLlmResult, dispatchResult?: DispatchResult):
   if (!dispatchResult) return pre
   return {
     ...pre,
-    skipLlm: dispatchResult.decision === 'plan' || pre.skipLlm,
-    enterPlanMode: dispatchResult.decision === 'plan' ? true : pre.enterPlanMode,
-    planTopic:
-      dispatchResult.decision === 'plan' ? dispatchResult.planTopic : pre.planTopic,
-    dispatchAskMessage:
-      dispatchResult.decision === 'ask_invoke' || dispatchResult.decision === 'ask_plan'
-        ? dispatchResult.askMessage
-        : pre.dispatchAskMessage,
     trace: {
       ...pre.trace,
       dispatch: {
@@ -148,15 +340,59 @@ function applyDispatchToPre(pre: PreLlmResult, dispatchResult?: DispatchResult):
   }
 }
 
+/**
+ * 阶段 1「判决可见」: 本轮判决的人话解释, 渲染层（上下文抽屉）直接消费。
+ * 只读账本; 缺判决返回 null（错误计数在 KPI 侧, 不在这里重复上报）。
+ */
+function buildRouteExplain(dataRoot: string, turnId: string) {
+  const exp = explainRouteVerdictForTurn(dataRoot, turnId)
+  if (!exp?.found) return null
+  return {
+    found: true,
+    finalChannel: exp.finalChannel,
+    channelText: exp.channelText,
+    summary: exp.summary,
+    layers: exp.layers.map((l) => ({ layer: l.layer, ruleId: l.ruleId, ms: l.ms, text: l.text }))
+  }
+}
+
 export function registerChatIpc(): void {
   ipcMain.handle('context:build', async (event, args: ContextBuildInvoke) => {
     if (!isEmbeddingReadyForChat()) {
       throw Object.assign(new Error('EMBEDDING_WARMING'), { code: 'EMBEDDING_WARMING' })
     }
+    touchProactiveUserActivity()
     clearExtensionTriggerTurn()
     const settings = loadSettings()
     const root = resolveDataRoot(settings)
     ensureDataLayout(root)
+    const targetAgentId = resolveTargetAgentId(args.targetAgentId)
+    const interactionSurface = resolveInteractionSurface(
+      args.interactionSurface,
+      'desktop',
+      targetAgentId
+    )
+    const { markChatInFlight, clearChatInFlight } = await import('../social/tick/chatInFlight.js')
+    markChatInFlight(targetAgentId)
+    try {
+    if (isSocialMember(targetAgentId, root)) {
+      return withAgentContext(
+        targetAgentId,
+        () => buildSocialMemberContext(event, args, targetAgentId, settings, root),
+        { interactionSurface }
+      )
+    }
+    return withAgentContext(
+      PRIMARY_AGENT_ID,
+      async () => {
+    const sessionId = engineSessionId()
+    const chatTurn = beginChatTurn({
+      dataRoot: root,
+      sessionId,
+      userText: args.userText,
+      surface: interactionSurface === 'weixin' ? 'weixin' : 'desktop',
+      timezoneOverride: null,
+    })
     activeRecall.setPersistencePath(join(root, 'memory', 'recall-history.json'))
     const snap = getOrRebuildIndex()
     const state = mergeEngineState(root, settings)
@@ -167,11 +403,6 @@ export function registerChatIpc(): void {
       .filter((m) => m.role === 'user')
       .map((m) => m.content)
 
-    const sessionId = args.sessionId ?? 'default'
-    const desktopAgentSessionActive = isDesktopAgentSessionActive(
-      settings,
-      args.desktopAgentChatMode === true
-    )
     const extCoordinator = getExtensionsCoordinator()
     const memoryMeta = buildMemoryMetaFromFacts(
       store.listActive(),
@@ -182,17 +413,11 @@ export function registerChatIpc(): void {
     const engineSnap = buildEngineSnapshot(state, settings, memoryMeta)
     extCoordinator?.updateSnapshot(engineSnap)
 
-    let extensionInjections = desktopAgentSessionActive
-      ? []
-      : (extCoordinator?.getContextInjections(args.userText) ?? [])
+    let extensionInjections = extCoordinator?.getContextInjections(args.userText) ?? []
     if (extCoordinator && isExtensionCapabilityListingQuery(args.userText)) {
       event.sender.send('chat:status', '在翻扩展库…')
       const listingOptions = {
-        settings,
-        desktopAgentSection:
-          desktopAgentSessionActive && isDesktopAgentSettingsReady(settings)
-            ? buildDesktopAgentCatalogSection(settings)
-            : undefined
+        settings
       }
       extensionInjections = [
         ...extensionInjections,
@@ -200,12 +425,6 @@ export function registerChatIpc(): void {
       ]
     }
     let weatherPreInjection: string | null = null
-    if (extCoordinator && !desktopAgentSessionActive) {
-      if (isWeatherQuery(args.userText)) {
-        event.sender.send('chat:status', skillToolActivityLabel('get_weather'))
-      }
-      weatherPreInjection = await preExecuteWeatherQuery(extCoordinator, args.userText)
-    }
     let extensionEmotionHints = extCoordinator?.getAggregatedEmotionHints()
 
     await ensureFactEmbeddingsReady(cache)
@@ -222,53 +441,43 @@ export function registerChatIpc(): void {
       index: snap,
       adultMode: settings.adultContentMode && settings.ageConfirmed18,
     })
-    const retrievedMemoryBlock = preparedTurn.retrieval.tierBBlock.slice(0, 1200)
+    const desktopAgentSessionActive = isDesktopAgentToolingActive(
+      settings,
+      args.desktopAgentChatMode === true
+    )
 
-    const auditIntent =
-      !args.dispatchRespond && !detectPlanDocumentIntent(args.userText, args.recentMessages)
-        ? detectMemoryAuditIntent(args.userText, args.recentMessages)
-        : null
+    const auditIntent = !detectPlanDocumentIntent(args.userText, args.recentMessages)
+      ? detectMemoryAuditIntent(args.userText, args.recentMessages)
+      : null
 
     if (auditIntent) {
       event.sender.send('chat:status', '在整理记忆档案…')
-      const preAudit = await runPreLlmTurn({
-        msg: args.userText,
-        prev: state,
-        factStore: store,
+      // 整改 #2 二轮: the audit shortcut runs through the REAL seam function
+      // (verdict BEFORE reply, inside chat/memoryAuditShortcut.ts).
+      const { intro, pre, verdictDegraded } = await runMemoryAuditShortcutTurn({
+        dataRoot: root,
+        sessionId,
+        saveSessionId: currentSessionId(),
+        turnId: chatTurn.turnId,
+        turnIndex: args.turnIndex ?? 0,
+        userText: args.userText,
+        auditIntent,
+        state,
+        store,
+        epStore,
         retriever,
-        sessionId,
-        dataRoot: root,
-        turnIndex: args.turnIndex ?? 0,
-        memoryBudgetChars: settings.memoryBudgetChars,
-        ultralite: true,
         preparedTurn,
-      })
-      const { intro, pre } = executeMemoryAuditTurn({
-        dataRoot: root,
-        factStore: store,
-        episodicStore: epStore,
-        intent: auditIntent,
-        pre: preAudit,
-        webContents: event.sender,
-      })
-      saveState(root, pre.newState, currentSessionId())
-      const turnId = randomUUID()
-      await finalizeSkipTurn({
-        turnId,
-        root,
-        sessionId,
-        turnIndex: args.turnIndex ?? 0,
-        userMsg: args.userText,
-        assistantText: intro,
-        pre,
+        memoryBudgetChars: settings.memoryBudgetChars,
         settings,
-        skipIngest: true,
+        webContents: event.sender,
+        notify: (status) => event.sender.send('chat:status', status),
       })
+      void verdictDegraded
       return {
         skipLlm: true,
         redlineReply: intro,
         tracePreview: pre.trace,
-        turnId,
+        turnId: chatTurn.turnId,
         messages: [],
         memoryFinalized: true,
       }
@@ -279,320 +488,181 @@ export function registerChatIpc(): void {
     let resolvedMessageForKnowledge: string | undefined
     let dispatchMs = 0
     let preFromParallel: PreLlmResult | undefined
-    let surfaceInvokeResult: { message: string; opened: boolean } | undefined
 
-    if (args.dispatchRespond && !args.dispatchRespond.accepted) {
-      rejectDispatchExtension(sessionId, args.dispatchRespond.extensionId, {
-        dataRoot: root,
-        remember: args.dispatchRespond.remember
+    let catalogFailed = false
+    let catalogEntries: ReturnType<typeof toCatalogEntry>[] = []
+    try {
+      catalogEntries = (extCoordinator?.getDispatchCatalog(sessionId) ?? [])
+        .filter((e) => e.dispatch.mode === 'dispatched')
+        .map(toCatalogEntry)
+    } catch {
+      catalogFailed = true
+    }
+    const revision = catalogRevisionOf(catalogEntries)
+    const llm = createLlmJsonClient(settings)
+    const redlineHit = interpretInput(
+      args.userText,
+      state.relationship.trust,
+      Boolean(settings.adultContentMode && settings.ageConfirmed18)
+    ).isExtremeRedline
+    const preBaseArgs = {
+      msg: args.userText,
+      prev: state,
+      factStore: store,
+      retriever,
+      sessionId,
+      dataRoot: root,
+      turnIndex: args.turnIndex ?? 0,
+      memoryBudgetChars: settings.memoryBudgetChars,
+      adultMode: settings.adultContentMode && settings.ageConfirmed18,
+      recentUserMessages: recentUserMsgs,
+      recentMessages: args.recentMessages,
+      extensionEmotionHints,
+      preparedTurn,
+    }
+
+    const phase = await orchestrateChannelTurn({
+      turnConfirm: args.turnConfirm,
+      userText: args.userText,
+      recentMessages: args.recentMessages,
+      dataRoot: root,
+      sessionId,
+      chatTurn,
+      surface: interactionSurface === 'weixin' ? 'weixin' : 'desktop',
+      revision,
+      catalogEntries,
+      catalogFailed,
+      llm,
+      redlineHit,
+      preBaseArgs,
+      extCoordinator,
+      engineSnap,
+      onResidual: () => event.sender.send('chat:status', '正在判断意图…'),
+      onMilestone: (text) => event.sender.send('chat:status', text),
+    })
+    // 阶段 3-5 伴随流: 分类器等待期先行回应 (默认关; §17.3 门槛 6)。
+    const speculativeOn = speculativeEnabled() && !args.turnConfirm
+    if (speculativeOn) {
+      startSpeculative({
+        turnId: chatTurn.turnId,
+        sessionId,
+        userText: args.userText,
+        wc: event.sender,
+        runStream: async (systemPrompt, userText2, signal, onChunk) => {
+          const llmSettings = settings
+          const { buildLlmHeaders, resolveChatCompletionsUrl } = await import('../llmEndpoint')
+          const res = await fetch(resolveChatCompletionsUrl(llmSettings), {
+            method: 'POST',
+            signal,
+            headers: { 'content-type': 'application/json', ...buildLlmHeaders(llmSettings) },
+            body: JSON.stringify({
+              model: llmSettings.model,
+              stream: true,
+              max_tokens: 120,
+              temperature: 0.7,
+              messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userText2 }
+              ]
+            })
+          })
+          if (!res.ok || !res.body) return
+          const reader = res.body.getReader()
+          const decoder = new TextDecoder()
+          let buf = ''
+          for (;;) {
+            const { done, value } = await reader.read()
+            if (done) break
+            buf += decoder.decode(value, { stream: true })
+            const lines = buf.split('\n')
+            buf = lines.pop() ?? ''
+            for (const line of lines) {
+              const m = line.match(/^data: (.+)$/)
+              if (!m || m[1] === '[DONE]') continue
+              try {
+                const delta = JSON.parse(m[1])?.choices?.[0]?.delta?.content
+                if (typeof delta === 'string' && delta) onChunk(delta)
+              } catch {
+                /* skip malformed chunk */
+              }
+            }
+          }
+        }
       })
     }
-
-    if (args.dispatchRespond?.accepted && extCoordinator) {
-      acceptDispatchExtension(root, args.dispatchRespond.extensionId, args.dispatchRespond.remember)
-      const exec = await executeDispatchedExtension(
-        extCoordinator,
-        args.dispatchRespond.extensionId,
-        args.userText,
-        sessionId,
-        engineSnap
-      )
-      if (exec.contextInjection) extraDispatchInjections.push(exec.contextInjection)
-    }
-
-    if (extCoordinator && !args.dispatchRespond?.accepted && !desktopAgentSessionActive) {
-      const llm = createLlmJsonClient(settings)
-      const tDispatch = Date.now()
-      const preBaseArgs = {
-        msg: args.userText,
-        prev: state,
-        factStore: store,
-        retriever,
-        sessionId,
-        dataRoot: root,
-        turnIndex: args.turnIndex ?? 0,
-        memoryBudgetChars: settings.memoryBudgetChars,
-        adultMode: settings.adultContentMode && settings.ageConfirmed18,
-        recentUserMessages: recentUserMsgs,
-        recentMessages: args.recentMessages,
-        extensionEmotionHints,
-        preparedTurn,
-      }
-      const [piped, prePartial] = await Promise.all([
-        runDispatchPipeline({
-          userText: args.userText,
-          sessionId,
-          settings,
-          state,
-          recentMessages: args.recentMessages,
-          retrievedMemoryBlock,
-          coordinator: extCoordinator,
-          snapshot: engineSnap,
-          llm,
-          queryEmbed: preparedTurn.queryEmbed,
-          skipAskForExtensionId:
-            args.dispatchRespond?.accepted === false ? args.dispatchRespond.extensionId : undefined,
-        }),
-        runPreLlmTurn({ ...preBaseArgs, dispatchResult: undefined }),
-      ])
-      dispatchMs = Date.now() - tDispatch
-      dispatchResult = piped.dispatchResult
-      preFromParallel = prePartial
-      extraDispatchInjections.push(...piped.extraInjections)
-      surfaceInvokeResult = piped.surfaceInvokeResult
-      if (piped.resolvedMessage) resolvedMessageForKnowledge = piped.resolvedMessage
-      if (piped.emotionHintDelta) {
-        const h = piped.emotionHintDelta
-        extensionEmotionHints = {
-          affDelta: (extensionEmotionHints?.affDelta ?? 0) + (h.affDelta ?? 0),
-          secDelta: (extensionEmotionHints?.secDelta ?? 0) + (h.secDelta ?? 0),
-          aroDelta: (extensionEmotionHints?.aroDelta ?? 0) + (h.aroDelta ?? 0),
-          domDelta: (extensionEmotionHints?.domDelta ?? 0) + (h.domDelta ?? 0)
+    dispatchResult = phase.dispatchResult
+    extraDispatchInjections = phase.extraDispatchInjections
+    resolvedMessageForKnowledge = phase.resolvedMessageForKnowledge
+    dispatchMs = phase.dispatchMs
+    preFromParallel = phase.preFromParallel
+    if (phase.cardClosed && phase.channelPending && phase.preFromParallel) {
+      // 阶段 3-5: confirm-card exit → CUT speculative text into the projection.
+      if (speculativeOn) {
+        const cutText = cutSpeculative(chatTurn.turnId)
+        if (cutText && cutText.trim()) {
+          createPersistentProvisionalProjection(root).append({
+            turnId: chatTurn.turnId,
+            sessionId,
+            text: cutText,
+            createdAt: new Date().toISOString(),
+            supersededBy: 'confirm_card',
+            ...(phase.channelPending.planId ? { planId: phase.channelPending.planId } : {})
+          })
+          const notify = cutNotificationPayload(chatTurn.turnId, cutText, phase.channelPending.planId)
+          event.sender.send(notify.channel, notify.body)
         }
       }
-    } else if (extCoordinator && args.dispatchRespond?.accepted) {
-      dispatchResult = {
-        decision: 'auto_invoke',
-        extensionId: args.dispatchRespond.extensionId,
-        confidence: 1,
-        reasoning: 'user_confirmed_ask'
-      }
-    }
-
-    if (dispatchResult?.decision === 'evolve' && dispatchResult.extensionId && extCoordinator && !args.dispatchRespond) {
-      const preEvolve = preFromParallel ?? await runPreLlmTurn({
-        msg: args.userText,
-        prev: state,
-        factStore: store,
-        retriever,
-        sessionId,
-        dataRoot: root,
-        turnIndex: args.turnIndex ?? 0,
-        memoryBudgetChars: settings.memoryBudgetChars,
-        adultMode: settings.adultContentMode && settings.ageConfirmed18,
-        recentUserMessages: recentUserMsgs,
-        recentMessages: args.recentMessages,
-        dispatchResult,
-        preparedTurn,
-      })
-      saveState(root, preEvolve.newState, currentSessionId())
-      event.sender.send('chat:status', '正在优化扩展…')
-      const evolved = await executeEvolveExtension(
-        extCoordinator,
-        dispatchResult.extensionId,
-        args.userText,
-        settings
+      // 整改 #4 + Codex 小修: confirm-card exits surface verdict-ledger failure
+      // exactly ONCE via the deterministic user status (memory-degradation
+      // contract). The normal-exit call below is unreachable on this path.
+      surfaceVerdictLedgerFailure(
+        { failed: phase.verdictLedgerFailed },
+        {
+          pushInjection: () => {},
+          sendStatus: (s) => event.sender.send('chat:status', s)
+        }
       )
-      const turnId = randomUUID()
-      await finalizeSkipTurn({
-        turnId,
-        root,
-        sessionId,
-        turnIndex: args.turnIndex ?? 0,
-        userMsg: args.userText,
-        assistantText: evolved.message,
-        pre: preEvolve,
-        settings,
-      })
       return {
         skipLlm: true,
-        redlineReply: evolved.message,
-        tracePreview: preEvolve.trace,
-        turnId,
+        channelPending: phase.channelPending,
+        tracePreview: phase.preFromParallel.trace,
+        turnId: chatTurn.turnId,
         messages: [],
-        memoryFinalized: true,
       }
     }
 
-    if (
-      dispatchResult?.decision === 'invoke_surface' &&
-      dispatchResult.surfaceInvoke?.skipMainChatLlm &&
-      dispatchResult.extensionId &&
-      extCoordinator &&
-      !args.dispatchRespond
-    ) {
-      const preSurface = preFromParallel
-        ? applyDispatchToPre(preFromParallel, dispatchResult)
-        : await runPreLlmTurn({
-            msg: args.userText,
-            prev: state,
-            factStore: store,
-            retriever,
-            sessionId,
-            dataRoot: root,
-            turnIndex: args.turnIndex ?? 0,
-            memoryBudgetChars: settings.memoryBudgetChars,
-            adultMode: settings.adultContentMode && settings.ageConfirmed18,
-            recentUserMessages: recentUserMsgs,
-            recentMessages: args.recentMessages,
-            dispatchResult,
-            preparedTurn
-          })
-      saveState(root, preSurface.newState, currentSessionId())
-      const reply =
-        surfaceInvokeResult?.message ??
-        executeOpenExtensionSurface(extCoordinator, dispatchResult.extensionId).message
-      const turnId = randomUUID()
-      await finalizeSkipTurn({
-        turnId,
-        root,
-        sessionId,
-        turnIndex: args.turnIndex ?? 0,
-        userMsg: args.userText,
-        assistantText: reply,
-        pre: preSurface,
-        settings
-      })
-      return {
-        skipLlm: true,
-        redlineReply: reply,
-        tracePreview: preSurface.trace,
-        turnId,
-        messages: [],
-        memoryFinalized: true
+    // 阶段 3-5: normal chat exit → adopt (abort temp; formal stream regenerates).
+    if (speculativeOn) adoptSpeculative(chatTurn.turnId)
+    // 整改 #4/三轮: normal (non-card) exits surface verdict-ledger failure
+    // DETERMINISTICALLY (chat:status) and into the reply context — the model
+    // may paraphrase the injection, so the user status is authoritative.
+    surfaceVerdictLedgerFailure(
+      { failed: phase.verdictLedgerFailed },
+      {
+        pushInjection: (m) => extraDispatchInjections.push(m),
+        sendStatus: (s) => event.sender.send('chat:status', s)
       }
-    }
-
-    if (
-      dispatchResult?.decision === 'open_surface' &&
-      dispatchResult.extensionId &&
-      extCoordinator &&
-      !args.dispatchRespond
-    ) {
-      const preSurface = preFromParallel
-        ? applyDispatchToPre(preFromParallel, dispatchResult)
-        : await runPreLlmTurn({
-        msg: args.userText,
-        prev: state,
-        factStore: store,
-        retriever,
-        sessionId,
-        dataRoot: root,
-        turnIndex: args.turnIndex ?? 0,
-        memoryBudgetChars: settings.memoryBudgetChars,
-        adultMode: settings.adultContentMode && settings.ageConfirmed18,
-        recentUserMessages: recentUserMsgs,
-        recentMessages: args.recentMessages,
-        dispatchResult,
-        preparedTurn,
-      })
-      saveState(root, preSurface.newState, currentSessionId())
-      const opened = executeOpenExtensionSurface(extCoordinator, dispatchResult.extensionId)
-      const turnId = randomUUID()
-      await finalizeSkipTurn({
-        turnId,
-        root,
-        sessionId,
-        turnIndex: args.turnIndex ?? 0,
-        userMsg: args.userText,
-        assistantText: opened.message,
-        pre: preSurface,
-        settings,
-      })
-      return {
-        skipLlm: true,
-        redlineReply: opened.message,
-        tracePreview: preSurface.trace,
-        turnId,
-        messages: [],
-        memoryFinalized: true,
-      }
-    }
-
-    if (dispatchResult?.decision === 'ask_plan' && !args.dispatchRespond) {
-      const preAsk = preFromParallel
-        ? applyDispatchToPre(preFromParallel, dispatchResult)
-        : await runPreLlmTurn({
-        msg: args.userText,
-        prev: state,
-        factStore: store,
-        retriever,
-        sessionId,
-        dataRoot: root,
-        turnIndex: args.turnIndex ?? 0,
-        memoryBudgetChars: settings.memoryBudgetChars,
-        adultMode: settings.adultContentMode && settings.ageConfirmed18,
-        recentUserMessages: recentUserMsgs,
-        recentMessages: args.recentMessages,
-        dispatchResult,
-        preparedTurn,
-      })
-      saveState(root, preAsk.newState, currentSessionId())
-      const templateAsk = dispatchResult.askMessage ?? '要不要我帮你做一个 Skill 或插件？'
-      event.sender.send('chat:status', '在想怎么开口…')
-      const llm = createLlmJsonClient(settings)
-      const crafted = await craftPlanCreateAsk({
-        settings,
-        state: preAsk.newState,
-        userText: args.userText,
-        templateAsk,
-        planTopic: dispatchResult.planTopic,
-        llm
-      })
-      return {
-        skipLlm: true,
-        planCreatePending: {
-          askMessage: crafted.askMessage,
-          planTopic: dispatchResult.planTopic,
-          emotionLabel: crafted.emotionLabel
-        },
-        tracePreview: preAsk.trace,
-        turnId: randomUUID(),
-        messages: []
-      }
-    }
-
-    if (
-      dispatchResult?.decision === 'ask_invoke' &&
-      dispatchResult.extensionId &&
-      !args.dispatchRespond
-    ) {
-      const entry = extCoordinator!.getDispatchCatalog(sessionId).find(
-        (e) => e.id === dispatchResult!.extensionId
-      )
-      const preAsk = preFromParallel
-        ? applyDispatchToPre(preFromParallel, dispatchResult)
-        : await runPreLlmTurn({
-        msg: args.userText,
-        prev: state,
-        factStore: store,
-        retriever,
-        sessionId,
-        dataRoot: root,
-        turnIndex: args.turnIndex ?? 0,
-        memoryBudgetChars: settings.memoryBudgetChars,
-        adultMode: settings.adultContentMode && settings.ageConfirmed18,
-        recentUserMessages: recentUserMsgs,
-        recentMessages: args.recentMessages,
-        dispatchResult,
-        preparedTurn,
-      })
-      saveState(root, preAsk.newState, currentSessionId())
-      return {
-        skipLlm: true,
-        dispatchPending: {
-          extensionId: dispatchResult.extensionId,
-          extensionName: entry?.name ?? dispatchResult.extensionId,
-          askMessage:
-            dispatchResult.askMessage ?? `要不要启用「${entry?.name ?? '扩展'}」？`
-        },
-        tracePreview: preAsk.trace,
-        turnId: randomUUID(),
-        messages: []
-      }
-    }
+    )
 
     const dispatchCatalogEntry =
       dispatchResult?.extensionId && extCoordinator
         ? extCoordinator.getDispatchCatalog(sessionId).find((e) => e.id === dispatchResult.extensionId)
         : undefined
-    const mergedInjections = mergeExtensionContextInjections({
+    const mergedInjectionsBase = mergeExtensionContextInjections({
       coordinatorInjections: extensionInjections,
       weatherPreInjection,
       dispatchInjections: extraDispatchInjections,
       dispatchResult,
       dispatchCatalogEntry
     })
+    const mergedInjections = [...mergedInjectionsBase]
+    try {
+      const { consumeSocialEchoes, buildSocialEchoBlock } = await import('../social/index.js')
+      const echoBlock = buildSocialEchoBlock(consumeSocialEchoes(root))
+      if (echoBlock) mergedInjections.push(echoBlock)
+    } catch {
+      /* social echo optional */
+    }
 
     if (dispatchResult?.emotionHint && !extCoordinator) {
       const h = dispatchResult.emotionHint
@@ -656,7 +726,7 @@ export function registerChatIpc(): void {
       assistantText: ''
     })
 
-    const turnId = randomUUID()
+    const turnId = chatTurn.turnId
 
     const userTaskFrame = await resolveUserTaskFrame(settings, args.userText)
     const taskFrameSystemHint = buildTaskFrameSystemHint(userTaskFrame)
@@ -672,40 +742,8 @@ export function registerChatIpc(): void {
         ? `\n【重要提示】你还不知道用户的名字。请用你的人格风格自然地询问ta叫什么。不要直接说"请告诉我你的名字"——用你自己的说话方式。`
         : undefined
 
-    const desktopAgentHintBase =
-      args.desktopAgentChatMode && isDesktopAgentSettingsReady(settings)
-        ? `\n${buildDesktopAgentModeSystemHint(settings)}`
-        : undefined
-
-    let desktopAgentCapability: DesktopAgentCapabilityMatch | undefined
-    if (desktopAgentSessionActive && preparedTurn.queryEmbed?.length) {
-      const provider = getCachedEmbeddingProvider(root)
-      desktopAgentCapability =
-        (await resolveDesktopAgentCapability({
-          dataRoot: root,
-          userText: args.userText,
-          queryEmbed: preparedTurn.queryEmbed,
-          settings,
-          provider
-        })) ?? undefined
-      if (desktopAgentCapability) {
-        log.info('desktop-agent.capability', {
-          id: desktopAgentCapability.capabilityId,
-          handler: desktopAgentCapability.handler,
-          score: desktopAgentCapability.score,
-          source: desktopAgentCapability.source
-        })
-      }
-    }
-
-    const desktopAgentRoutingHint = desktopAgentCapability
-      ? `\n${buildCapabilityRoutingSystemHint(desktopAgentCapability)}`
-      : undefined
-
-    const desktopAgentHint = [desktopAgentHintBase, desktopAgentRoutingHint].filter(Boolean).join('\n') || undefined
-
     const mergedSystemHint =
-      [args.systemHint, desktopAgentHint, taskFrameSystemHint, honesty.systemHint, askNameHint].filter(Boolean).join('\n\n') ||
+      [args.systemHint, taskFrameSystemHint, honesty.systemHint, askNameHint].filter(Boolean).join('\n\n') ||
       undefined
 
     const userInfoBlock = buildUserInfoBlock(root, store)
@@ -725,6 +763,7 @@ export function registerChatIpc(): void {
           userMsg: args.userText,
           assistantText: redline,
           pre,
+          prevState: state,
           settings,
         })
       }
@@ -752,6 +791,7 @@ export function registerChatIpc(): void {
         dispatchBypassed: honesty.dispatchBypassed,
         dispatchTriggered,
         memoryFinalized: Boolean(redline),
+        routeExplain: buildRouteExplain(root, turnId),
       }
     }
 
@@ -779,13 +819,17 @@ export function registerChatIpc(): void {
 
     setPendingTurn(turnId, {
       dataRoot: root,
-      sessionId: args.sessionId ?? 'default',
+      sessionId: args.sessionId ?? engineSessionId(),
       turnIndex: args.turnIndex ?? 0,
       userMsg: args.userText,
       newState: finalState,
+      prevState: structuredClone(state),
       skipIngest: shouldSkipTierBIngestForOrigin(pre.trace),
       trace: pre.trace,
-      event: pre.event
+      event: pre.event,
+      surface: interactionSurface === 'weixin' ? 'weixin' : 'desktop',
+      interactionSurface,
+      ownerAgentId: PRIMARY_AGENT_ID,
     })
 
     const messages = assembleMessages({
@@ -807,16 +851,7 @@ export function registerChatIpc(): void {
       if (planHit) planDocumentTopic = planHit.topic
     }
 
-    const workIntentForRouting = desktopAgentSessionActive
-      ? applyDesktopAgentModeToWorkIntent(pre.workIntent, true)
-      : pre.workIntent
-    const forcedWebSearchQueryRaw = planDocumentTopic
-      ? undefined
-      : resolveForcedWebSearchQuery(workIntentForRouting)
-    const forcedWebSearchQuery = shouldForceWebSearchInDesktopAgentSession(
-      desktopAgentSessionActive,
-      forcedWebSearchQueryRaw ? enrichQueryForRecency(forcedWebSearchQueryRaw) : undefined
-    )
+    const forcedWebSearchQuery = undefined
     const dispatchTriggered =
       resolveDispatchTriggerStatus(dispatchResult, dispatchCatalogEntry) ??
       consumeExtensionTriggerTurn()
@@ -885,9 +920,20 @@ export function registerChatIpc(): void {
       useWaveChat: useWaveChat && Boolean(wavePlan && waveContext),
       wavePlan,
       waveContext,
-      desktopAgentCapability,
-      queryEmbed: preparedTurn.queryEmbed
+      queryEmbed: preparedTurn.queryEmbed,
+      routeExplain: buildRouteExplain(root, turnId)
     }
+      }
+    )
+    } finally {
+      clearChatInFlight(targetAgentId)
+    }
+  })
+
+  ipcMain.handle('workbench:follow', (_e, args: { chatSessionId?: string; text?: string }) => {
+    const text = args?.text?.trim() ?? ''
+    if (!text) return { ok: false, reason: '空跟一句' }
+    return followPinnedWork(args.chatSessionId || currentSessionId(), text, undefined, currentDataRoot())
   })
 
   ipcMain.handle('settings:probeLocalChat', async (_e, patch?: Partial<import('../settings').AppSettings>) => {
@@ -902,57 +948,79 @@ export function registerChatIpc(): void {
     }
     const wc = event.sender
     const root = currentDataRoot()
+    const targetAgentId = resolveTargetAgentId(
+      typeof payload.targetAgentId === 'string' ? payload.targetAgentId : undefined
+    )
+    const interactionSurface = resolveInteractionSurface(
+      payload.interactionSurface,
+      'desktop',
+      targetAgentId
+    )
     const sessionId =
-      typeof payload.sessionId === 'string' ? payload.sessionId : currentSessionId()
+      typeof payload.sessionId === 'string'
+        ? payload.sessionId
+        : isSocialMember(targetAgentId, root)
+          ? sessionIdForAgent(targetAgentId)
+          : currentSessionId()
     recordDesktopAckemActivity(root)
+    touchProactiveUserActivity()
     if (lastIntensityMod !== 1.0) {
       payload.intensityMod = lastIntensityMod
     }
     markChatStreamStart(sessionId)
-    try {
-      await streamChatCompletion(wc, payload, root)
-    } finally {
-      markChatStreamEnd(sessionId)
-    }
-  })
-
-  ipcMain.handle('chat:loadHistory', () => {
-    const root = currentDataRoot()
-    const sid = currentSessionId()
-    const fromDb = loadChatHistoryFromDb(root, sid)
-    if (fromDb.length > 0) return fromDb
-    const file = join(root, 'companion', `chat-history-${sid}.json`)
-    if (!existsSync(file)) return []
-    try {
-      const rows = JSON.parse(readFileSync(file, 'utf-8')) as unknown[]
-      if (Array.isArray(rows) && rows.length > 0) {
-        saveChatHistoryToDb(root, sid, rows)
+    const runChat = async () => {
+      try {
+        await streamChatCompletion(wc, payload, root)
+      } finally {
+        markChatStreamEnd(sessionId)
       }
-      return Array.isArray(rows) ? rows : []
-    } catch {
-      return []
     }
+    await withAgentContext(targetAgentId, runChat, { interactionSurface })
   })
 
-  ipcMain.handle('chat:saveHistory', (_e, rows: unknown[]) => {
+  ipcMain.handle('chat:loadHistory', (_e, opts?: { targetAgentId?: string }) => {
     const root = currentDataRoot()
+    const targetAgentId = resolveTargetAgentId(opts?.targetAgentId)
+    const sid = isSocialMember(targetAgentId, root)
+      ? sessionIdForAgent(targetAgentId)
+      : currentSessionId()
+    return loadUnifiedChatRows(root, sid)
+  })
+
+  ipcMain.handle(
+    'chat:saveHistory',
+    (_e, rows: unknown[], opts?: { targetAgentId?: string }) => {
+    const root = currentDataRoot()
+    const targetAgentId = resolveTargetAgentId(opts?.targetAgentId)
     const dir = join(root, 'companion')
-    const sid = currentSessionId()
+    const sid = isSocialMember(targetAgentId, root)
+      ? sessionIdForAgent(targetAgentId)
+      : currentSessionId()
     mkdirSync(dir, { recursive: true })
     const trimmed = rows.slice(-2000)
     writeFileSync(join(dir, `chat-history-${sid}.json`), JSON.stringify(trimmed), 'utf-8')
     saveChatHistoryToDb(root, sid, trimmed)
   })
 
-  ipcMain.handle('state:get', () => {
+  ipcMain.handle('state:get', (_e, opts?: { targetAgentId?: string }) => {
     const s = loadSettings()
     const root = resolveDataRoot(s)
     ensureDataLayout(root)
-    const st = mergeEngineState(root, s)
+    const targetAgentId = resolveTargetAgentId(opts?.targetAgentId)
+    let st
+    if (isSocialMember(targetAgentId, root)) {
+      const row = getRegisteredAgent(root, targetAgentId)
+      if (!row) {
+        throw Object.assign(new Error('AGENT_NOT_FOUND'), { code: 'AGENT_NOT_FOUND' })
+      }
+      st = mergeSocialMemberState(root, s, row)
+    } else {
+      st = mergeEngineState(root, s)
+    }
     const gapHours = (Date.now() - new Date(st.lastActive).getTime()) / 3600000
     const shock =
       gapHours >= 1 ? { gapHours: Math.round(gapHours), active: true } : { active: false }
-    return { ...st, _reunion: shock }
+    return { ...st, _reunion: shock, agentId: targetAgentId }
   })
 
   ipcMain.handle('state:reset', () => {

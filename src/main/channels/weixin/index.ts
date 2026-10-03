@@ -4,6 +4,7 @@ import { broadcastToRenderers } from '../../rendererBroadcast'
 import { disconnectWeixin } from './auth'
 import { startWeixinMonitor, type WeixinMonitorHandle } from './monitor'
 import { loadWeixinAccount } from './store'
+import { resolveWeixinBoundAgentId } from './store'
 import { notifyWeixinStart, notifyWeixinStop } from './api'
 import {
   startWeixinProactiveScheduler,
@@ -27,6 +28,7 @@ export type WeixinChannelStatus = {
   proactiveEnabled: boolean
   accountId?: string
   userId?: string
+  boundAgentId?: string
   lastError?: string | null
   tokenExpired: boolean
 }
@@ -41,6 +43,7 @@ export function getWeixinChannelStatus(dataRoot: string): WeixinChannelStatus {
     proactiveEnabled: settings.weixinProactiveEnabled !== false,
     accountId: account?.accountId,
     userId: account?.userId,
+    boundAgentId: account?.boundAgentId ?? resolveWeixinBoundAgentId(dataRoot, account),
     lastError,
     tokenExpired
   }

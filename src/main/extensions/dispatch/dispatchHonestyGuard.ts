@@ -4,7 +4,7 @@ import {
   detectExtensionDemandExplicit,
   extractBareFeatureCreateTopic
 } from './explicitDispatch'
-import { shouldRunCapabilityProbe } from '../openforu/extensionIntentClassifier'
+import { hasCapabilityGapHint } from '../../channel/gapHint'
 
 export type DispatchHonestyInput = {
   userText: string
@@ -13,15 +13,7 @@ export type DispatchHonestyInput = {
 
 export type DispatchHonestyBypassKind = 'create' | 'schedule' | 'both'
 
-const ROUTED_DECISIONS = new Set<DispatchResult['decision']>([
-  'plan',
-  'ask_plan',
-  'ask_invoke',
-  'auto_invoke',
-  'evolve',
-  'open_surface',
-  'invoke_surface'
-])
+const ROUTED_DECISIONS = new Set<DispatchResult['decision']>(['auto_invoke'])
 
 /** 到点 / 相对时间 / 日历日 */
 const SCHEDULE_TIME_RE =
@@ -44,7 +36,7 @@ export function detectMissedExtensionCreateIntent(userText: string): boolean {
   if (!trimmed) return false
   if (detectExtensionDemandExplicit(trimmed)) return true
   if (detectBareFeatureCreateCandidate(trimmed)) return true
-  if (shouldRunCapabilityProbe(trimmed)) return true
+  if (hasCapabilityGapHint(trimmed)) return true
   return false
 }
 

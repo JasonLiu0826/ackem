@@ -127,12 +127,45 @@ import {
   type TemporalSemanticSignal,
 } from '../memory/temporalSignalExtractor'
 import type { PreparedTurnContext } from './prepareTurnContext'
+import { loadSettings } from '../settings'
+import { getClock } from '../memory/temporal/clock.js'
+import { monthDayWindowRanges } from '../memory/temporal/calendarWindow.js'
+import { deriveTimeOfDay, formatLocalTimeHHMM } from '../memory/temporal/timeOfDay.js'
+import { resolveUserTimezone } from '../memory/temporal/timezonePolicy.js'
+import { zonedDateParts, zonedLocalDate, zonedMonthDay } from '../memory/temporal/zonedDate.js'
+import { getCurrentAgentId } from '../social/agents/withAgentContext'
+import { isPrimaryCompanion } from '../social/agents/guards'
 
-export const activeRecall = new ActiveRecall()
-
-// 用户画像 Embedding 缓存：最近 20 轮的 queryEmbed
-const recentEmbedHistory: number[][] = []
+const activeRecallByAgent = new Map<string, ActiveRecall>()
+const recentEmbedHistoryByAgent = new Map<string, number[][]>()
 const MAX_EMBED_HISTORY = 20
+
+export function getActiveRecall(agentId = getCurrentAgentId()): ActiveRecall {
+  let ar = activeRecallByAgent.get(agentId)
+  if (!ar) {
+    ar = new ActiveRecall()
+    activeRecallByAgent.set(agentId, ar)
+  }
+  return ar
+}
+
+/** 兼容旧调用：转发到当前 agent 的 ActiveRecall（Proxy 全量透传） */
+export const activeRecall: ActiveRecall = new Proxy({} as ActiveRecall, {
+  get(_target, prop, receiver) {
+    const inst = getActiveRecall()
+    const value = Reflect.get(inst, prop, receiver)
+    return typeof value === 'function' ? value.bind(inst) : value
+  },
+  set(_target, prop, value) {
+    const inst = getActiveRecall()
+    return Reflect.set(inst, prop, value)
+  },
+})
+
+export function clearAgentEngineMaps(agentId: string): void {
+  activeRecallByAgent.delete(agentId)
+  recentEmbedHistoryByAgent.delete(agentId)
+}
 
 export type PreLlmResult = {
   psycheBlock: string
@@ -285,16 +318,21 @@ export async function runPreLlmTurn(args: {
   const relevanceHint = computeRelevanceHint(prev.relationship, prev.emotion, turnIndex)
   // 构建时间感知上下文
   const gapHours = (Date.now() - new Date(prev.lastActive).getTime()) / 3600000
-  const nowDate = new Date()
+  const nowDate = getClock().now()
+  const memoryTimeZone = resolveUserTimezone(loadSettings().timezone).timezone
+  const zonedNow = zonedDateParts(nowDate, memoryTimeZone)
+  const userLocalDate = zonedLocalDate(nowDate, memoryTimeZone)
   const temporalCtx = {
-    timeOfDay: getTimeContext(nowDate).timeOfDay,
-    isWeekend: [0, 6].includes(nowDate.getDay()),
-    month: nowDate.getMonth() + 1,
-    season: (() => { const m = nowDate.getMonth() + 1; return m === 12 || m <= 2 ? 'winter' : m <= 5 ? 'spring' : m <= 8 ? 'summer' : 'autumn' })(),
-    hour: nowDate.getHours(),
-    weekday: nowDate.getDay(),
+    timeOfDay: deriveTimeOfDay(zonedNow.hour),
+    isWeekend: zonedNow.weekday === 0 || zonedNow.weekday === 6,
+    month: zonedNow.month,
+    season: (() => { const m = zonedNow.month; return m === 12 || m <= 2 ? 'winter' : m <= 5 ? 'spring' : m <= 8 ? 'summer' : 'autumn' })(),
+    hour: zonedNow.hour,
+    weekday: zonedNow.weekday,
     gapHours,
-    localDate: nowDate.toISOString().slice(0, 10)
+    localDate: userLocalDate,
+    observedAt: nowDate.toISOString(),
+    timeZone: memoryTimeZone,
   }
 
   // Embedding 语义兜底：获取 provider 和锚定向量（在 retriever 和 interpretInput 之前）
@@ -520,18 +558,17 @@ export async function runPreLlmTurn(args: {
 
   // 🆕 周日情绪曲线：模拟人类一周情绪周期（周五晚最兴奋，周日晚最失落）
   // 特殊日期（生日/周年/节日）会覆盖周日曲线——生日当天不该有 Sunday blues
-  const todayForBias = new Date()
   const firstMetStrEarly = prev.firstMetDate ?? null
   const ackemBirthday = ACKEM_CANON.birthDate
   const hasFastSpecialDate = detectFastSpecialDateType({
-    today: todayForBias,
+    localDate: temporalCtx.localDate,
     firstMetDate: firstMetStrEarly,
     ackemBirthday,
     factStore,
   })
   const moodBias = hasFastSpecialDate
     ? computeSpecialDateMoodBias(hasFastSpecialDate)
-    : computeWeekdayMoodBias(todayForBias)
+    : computeWeekdayMoodBias({ weekday: zonedNow.weekday, hour: zonedNow.hour })
   if (moodBias.affDelta !== 0 || moodBias.secDelta !== 0) {
     l2Next = {
       ...l2Next,
@@ -637,7 +674,7 @@ export async function runPreLlmTurn(args: {
     }
 
     // 计算主动性分值
-    const hour = new Date().getHours()
+    const hour = zonedNow.hour
     const recentUserWindow =
       recentMessages.length > 0
         ? recentMessages
@@ -710,7 +747,7 @@ export async function runPreLlmTurn(args: {
 
   const emergencePersist = prev.emergencePersistence ?? { active: null, history: [] }
 
-  let desireResult: { stack: import('./desire').DesireStack; hints: string[] }
+  let desireResult: { stack: import('./types').DesireStack; hints: string[] }
   let activeEmergence: EmergenceState | null
 
   if (ultralite) {
@@ -771,7 +808,7 @@ export async function runPreLlmTurn(args: {
   }
 
   if (!activeEmergence) {
-    const timeOfDay = getTimeContext().timeOfDay
+    const timeOfDay = temporalCtx.timeOfDay
     const emergenceCtx: EmergenceContext = {
       emotion: l2Next,
       stage: l1Next.stage,
@@ -837,14 +874,30 @@ export async function runPreLlmTurn(args: {
   let temporalSignal = produceTemporalSignal(specialDates)
   let mandatoryCanonTemporal = ''
   if (!ultralite) {
-    const today = new Date()
-    const todayMMDD = `${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+    const today = getClock().now()
+    const memoryTimeZone = resolveUserTimezone(loadSettings().timezone).timezone
+    const todayMMDD = zonedMonthDay(today, memoryTimeZone)
+    const mmRanges = monthDayWindowRanges(today, memoryTimeZone, 7, 7)
     const birthdays: BirthdayEntry[] = []
     try { for (const f of factStore.listActive()) { if ((f as any).ageMeta?.birthdayMMDD) birthdays.push({ subject: f.subject, birthdayMMDD: (f as any).ageMeta.birthdayMMDD }) } } catch { /* ok */ }
     const anchorRows: AnchorEntry[] = []
-    try { const db = getDatabase(dataRoot); if (db) anchorRows.push(...db.prepare(`SELECT anchor_date, anchor_type, linked_fact_ids, emotional_intensity FROM temporal_anchors WHERE SUBSTR(anchor_date,6,5)=? OR SUBSTR(anchor_date,6,5) BETWEEN ? AND ?`).all(todayMMDD, new Date(today.getTime()-7*86400000).toISOString().slice(5,10), new Date(today.getTime()+7*86400000).toISOString().slice(5,10)) as AnchorEntry[]) } catch { /* ok */ }
+    try {
+      const db = getDatabase(dataRoot)
+      if (db) {
+        const rangeSql = mmRanges
+          .map(() => 'SUBSTR(anchor_date,6,5) BETWEEN ? AND ?')
+          .join(' OR ')
+        anchorRows.push(
+          ...db
+            .prepare(
+              `SELECT anchor_date, anchor_type, linked_fact_ids, emotional_intensity FROM temporal_anchors WHERE SUBSTR(anchor_date,6,5)=? OR ${rangeSql}`
+            )
+            .all(todayMMDD, ...mmRanges.flatMap((r) => [r.start, r.end])) as AnchorEntry[]
+        )
+      }
+    } catch { /* ok */ }
     specialDates = detectSpecialDates({
-      today,
+      localDate: zonedLocalDate(today, memoryTimeZone),
       firstMetDate: firstMetStr,
       ackemBirthday,
       birthdays,
@@ -891,17 +944,19 @@ export async function runPreLlmTurn(args: {
       `本条【心理状态】只调节强弱、亲密度与话量，不得把你写成与预设无关的温柔客服或理性百科腔。`
   }
 
-  psycheBlock += `\n\n${buildAckemCanonBlock({
-    gender: preset?.gender ?? 'female',
-    relationshipStage: l1Next.stage,
-  })}`
-  if (shouldInjectStrangerGuard(prev.counters.totalTurns, prev.firstMetDate, nowDate)) {
-    psycheBlock += `\n\n${buildStrangerGuardBlock(prev.counters.totalTurns, prev.firstMetDate ?? null, nowDate)}`
-  }
-  if (!ultralite) {
-    mandatoryCanonTemporal = buildMandatoryCanonSpecialDateBlock(specialDates)
-    if (mandatoryCanonTemporal) {
-      psycheBlock += mandatoryCanonTemporal
+  if (isPrimaryCompanion(getCurrentAgentId())) {
+    psycheBlock += `\n\n${buildAckemCanonBlock({
+      gender: preset?.gender ?? 'female',
+      relationshipStage: l1Next.stage,
+    })}`
+    if (shouldInjectStrangerGuard(prev.counters.totalTurns, prev.firstMetDate, nowDate)) {
+      psycheBlock += `\n\n${buildStrangerGuardBlock(prev.counters.totalTurns, prev.firstMetDate ?? null, nowDate)}`
+    }
+    if (!ultralite) {
+      mandatoryCanonTemporal = buildMandatoryCanonSpecialDateBlock(specialDates)
+      if (mandatoryCanonTemporal) {
+        psycheBlock += mandatoryCanonTemporal
+      }
     }
   }
 
@@ -938,7 +993,8 @@ export async function runPreLlmTurn(args: {
           sessionId,
           lastActiveAt: prev.lastActive,
           memoryFactSummaries: memoryMeta.recentFactSummaries,
-          now: nowDate
+          now: nowDate,
+          timeZone: memoryTimeZone,
         })
       : null
 
@@ -964,11 +1020,11 @@ export async function runPreLlmTurn(args: {
           },
           companion: { mode: 'active', idleDurationMs: 0, lastInteractionMs: Date.now() },
           time: {
-            localDate: nowDate.toISOString().slice(0, 10),
-            localTime: nowDate.toTimeString().slice(0, 5),
+            localDate: temporalCtx.localDate,
+            localTime: formatLocalTimeHHMM(zonedNow.hour, zonedNow.minute),
             timeOfDay: temporalCtx.timeOfDay as RuntimeContext['time']['timeOfDay'],
-            hour: nowDate.getHours(),
-            minute: nowDate.getMinutes(),
+            hour: temporalCtx.hour,
+            minute: zonedNow.minute,
             isWeekend: temporalCtx.isWeekend
           },
           activity: {
@@ -1314,12 +1370,19 @@ export async function runPreLlmTurn(args: {
     userProfile = mapToLegacyUserProfile(prev.userSixDimensions, userProfile)
   }
   // 缓存最近 Embedding 历史（用于用户画像）
+  const embedAgentId = getCurrentAgentId()
+  const recentEmbedHistory = recentEmbedHistoryByAgent.get(embedAgentId) ?? []
   if (queryEmbed && queryEmbed.length > 0) {
     recentEmbedHistory.push(queryEmbed)
     if (recentEmbedHistory.length > MAX_EMBED_HISTORY) recentEmbedHistory.shift()
+    recentEmbedHistoryByAgent.set(embedAgentId, recentEmbedHistory)
   }
 
-  if (recentUserMessages.length >= 3 && fatherRefSignal?.kind !== 'ackem_creator') {
+  if (
+    isPrimaryCompanion(getCurrentAgentId()) &&
+    recentUserMessages.length >= 3 &&
+    fatherRefSignal?.kind !== 'ackem_creator'
+  ) {
     const prevTrust = prev.relationship.trust
     userProfile = updateUserProfile(
       [...recentUserMessages, msg],
@@ -1333,10 +1396,10 @@ export async function runPreLlmTurn(args: {
     )
   }
 
-  if (!ultralite && prev.userSixDimensions) {
+  if (isPrimaryCompanion(getCurrentAgentId()) && !ultralite && prev.userSixDimensions) {
     psycheBlock += `\n\n【${sixDimensionsToHint(prev.userSixDimensions)}】`
   }
-  if (!ultralite && userProfile.dominantArchetype !== 'unknown') {
+  if (isPrimaryCompanion(getCurrentAgentId()) && !ultralite && userProfile.dominantArchetype !== 'unknown') {
     const hint = archetypeToResponseHint(userProfile, { adultMode })
     const styleParts: string[] = []
     if (hint.paceSlow) styleParts.push(t('orch.paceSlow'))
@@ -1361,7 +1424,9 @@ export async function runPreLlmTurn(args: {
     lastActive: new Date().toISOString(),
     firstMetDate:
       prev.firstMetDate ??
-      (prev.counters.totalTurns === 0 ? new Date().toISOString().slice(0, 10) : undefined),
+      (prev.counters.totalTurns === 0
+        ? zonedLocalDate(getClock().now(), resolveUserTimezone(loadSettings().timezone).timezone)
+        : undefined),
     externalAtmosphere: externalAtm,  // P1-4
     userProfile,  // 🆕
     userSixDimensions: prev.userSixDimensions,
@@ -1522,13 +1587,10 @@ export async function runPreLlmTurn(args: {
   return {
     psycheBlock,
     tierBBlock,
-    skipLlm: dispatchResult?.decision === 'plan',
-    enterPlanMode: dispatchResult?.decision === 'plan',
-    planTopic: dispatchResult?.decision === 'plan' ? dispatchResult.planTopic : undefined,
-    dispatchAskMessage:
-      dispatchResult?.decision === 'ask_invoke' || dispatchResult?.decision === 'ask_plan'
-        ? dispatchResult.askMessage
-        : undefined,
+    skipLlm: false,
+    enterPlanMode: false,
+    planTopic: undefined,
+    dispatchAskMessage: undefined,
     newState,
     trace,
     event,

@@ -32,7 +32,7 @@ import {
   resetEmbeddingReadiness,
   setEmbeddingPhase,
 } from './embedding/embeddingReadiness'
-import type { MemoryFact } from './engine/types'
+import type { MemoryFact } from './memory/semantic/types.js'
 
 const log = createLogger('engine-cache')
 
@@ -481,6 +481,20 @@ export async function ensureEmbeddingReady(
     await new Promise((r) => setTimeout(r, 400))
   }
   return false
+}
+
+/** Vitest: register a ready provider under the same model signature used in production. */
+export function registerEmbeddingProviderForTests(
+  dataRoot: string,
+  provider: EmbeddingProvider
+): void {
+  embeddingProviderMap.set(dataRoot, provider)
+  embeddingConfigMap.set(dataRoot, provider.name())
+}
+
+export function resetAssociationIndexForTests(dataRoot?: string): void {
+  if (dataRoot) associationIndexMap.delete(dataRoot)
+  else associationIndexMap.clear()
 }
 
 /** 清空所有缓存 */

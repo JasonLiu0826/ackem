@@ -286,7 +286,11 @@ export const zhResources: Record<string, string> = {
   'settings.mobile.weixin.guideHint': '按顺序完成以下步骤即可。',
   'settings.mobile.weixin.step1': '确认 Ackem 已配置好对话模型（设置 → 模型与 API），并已确认年龄合规。',
   'settings.mobile.weixin.step2': '等待主界面记忆引擎预热完成（输入框上方无琥珀色「正在预热」提示）。',
-  'settings.mobile.weixin.step3': '点击下方「开始连接微信」，用微信扫描出现的二维码并确认绑定。',
+  'settings.mobile.weixin.step3': '先选择要绑定的角色，再点击「开始连接微信」，用微信扫描二维码并确认。',
+  'settings.mobile.weixin.boundAgentLabel': '对话角色',
+  'settings.mobile.weixin.boundAgentHint': '微信消息会进入所选角色的记忆与聊天；可随时改绑，无需重扫。',
+  'settings.mobile.weixin.pickAgent': '选择角色',
+  'settings.mobile.weixin.scanHintFor': '请用微信扫描二维码，连接后将与「{name}」对话',
   'settings.mobile.weixin.step4': '若手机提示输入数字验证码，在本页输入后提交。',
   'settings.mobile.weixin.step5': '连接成功后，打开「启用微信通道」，在手机微信里给她发文字消息测试。',
   'settings.mobile.weixin.step6': '保持 Ackem 在后台运行（可最小化到托盘，不要完全退出）。',
@@ -346,7 +350,7 @@ export const zhResources: Record<string, string> = {
   'settings.male': '男性',
   'settings.switchedPersonality': '已切换人格：{label}',
   'settings.modelAndApi': '模型与 API',
-  'settings.modelAndApiDesc': '聊天对话所用的大模型与 API 配置。',
+  'settings.modelAndApiDesc': '聊天和内置编程各自用哪套模型。',
   'settings.desktopAgent': '暂未开放 · 电脑助手',
   'settings.desktopAgentDesc': '开发中，当前仅展示设置入口；正式开放前不会在聊天中执行本机操作。',
   'settings.openforuPlan': 'Plan · OpenForU',
@@ -357,7 +361,13 @@ export const zhResources: Record<string, string> = {
   'settings.voice': '语音',
   'settings.voiceDesc': 'ASR 识别与 TTS 播报配置。',
   'settings.chatModel': '聊天模型',
-  'settings.chatModelHint': '用于日常对话与记忆抽取。',
+  'settings.chatModelHint': '用于日常对话与记忆抽取。不单独配置编程时，编程也用这一套。',
+  'settings.ackemcodeModel': '编程（AckemCode）',
+  'settings.ackemcodeModelHint': '改代码、跑任务时用的模型。',
+  'settings.ackemcodeIndependent': '为 AckemCode 单独配置',
+  'settings.ackemcodeIndependentHint': '打开后，编程可以用另一套网址、密钥和模型。',
+  'settings.ackemcodeSharedHint': '现在和上面的聊天模型共用同一套。',
+  'settings.ackemcodeAnthropicHint': '编程按 OpenAI 兼容接口调用。聊天如果走 Anthropic，请打开单独配置。',
   'settings.protocolNote': '协议说明（OpenAI 兼容 / Anthropic）',
   'settings.protocolDesc': 'OpenAI 兼容可接 Ollama、LM Studio、vLLM；Anthropic 走 Messages API。Base URL 若已含/chat/completions 或 /messages 则不再自动拼接。',
   'settings.llmProvider': 'LLM 厂商',
@@ -432,44 +442,24 @@ export const zhResources: Record<string, string> = {
   'settings.noContradiction': '未检测到矛盾',
   'settings.dangerousOps': '危险操作',
   'settings.archiveHint': '归档将清空记忆、聊天记录与引擎状态；保留 API 与人格设置。不可撤销。',
+  'settings.clearOwnerHint': '仅清空某个社会成员的记忆与聊天，不影响 Ackem 主体。角色卡片与人格会保留。',
   'settings.processing': '处理中…',
   'settings.archiveAction': '归档（清空记忆与聊天）',
+  'settings.clearOwnerAction': '清空选中角色记忆',
+  'settings.clearOwnerTitle': '清空哪个角色的记忆？',
+  'settings.clearOwnerDesc': '将清空该角色的事实记忆、档案与聊天记录。不可撤销。',
+  'settings.clearOwnerEmpty': '还没有社会成员。请先在「社会」页添加角色。',
+  'settings.clearOwnerConfirm': '清空该角色',
+  'settings.clearOwnerCancel': '取消',
+  'settings.clearOwnerDone': '已清空「{name}」的记忆',
+  'settings.clearOwnerFailed': '清空失败',
+  'settings.clearOwnerNeedSelect': '请先选择要清空的角色',
   'settings.safety': '安全与合规',
   'settings.safetyDesc': '年龄确认与成人内容模式。',
   'settings.ossNotice': '开源协议须知',
   'settings.ossNoticeDesc': 'Ackem 开源许可与用户须知。',
   'settings.ossNoticeBodyTitle': '协议正文',
-  'settings.ossNoticePlaceholder': `Ackem v1.0.0 · 2026-06-28
-
-【开源许可】
-Ackem 以 GNU Affero GPL v3（AGPL-3.0）发布。版权 © 2026 Jason Liu（JasonLiu0826）。
-修改与分发须同协议开源；若通过网络提供基于本软件的服务（含 SaaS），须向用户提供完整源代码。
-完整协议：https://github.com/JasonLiu0826/Ackem/blob/main/LICENSE
-
-【允许的使用】
-· 个人学习、研究与非商业自用
-· Fork 或集成到其他项目，且衍生作品同样以 AGPL-3.0 开源
-· 学术论文、教学与公开演示（注明 Ackem 与许可证）
-
-【商业授权】
-闭源商业产品、SaaS 不向用户提供源码、企业私有部署不开源等场景，须单独商业授权。
-联系：jasonliu_lyf_2005@qq.com
-
-【第三方组件】
-基于 Electron、Chromium、Node.js 及多项 npm 库；可能捆绑 embedding 模型与语音服务。
-各组件保留原许可证；详见仓库 NOTICE.md 与绿色版 LICENSE.electron.txt。
-
-【贡献者】
-提交 Pull Request 即表示同意 CLA v1.1。
-https://github.com/JasonLiu0826/Ackem/blob/main/CLA.md
-
-【隐私与用户数据】
-对话、记忆、情绪状态与导入文件均保存在本机；默认不上传对话内容。
-便携版：.\\data\\  ·  用户目录：%LOCALAPPDATA%\\Ackem\\
-备份请拷贝整棵 data 目录（含 ackem.db）。
-
-【官方发行包不含】
-用户 data/、API Key、.env 或开发者密钥；凭证需在设置中自行填写。`,
+  'settings.ossNoticePlaceholder': '正文内容待补充，后续将在此展示开源协议与用户须知。',
   'settings.compliance': '合规声明',
   'settings.ageConfirmed': '年龄确认已保存',
   'settings.ageCancelled': '已取消年龄确认',
@@ -514,37 +504,7 @@ https://github.com/JasonLiu0826/Ackem/blob/main/CLA.md
   'settings.debugPanelHint': '查看引擎 trace 与运行日志',
   'settings.about': '关于 Ackem',
   'settings.version': '版本',
-  'settings.versionValue': '1.0.0（开源本地版）',
-  'settings.versionSuffix': '（开源本地版）',
-  'settings.update': '更新',
-  'settings.updateDesc': '从 GitHub 或 Gitee Releases 下载完整绿色版并安装；您的 data/ 记忆与设置不会删除。',
-  'settings.updateCurrent': '当前版本',
-  'settings.updateCurrentHint': '发行版可通过下方检查 GitHub / Gitee 最新 Release。',
-  'settings.updateRemote': '远程版本',
-  'settings.updateLastCheck': '上次检查',
-  'settings.updateAvailable': '有新版本',
-  'settings.updateUpToDate': '已是最新',
-  'settings.updateChannel': '下载线路',
-  'settings.updateChannelAuto': '自动',
-  'settings.updateChannelGithub': 'GitHub',
-  'settings.updateChannelGitee': 'Gitee',
-  'settings.updateChannelError': '不可用：{error}',
-  'settings.updateSelectedLine': '将使用 {channel} · v{version}',
-  'settings.updateReleaseNotes': '更新说明',
-  'settings.updateCheck': '检查更新',
-  'settings.updateChecking': '检查中…',
-  'settings.updateNow': '立即更新',
-  'settings.updateStarting': '正在启动更新器…',
-  'settings.updateDevOnly': '开发模式（npm run dev）无法应用内更新；请使用绿色发行版。',
-  'settings.updateConfirmTitle': '确认更新',
-  'settings.updateConfirmBody': 'Ackem 将退出并打开更新终端窗口。将下载完整安装包并替换程序文件；记忆与 API 设置不会删除。',
-  'settings.updateConfirmYes': '继续更新',
-  'settings.updateConfirmNo': '取消',
-  'settings.updateErrorNotPackaged': '仅绿色发行版支持应用内更新。',
-  'settings.updateErrorNotWritable': '安装目录不可写，请更换位置或以管理员运行。',
-  'settings.updateErrorInZip': '请勿在 zip 内直接运行；请先完整解压。',
-  'settings.updateErrorNoRelease': '未找到可用的 Release 下载地址。',
-  'settings.updateErrorGeneric': '无法启动更新，请稍后重试或手动下载 Release。',
+  'settings.versionValue': '0.1.0（开源本地版）',
   'settings.data': '数据',
   'settings.dataDesc': '对话与记忆默认仅保存在本机目录',
   'settings.telemetry': '遥测',
@@ -552,8 +512,8 @@ https://github.com/JasonLiu0826/Ackem/blob/main/CLA.md
   'settings.canonBirthDate': '出生',
   'settings.canonCreator': '创造者',
   'settings.canonCreatorValue': 'Jason（GitHub JasonLiu0826，全球唯一）',
-  'settings.creatorMemoryTitle': '创造者记忆（Canon-M）',
-  'settings.creatorMemoryHint': 'Ackem 关于创造者 Jason 的 Canon 种子记忆（中性、不衰减）。只读；按语境轮播注入，不会写入用户 Tier B。',
+  'settings.creatorMemoryTitle': '父亲记忆（Canon-M）',
+  'settings.creatorMemoryHint': 'Ackem 对创造者 Jason 的不衰减记忆包。只读；对话中按语境轮播注入，不会写入用户 Tier B。',
   'settings.creatorMemoryReadOnly': '只读',
   'settings.creatorMemoryEmpty': '尚未 seed creator-memory.json',
   'settings.creatorMemoryCategory.identity': '身份',
@@ -587,6 +547,8 @@ https://github.com/JasonLiu0826/Ackem/blob/main/CLA.md
 
   // ═══ 主导航（FIX-035）═══
   'nav.chat': '对话',
+  'nav.code': '编程',
+  'nav.social': '社会',
   'nav.memory': '记忆',
   'nav.diary': '日记',
   'nav.gamemode': '游戏',

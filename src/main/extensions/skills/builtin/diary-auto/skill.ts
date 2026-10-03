@@ -43,7 +43,7 @@ async function execute(invocation: SkillInvocation): Promise<SkillResult> {
     return {
       ok: result.skipped,
       output: '',
-      error: result.skipped ? undefined : result.reason,
+      error: undefined,
       injectToContext: false,
       events: [],
       data: { date: today, skipped: true, reason: result.reason },

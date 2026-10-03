@@ -440,7 +440,7 @@ export class OpenForUAgentRunner {
       this.deps.writeStaging(session)
       if (!verify.ok && !verify.skipped) {
         if (bundleKind === 'uskill') {
-          await loader.deactivateUskill(extensionId)
+          await loader.deactivateUskil(extensionId)
         } else {
           await loader.deactivateUplugin(extensionId)
         }
@@ -455,7 +455,7 @@ export class OpenForUAgentRunner {
     }
 
     if (bundleKind === 'uskill') {
-      await loader.deactivateUskill(extensionId)
+      await loader.deactivateUskil(extensionId)
     } else {
       await loader.deactivateUplugin(extensionId)
     }

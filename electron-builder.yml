@@ -60,11 +60,24 @@ extraResources:
     to: assets/weixin-stickers
     filter:
       - "**/*"
+  # AckemCode 任务运行时。打包后落在 {exe}/resources/ackemcode
+  - from: ackemcode
+    to: ackemcode
+    filter:
+      - "**/*"
+      - "**/node_modules/**"
+      - "!**/.git/**"
+      - "!**/*.log"
+      - "!**/data/sessions/**"
+      - "!**/data/settings*.json"
+      - "!**/.test-cache/**"
   # 开发者扩展接口协议（绿色版 docs/developer/）
   - from: docs/developer
     to: docs/developer
     filter:
       - "**/*"
+
+afterPack: scripts/after-pack.cjs
 
 win:
   icon: build/icon.ico

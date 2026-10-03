@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { AppSettings, LlmProvider, PresetGender } from '../ackem'
+import type { AppSettings, LlmProvider, PresetGender, SocialAgentSummary } from '../ackem'
 import { t, getLocale, setLocale, refreshI18n } from '../lib/i18n'
 import { ConfirmDialog } from './ConfirmDialog'
 import { CompanionSkinSection } from './CompanionSkinSection'
@@ -7,7 +7,6 @@ import { EmbeddingModelSection } from './EmbeddingModelSection'
 import { MobileComingSoonSection, WeixinConnectSection } from './WeixinConnectSection'
 import { VoiceSettings } from './VoiceSettings'
 import { DesktopAgentSettings, desktopAgentSettingsSaveBlocked } from './DesktopAgentSettings'
-import { UpdateSettingsPanel } from './settings/UpdateSettingsPanel'
 import { useAppStore } from '../store/appStore'
 import { resolveInitialTheme, toggleTheme, type ThemeMode } from '../lib/theme'
 import { isSettingsDirty, mergeSettingsDraft, prepareSettingsForSave } from '../lib/settingsForm'
@@ -32,6 +31,7 @@ import {
   ExperimentalFeatureNotice,
   useSettingsSection
 } from './settings/settingsUi'
+import { OssNoticePanel } from './settings/OssNoticePanel'
 
 function companionSubjectPronoun(gender: PresetGender): string {
   if (getLocale() === 'en') return gender === 'male' ? 'He' : 'She'
@@ -47,7 +47,8 @@ export function SettingsPage(): JSX.Element {
     setDeleteAttempted,
     requestChatInputFocus,
     resetChat,
-    openSettingsAt
+    openSettingsAt,
+    activeAgentId
   } = useAppStore()
   const [theme, setTheme] = useState<ThemeMode>(() => resolveInitialTheme())
   const [form, setForm] = useState<AppSettings | null>(null)
@@ -61,11 +62,16 @@ export function SettingsPage(): JSX.Element {
   >([])
   const [showAdultConfirm, setShowAdultConfirm] = useState(false)
   const [showArchiveConfirm, setShowArchiveConfirm] = useState(false)
+  const [showClearOwnerDialog, setShowClearOwnerDialog] = useState(false)
+  const [clearOwnerAgents, setClearOwnerAgents] = useState<SocialAgentSummary[]>([])
+  const [clearOwnerSelectedId, setClearOwnerSelectedId] = useState<string | null>(null)
+  const [clearOwnerLoading, setClearOwnerLoading] = useState(false)
   const [showPersonalityConfirm, setShowPersonalityConfirm] = useState(false)
   const pendingPersonality = useRef<{ id: string; label: string; requiresAdult18?: boolean } | null>(
     null
   )
   const [archiveBusy, setArchiveBusy] = useState(false)
+  const [clearOwnerBusy, setClearOwnerBusy] = useState(false)
   const [diaryResult, setDiaryResult] = useState<string | null>(null)
   const [diaryBusy, setDiaryBusy] = useState(false)
   const [thoughtResult, setThoughtResult] = useState<string | null>(null)
@@ -76,7 +82,6 @@ export function SettingsPage(): JSX.Element {
   const [mirrorBusy, setMirrorBusy] = useState(false)
   const [mediaStatus, setMediaStatus] = useState<string>('')
   const [canonInfo, setCanonInfo] = useState<{ birthDate: string } | null>(null)
-  const [appVersion, setAppVersion] = useState('')
   const [uninstallInfo, setUninstallInfo] = useState<{
     mode: 'dev' | 'portable' | 'installed'
     installDir: string
@@ -95,7 +100,6 @@ export function SettingsPage(): JSX.Element {
 
   useEffect(() => {
     void window.ackem.getCanon().then((c) => setCanonInfo({ birthDate: c.birthDate }))
-    void window.ackem.getAppVersion().then(setAppVersion)
   }, [])
 
   /** 磁盘已持久化 → 同步全局 store + 本地 form（勿用 settings 变化盲目覆盖 form） */
@@ -275,6 +279,56 @@ export function SettingsPage(): JSX.Element {
       pushToast(t('settings.archiveFailed') + (e instanceof Error ? e.message : String(e)))
     } finally {
       setArchiveBusy(false)
+    }
+  }
+
+  const openClearOwnerDialog = async () => {
+    setClearOwnerLoading(true)
+    setShowClearOwnerDialog(true)
+    setClearOwnerSelectedId(null)
+    try {
+      const agents = await window.ackem.social.listAgents()
+      const social = agents.filter((a) => a.kind === 'social_member')
+      setClearOwnerAgents(social)
+      if (social.length === 1) setClearOwnerSelectedId(social[0].id)
+    } catch (e) {
+      setClearOwnerAgents([])
+      pushToast(e instanceof Error ? e.message : t('settings.clearOwnerFailed'))
+    } finally {
+      setClearOwnerLoading(false)
+    }
+  }
+
+  const confirmClearOwner = async () => {
+    const agentId = clearOwnerSelectedId
+    if (!agentId) {
+      pushToast(t('settings.clearOwnerNeedSelect'))
+      return
+    }
+    const agent = clearOwnerAgents.find((a) => a.id === agentId)
+    const name = agent?.name ?? agentId
+    setShowClearOwnerDialog(false)
+    setClearOwnerBusy(true)
+    try {
+      const r = await window.ackem.memoryClearOwner({ ownerAgentId: agentId })
+      if (!r.ok) {
+        pushToast(r.error ?? t('settings.clearOwnerFailed'))
+        return
+      }
+      await window.ackem.saveChatHistory([], { targetAgentId: agentId })
+      if (activeAgentId === agentId) {
+        resetChat()
+      }
+      pushToast(t('settings.clearOwnerDone', { name }))
+    } catch (e) {
+      pushToast(
+        t('settings.clearOwnerFailed') +
+          '：' +
+          (e instanceof Error ? e.message : String(e))
+      )
+    } finally {
+      setClearOwnerBusy(false)
+      setClearOwnerSelectedId(null)
     }
   }
 
@@ -584,6 +638,47 @@ export function SettingsPage(): JSX.Element {
               />
             </SettingsField>
           </SettingsBlock>
+          <SettingsBlock title={t('settings.ackemcodeModel')} hint={t('settings.ackemcodeModelHint')}>
+            <SettingsToggleRow
+              title={t('settings.ackemcodeIndependent')}
+              hint={t('settings.ackemcodeIndependentHint')}
+              checked={form.ackemcodeIndependentLlm ?? false}
+              onChange={(v) => setForm({ ...form, ackemcodeIndependentLlm: v })}
+            />
+            {form.ackemcodeIndependentLlm ? (
+              <>
+                <SettingsField label="Base URL">
+                  <input
+                    className="field-input w-full"
+                    placeholder={form.openaiBaseUrl || 'https://api.deepseek.com'}
+                    value={form.ackemcodeBaseUrl ?? ''}
+                    onChange={(e) => setForm({ ...form, ackemcodeBaseUrl: e.target.value })}
+                  />
+                </SettingsField>
+                <SettingsField label="API Key">
+                  <input
+                    type="password"
+                    className="field-input w-full"
+                    value={form.ackemcodeApiKey ?? ''}
+                    onChange={(e) => setForm({ ...form, ackemcodeApiKey: e.target.value })}
+                  />
+                </SettingsField>
+                <SettingsField label={t('settings.modelId')}>
+                  <input
+                    className="field-input w-full"
+                    placeholder={form.model || 'deepseek-chat'}
+                    value={form.ackemcodeModel ?? ''}
+                    onChange={(e) => setForm({ ...form, ackemcodeModel: e.target.value })}
+                  />
+                </SettingsField>
+              </>
+            ) : (
+              <p className="text-[11px] leading-relaxed text-ink-muted">
+                {t('settings.ackemcodeSharedHint')}
+                {form.llmProvider === 'anthropic' ? ` ${t('settings.ackemcodeAnthropicHint')}` : ''}
+              </p>
+            )}
+          </SettingsBlock>
           <SettingsBlock title={t("settings.embeddingModel")} hint={t("settings.embeddingModelHint")}>
             <EmbeddingModelSection />
           </SettingsBlock>
@@ -826,11 +921,22 @@ export function SettingsPage(): JSX.Element {
               </p>
               <button
                 type="button"
-                disabled={archiveBusy}
+                disabled={archiveBusy || clearOwnerBusy}
                 onClick={() => setShowArchiveConfirm(true)}
                 className="field-btn-danger mt-3 px-3 py-2 text-xs disabled:opacity-50"
               >
                 {archiveBusy ? t("settings.processing") : t("settings.archiveAction")}
+              </button>
+              <p className="mt-4 text-xs text-ink-muted">
+                {t("settings.clearOwnerHint")}
+              </p>
+              <button
+                type="button"
+                disabled={archiveBusy || clearOwnerBusy}
+                onClick={() => void openClearOwnerDialog()}
+                className="field-btn-danger mt-3 px-3 py-2 text-xs disabled:opacity-50"
+              >
+                {clearOwnerBusy ? t("settings.processing") : t("settings.clearOwnerAction")}
               </button>
             </div>
           </SettingsBlock>
@@ -922,8 +1028,6 @@ export function SettingsPage(): JSX.Element {
           </div>
         )}
 
-        {activeId === 'settings-update' && <UpdateSettingsPanel />}
-
         {activeId === 'settings-oss-notice' && (
           <SettingsGroup
             id="settings-oss-notice"
@@ -931,9 +1035,7 @@ export function SettingsPage(): JSX.Element {
             description={t('settings.ossNoticeDesc')}
           >
             <SettingsBlock title={t('settings.ossNoticeBodyTitle')}>
-              <p className="whitespace-pre-wrap text-xs leading-relaxed text-ink-muted">
-                {t('settings.ossNoticePlaceholder')}
-              </p>
+              <OssNoticePanel />
             </SettingsBlock>
           </SettingsGroup>
         )}
@@ -1035,7 +1137,7 @@ export function SettingsPage(): JSX.Element {
             <dl className="settings-meta-list">
               <div className="settings-meta-row">
                 <dt>{t("settings.version")}</dt>
-                <dd>{appVersion ? `${appVersion}${t('settings.versionSuffix')}` : t('settings.versionValue')}</dd>
+                <dd>{t("settings.versionValue")}</dd>
               </div>
               {canonInfo && (
                 <>
@@ -1058,6 +1160,11 @@ export function SettingsPage(): JSX.Element {
                 <dd>{t("settings.telemetryDesc")}</dd>
               </div>
             </dl>
+            <p className="text-xs leading-relaxed text-ink-muted">
+              {t("settings.roadmap")}{' '}
+              <span className="font-mono text-[11px]">docs/开源版产品计划.md</span>、{' '}
+              <span className="font-mono text-[11px]">docs/external-review-deepseek.md</span>。
+            </p>
           </SettingsBlock>
         </SettingsGroup>}
         </div>
@@ -1117,6 +1224,56 @@ export function SettingsPage(): JSX.Element {
       </p>
       <p className="mt-2">{t('settings.archiveAllKeep')}</p>
       <p className="mt-2 font-medium text-red-600">{t("settings.archiveAllIrreversible")}</p>
+    </ConfirmDialog>
+    <ConfirmDialog
+      open={showClearOwnerDialog}
+      title={t('settings.clearOwnerTitle')}
+      danger
+      cancelLabel={t('settings.clearOwnerCancel')}
+      confirmLabel={t('settings.clearOwnerConfirm')}
+      confirmDisabled={
+        clearOwnerLoading || clearOwnerAgents.length === 0 || !clearOwnerSelectedId
+      }
+      onCancel={() => {
+        setShowClearOwnerDialog(false)
+        setClearOwnerSelectedId(null)
+      }}
+      onConfirm={() => void confirmClearOwner()}
+    >
+      <p>{t('settings.clearOwnerDesc')}</p>
+      {clearOwnerLoading ? (
+        <p className="mt-3 text-ink-muted">{t('settings.processing')}</p>
+      ) : clearOwnerAgents.length === 0 ? (
+        <p className="mt-3 text-ink-muted">{t('settings.clearOwnerEmpty')}</p>
+      ) : (
+        <ul className="settings-clear-owner-list mt-3 max-h-56 space-y-1.5 overflow-y-auto">
+          {clearOwnerAgents.map((agent) => {
+            const selected = clearOwnerSelectedId === agent.id
+            return (
+              <li key={agent.id}>
+                <label
+                  className={[
+                    'flex cursor-pointer items-center gap-2.5 rounded-xl border px-3 py-2.5 text-sm transition-colors',
+                    selected
+                      ? 'border-accent/50 bg-accent/10 text-ink'
+                      : 'border-surface-inset bg-surface text-ink-muted hover:border-accent/30 hover:text-ink'
+                  ].join(' ')}
+                >
+                  <input
+                    type="radio"
+                    name="clear-owner-agent"
+                    className="accent-[var(--color-accent)]"
+                    checked={selected}
+                    onChange={() => setClearOwnerSelectedId(agent.id)}
+                  />
+                  <span className="min-w-0 flex-1 truncate font-medium">{agent.name}</span>
+                </label>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+      <p className="mt-3 font-medium text-red-600">{t('settings.archiveAllIrreversible')}</p>
     </ConfirmDialog>
     <ConfirmDialog
       open={showUninstallConfirm}

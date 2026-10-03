@@ -57,9 +57,30 @@ export async function runExitPersistenceHooks(): Promise<void> {
 export async function shutdownBackgroundServices(opts?: { closeDatabases?: boolean }): Promise<void> {
   stopDesktopCompanionProactiveTimer()
   stopCompanionHarassScheduler()
+  try {
+    const { stopSocialTick } = await import('./social/index.js')
+    const { loadSettings } = await import('./settings.js')
+    const { resolveDataRoot } = await import('./paths.js')
+    stopSocialTick(resolveDataRoot(loadSettings()))
+  } catch {
+    /* social may not have booted */
+  }
   stopDispatchScheduler()
+  try {
+    const { stopRouteReportScheduler } = await import('./chat/routeReportScheduler.js')
+    stopRouteReportScheduler()
+  } catch {
+    /* report scheduler may not have started */
+  }
   stopMediaSessionPolling()
   destroyPetWindow()
+
+  try {
+    const { stopAllMemoryJobRunners } = await import('./memory/jobs/memoryJobRunnerRegistry.js')
+    stopAllMemoryJobRunners()
+  } catch {
+    /* runner may not have started */
+  }
 
   try {
     const { stopVoiceService } = await import(
@@ -81,6 +102,13 @@ export async function shutdownBackgroundServices(opts?: { closeDatabases?: boole
     await getMinecraftProvider()?.disconnect()
   } catch (e) {
     log.warn('minecraft disconnect failed', { error: String(e) })
+  }
+
+  try {
+    const { stopSpawnedDaemon } = await import('./ackemcode/ensureDaemon.js')
+    stopSpawnedDaemon()
+  } catch (e) {
+    log.warn('ackemcode daemon stop failed', { error: String(e) })
   }
 
   if (opts?.closeDatabases !== false) {

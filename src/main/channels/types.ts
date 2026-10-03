@@ -6,6 +6,8 @@ export type CompanionTurnInput = {
   userText: string
   recentMessages?: Array<{ role: 'user' | 'assistant'; content: string }>
   turnIndex?: number
+  /** 对话归属 Agent；缺省为 Ackem（default） */
+  targetAgentId?: string
   options?: {
     skipDispatch?: boolean
   }

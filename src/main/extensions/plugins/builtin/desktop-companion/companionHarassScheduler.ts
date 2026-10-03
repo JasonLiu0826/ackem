@@ -1,16 +1,8 @@
 import type { BrowserWindow } from 'electron'
 import { Notification } from 'electron'
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { join } from 'node:path'
 import { createLogger } from '../../../../logger'
 import { loadSettings } from '../../../../settings'
 import { resolveDataRoot } from '../../../../paths'
-import { composeCompanionProactiveMessage } from '../../../../companion/proactiveCompose'
-import { loadState, saveState } from '../../../../engine/state-persistence'
-import {
-  getTimeContext,
-  type TimeContext
-} from './desktop-companion'
 import {
   sanitizeDesktopProactiveMessage,
   templateDesktopProactiveMessage
@@ -20,6 +12,15 @@ import {
   pickPersonalityHarassDelayMs,
   shouldHarassTickForPersonality
 } from '../../../../companion/proactivePersonalityContext'
+import { appendUnifiedChatMessage } from '../../../../chat/unifiedChatHistory'
+import { engineSessionId } from '../../../../session/canonical'
+import { composeCompanionProactiveMessage } from '../../../../companion/proactiveCompose'
+import { loadState, saveState } from '../../../../engine/state-persistence'
+
+import {
+  getTimeContext,
+  type TimeContext
+} from './desktop-companion'
 
 const log = createLogger('companion-harass-scheduler')
 
@@ -36,14 +37,18 @@ export function deliverCompanionProactiveMessage(args: {
   message: string
   timeContext?: TimeContext
   source?: 'idle' | 'harass'
+  displayMode?: 'notify_only' | 'chat_only' | 'both'
+  proactiveId?: string
+  skipChatAppend?: boolean
 }): void {
   const { mainWindow } = args
   const timeContext = args.timeContext ?? getTimeContext()
   const message =
     sanitizeDesktopProactiveMessage(args.message, 120) ??
     templateDesktopProactiveMessage(timeContext)
+  const displayMode = args.displayMode ?? 'both'
 
-  if (Notification.isSupported()) {
+  if (displayMode !== 'chat_only' && Notification.isSupported()) {
     const n = new Notification({
       title: 'Ackem',
       body: notificationBodyFromProactiveMessage(message),
@@ -52,31 +57,29 @@ export function deliverCompanionProactiveMessage(args: {
     n.show()
   }
 
-  try {
-    const s = loadSettings()
-    const root = resolveDataRoot(s)
-    const sid = s.activeSessionId || 'default'
-    const file = join(root, 'companion', `chat-history-${sid}.json`)
-    let rows: Array<{ role: string; content: string }> = []
-    if (existsSync(file)) {
-      try {
-        rows = JSON.parse(readFileSync(file, 'utf-8'))
-      } catch {
-        /* reset */
-      }
+  if (!args.skipChatAppend && displayMode !== 'notify_only') {
+    try {
+      const s = loadSettings()
+      const root = resolveDataRoot(s)
+      appendUnifiedChatMessage(root, {
+        role: 'assistant',
+        content: message,
+        channel: 'desktop',
+        proactiveId: args.proactiveId,
+      }, engineSessionId())
+    } catch {
+      /* non-critical */
     }
-    rows.push({ role: 'assistant', content: message })
-    mkdirSync(join(root, 'companion'), { recursive: true })
-    writeFileSync(file, JSON.stringify(rows.slice(-2000)), 'utf-8')
-  } catch {
-    /* non-critical */
   }
 
-  mainWindow?.webContents.send('companion:proactive', {
-    message,
-    timeContext,
-    ...(args.source ? { source: args.source } : {})
-  })
+  if (displayMode !== 'notify_only') {
+    mainWindow?.webContents.send('companion:proactive', {
+      message,
+      timeContext,
+      ...(args.source ? { source: args.source } : {}),
+      ...(args.proactiveId ? { proactiveId: args.proactiveId } : {}),
+    })
+  }
 }
 
 async function tickCompanionHarass(): Promise<void> {
@@ -97,7 +100,7 @@ async function tickCompanionHarass(): Promise<void> {
     if (!mainWindow) return
 
     const root = resolveDataRoot(settings)
-    const sessionId = settings.activeSessionId || 'default'
+    const sessionId = engineSessionId()
     const composed = await composeCompanionProactiveMessage({
       dataRoot: root,
       settings,

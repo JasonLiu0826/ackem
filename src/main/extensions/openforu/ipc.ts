@@ -165,7 +165,7 @@ export function registerOpenForUIpc(): void {
     try {
       const result = getCoordinator().deleteWorkspace(workspaceId)
       const listed = getCoordinator().listWorkspaces()
-      return { ok: true, ...result, ...listed }
+      return { ...result, ...listed, ok: true }
     } catch (err) {
       return {
         ok: false,

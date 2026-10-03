@@ -3,7 +3,8 @@
 // 对标 OpenAI/MemGPT embedding 搜索的语义理解能力，但用 LLM 而非 embedding 模型
 // 引用：../engine/types, ../engine/ackemParams, ./factStore
 
-import type { LlmClient, MemoryFact } from '../engine/types'
+import type { LlmClient } from '../engine/types'
+import type { MemoryFact } from './semantic/types.js'
 
 const RERANK_TEMPERATURE = 0.0
 

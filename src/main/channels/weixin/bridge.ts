@@ -1,4 +1,3 @@
-import { loadChatHistoryFromDb } from '../../db/repos/chatHistory'
 import { loadSettings } from '../../settings'
 import { formatBubbleForWeixin } from '../markdownForChannel'
 import { runCompanionTurn } from '../companionTurn'
@@ -11,33 +10,16 @@ import { enqueuePeerTurn } from './queue'
 import {
   loadContextToken,
   markMessageSeen,
-  normalizePeerSessionId,
+  resolveWeixinBoundAgentId,
   saveContextToken
 } from './store'
 import { recordWeixinAckemActivity } from './activity'
 import type { WeixinAccount, WeixinMessage } from './types'
 import { createLogger } from '../../logger'
+import { sessionIdForAgent } from '../../social/agents/agentPaths'
+import { loadMergedRecentMessages } from '../../chat/unifiedChatHistory'
 
 const log = createLogger('weixin-bridge')
-
-function loadRecentMessages(
-  dataRoot: string,
-  sessionId: string,
-  limit = 24
-): Array<{ role: 'user' | 'assistant'; content: string }> {
-  const raw = loadChatHistoryFromDb(dataRoot, sessionId)
-  const rows = Array.isArray(raw) ? raw : []
-  const msgs: Array<{ role: 'user' | 'assistant'; content: string }> = []
-  for (const row of rows) {
-    if (!row || typeof row !== 'object') continue
-    const r = row as { kind?: string; role?: string; content?: string }
-    if (r.kind !== 'message') continue
-    if (r.role !== 'user' && r.role !== 'assistant') continue
-    if (!r.content?.trim()) continue
-    msgs.push({ role: r.role, content: r.content })
-  }
-  return msgs.slice(-limit)
-}
 
 export function enqueueInboundWeixinMessage(
   msg: WeixinMessage,
@@ -76,11 +58,13 @@ async function handleInboundMessage(
     return
   }
 
-  const sessionId = normalizePeerSessionId(peerId)
-  const recentMessages = loadRecentMessages(dataRoot, sessionId)
+  const boundAgentId = resolveWeixinBoundAgentId(dataRoot, account)
+  const sessionId = sessionIdForAgent(boundAgentId)
+  const recentMessages = loadMergedRecentMessages(dataRoot, 24, sessionId)
   const settings = loadSettings()
 
   let rawReply: string
+  let turnId: string | undefined
   let documentDelivery: {
     cardBody: string
     displayTitle: string
@@ -97,11 +81,13 @@ async function handleInboundMessage(
     const result = await runCompanionTurn({
       channel: 'weixin',
       sessionId,
+      targetAgentId: boundAgentId,
       userText: text,
       recentMessages,
       options: { skipDispatch: true }
     })
     rawReply = result.assistantText
+    turnId = result.turnId
     documentDelivery = result.documentDelivery
     if (result.deliveryHints) hints = { ...hints, ...result.deliveryHints }
   } catch (e) {
@@ -142,8 +128,10 @@ async function handleInboundMessage(
 
   log.info('outbound plan', {
     presetId: hints.presetId,
+    boundAgentId,
     bubbles: bubbles.length,
-    document: Boolean(documentDelivery)
+    document: Boolean(documentDelivery),
+    turnId,
   })
 
   await sendWeixinOutboundSequence({

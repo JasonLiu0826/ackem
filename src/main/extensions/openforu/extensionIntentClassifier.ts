@@ -1,13 +1,9 @@
+import { extractBareFeatureCreateTopic } from '../dispatch/explicitDispatch'
 import {
-  detectBareFeatureCreateCandidate,
-  detectExtensionDemandExplicit,
-  extractBareFeatureCreateTopic
-} from '../dispatch/explicitDispatch'
-import {
-  isCasualOpinionChat,
-  wantsOrganizeAsCard
-} from '../plugins/builtin/knowledge-presentation/intent'
-import { cosineSimilarity } from '../../memory/factEmbeddingCache'
+  hasCapabilityGapHint
+} from '../../channel/gapHint'
+
+export { hasCapabilityGapHint, shouldSkipCapabilityProbe } from '../../channel/gapHint'
 
 /** @deprecated 兼容旧测试名；请用 shouldRunCapabilityProbe */
 export type ExtensionIntentClass =
@@ -39,18 +35,6 @@ export type ExtensionIntentClassification = {
   probe?: CapabilityProbe
 }
 
-const MIN_PROBE_LEN = 8
-
-/** 用户表达流程摩擦 / 能力缺口（不写具体功能实体） */
-const CAPABILITY_GAP_SIGNALS: RegExp[] = [
-  /(?:要是|如果|真希望|希望|何时|什么时候).{0,24}(?:就好了|该多好)/,
-  /(?:要是能|要是可以|如果能|能不能自动|能不能帮我)/,
-  /(?:能不能有个|还缺|缺少|没(?:有)?(?:合适)?的(?:工具|办法|功能|能力))/,
-  /(?:总是|老是|每次|天天).{0,16}(?:烦|麻烦|忘|重复|手动|折腾)/,
-  /(?:好烦|太麻烦|费劲|费时间|重复劳动|一遍遍)/,
-  /(?:提醒我|通知我|帮我记|自动(?:化)?处理)/
-]
-
 const IMPLICIT_PLAN_THRESHOLD = 0.72
 const GAP_MIN = 0.62
 const IMPLEMENTABLE_MIN = 0.68
@@ -58,41 +42,8 @@ const IMPLEMENTABLE_MIN = 0.68
 /** 解析失败降级时排除：抽象情感/陪伴诉求（不用具体人物实体词） */
 const PARSE_FAIL_RELATIONAL_RE = /(?:陪(?:我|你)|孤独|寂寞|脱单|恋爱|好孤单)/u
 
-function isCapabilityMetaQuery(message: string): boolean {
-  return (
-    /(?:Ackem|你|这边|系统).{0,12}(?:能不能|可不可以|有没有|支持)/u.test(message) &&
-    !/(?:要是|烦|麻烦|忘|自动|缺|折腾)/u.test(message)
-  )
-}
-
-/** 快路径排除：已知走其它管线，不必调 LLM */
-export function shouldSkipCapabilityProbe(message: string): boolean {
-  const trimmed = message.trim()
-  if (trimmed.length < MIN_PROBE_LEN) return true
-  if (detectExtensionDemandExplicit(trimmed)) return true
-  if (wantsOrganizeAsCard(trimmed)) return true
-  if (isCasualOpinionChat(trimmed)) return true
-  if (isCapabilityMetaQuery(trimmed)) return true
-  return false
-}
-
-/** 是否值得启动能力探针（宽进：裸功能名 create 或摩擦/缺口信号；严出：LLM 多维评分） */
-export function shouldRunCapabilityProbe(
-  message: string,
-  queryEmbed?: number[],
-  createToolAnchor?: number[]
-): boolean {
-  const trimmed = message.trim()
-  if (detectBareFeatureCreateCandidate(trimmed)) return true
-  if (shouldSkipCapabilityProbe(message)) return false
-  if (CAPABILITY_GAP_SIGNALS.some((re) => re.test(trimmed))) return true
-
-  // Embedding 兜底：语义匹配"想造工具"意图
-  if (queryEmbed && createToolAnchor && queryEmbed.length > 0 && createToolAnchor.length > 0) {
-    if (cosineSimilarity(queryEmbed, createToolAnchor) > 0.70) return true
-  }
-
-  return false
+export function shouldRunCapabilityProbe(message: string): boolean {
+  return hasCapabilityGapHint(message)
 }
 
 export function buildCapabilityProbePrompt(userMessage: string, recentContext: string): string {

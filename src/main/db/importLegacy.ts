@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { getDatabase } from './database'
-import { loadChatHistoryFromDb, saveChatHistoryToDb } from './repos/chatHistory'
+import { hasChatHistoryRow, loadChatHistoryFromDb, saveChatHistoryToDb } from './repos/chatHistory'
 import { countFactsInDb } from './repos/memoryFacts'
 import { countEpisodesInDb, loadEpisodesFromDb, replaceEpisodesInDb } from './repos/episodes'
 import { countTriplesInDb, loadTriplesFromDb, replaceTriplesInDb } from './repos/knowledgeTriples'
@@ -18,7 +18,7 @@ import {
 import { kvSet } from './repos/kv'
 import { rebuildEpisodesFts, rebuildFactsFts } from './repos/fts'
 import type { TurnTrace } from '../engine/types'
-import type { Episode } from '../engine/types'
+import type { Episode } from '../memory/episodes/types.js'
 import type { Triple } from '../engine/types'
 import type { OpenForUWorkspaceIndex } from '../extensions/openforu/workspaces'
 import type { AgentRunMeta } from '../../shared/openforuAgentTypes'
@@ -31,7 +31,7 @@ function importChatHistories(dataRoot: string): void {
     const m = /^chat-history-(.+)\.json$/.exec(name)
     if (!m) continue
     const sid = m[1]
-    if (loadChatHistoryFromDb(dataRoot, sid).length > 0) continue
+    if (hasChatHistoryRow(dataRoot, sid)) continue
     try {
       const rows = JSON.parse(readFileSync(join(dir, name), 'utf-8')) as unknown[]
       if (Array.isArray(rows) && rows.length > 0) {

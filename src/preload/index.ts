@@ -14,15 +14,12 @@ export type BuildContextResult = {
   tracePreview?: unknown
   enterPlanMode?: boolean
   planTopic?: string
-  dispatchPending?: {
-    extensionId: string
-    extensionName: string
+  channelPending?: {
+    planId: string
+    kind: 'create' | 'update' | 'work_job' | 'use_missing' | 'plugin_ask' | 'plugin_use'
     askMessage: string
-  }
-  planCreatePending?: {
-    askMessage: string
-    planTopic?: string
-    emotionLabel?: string
+    cwd?: string
+    candidates?: Array<{ id: string; name: string }>
   }
   knowledgeTopic?: string
   suggestedSearchQuery?: string
@@ -44,6 +41,14 @@ export type BuildContextResult = {
   waveContext?: Record<string, unknown>
   sessionId?: string
   desktopAgentCapability?: import('../shared/desktopAgentCapabilities').DesktopAgentCapabilityMatch
+  /** 阶段 1「判决可见」: 本轮路由判决的人话解释（账本读回，缺判决为 null）。 */
+  routeExplain?: {
+    found: boolean
+    finalChannel?: 'chat' | 'plugin' | 'work'
+    channelText?: string
+    summary?: string
+    layers?: Array<{ layer: string; ruleId: string; ms: number; text: string }>
+  } | null
 }
 
 const GAME_MINECRAFT = 'minecraft'
@@ -117,22 +122,6 @@ const gamemodeMinecraft = {
 
 contextBridge.exposeInMainWorld('ackem', {
   getSettings: (): Promise<AppSettings> => ipcRenderer.invoke('settings:get'),
-  getAppVersion: (): Promise<string> => ipcRenderer.invoke('update:getAppVersion'),
-  checkUpdate: (): Promise<import('../shared/updateTypes').UpdateCheckResult> =>
-    ipcRenderer.invoke('update:check'),
-  startUpdate: (
-    req: import('../shared/updateTypes').UpdateStartRequest & {
-      channel: import('../shared/updateTypes').UpdateChannel
-    }
-  ): Promise<{ ok: true; jobPath: string } | { ok: false; reason: string }> =>
-    ipcRenderer.invoke('update:start', req),
-  openUpdateRelease: (url: string): Promise<void> => ipcRenderer.invoke('update:openRelease', url),
-  getUpdateChannelPreference: (): Promise<import('../shared/updateTypes').UpdateChannel> =>
-    ipcRenderer.invoke('update:getChannelPreference'),
-  setUpdateChannelPreference: (
-    channel: import('../shared/updateTypes').UpdateChannel
-  ): Promise<import('../shared/updateTypes').UpdateChannel> =>
-    ipcRenderer.invoke('update:setChannelPreference', channel),
   getCanon: (): Promise<{ name: string; birthDate: string; creator: { name: string; github: string; role: string; bio: string } }> =>
     ipcRenderer.invoke('canon:get'),
   getCreatorMemory: (): Promise<{
@@ -164,10 +153,14 @@ contextBridge.exposeInMainWorld('ackem', {
     relPaths: string[]
     consentAck: boolean
     consentVersion: number
+    ownerAgentId?: string
   }) => ipcRenderer.invoke('import:parseDocuments', args),
   importGetJob: (jobId: string) => ipcRenderer.invoke('import:getJob', jobId),
-  importCommitJob: (args: { jobId: string; disabledDraftIds?: string[] }) =>
-    ipcRenderer.invoke('import:commitJob', args),
+  importCommitJob: (args: {
+    jobId: string
+    disabledDraftIds?: string[]
+    ownerAgentId?: string
+  }) => ipcRenderer.invoke('import:commitJob', args),
   rebuildIndex: (): Promise<{ chunks: number; builtAt: string }> =>
     ipcRenderer.invoke('index:rebuild'),
   search: (q: string, limit?: number) => ipcRenderer.invoke('index:search', q, limit),
@@ -178,9 +171,17 @@ contextBridge.exposeInMainWorld('ackem', {
     sessionId?: string
     turnIndex?: number
     systemHint?: string
-    dispatchRespond?: { accepted: boolean; extensionId: string; remember?: boolean }
+    targetAgentId?: string
+    interactionSurface?: string
     desktopAgentChatMode?: boolean
+    turnConfirm?: { planId: string; accepted: boolean; cwd?: string; extensionId?: string }
   }): Promise<BuildContextResult> => ipcRenderer.invoke('context:build', args),
+  workbenchFollow: (args: { chatSessionId?: string; text: string }) =>
+    ipcRenderer.invoke('workbench:follow', args) as Promise<{ ok: boolean; reason?: string }>,
+  codePart: {
+    ensure: () =>
+      ipcRenderer.invoke('codepart:ensure') as Promise<{ ok: boolean; reason?: string }>
+  },
   readRel: (rel: string, maxBytes?: number) => ipcRenderer.invoke('fs:readRel', rel, maxBytes),
   writeAllowed: (rel: string, content: string, mode: 'append' | 'overwrite') =>
     ipcRenderer.invoke('fs:writeAllowed', rel, content, mode),
@@ -197,6 +198,8 @@ contextBridge.exposeInMainWorld('ackem', {
     wavePlan?: WavePlan
     waveContext?: Record<string, unknown>
     sessionId?: string
+    targetAgentId?: string
+    interactionSurface?: string
     desktopAgentChatMode?: boolean
   }) => ipcRenderer.invoke('chat:start', payload),
   desktopAgent: {
@@ -249,19 +252,51 @@ contextBridge.exposeInMainWorld('ackem', {
       ipcRenderer.on('machine-map:progress', (_e, payload) => fn(payload))
     }
   },
-  getState: () => ipcRenderer.invoke('state:get'),
+  getState: (opts?: { targetAgentId?: string }) => ipcRenderer.invoke('state:get', opts),
   resetState: () => ipcRenderer.invoke('state:reset'),
   traceLatest: (n?: number) => ipcRenderer.invoke('trace:latest', n),
-  memoryList: () => ipcRenderer.invoke('memory:list'),
+  memoryList: (opts?: { ownerAgentId?: string }) => ipcRenderer.invoke('memory:list', opts),
   memoryAuditReport: (opts?: {
     mode?: 'curated_audit' | 'self_report' | 'stats_only' | 'full_dump'
-    includeAvoid?: boolean
     page?: number
+    includeAvoid?: boolean
   }) => ipcRenderer.invoke('memory:auditReport', opts),
+  memoryWhyStored: (factId: string) => ipcRenderer.invoke('memory:whyStored', factId),
+  memoryActionTimeline: (sessionId: string, limit?: number) =>
+    ipcRenderer.invoke('memory:actionTimeline', sessionId, limit),
+  memoryAuditMetrics: () => ipcRenderer.invoke('memory:auditMetrics'),
+  memoryPermanentDeletePreview: (preview: {
+    targetKind: 'fact' | 'episode'
+    targetId: string
+    scope: 'memory_only' | 'memory_and_source'
+    summary: string
+  }) => ipcRenderer.invoke('memory:permanentDeletePreview', preview),
+  memoryPermanentDelete: (
+    preview: {
+      targetKind: 'fact' | 'episode'
+      targetId: string
+      scope: 'memory_only' | 'memory_and_source'
+      summary: string
+    },
+    turnId?: string | null,
+    confirmed?: boolean
+  ) => ipcRenderer.invoke('memory:permanentDelete', preview, turnId, confirmed),
+  memoryLegacyBackfill: (opts?: { apply?: boolean; batchSize?: number; maxRounds?: number }) =>
+    ipcRenderer.invoke('memory:legacyBackfill', opts),
   memoryUpdate: (id: string, patch: { summary?: string; weight?: number; confidence?: number; triggers?: string[] }) =>
     ipcRenderer.invoke('memory:update', id, patch),
   memoryRetire: (id: string) => ipcRenderer.invoke('memory:retire', id),
+  /** Governance four-type control (mute / correct / forget / delete). */
+  memoryControl: (command: import('../main/memory/contracts').MemoryControlCommand) =>
+    ipcRenderer.invoke('memory:control', command),
+  /** Natural-language control; ambiguous targets return requiresConfirmation (no execute). */
+  memoryResolveControl: (
+    text: string,
+    candidateTargets: import('../main/memory/contracts').MemoryTarget[]
+  ) => ipcRenderer.invoke('memory:resolveControl', text, candidateTargets),
   memoryClearAll: () => ipcRenderer.invoke('memory:clearAll'),
+  memoryClearOwner: (opts?: { ownerAgentId?: string }) =>
+    ipcRenderer.invoke('memory:clearOwner', opts),
   memoryFeedback: (id: string, action: 'thumbs_up' | 'thumbs_down') =>
     ipcRenderer.invoke('memory:feedback', id, action),
   appReload: () => ipcRenderer.invoke('app:reload'),
@@ -306,9 +341,11 @@ contextBridge.exposeInMainWorld('ackem', {
     ipcRenderer.invoke('profile:inferFromFiles', args),
   profileApplyCompanionSuggestion: () => ipcRenderer.invoke('profile:applyCompanionSuggestion'),
   memoryConsolidate: () => ipcRenderer.invoke('memory:consolidate'),
-  associationList: () => ipcRenderer.invoke('association:list'),
+  associationList: (opts?: { ownerAgentId?: string }) =>
+    ipcRenderer.invoke('association:list', opts),
   anchorList: () => ipcRenderer.invoke('anchor:list'),
-  memoryStats: () => ipcRenderer.invoke('memory:stats'),
+  memoryStats: (opts?: { ownerAgentId?: string }) =>
+    ipcRenderer.invoke('memory:stats', opts),
   onMemoryUpdated: (fn: (payload: { sessionId: string; turnIndex: number; newFactCount: number }) => void) => {
     const handler = (_e: unknown, payload: Parameters<typeof fn>[0]) => fn(payload)
     ipcRenderer.on('memory:updated', handler)
@@ -316,9 +353,10 @@ contextBridge.exposeInMainWorld('ackem', {
       ipcRenderer.removeListener('memory:updated', handler)
     }
   },
-  kgList: () => ipcRenderer.invoke('kg:list'),
+  kgList: (opts?: { ownerAgentId?: string }) => ipcRenderer.invoke('kg:list', opts),
   kgOneHop: (entity: string) => ipcRenderer.invoke('kg:oneHop', entity),
-  episodeList: () => ipcRenderer.invoke('episode:list'),
+  episodeList: (opts?: { ownerAgentId?: string }) =>
+    ipcRenderer.invoke('episode:list', opts),
   desireList: () => ipcRenderer.invoke('desire:list'),
   desireDismiss: (desireId: string) => ipcRenderer.invoke('desire:dismiss', desireId),
   desireClearActive: () => ipcRenderer.invoke('desire:clearActive'),
@@ -479,11 +517,16 @@ contextBridge.exposeInMainWorld('ackem', {
   sessionCreate: (name: string) => ipcRenderer.invoke('session:create', name),
   sessionSwitch: (sessionId: string) => ipcRenderer.invoke('session:switch', sessionId),
   sessionDelete: (sessionId: string) => ipcRenderer.invoke('session:delete', sessionId),
-  archiveList: () => ipcRenderer.invoke('archive:list'),
-  archiveRead: (relPath: string) => ipcRenderer.invoke('archive:read', relPath),
-  archiveExport: () => ipcRenderer.invoke('memory:exportArchive'),
-  loadChatHistory: () => ipcRenderer.invoke('chat:loadHistory'),
-  saveChatHistory: (rows: unknown[]) => ipcRenderer.invoke('chat:saveHistory', rows),
+  archiveList: (opts?: { ownerAgentId?: string }) =>
+    ipcRenderer.invoke('archive:list', opts),
+  archiveRead: (relPath: string, opts?: { ownerAgentId?: string }) =>
+    ipcRenderer.invoke('archive:read', relPath, opts),
+  archiveExport: (opts?: { ownerAgentId?: string }) =>
+    ipcRenderer.invoke('memory:exportArchive', opts),
+  loadChatHistory: (opts?: { targetAgentId?: string }) =>
+    ipcRenderer.invoke('chat:loadHistory', opts),
+  saveChatHistory: (rows: unknown[], opts?: { targetAgentId?: string }) =>
+    ipcRenderer.invoke('chat:saveHistory', rows, opts),
   i18n: {
     t: (key: string, params?: Record<string, string | number>) => ipcRenderer.invoke('i18n:t', key, params),
     getLocale: () => ipcRenderer.invoke('i18n:getLocale') as Promise<string>,
@@ -509,6 +552,11 @@ contextBridge.exposeInMainWorld('ackem', {
   onChatChunk: (fn: (s: string) => void) => {
     ipcRenderer.removeAllListeners('chat:chunk')
     ipcRenderer.on('chat:chunk', (_e, s: string) => fn(s))
+  },
+  /** 思考模型 reasoning_content 单独通道 (折叠灰度显示, 不进正文气泡)。 */
+  onChatReasoning: (fn: (s: string) => void) => {
+    ipcRenderer.removeAllListeners('chat:reasoning')
+    ipcRenderer.on('chat:reasoning', (_e, s: string) => fn(s))
   },
   onChatStreamStart: (fn: () => void) => {
     ipcRenderer.removeAllListeners('chat:stream-start')
@@ -594,7 +642,12 @@ contextBridge.exposeInMainWorld('ackem', {
     ipcRenderer.on('chat:memoryAudit', (_e, payload) => fn(payload))
   },
   onChatDone: (
-    fn: (meta?: { memoryWrites?: string[]; assistantText?: string; turnId?: string }) => void
+    fn: (meta?: {
+      memoryWrites?: string[]
+      assistantText?: string
+      turnId?: string
+      stateDelta?: { turnId?: string; bubbles: Array<{ key: string; label: string; delta: number; reason: string }> }
+    }) => void
   ) => {
     ipcRenderer.removeAllListeners('chat:done')
     ipcRenderer.on('chat:done', (_e, meta) => fn(meta))
@@ -631,12 +684,15 @@ contextBridge.exposeInMainWorld('ackem', {
     proactiveEnabled: boolean
     accountId?: string
     userId?: string
+    boundAgentId?: string
     lastError?: string | null
     tokenExpired: boolean
     embeddingReady?: boolean
   }> => ipcRenderer.invoke('weixin:getStatus'),
-  weixinStartLogin: (): Promise<{ qrcode: string; qrcodeImgContent: string; qrcodeScanUrl?: string }> =>
-    ipcRenderer.invoke('weixin:startLogin'),
+  weixinStartLogin: (args?: {
+    agentId?: string
+  }): Promise<{ qrcode: string; qrcodeImgContent: string; qrcodeScanUrl?: string }> =>
+    ipcRenderer.invoke('weixin:startLogin', args),
   weixinPollLogin: (args: { qrcode: string; verifyCode?: string; baseUrl?: string }) =>
     ipcRenderer.invoke('weixin:pollLogin', args) as Promise<{
       ok: boolean
@@ -651,6 +707,8 @@ contextBridge.exposeInMainWorld('ackem', {
       needVerifyCode?: boolean
       error?: string
     }>,
+  weixinSetBoundAgent: (args: { agentId: string }) =>
+    ipcRenderer.invoke('weixin:setBoundAgent', args),
   weixinDisconnect: (): Promise<{ ok: boolean }> => ipcRenderer.invoke('weixin:disconnect'),
   weixinSetEnabled: (enabled: boolean) => ipcRenderer.invoke('weixin:setEnabled', enabled),
   weixinSetProactiveEnabled: (enabled: boolean) =>
@@ -664,6 +722,7 @@ contextBridge.exposeInMainWorld('ackem', {
       proactiveEnabled: boolean
       accountId?: string
       userId?: string
+      boundAgentId?: string
       lastError?: string | null
       tokenExpired: boolean
     }) => void
@@ -671,6 +730,72 @@ contextBridge.exposeInMainWorld('ackem', {
     ipcRenderer.removeAllListeners('weixin:status-changed')
     ipcRenderer.on('weixin:status-changed', (_e, payload) => fn(payload))
     return () => ipcRenderer.removeAllListeners('weixin:status-changed')
+  },
+  social: {
+    listAgents: () => ipcRenderer.invoke('social:listAgents'),
+    getAgent: (agentId: string) => ipcRenderer.invoke('social:getAgent', agentId),
+    getAgentCard: (agentId: string) => ipcRenderer.invoke('social:getAgentCard', agentId),
+    parseCharacterCard: (args: {
+      format: 'md' | 'txt'
+      content: string
+      displayName?: string
+      roleOrTagline?: string
+      gender?: 'female' | 'male'
+    }) => ipcRenderer.invoke('social:parseCharacterCard', args),
+    createAgent: (input: Record<string, unknown>) => ipcRenderer.invoke('social:createAgent', input),
+    updateAgent: (input: Record<string, unknown>) => ipcRenderer.invoke('social:updateAgent', input),
+    deleteAgent: (agentId: string) => ipcRenderer.invoke('social:deleteAgent', agentId),
+    setAgentAvatar: (args: {
+      agentId: string
+      croppedBytes: Uint8Array
+      mime: 'image/webp' | 'image/png'
+      sourceBytes?: Uint8Array
+      sourceMime?: string
+      crop?: { x: number; y: number; width: number; height: number }
+    }) => ipcRenderer.invoke('social:setAgentAvatar', args),
+    clearAgentAvatar: (agentId: string) => ipcRenderer.invoke('social:clearAgentAvatar', agentId),
+    listPresetsForGender: (gender?: 'female' | 'male') =>
+      ipcRenderer.invoke('social:listPresetsForGender', gender),
+    parsePlatformCard: (zipBytes: Uint8Array) =>
+      ipcRenderer.invoke('social:parsePlatformCard', zipBytes),
+    getAgentAvatarDataUrl: (agentId: string) =>
+      ipcRenderer.invoke('social:getAgentAvatarDataUrl', agentId),
+    ensureSeeded: () => ipcRenderer.invoke('social:ensureSeeded'),
+    getFeed: (args?: { limit?: number }) => ipcRenderer.invoke('social:getFeed', args),
+    getAgentPosts: (args: { agentId: string; limit?: number }) =>
+      ipcRenderer.invoke('social:getAgentPosts', args),
+    likePost: (args: { postId: string }) => ipcRenderer.invoke('social:likePost', args),
+    commentPost: (args: { postId: string; content: string }) =>
+      ipcRenderer.invoke('social:commentPost', args),
+    requestFriend: (args: { agentId: string }) => ipcRenderer.invoke('social:requestFriend', args),
+    listFriends: () => ipcRenderer.invoke('social:listFriends'),
+    getFriendship: (args: { agentId: string }) => ipcRenderer.invoke('social:getFriendship', args),
+    muteAgent: (args: { agentId: string }) => ipcRenderer.invoke('social:muteAgent', args),
+    blockAgent: (args: { agentId: string }) => ipcRenderer.invoke('social:blockAgent', args),
+    unmuteAgent: (args: { agentId: string }) => ipcRenderer.invoke('social:unmuteAgent', args),
+    unblockAgent: (args: { agentId: string }) => ipcRenderer.invoke('social:unblockAgent', args),
+    listBlocks: () => ipcRenderer.invoke('social:listBlocks'),
+    getEvents: (args?: { limit?: number }) => ipcRenderer.invoke('social:getEvents', args),
+    getNotifications: () => ipcRenderer.invoke('social:getNotifications'),
+    toggle: (args: { enabled: boolean }) => ipcRenderer.invoke('social:toggle', args),
+    getSocialSettings: () => ipcRenderer.invoke('social:getSocialSettings'),
+    setSocialSettings: (patch: Record<string, unknown>) =>
+      ipcRenderer.invoke('social:setSocialSettings', patch),
+    listGroups: () => ipcRenderer.invoke('social:listGroups'),
+    createGroup: (args: { name: string; agentIds: string[] }) =>
+      ipcRenderer.invoke('social:createGroup', args),
+    requestJoinGroup: (args: { groupId: string }) =>
+      ipcRenderer.invoke('social:requestJoinGroup', args),
+    leaveGroup: (args: { groupId: string }) => ipcRenderer.invoke('social:leaveGroup', args),
+    dissolveGroup: (args: { groupId: string }) => ipcRenderer.invoke('social:dissolveGroup', args),
+    getGroupMessages: (args: { groupId: string; limit?: number }) =>
+      ipcRenderer.invoke('social:getGroupMessages', args),
+    sendGroupMessage: (args: { groupId: string; content: string }) =>
+      ipcRenderer.invoke('social:sendGroupMessage', args),
+    getAchievements: () => ipcRenderer.invoke('social:getAchievements'),
+    runTickNow: () => ipcRenderer.invoke('social:runTickNow'),
+    getOfflineReplay: () => ipcRenderer.invoke('social:getOfflineReplay'),
+    ackOfflineReplay: () => ipcRenderer.invoke('social:ackOfflineReplay')
   },
   ui: {
     getTheme: (): Promise<'light' | 'dark'> =>

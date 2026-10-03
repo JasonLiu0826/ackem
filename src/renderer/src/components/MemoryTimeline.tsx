@@ -36,15 +36,19 @@ export function MemoryTimeline(): JSX.Element {
   const setTab = useAppStore((s) => s.setTab)
   const setDeleteAttempted = useAppStore((s) => s.setDeleteAttempted)
   const requestChatInputFocus = useAppStore((s) => s.requestChatInputFocus)
+  const activeAgentId = useAppStore((s) => s.activeAgentId)
+  const activeAgentName = useAppStore((s) => s.activeAgentName)
 
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const list = await window.ackem.memoryList() as MemoryFact[]
+      const list = await window.ackem.memoryList({
+        ownerAgentId: activeAgentId || 'default',
+      }) as MemoryFact[]
       setFacts(list)
     } catch { /* ignore */ }
     finally { setLoading(false) }
-  }, [])
+  }, [activeAgentId])
 
   useEffect(() => { void load() }, [load])
 
@@ -79,6 +83,19 @@ export function MemoryTimeline(): JSX.Element {
 
   const confirmArchive = async () => {
     setShowArchiveDialog(false)
+    const agentId = useAppStore.getState().activeAgentId || 'default'
+    if (agentId !== 'default') {
+      const r = await window.ackem.memoryClearOwner({ ownerAgentId: agentId })
+      if (!r.ok) {
+        useAppStore.getState().pushToast(r.error ?? '清空失败')
+        return
+      }
+      useAppStore.getState().resetChat()
+      await window.ackem.saveChatHistory([], { targetAgentId: agentId })
+      await load()
+      useAppStore.getState().pushToast(`已清空「${activeAgentName}」的记忆`)
+      return
+    }
     await window.ackem.memoryClearAll()
     useAppStore.getState().resetChat()
     await window.ackem.saveChatHistory([])
@@ -99,7 +116,9 @@ export function MemoryTimeline(): JSX.Element {
     <div className="flex h-full min-h-0 flex-1 flex-col bg-surface">
       <header className="flex items-center justify-between border-b border-surface-inset bg-surface-raised px-6 py-4">
         <div>
-          <h1 className="text-base font-semibold text-ink">{t('timeline.title')}</h1>
+          <h1 className="text-base font-semibold text-ink">
+            {t('timeline.title')} · {activeAgentName || 'Ackem'}
+          </h1>
           <p className="mt-0.5 text-xs text-ink-muted">
             {t('timeline.count', { count: facts.length })}
           </p>

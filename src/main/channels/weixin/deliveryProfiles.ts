@@ -229,7 +229,7 @@ const PROFILES: WeixinDeliveryProfile[] = [
 const BY_ID = new Map(PROFILES.map((p) => [p.presetId, p]))
 
 export function getWeixinDeliveryProfile(presetId: string): WeixinDeliveryProfile {
-  return BY_ID.get(presetId) ?? profile('girl_next_door', 'warm_flow', { presetId })
+  return BY_ID.get(presetId) ?? profile(presetId, 'warm_flow')
 }
 
 export function buildWeixinPsycheHint(presetId: string): string {

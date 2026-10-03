@@ -257,7 +257,6 @@ export type SettingsSectionId =
   | 'settings-data'
   | 'settings-safety'
   | 'settings-oss-notice'
-  | 'settings-update'
   | 'settings-more'
   | 'settings-uninstall'
 
@@ -306,7 +305,6 @@ export const SETTINGS_NAV_GROUPS: NavGroup[] = [
     items: [
       { id: 'settings-safety', labelKey: 'settings.safety' },
       { id: 'settings-oss-notice', labelKey: 'settings.ossNotice' },
-      { id: 'settings-update', labelKey: 'settings.update' },
       { id: 'settings-more', labelKey: 'settings.more' },
       { id: 'settings-uninstall', labelKey: 'settings.uninstall' }
     ]

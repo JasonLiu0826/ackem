@@ -12,6 +12,7 @@ import { loadState, saveState, defaultFullState } from '../engine/state-persiste
 import { defaultPersonalitySlice } from '../personalityPresets'
 import { STATE_JSON_VERSION } from '../engine/ackemParams'
 import type { FullState } from '../engine/types'
+import { engineSessionId } from '../session/canonical'
 import { invalidateEngineCache } from '../engineCache'
 import type { BuildContextArgs } from '../context'
 import { MemoryConsolidator } from '../memory/consolidator'
@@ -32,10 +33,19 @@ let registerExtensionsRendererPushRef: ((channel: string, payload: unknown) => v
 export type ContextBuildInvoke = Omit<BuildContextArgs, 'index' | 'settings'> & {
   sessionId?: string
   turnIndex?: number
+  /** 社会页目标 Agent；default 为主 Chat */
+  targetAgentId?: string
+  /** 记忆场景面：主聊 desktop_main / 微信 weixin / … */
+  interactionSurface?: string
   /** 聊天页电脑助手模式（本会话） */
   desktopAgentChatMode?: boolean
-  /** dispatch:respond 重入：用户已确认/拒绝扩展 */
-  dispatchRespond?: { accepted: boolean; extensionId: string; remember?: boolean }
+  /** 通道路由确认卡：只认 planId，不重跑 routeChannel */
+  turnConfirm?: {
+    planId: string
+    accepted: boolean
+    cwd?: string
+    extensionId?: string
+  }
 }
 
 export function getExtensionsCoordinator(): ExtensionsCoordinator | null {
@@ -78,7 +88,7 @@ export function currentDataRoot(): string {
 }
 
 export function currentSessionId(): string {
-  return loadSettings().activeSessionId || 'default'
+  return engineSessionId()
 }
 
 export function refreshIndex(): IndexSnapshot {
@@ -111,7 +121,7 @@ export function invalidateIndexCache(root: string): void {
 
 export function mergeEngineState(root: string, settings: AppSettings): FullState {
   const pers = defaultPersonalitySlice(settings)
-  const sessionId = settings.activeSessionId || 'default'
+  const sessionId = engineSessionId()
   const loaded = loadState(root, sessionId)
   if (!loaded) return defaultFullState(pers)
   const s = { ...loaded }

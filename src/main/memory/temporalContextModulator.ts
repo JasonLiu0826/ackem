@@ -3,7 +3,10 @@
 // 模拟人类时间感知：昼夜节律、星期模式、季节共振、深夜加权、重逢策略、距离感知
 // 引用：./factStore, ../engine/types
 
-import type { MemoryFact } from '../engine/types'
+import type { MemoryFact } from './semantic/types.js'
+import { loadSettings } from '../settings'
+import { resolveUserTimezone } from './temporal/timezonePolicy.js'
+import { weekdayFromCalendarDate, zonedDateParts, zonedLocalDate } from './temporal/zonedDate.js'
 
 export interface TemporalContext {
   timeOfDay: string      // 'morning'|'forenoon'|'afternoon'|'evening'|'night'|'late_night'
@@ -14,6 +17,10 @@ export interface TemporalContext {
   weekday: number         // 0(Sun)-6(Sat)
   gapHours: number        // 距上次聊天间隔
   localDate: string       // "2026-06-09"
+  /** 本轮观测时刻（与 Clock 一致；记忆热路径应传入） */
+  observedAt?: string
+  /** 用户有效 IANA 时区（记忆热路径应传入） */
+  timeZone?: string
 }
 
 function monthToSeason(m: number): string {
@@ -31,6 +38,8 @@ export function buildTemporalContext(args: {
   minute: number
   gapHours: number
   localDate: string
+  observedAt?: string
+  timeZone?: string
 }): TemporalContext {
   return {
     timeOfDay: args.timeOfDay,
@@ -38,10 +47,20 @@ export function buildTemporalContext(args: {
     month: args.month,
     season: monthToSeason(args.month),
     hour: args.hour,
-    weekday: new Date(args.localDate).getDay(),
+    weekday: weekdayFromCalendarDate(args.localDate),
     gapHours: args.gapHours,
-    localDate: args.localDate
+    localDate: args.localDate,
+    observedAt: args.observedAt,
+    timeZone: args.timeZone,
   }
+}
+
+function civilDaysBetween(fromLocal: string, toLocal: string): number {
+  const parse = (s: string) => {
+    const [y, m, d] = s.split('-').map(Number)
+    return Date.UTC(y, m - 1, d)
+  }
+  return Math.floor((parse(toLocal) - parse(fromLocal)) / 86400000)
 }
 
 /**
@@ -49,11 +68,14 @@ export function buildTemporalContext(args: {
  * 纯数学运算，零 I/O，零 Embedding，< 0.5ms。
  */
 export function computeTemporalBoost(fact: MemoryFact, ctx: TemporalContext): number {
-  const factDate = new Date(fact.createdAt)
-  const factHour = factDate.getHours()
-  const factMonth = factDate.getMonth() + 1
-  const factDay = factDate.getDay()
-  const daysSinceCreation = (Date.now() - factDate.getTime()) / 86400000
+  const factInstant = new Date(fact.createdAt)
+  const timeZone = ctx.timeZone ?? resolveUserTimezone(loadSettings().timezone).timezone
+  const factParts = zonedDateParts(factInstant, timeZone)
+  const factHour = factParts.hour
+  const factMonth = factParts.month
+  const factLocal = zonedLocalDate(factInstant, timeZone)
+  const factDay = weekdayFromCalendarDate(factLocal)
+  const daysSinceCreation = civilDaysBetween(factLocal, ctx.localDate)
   let boost = 1.0
 
   // T1: 昼夜节律 — 同时段记忆优先（±2小时）
@@ -106,9 +128,11 @@ export function computeTemporalBoost(fact: MemoryFact, ctx: TemporalContext): nu
  *
  * @returns { affDelta, secDelta } 情绪四维的微调偏移（-0.06 ~ +0.06）
  */
-export function computeWeekdayMoodBias(now: Date): { affDelta: number; secDelta: number } {
-  const weekday = now.getDay()  // 0=Sun, 1=Mon, ..., 6=Sat
-  const hour = now.getHours()
+export function computeWeekdayMoodBias(
+  now: Date | { weekday: number; hour: number }
+): { affDelta: number; secDelta: number } {
+  const weekday = 'weekday' in now ? now.weekday : now.getDay()
+  const hour = 'hour' in now ? now.hour : now.getHours()
 
   let affDelta = 0
   let secDelta = 0

@@ -5,7 +5,8 @@ import { extractTriples } from './tripleExtractor'
 import { extractTriggers } from './triggerExtractor'
 import { detectAnchorType, shouldWriteTemporalAnchor, writeTemporalAnchor } from './temporalAnchorPolicy'
 import { vetCreatorContradictingFact } from '../canon/canonCreatorIngestGuard'
-import type { EmotionState, L1State, MemoryFact } from '../engine/types'
+import type { EmotionState, L1State } from '../engine/types'
+import type { MemoryFact } from './semantic/types.js'
 import type { ExtractedFactRow } from './lightExtract/types'
 import type { AdultMemoryPrivacyLevel } from '../prompt/adult-mode'
 
@@ -62,7 +63,14 @@ export function writeFactRows(args: {
       sourceTurnIndex: turnIndex,
       emotionalContext: emo,
       privacyLevel: adultPrivacyLevel,
-      ageMeta: f.ageMeta,
+      ageMeta: f.ageMeta?.birthdayMMDD
+        ? {
+            age: 0,
+            birthdayMMDD: f.ageMeta.birthdayMMDD,
+            recordedAt: new Date().toISOString(),
+            isEstimate: true
+          }
+        : undefined,
     })
 
     if (shouldWriteTemporalAnchor({

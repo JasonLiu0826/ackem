@@ -3,6 +3,8 @@ export type WeixinAccount = {
   token: string
   baseUrl: string
   userId?: string
+  /** 该微信 bot 对话路由到的 Agent（Ackem 或社会成员） */
+  boundAgentId?: string
 }
 
 export type WeixinMessageItem = {

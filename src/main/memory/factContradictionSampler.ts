@@ -5,7 +5,7 @@ import {
   CONTRADICTION_SIMILARITY_THRESHOLD,
   PERIODIC_CONTRADICTION_SAMPLE_PAIRS,
 } from '../engine/ackemParams'
-import type { MemoryFact } from '../engine/types'
+import type { MemoryFact } from './semantic/types.js'
 import type { FactStore } from './factStore'
 
 function charJaccard(a: MemoryFact, b: MemoryFact): number {

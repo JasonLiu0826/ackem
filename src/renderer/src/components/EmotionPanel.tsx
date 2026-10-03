@@ -108,13 +108,19 @@ export function EmotionPanel(): JSX.Element {
   const [error, setError] = useState<string | null>(null)
   const chatTurnCount = useAppStore((s) => s.chatTurnCount)
   const dispatchTrigger = useAppStore((s) => s.dispatchTriggerStatus)
+  const activeAgentId = useAppStore((s) => s.activeAgentId)
+  const activeAgentName = useAppStore((s) => s.activeAgentName)
 
   const refresh = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
+      const stateOpts =
+        activeAgentId && activeAgentId !== 'default'
+          ? { targetAgentId: activeAgentId }
+          : undefined
       const [s, profile] = await Promise.all([
-        window.ackem.getState() as Promise<EngineState>,
+        window.ackem.getState(stateOpts) as Promise<EngineState>,
         window.ackem.profileGet()
       ])
       setState(s)
@@ -124,11 +130,11 @@ export function EmotionPanel(): JSX.Element {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [activeAgentId])
 
   useEffect(() => {
     void refresh()
-  }, [refresh, chatTurnCount])
+  }, [refresh, chatTurnCount, activeAgentId])
 
   if (error) {
     return (
@@ -156,9 +162,12 @@ export function EmotionPanel(): JSX.Element {
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <LightCore trust={s?.relationship.trust} />
-            <span className="font-display text-sm font-medium text-ink">
-              {s ? EMOTION_LABEL_ZH[s.emotion.primaryLabel] ?? s.emotion.primaryLabel : '—'}
-            </span>
+            <div className="min-w-0">
+              <div className="truncate text-[10px] text-ink-muted">{activeAgentName}</div>
+              <span className="font-display text-sm font-medium text-ink">
+                {s ? EMOTION_LABEL_ZH[s.emotion.primaryLabel] ?? s.emotion.primaryLabel : '—'}
+              </span>
+            </div>
           </div>
         <div className="flex gap-1">
           <button

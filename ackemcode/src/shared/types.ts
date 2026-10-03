@@ -18,6 +18,15 @@ export type PermissionMode =
   | 'bypassPermissions'
   | 'dontAsk'
 
+/** Host (Ackem) task envelope on POST /api/session. */
+export type AckemTaskKind = 'work.job' | 'openforu.create' | 'openforu.update'
+
+export type AckemTask = {
+  kind: AckemTaskKind
+  summary: string
+  tag: string | null
+}
+
 /** CC-style session chrome state for the host UI. */
 export type SessionUiState = 'idle' | 'running' | 'requires_action'
 
@@ -362,6 +371,17 @@ export type AskUserAnswerPayload = {
   cancelled?: boolean
 }
 
+/** Host-side turn receipt. Ackem reconciles by hostRunId + revision. */
+export interface HostTurnReceipt {
+  hostRunId: string
+  state: 'running' | 'requires_action' | 'succeeded' | 'failed' | 'aborted'
+  revision: number
+  startedAt: string
+  updatedAt: string
+  completedAt?: string
+  errorCode?: string
+}
+
 /**
  * SSE event vocabulary for the AckemCode host (M00/M20).
  * Maps CC SDK stream + control_request semantics without Ink.
@@ -407,6 +427,8 @@ export type AgentEvent =
       toolName: string
       input: unknown
       reason: string
+      hostRunId?: string
+      hostTurnReceipt?: HostTurnReceipt
       /** Bind to timeline step / tool_use id (CC can_use_tool.tool_use_id). */
       toolUseId?: string
       agentId?: string
@@ -567,6 +589,8 @@ export type AgentEvent =
       restoredUserText?: string
       rewound?: boolean
       filesChanged?: string[]
+      hostRunId?: string
+      hostTurnReceipt?: HostTurnReceipt
     }
   | {
       /** P2: settings PUT succeeded — hosts refresh chrome (no apiKey). */
@@ -617,7 +641,7 @@ export type AgentEvent =
         mode: 'prompt' | 'task-notification' | 'slash'
       }>
     }
-  | { type: 'done'; ok: boolean; error?: string }
+  | { type: 'done'; ok: boolean; error?: string; hostRunId?: string; hostTurnReceipt?: HostTurnReceipt }
   | { type: 'error'; message: string }
 
 /** Exhaustive list of AgentEvent.type values (for docs + smoke). */

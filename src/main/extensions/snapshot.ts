@@ -8,7 +8,7 @@ import { FactStore, defaultFactsPath } from '../memory/factStore'
 import { EpisodicStore, defaultEpisodesPath } from '../memory/episodicStore'
 import { KnowledgeGraph, defaultKgPath } from '../memory/knowledgeGraph'
 import { filterFactsForSession, summariesForSession } from '../memory/sessionFacts'
-import type { MemoryFact } from '../engine/types'
+import type { MemoryFact } from '../memory/semantic/types.js'
 
 export type EngineMemoryMeta = {
   activeFactCount: number

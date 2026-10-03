@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
+import { dismissBootSplash } from './lib/bootSplash'
 
 type Props = { children: ReactNode }
 type State = { err: Error | null }
@@ -12,6 +13,12 @@ export class ErrorBoundary extends Component<Props, State> {
 
   override componentDidCatch(err: Error, info: ErrorInfo): void {
     console.error('[Ackem renderer]', err, info.componentStack)
+    // 渲染崩溃时主界面无法 signalBootSplashReady，主动关掉开屏以免一直卡在 100%
+    try {
+      dismissBootSplash()
+    } catch {
+      /* ignore */
+    }
   }
 
   override render(): ReactNode {

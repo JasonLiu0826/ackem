@@ -1,4 +1,5 @@
-import type { MemoryFact, Episode } from '../../engine/types'
+import type { MemoryFact } from '../semantic/types.js'
+import type { Episode } from '../episodes/types.js'
 import type { FactStore } from '../factStore'
 import type { EpisodicStore } from '../episodicStore'
 import { getDatabase } from '../../db/database'

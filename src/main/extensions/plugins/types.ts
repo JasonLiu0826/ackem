@@ -66,6 +66,8 @@ export type PluginPermission =
 
 export interface PluginManifest extends ExtensionManifestBase {
   category: 'plugin'
+  /** Optional discovery keywords for user-created plugins. */
+  keywords?: string[]
   /** 插件类型 */
   pluginType: PluginType
   /** 请求的权限列表 */

@@ -10,6 +10,7 @@ const LIGHT_SCHEDULE_DISPATCH: DispatchConfig = {
   scenarios: ['md 段落级轻日程', '仅今天/明天'],
   summary: '轻量 md 日程增删查（非完整日历）。',
   keywords: ['记一下', '安排', '日程', '提醒', '待办'],
+  invocation: ['提醒我 {n} 分钟'],
   personality_hint: 'neutral'
 }
 

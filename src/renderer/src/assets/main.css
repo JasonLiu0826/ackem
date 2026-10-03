@@ -2690,11 +2690,68 @@ html.theater-open body {
   color: var(--color-ink-muted);
 }
 
-.viz-legend-dot {
-  width: 0.5rem;
-  height: 0.5rem;
-  flex-shrink: 0;
-  border-radius: 999px;
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-ink) 12%, transparent);
+.state-bubble-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.75rem;
+}
+
+.state-bubble {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.6rem;
+  align-items: baseline;
+  padding: 0.45rem 0.65rem;
+  border-radius: 0.65rem;
+  background: color-mix(in srgb, var(--color-accent) 8%, var(--glass-bg));
+  border: 1px solid color-mix(in srgb, var(--color-accent) 22%, var(--glass-border));
+  font-size: 0.75rem;
+  color: var(--color-ink-muted);
+  animation: state-bubble-in 0.35s ease-out;
+}
+
+.state-bubble-label {
+  font-weight: 600;
+  color: var(--color-accent);
+}
+
+.state-bubble-reason {
+  opacity: 0.9;
+}
+
+@keyframes state-bubble-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── 社会页 ── */
+@keyframes social-post-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.social-post-card {
+  animation: social-post-in 420ms var(--ease-out) both;
+}
+
+.social-offline-banner {
+  animation: social-post-in 500ms var(--ease-out) both;
+}
+
+.social-page {
+  position: relative;
 }
 

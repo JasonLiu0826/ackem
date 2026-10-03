@@ -88,11 +88,18 @@ export type AppSettings = {
   openforuAgentCoreEnabled?: boolean
   /** AC-1：auto | deterministic | hybrid_skill | hybrid_inject */
   openforuGenerateStrategy?: import('./openforuAgentTypes').OpenForUGenerateStrategySetting
+  /** 内置 AckemCode 使用独立模型；关则与聊天共用网址、密钥和模型 */
+  ackemcodeIndependentLlm?: boolean
+  ackemcodeBaseUrl?: string
+  ackemcodeApiKey?: string
+  ackemcodeModel?: string
   /** 天气感知 Skill 默认城市（空则使用 Shanghai） */
   weatherCity?: string
   // ── i18n ──
   /** 界面语言 */
   locale?: 'zh' | 'en'
+  /** IANA 时区 override（记忆/本地日历）；空则每轮使用系统 IANA 时区 */
+  timezone?: string
   // ── Embedding 模型配置 ──
   /** 当前激活的本地 embedding 模型 ID；'none' = 不加载本地模型 */
   embeddingActiveModel?: 'bge-small-zh' | 'bge-small-en' | 'm3e-small' | 'bge-base-zh' | 'none'
@@ -125,10 +132,29 @@ export type AppSettings = {
   desktopAgentAllowDelete?: boolean
   /** 默认下载目录；空则 ~/Downloads/AckemDownloads */
   desktopAgentDownloadDir?: string
-  /** 软件更新下载线路 */
-  updateChannel?: 'auto' | 'github' | 'gitee'
-  /** 用户跳过的版本号 */
-  updateSkippedVersion?: string
-  /** 上次检查更新时间 ISO */
-  updateLastCheckAt?: string
+  /** v1.1.0 主动问候频率 */
+  proactiveFrequency?: 'low' | 'medium' | 'high'
+  /** v1.1.0 主动问候展示：纯弹窗 / 纯聊天 / 两者 */
+  proactiveDisplayMode?: 'notify_only' | 'chat_only' | 'both'
+  /** v1.1.0 主动问候上下文关联比例 0–1 */
+  proactiveContextRatio?: number
+  /** v1.1.0 用户刚发言后顺延主动问候（毫秒） */
+  proactiveUserQuietMs?: number
+  /** v1.1.0 启用主动问候总开关 */
+  proactiveEnabled?: boolean
+  /** v1.1.0 桌面回复镜像到微信 */
+  weixinMirrorEnabled?: boolean
+  /** v1.1.0 LLM 配置预设 */
+  llmProfiles?: import('../main/settings/llmProfiles').LlmProfile[]
+  activeChatProfileId?: string
+  activeOpenForUProfileId?: string
+  activeImageGenProfileId?: string
+  /** v1.1.0 生图 */
+  imageGenEnabled?: boolean
+  imageGenProvider?: 'openai_compatible' | 'sd_webui' | 'unset'
+  imageGenBaseUrl?: string
+  imageGenModel?: string
+  imageGenApiKey?: string
+  imageGenDefaultSize?: '512x512' | '1024x1024'
+  imageGenPromptEnhancementEnabled?: boolean
 }

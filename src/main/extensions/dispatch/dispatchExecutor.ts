@@ -17,6 +17,8 @@ function resolveSkillContextInjection(result: SkillResult): string | undefined {
 
 export type DispatchExecutionResult = {
   contextInjection?: string
+  ok?: boolean
+  errorCode?: string
   emotionHint?: {
     affDelta?: number
     secDelta?: number
@@ -41,10 +43,11 @@ export async function executeDispatchedExtension(
   extensionId: string,
   userMessage: string,
   sessionId: string,
-  snapshot: EngineSnapshot
+  snapshot: EngineSnapshot,
+  args?: Record<string, unknown>
 ): Promise<DispatchExecutionResult> {
   if (!isDispatchExtensionActive(coordinator, extensionId)) {
-    return { events: [] }
+    return { events: [], ok: false, errorCode: 'extension_inactive' }
   }
 
   recordDispatchTrigger(sessionId, extensionId)
@@ -57,7 +60,8 @@ export async function executeDispatchedExtension(
       trigger: 'keyword',
       triggerDetail: 'dispatch:auto_invoke',
       userMessage,
-      snapshot
+      snapshot,
+      args
     })
     const events = result.events ?? []
     const contextInjection = resolveSkillContextInjection(result)
@@ -66,9 +70,9 @@ export async function executeDispatchedExtension(
       notifyExtensionInvoke(extensionId, entry?.name ?? extensionId)
     }
     if (contextInjection) {
-      return { contextInjection, events }
+      return { contextInjection, events, ok: result.ok, errorCode: result.ok ? undefined : 'plugin_failed' }
     }
-    return { events }
+    return { events, ok: result.ok, errorCode: result.ok ? undefined : 'plugin_failed' }
   }
 
   const pluginHooks = coordinator.plugins.get(extensionId)?.hooks
@@ -81,13 +85,14 @@ export async function executeDispatchedExtension(
       notifyExtensionInvoke(extensionId, entry?.name ?? extensionId)
       return {
         contextInjection: injections.length > 0 ? injections.join('\n\n') : undefined,
-        events: []
+        events: [],
+        errorCode: 'unverified_plugin_result'
       }
     } catch (err) {
       const uplugin = coordinator.openforu.getUplugin(extensionId)
       const fallback = uplugin?.meta?.injectTemplate?.trim()
       if (fallback) {
-        return { contextInjection: fallback, events: [] }
+        return { contextInjection: fallback, events: [], errorCode: 'unverified_plugin_result' }
       }
       throw err
     }
@@ -97,10 +102,10 @@ export async function executeDispatchedExtension(
   const metaInject = upluginOnly?.meta?.injectTemplate?.trim()
   if (metaInject) {
     publishExtensionTriggeredById(extensionId)
-    return { contextInjection: metaInject, events: [] }
+    return { contextInjection: metaInject, events: [], errorCode: 'unverified_plugin_result' }
   }
 
-  return { events: [] }
+  return { events: [], ok: false, errorCode: 'plugin_not_executed' }
 }
 
 /** llm_function_call 类扩展不在此执行，由 LLM tools 承接 */

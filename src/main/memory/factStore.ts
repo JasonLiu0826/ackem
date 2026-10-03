@@ -33,7 +33,8 @@ import {
 
 /** Embedding 去重阈值：同 domain + 同 subcategory 时，cosine > 此值视为语义重复 */
 const EMBEDDING_DEDUP_THRESHOLD = 0.85
-import type { EmotionalContext, FactLayer, MemoryEcho, MemoryFact, MemoryTier } from '../engine/types'
+import type { EmotionalContext, MemoryEcho } from '../engine/types'
+import type { FactLayer, MemoryFact, MemoryTier } from './semantic/types.js'
 import { normalizeConfidence } from '../../shared/confidence'
 import {
   countFactsInDb,
@@ -43,11 +44,25 @@ import {
   updateFactInDb,
   deleteFactFromDb
 } from '../db/repos/memoryFacts'
+import {
+  getCurrentAgentId,
+  getCurrentInteractionSurface
+} from '../social/agents/withAgentContext'
+import {
+  isInteractionSurface,
+  validateProvenance,
+  type InteractionSurface
+} from './provenance'
+import { isPrimaryCompanion } from '../social/agents/guards'
 import { searchFactIdsFts } from '../db/repos/fts'
 import { getDatabase } from '../db/database'
 import { dataRootFromFactsPath } from '../db/paths'
 import { CATEGORY_META, type Subcategory, isValidSubcategory } from './taxonomy'
 import { cosineSimilarity } from './factEmbeddingCache'
+import { emptyFactChangeSet, noteFactChange } from './semantic/changeSet.js'
+import type { FactChangeKind, FactChangeSet, FactIndexPendingEntry } from './semantic/types.js'
+import { evaluateFactMerge } from './semantic/factMergePolicy.js'
+import { getClock } from './temporal/clock.js'
 
 type FactsFile = { version: string; facts: MemoryFact[] }
 
@@ -77,6 +92,9 @@ export class FactStore {
   private flushTimer: ReturnType<typeof setTimeout> | null = null
   /** Phase 3: DB 可用时走增量写入，不再全表重写 */
   private useDb = false
+  private pendingIndexChanges: FactChangeSet = emptyFactChangeSet()
+  private pendingIndexEntries: FactIndexPendingEntry[] = []
+  private indexProjectionQueued = false
 
   constructor(filePath: string) {
     this.path = filePath
@@ -96,9 +114,19 @@ export class FactStore {
     return dataRootFromFactsPath(this.path)
   }
 
+  private assertDbWritable(): void {
+    if (this.useDb && !getDatabase(this.dataRoot)) throw new Error('MEMORY_DB_UNAVAILABLE')
+  }
+
   load(): void {
     this.flushLegacy()
     const dataRoot = this.dataRoot
+
+    const dbAvailable = getDatabase(dataRoot) !== null
+    if (!dbAvailable && process.env.VITEST !== 'true') throw new Error('MEMORY_DB_UNAVAILABLE')
+    // An empty but healthy DB is still the production source of truth. Do not
+    // switch a new profile into JSON mode until its first fact is written.
+    this.useDb = dbAvailable
 
     const dbCount = countFactsInDb(dataRoot)
     if (dbCount > 0) {
@@ -127,10 +155,9 @@ export class FactStore {
       }
       if (this.facts.length > 0) {
         replaceFactsInDb(dataRoot, this.facts)
-        // 只在 DB 真正可用时才设 useDb（replaceFactsInDb 可能因 DB 不可用而静默跳过）
-        if (countFactsInDb(dataRoot) > 0) {
-          this.useDb = true
-        }
+        // The import may skip tombstoned IDs. Never keep those stale JSON
+        // rows active in the in-memory view after the database accepted it.
+        if (dbAvailable) this.facts = loadFactsFromDb(dataRoot)
       }
       if (migrated) {
         this.dirty = true
@@ -165,7 +192,9 @@ export class FactStore {
     mkdirSync(dirname(this.path), { recursive: true })
     const body: FactsFile = { version: '2.0', facts: this.facts }
     writeFileSync(this.path, JSON.stringify(body, null, 2), 'utf-8')
-    replaceFactsInDb(this.dataRoot, this.facts)
+    // JSON is only a legacy fallback. Never replace a populated ledger-backed
+    // database with a possibly stale JSON snapshot after SQLite recovers.
+    if (countFactsInDb(this.dataRoot) === 0) replaceFactsInDb(this.dataRoot, this.facts)
   }
 
   /** 兼容外部调用（如 postChatTurn） */
@@ -180,8 +209,41 @@ export class FactStore {
     }
   }
 
+  /** Index projections (Task 10): consume after a write batch. */
+  takePendingIndexChanges(): FactChangeSet {
+    const out = this.pendingIndexChanges
+    this.pendingIndexChanges = emptyFactChangeSet()
+    return out
+  }
+
+  takePendingIndexEntries(): FactIndexPendingEntry[] {
+    const out = this.pendingIndexEntries
+    this.pendingIndexEntries = []
+    this.pendingIndexChanges = emptyFactChangeSet()
+    return out
+  }
+
+  private trackIndexChange(kind: FactChangeKind, factId: string): void {
+    noteFactChange(this.pendingIndexChanges, kind, factId)
+    const revision = this.getById(factId)?.indexRevision ?? 1
+    this.pendingIndexEntries.push({ factId, kind, revision })
+    this.queueIndexProjection()
+  }
+
+  private queueIndexProjection(): void {
+    if (!this.useDb || this.indexProjectionQueued) return
+    this.indexProjectionQueued = true
+    queueMicrotask(() => {
+      this.indexProjectionQueued = false
+      void import('./semantic/semanticMemory.js').then(({ flushFactStoreIndexProjections }) =>
+        flushFactStoreIndexProjections(this).catch(() => undefined)
+      )
+    })
+  }
+
   /** 移除超过保留期的退役瞬时状态（仅 NOW/PLANS/WORLD），真实记忆永远保留 */
   compactFacts(): number {
+    this.assertDbWritable()
     const cutoff = new Date(Date.now() - AUTO_COMPACT_RETENTION_DAYS * 86400000).toISOString()
     // 只物理删除瞬时状态（NOW/PLANS/WORLD），其他退役事实（矛盾检测、降权等）永远保留
     const TRANSIENT_SUBS = new Set(['NOW', 'PLANS', 'WORLD'])
@@ -196,6 +258,7 @@ export class FactStore {
     for (const id of removeIds) this.byId.delete(id)
     if (this.useDb) {
       for (const id of removeIds) deleteFactFromDb(this.dataRoot, id)
+      for (const id of removeIds) this.trackIndexChange('retired', id)
     } else {
       this.persist()
     }
@@ -340,7 +403,13 @@ export class FactStore {
     return { aff: ea, sec: es, aro: eAr, dom: eDom }
   }
 
-  findSimilarFacts(subcategory: string, subject: string, summary: string, threshold?: number): MemoryFact[] {
+  findSimilarFacts(
+    subcategory: string,
+    subject: string,
+    summary: string,
+    threshold?: number,
+    ownerAgentId?: string
+  ): MemoryFact[] {
     const thresh = threshold ?? FACT_DEDUP_THRESHOLD
     const charSet = (s: string) => {
       const set = new Set<string>()
@@ -351,10 +420,19 @@ export class FactStore {
     }
     const qSet = charSet(`${subject} ${summary}`)
     if (qSet.size < 2) return []
+    const owner = ownerAgentId?.trim()
 
     const results: MemoryFact[] = []
     for (const f of this.facts) {
       if (f.status !== 'active' || f.subcategory !== subcategory) continue
+      if (owner) {
+        const factOwner = f.ownerAgentId ?? 'default'
+        if (owner === 'default') {
+          if (factOwner !== 'default') continue
+        } else if (factOwner !== owner) {
+          continue
+        }
+      }
       const fSet = charSet(`${f.subject} ${f.summary}`)
       if (fSet.size < 2) continue
       let intersect = 0
@@ -375,11 +453,13 @@ export class FactStore {
   promoteToCore(id: string): boolean {
     const f = this.facts.find(x => x.id === id)
     if (!f || f.status !== 'active') return false
+    this.assertDbWritable()
     f.tier = 'core'
-    f.updatedAt = new Date().toISOString()
+    f.updatedAt = getClock().now().toISOString()
     this.autoDemoteExcessCores()
     if (this.useDb) {
       updateFactInDb(this.dataRoot, f)
+      this.trackIndexChange('updated', id)
     } else {
       this.persist()
     }
@@ -396,6 +476,7 @@ export class FactStore {
   }
 
   autoDemoteExcessCores(): void {
+    this.assertDbWritable()
     const cores = this.facts.filter(f => f.status === 'active' && f.tier === 'core')
     if (cores.length <= CORE_MEMORY_MAX_COUNT) return
     // 按 decayedScore 排序（而非裸 weight），僵尸核心记忆优胜劣汰
@@ -403,7 +484,7 @@ export class FactStore {
     const toDemote = cores.slice(0, cores.length - CORE_MEMORY_MAX_COUNT)
     for (const f of toDemote) {
       f.tier = 'archival'
-      f.updatedAt = new Date().toISOString()
+      f.updatedAt = getClock().now().toISOString()
       if (this.useDb) {
         updateFactInDb(this.dataRoot, f)
       }
@@ -416,7 +497,8 @@ export class FactStore {
     summary: string,
     domain?: string,
     embedding?: number[],
-    embeddingCache?: Map<string, number[]>
+    embeddingCache?: Map<string, number[]>,
+    ownerAgentId?: string
   ): MemoryFact | null {
     const charSet = (s: string) => {
       const set = new Set<string>()
@@ -427,6 +509,7 @@ export class FactStore {
     }
     const qSet = charSet(`${subject} ${summary}`)
     if (qSet.size < 2 && !embedding) return null
+    const owner = ownerAgentId?.trim()
 
     let bestMatch: MemoryFact | null = null
     let bestSim = 0
@@ -434,6 +517,14 @@ export class FactStore {
     for (const f of this.facts) {
       if (f.status !== 'active' || f.subcategory !== subcategory) continue
       if (domain && f.domain !== domain) continue  // 同 domain 约束
+      if (owner) {
+        const factOwner = f.ownerAgentId ?? 'default'
+        if (owner === 'default') {
+          if (factOwner !== 'default') continue
+        } else if (factOwner !== owner) {
+          continue
+        }
+      }
 
       // Embedding 去重（优先，语义更准）
       if (embedding && embeddingCache) {
@@ -480,7 +571,16 @@ export class FactStore {
     factLayer?: FactLayer
     embedding?: number[]
     privacyLevel?: MemoryFact['privacyLevel']
+    sensitivity?: MemoryFact['sensitivity']
     ageMeta?: { age: number; birthdayMMDD?: string; birthYear?: number; recordedAt: string; isEstimate: boolean }
+    ownerAgentId?: string
+    interactionSurface?: MemoryFact['interactionSurface']
+    counterpartyKind?: MemoryFact['counterpartyKind']
+    counterpartyId?: string | null
+    involvesUser?: boolean
+    occurredAt?: string
+    scheduledFor?: string
+    contextJson?: Record<string, unknown>
   }): AddFactResult {
     return this._addFactImpl(raw)
   }
@@ -501,6 +601,7 @@ export class FactStore {
     derivedFrom?: string[]
     factLayer?: FactLayer
     privacyLevel?: MemoryFact['privacyLevel']
+    sensitivity?: MemoryFact['sensitivity']
   }): MemoryFact {
     return this._addFactImpl(raw).fact
   }
@@ -521,27 +622,46 @@ export class FactStore {
     factLayer?: FactLayer
     embedding?: number[]
     privacyLevel?: MemoryFact['privacyLevel']
+    sensitivity?: MemoryFact['sensitivity']
     ageMeta?: { age: number; birthdayMMDD?: string; birthYear?: number; recordedAt: string; isEstimate: boolean }
+    ownerAgentId?: string
+    interactionSurface?: string
+    counterpartyKind?: string
+    counterpartyId?: string | null
+    involvesUser?: boolean
+    occurredAt?: string
+    scheduledFor?: string
+    contextJson?: Record<string, unknown>
   }): AddFactResult {
+    this.assertDbWritable()
     const sub = raw.subcategory as Subcategory
     const meta = isValidSubcategory(sub) ? CATEGORY_META[sub] : CATEGORY_META.MOOD
-    const now = new Date().toISOString()
+    const now = getClock().now().toISOString()
     const incomingConfidence = normalizeConfidence(raw.confidence ?? meta.defaultConfidence)
 
-    // O1: 事实去重 — Embedding + Jaccard 双条件
-    const existing = this.findSimilarFact(sub, raw.subject, raw.summary, raw.domain, raw.embedding, this._embeddingCache)
+    // O1: 事实去重 — Embedding + Jaccard 双条件（同 owner 内）
+    const dedupeOwner = raw.ownerAgentId ?? getCurrentAgentId()
+    const existing = this.findSimilarFact(
+      sub,
+      raw.subject,
+      raw.summary,
+      raw.domain,
+      raw.embedding,
+      this._embeddingCache,
+      dedupeOwner
+    )
     if (existing) {
-      existing.weight = Math.max(existing.weight, raw.weight ?? meta.defaultWeight) + FACT_DEDUP_WEIGHT_BOOST
-      existing.confidence = Math.max(normalizeConfidence(existing.confidence), incomingConfidence)
-      existing.triggers = [...new Set([...existing.triggers, ...(raw.triggers ?? [])])]
-      if (raw.summary.length > existing.summary.length) {
-        existing.summary = raw.summary
-      }
-      existing.emotionalContext = raw.emotionalContext
-      existing.privacyLevel = mostRestrictivePrivacy(existing.privacyLevel, raw.privacyLevel)
-      existing.updatedAt = now
-      existing.updateTrail = [...existing.updateTrail, now]
-      // B: 合并后若权重超过阈值，提升为核心记忆
+      Object.assign(existing, {
+        weight: Math.max(existing.weight, raw.weight ?? meta.defaultWeight) + FACT_DEDUP_WEIGHT_BOOST,
+        confidence: Math.max(normalizeConfidence(existing.confidence), incomingConfidence),
+        triggers: [...new Set([...existing.triggers, ...(raw.triggers ?? [])])],
+        summary: raw.summary.length > existing.summary.length ? raw.summary : existing.summary,
+        emotionalContext: raw.emotionalContext,
+        privacyLevel: mostRestrictivePrivacy(existing.privacyLevel, raw.privacyLevel),
+        sensitivity: existing.sensitivity === 'avoid' || raw.sensitivity === 'avoid' ? 'avoid' : 'normal',
+        updatedAt: now,
+        updateTrail: [...existing.updateTrail, now]
+      })
       if (!existing.tier || existing.tier !== 'core') {
         if (existing.weight >= CORE_MEMORY_WEIGHT_THRESHOLD) {
           existing.tier = 'core'
@@ -553,8 +673,45 @@ export class FactStore {
       } else {
         this.persist()
       }
+      this.trackIndexChange('updated', existing.id)
       return { fact: existing, isNew: false, mergedWith: existing.id }
     }
+
+    const policyDecision = evaluateFactMerge(this.listActive(), raw, { ownerAgentId: dedupeOwner })
+    if (policyDecision.action === 'update') {
+      const target = this.byId.get(policyDecision.targetId)
+      if (target) {
+        Object.assign(target, policyDecision.patch)
+        if (target.tier === 'core') this.autoDemoteExcessCores()
+        if (this.useDb) updateFactInDb(this.dataRoot, target)
+        else this.persist()
+        this.trackIndexChange('updated', target.id)
+        return { fact: target, isNew: false, mergedWith: target.id }
+      }
+    }
+
+    // 溯源：显式入参 > ALS 当前场景 > primary/social 默认
+    const agentId = raw.ownerAgentId ?? getCurrentAgentId()
+    const fromAls = getCurrentInteractionSurface()
+    const rawSurface = raw.interactionSurface
+    const interactionSurface: InteractionSurface = isInteractionSurface(rawSurface)
+      ? rawSurface
+      : fromAls ?? (isPrimaryCompanion(agentId) ? 'desktop_main' : 'social_private')
+    const counterpartyKind =
+      raw.counterpartyKind ?? (interactionSurface === 'import' ? 'none' : 'user')
+    const involvesUser =
+      raw.involvesUser ??
+      (interactionSurface !== 'import' &&
+        interactionSurface !== 'system' &&
+        interactionSurface !== 'social_tick')
+
+    validateProvenance(agentId, {
+      ownerAgentId: agentId,
+      interactionSurface,
+      counterpartyKind: (counterpartyKind as 'user' | 'agent' | 'group' | 'none' | 'system') ?? 'user',
+      counterpartyId: raw.counterpartyId ?? null,
+      involvesUser,
+    })
 
     const fact: MemoryFact = {
       id: randomUUID(),
@@ -577,7 +734,16 @@ export class FactStore {
       factLayer: raw.factLayer ?? 'raw',
       tier: raw.factLayer === 'consolidated' ? 'core' : undefined,
       privacyLevel: raw.privacyLevel ?? 'normal',
-      ageMeta: raw.ageMeta
+      sensitivity: raw.sensitivity ?? 'normal',
+      ageMeta: raw.ageMeta,
+      ownerAgentId: agentId,
+      interactionSurface,
+      counterpartyKind,
+      counterpartyId: raw.counterpartyId ?? null,
+      involvesUser,
+      occurredAt: raw.occurredAt,
+      scheduledFor: raw.scheduledFor,
+      contextJson: raw.contextJson,
     }
     // B: 自动提升——高权重事实自动成为核心记忆
     if (!fact.tier && fact.weight >= CORE_MEMORY_WEIGHT_THRESHOLD) {
@@ -591,6 +757,7 @@ export class FactStore {
     } else {
       this.persist()
     }
+    this.trackIndexChange('inserted', fact.id)
     return { fact, isNew: true }
   }
 
@@ -600,36 +767,41 @@ export class FactStore {
   ): boolean {
     const f = this.facts.find((x) => x.id === id)
     if (!f) return false
+    this.assertDbWritable()
     const normalized = patch.confidence !== undefined
       ? { ...patch, confidence: normalizeConfidence(patch.confidence) }
       : patch
     if (normalized.privacyLevel) {
       normalized.privacyLevel = mostRestrictivePrivacy(f.privacyLevel, normalized.privacyLevel)
     }
-    Object.assign(f, normalized, { updatedAt: new Date().toISOString() })
+    Object.assign(f, normalized, { updatedAt: getClock().now().toISOString() })
     if (this.useDb) {
       updateFactInDb(this.dataRoot, f)
     } else {
       this.persist()
     }
+    this.trackIndexChange('updated', id)
     return true
   }
 
   retireFact(id: string): boolean {
     const f = this.facts.find((x) => x.id === id)
     if (!f) return false
+    this.assertDbWritable()
     f.status = 'retired'
-    f.updatedAt = new Date().toISOString()
+    f.updatedAt = getClock().now().toISOString()
     if (this.useDb) {
       updateFactInDb(this.dataRoot, f)
     } else {
       this.persist()
     }
+    this.trackIndexChange('retired', id)
     return true
   }
 
   /** 名字降权：新增名字时，同 subject 的旧名字 weight-1 */
   downgradeNameFacts(subject: string): void {
+    this.assertDbWritable()
     for (const f of this.facts) {
       if (
         f.subcategory === 'BASIC_PROFILE' &&
@@ -639,7 +811,7 @@ export class FactStore {
         f.status === 'active'
       ) {
         f.weight = Math.max(0, f.weight - 1)
-        f.updatedAt = new Date().toISOString()
+        f.updatedAt = getClock().now().toISOString()
         if (this.useDb) {
           updateFactInDb(this.dataRoot, f)
         }
@@ -649,6 +821,7 @@ export class FactStore {
   }
 
   autoRetireExpired(): void {
+    this.assertDbWritable()
     const now = Date.now()
     for (const f of this.facts) {
       if (f.status !== 'active') continue
@@ -658,9 +831,10 @@ export class FactStore {
       const age = (now - new Date(f.createdAt).getTime()) / 86400000
       if (age >= days && ['NOW', 'PLANS', 'WORLD'].includes(f.subcategory)) {
         f.status = 'retired'
-        f.updatedAt = new Date().toISOString()
+        f.updatedAt = getClock().now().toISOString()
         if (this.useDb) {
           updateFactInDb(this.dataRoot, f)
+          this.trackIndexChange('retired', f.id)
         }
       }
     }
