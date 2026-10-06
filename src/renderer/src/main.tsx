@@ -24,8 +24,10 @@ if (splashMount) {
 const rootEl = document.getElementById('root')
 if (!rootEl) {
   dismissBootSplash()
-  document.body.innerHTML =
-    '<p style="font-family:system-ui;padding:24px;color:#e8e0d0;background:#0f0d14">Missing #root in index.html</p>'
+  const errEl = document.createElement('p')
+  errEl.style.cssText = "font-family:system-ui;padding:24px;color:#e8e0d0;background:#0f0d14"
+  errEl.textContent = 'Missing #root in index.html'
+  document.body.appendChild(errEl)
 } else {
   ReactDOM.createRoot(rootEl).render(
     <React.StrictMode>
