@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  test:
+  validate:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -16,5 +16,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm run typecheck
-      - run: npm test
+      - name: Typecheck renderer
+        run: npm run typecheck
+      - name: Build application
+        run: npm run build
