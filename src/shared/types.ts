@@ -40,12 +40,18 @@ export type CompanionSuggestion = {
 export const INFERENCE_CONSENT_VERSION = 1
 
 export type AppSettings = {
+  /** Internal coordination policy; normal task controls remain input and stop. */
+  taskPolicy?: {maxAttempts?:number;maxDurationMs?:number;maxModelCallsPerAttempt?:number;notificationIntervalMs?:number;stopConfirmationMs?:number;maxContextTokens?:number;maxCostUsd?:number}
+  updateChannel?: import('./updateTypes').UpdateChannel
+  updateLastCheckAt?: string
   dataRootMode: DataRootMode
   llmProvider: LlmProvider
   openaiBaseUrl: string
   openaiApiKey: string
   anthropicBaseUrl: string
   anthropicApiVersion: string
+  /** Default true, including settings saved before this option existed. */
+  outputTokensAuto?: boolean
   anthropicMaxTokens: number
   model: string
   timeoutMs: number
@@ -109,6 +115,9 @@ export type AppSettings = {
   embeddingRemoteModel?: string
   /** 异步多消息（多波 API）总开关；关则回退单轮 + [SPLIT] */
   asyncMultiMessageEnabled?: boolean
+  companionInteractionMode?: 'assistant' | 'companionship'
+  companionshipProactiveEnabled?: boolean
+  companionshipQuietHours?: boolean
   /** Wave0 使用本地 OpenAI 兼容端点（Ollama / LM Studio） */
   localChatEnabled?: boolean
   localChatBaseUrl?: string

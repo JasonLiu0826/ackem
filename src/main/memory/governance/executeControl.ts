@@ -44,6 +44,7 @@ import {
 } from './sourceTurnValidation.js'
 
 import { invalidateUserDossier, scrubDossierSummaries } from './dossierHygiene.js'
+import { canControlMemoryObject, canReplayMemoryControl, memoryControlScopeProof } from '../accessScope.js'
 
 
 
@@ -73,7 +74,7 @@ export function setControlFaultHookForTests(hook: ((phase: string) => void) | un
 
 
 
-function resolveFactId(db: Database.Database, target: MemoryTarget): string | null {
+function resolveFactId(db: Database.Database, target: MemoryTarget, sessionId: string, accessContextRef?: string): string | null {
 
   if (target.kind === 'fact') return target.factId
 
@@ -83,15 +84,15 @@ function resolveFactId(db: Database.Database, target: MemoryTarget): string | nu
 
       .prepare(
 
-        `SELECT id FROM memory_facts WHERE status = 'active' AND (summary LIKE ? OR subject LIKE ?)
+        `SELECT id,source_session_id FROM memory_facts WHERE status = 'active' AND (summary LIKE ? OR subject LIKE ?)
 
-         ORDER BY updated_at DESC LIMIT 1`
+         ORDER BY updated_at DESC`
 
       )
 
-      .get(`%${target.text}%`, `%${target.text}%`) as { id: string } | undefined
+      .all(`%${target.text}%`, `%${target.text}%`) as { id: string; source_session_id: string }[]
 
-    return row?.id ?? null
+    return row.find(fact => canControlMemoryObject(db,'fact',fact.id,fact.source_session_id || sessionId,accessContextRef))?.id ?? null
 
   }
 
@@ -255,13 +256,16 @@ export function executeMemoryControl(
 
   const factId =
 
-    command.target.kind === 'episode' ? null : resolveFactId(db, command.target)
+    command.target.kind === 'episode' ? null : resolveFactId(db, command.target, ctx.sessionId, command.accessContextRef)
 
   if (!factId && command.target.kind !== 'episode') {
 
     return { ok: false, invalidated }
 
   }
+  const targetKind = command.target.kind === 'episode' ? 'episode' : 'fact'
+  const targetId = command.target.kind === 'episode' ? command.target.episodeId : factId!
+  const targetRow = db.prepare(targetKind === 'fact' ? 'SELECT source_session_id FROM memory_facts WHERE id=?' : 'SELECT source_session_id FROM episodes WHERE id=?').get(targetId) as { source_session_id: string } | undefined
 
 
 
@@ -278,11 +282,21 @@ export function executeMemoryControl(
   const priorEventId = existingControlByIdempotency(db, idempotencyKey)
 
   if (priorEventId) {
+    const payload = db.prepare('SELECT content_json FROM memory_event_payloads WHERE event_id=? AND redacted_at IS NULL').get(priorEventId) as {content_json:string}|undefined
+    let proof:unknown
+    try { proof=payload?JSON.parse(payload.content_json).accessProof:undefined } catch { /* fail closed */ }
+    if (!canReplayMemoryControl(db,proof,command.accessContextRef)) return {ok:false,invalidated,errorCode:'scope_denied'}
     const heal = reconcileLegacyChatProjectionFromDb(dataRoot, ctx.sessionId, { maxAttempts: 3 })
     if (heal.status === 'failed') {
       return { ok: false, controlEventId: priorEventId, invalidated, errorCode: 'projection_failed' }
     }
     return { ok: true, controlEventId: priorEventId, invalidated }
+  }
+  if (!canControlMemoryObject(db, targetKind, targetId, targetRow?.source_session_id ?? ctx.sessionId, command.accessContextRef)) return { ok: false, invalidated, errorCode: 'scope_denied' }
+  const accessProof = memoryControlScopeProof(db,targetKind,targetId)
+  const writeControlEvent = (...params: Parameters<typeof appendControlEvent>): string => {
+    params[3] = {...params[3],accessProof}
+    return appendControlEvent(...params)
   }
 
   if (command.kind === 'delete' && factId) {
@@ -387,7 +401,7 @@ export function executeMemoryControl(
 
         updateFactInDb(dataRoot, { ...fact, sensitivity: 'avoid', updatedAt: at })
 
-        appendControlEvent(db, events, baseMeta('memory.muted'), { factId, command: 'mute' }, 'memory muted')
+        writeControlEvent(db, events, baseMeta('memory.muted'), { factId, command: 'mute' }, 'memory muted')
 
         controlFaultHookForTests?.('before_commit')
 
@@ -445,7 +459,7 @@ export function executeMemoryControl(
 
         invalidated.associations = inv.associations
 
-        appendControlEvent(
+        writeControlEvent(
 
           db,
 
@@ -489,7 +503,7 @@ export function executeMemoryControl(
 
         invalidated.associations = inv.associations
 
-        appendControlEvent(db, events, baseMeta('memory.forgotten'), { factId }, 'memory forgotten')
+        writeControlEvent(db, events, baseMeta('memory.forgotten'), { factId }, 'memory forgotten')
 
         tombstones.insert(db, {
 
@@ -569,7 +583,7 @@ export function executeMemoryControl(
 
         invalidated.facts = 1
 
-        appendControlEvent(db, events, baseMeta('memory.deleted'), { factId, scope: command.scope }, 'memory deleted')
+        writeControlEvent(db, events, baseMeta('memory.deleted'), { factId, scope: command.scope }, 'memory deleted')
 
         tombstones.insert(db, {
 
@@ -653,7 +667,7 @@ export function executeMemoryControl(
 
         invalidated.episodes = 1
 
-        appendControlEvent(db, events, baseMeta('memory.deleted'), { episodeId, scope: command.scope }, 'memory deleted')
+        writeControlEvent(db, events, baseMeta('memory.deleted'), { episodeId, scope: command.scope }, 'memory deleted')
 
         tombstones.insert(db, {
 

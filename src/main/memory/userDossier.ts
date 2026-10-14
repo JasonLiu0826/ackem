@@ -10,6 +10,9 @@ import { buildUserNameLine } from './userName'
 import { buildAgeLine } from './ageComputer'
 import { getDatabase } from '../db/database.js'
 import { isUserDossierPromptBlocked } from './governance/dossierHygiene.js'
+import { createHash } from 'node:crypto'
+import { personalFacts } from './personalFacts'
+import { FactStore as ProfileFactStore, defaultFactsPath } from './factStore'
 
 const DOSSIER_PATH = 'companion/user-dossier.md'
 
@@ -44,8 +47,7 @@ function getDossierFacts(factStore: FactStore, dynamicOnly: boolean): string[] {
   factStore.load()
   const dataRoot = factStore.getDataRoot()
   const tombstoned = factIdsTombstoned(dataRoot)
-  const all = factStore
-    .listActive()
+  const all = personalFacts(factStore)
     .filter((f) => !tombstoned.has(f.id))
     .filter((f) => f.status === 'active')
     .filter((f) => {
@@ -125,6 +127,24 @@ function buildDynamicUserMsg(
   return `近期新事实（共 ${count} 条）：\n${factsBlock}${prevBlock}\n\n请更新近期状态段。只输出"—— 近期状态（仅供参考） ——"后面的内容。`
 }
 
+function profileFingerprint(dataRoot: string): string | null {
+  if (!getDatabase(dataRoot)) return null
+  const store = new ProfileFactStore(defaultFactsPath(dataRoot)); store.preferDbWrites(); store.load()
+  return createHash('sha256').update(JSON.stringify(personalFacts(store).map(f => [f.id, f.indexRevision, f.updatedAt, f.summary]).sort((a, b) => String(a[0]).localeCompare(String(b[0]))))).digest('hex')
+}
+function dossierStamp(dataRoot: string, content: string, fingerprint: string): void {
+  const db = getDatabase(dataRoot)
+  if (!db) return
+  db.exec('CREATE TABLE IF NOT EXISTS memory_dossier_scope (id TEXT PRIMARY KEY, content_hash TEXT NOT NULL, source_fingerprint TEXT NOT NULL, scope_version INTEGER NOT NULL)')
+  db.prepare('INSERT OR REPLACE INTO memory_dossier_scope VALUES (?,?,?,1)').run('personal', createHash('sha256').update(content).digest('hex'), fingerprint)
+}
+function isScopedDossier(dataRoot: string, content: string): boolean {
+  const db = getDatabase(dataRoot)
+  if (!db || !db.prepare("SELECT 1 FROM sqlite_master WHERE name='memory_dossier_scope'").get()) return false
+  const stamp = db.prepare('SELECT content_hash,source_fingerprint,scope_version FROM memory_dossier_scope WHERE id=?').get('personal') as { content_hash: string; source_fingerprint: string; scope_version: number } | undefined
+  return !!stamp && stamp.scope_version === 1 && stamp.content_hash === createHash('sha256').update(content).digest('hex') && stamp.source_fingerprint === profileFingerprint(dataRoot)
+}
+
 /** 生成整份档案 */
 export async function generateUserDossier(
   dataRoot: string,
@@ -136,6 +156,8 @@ export async function generateUserDossier(
 
   const facts = getDossierFacts(factStore, false)
   if (facts.length < 5) return null
+  const sourceFingerprint = profileFingerprint(dataRoot)
+  if (!sourceFingerprint) return null
 
   try {
     const raw = await llm.chatCompletionJson({
@@ -148,11 +170,13 @@ export async function generateUserDossier(
 
     const content = raw?.trim()
     if (!content || content.length < 50) return null
+    if (profileFingerprint(dataRoot) !== sourceFingerprint) return null
 
     const dateStr = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`
     const dossier = `${content}\n\n---\n*最后更新：${dateStr}*`
 
     writeFileSync(dossierPath, dossier, 'utf-8')
+    dossierStamp(dataRoot, dossier, sourceFingerprint)
     return dossier
   } catch {
     return null
@@ -166,7 +190,10 @@ export async function updateDynamicLayer(
   llm: LlmClient,
 ): Promise<string | null> {
   const dossierPath = defaultDossierPath(dataRoot)
-  const existing = existsSync(dossierPath) ? readFileSync(dossierPath, 'utf-8') : ''
+  const rawExisting = existsSync(dossierPath) ? readFileSync(dossierPath, 'utf-8') : ''
+  const existing = rawExisting && isScopedDossier(dataRoot, rawExisting) ? rawExisting : ''
+  const sourceFingerprint = profileFingerprint(dataRoot)
+  if (!sourceFingerprint) return null
 
   // 提取旧的动态段
   const dynamicMatch = existing.match(/—— 近期状态（仅供参考） ——\n([\s\S]*?)(?:\n\n---|$)/)
@@ -189,6 +216,7 @@ export async function updateDynamicLayer(
     })
 
     const dynamicContent = raw?.trim()
+    if (profileFingerprint(dataRoot) !== sourceFingerprint) return null
     if (!dynamicContent || dynamicContent.length < 10) {
       return prevDynamic || null
     }
@@ -215,6 +243,7 @@ export async function updateDynamicLayer(
     }
 
     writeFileSync(dossierPath, newDossier, 'utf-8')
+    dossierStamp(dataRoot, newDossier, sourceFingerprint)
     return newDossier
   } catch {
     return prevDynamic || null
@@ -228,6 +257,7 @@ export function loadUserDossier(dataRoot: string): string {
   if (!existsSync(p)) return ''
   const content = readFileSync(p, 'utf-8')
   if (!content.trim()) return ''
+  if (!isScopedDossier(dataRoot, content)) return ''
 
   return (
     '\n\n【关于 ta 的笔记 · 仅供你内心参考 · 绝对禁止在回复中对用户说"ta"】\n' +

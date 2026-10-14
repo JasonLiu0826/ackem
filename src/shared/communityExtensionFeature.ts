@@ -18,7 +18,7 @@ export function isCommunityExtensionsOpen(): boolean {
 }
 
 export const COMMUNITY_EXTENSIONS_CLOSED_ZH =
-  '社区扩展市场暂未开放。请在本地用 OpenForU（u/）试验，满意后向 Ackem 仓库 PR 合并为 ackem/ 官方扩展。'
+  '社区扩展市场暂未开放。可通过 AckemCode 任务创建本地插件；官方扩展贡献按仓库流程提交。'
 
 export const COMMUNITY_EXTENSIONS_CLOSED_EN =
   'Community extension marketplace is not open yet. Prototype locally with OpenForU (u/), then open a PR to ship as ackem/ built-ins.'

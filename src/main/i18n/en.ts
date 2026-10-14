@@ -547,7 +547,7 @@ export const enResources: Record<string, string> = {
 
   // ═══ Main nav (FIX-035) ═══
   'nav.chat': 'Chat',
-  'nav.code': 'Code',
+  'nav.code': 'Work',
   'nav.social': 'Social',
   'nav.memory': 'Memory',
   'nav.diary': 'Diary',

@@ -146,13 +146,16 @@ export function registerMemoryIpc(): void {
     }
   )
 
-  ipcMain.handle('memory:clearAll', () => {
+  ipcMain.handle('memory:clearAll', async () => {
     const settings = loadSettings()
     const root = resolveDataRoot(settings)
+    try{await (await import('../tasks/runtime')).stopTasksBeforeMemoryClear(root)}catch(error){return{ok:false,error:String((error as Error).message)}}
+    ;(await import('./workbench')).clearWorkSupervisorCache(root)
     ensureDataLayout(root)
 
     const dirsToClear = [
       join(root, 'memory', 'facts'),
+      join(root, 'memory', 'tasks'),
       join(root, 'memory', 'tree'),
       join(root, 'memory', 'shared-events'),
       join(root, 'memory', 'episodes'),
@@ -185,7 +188,7 @@ export function registerMemoryIpc(): void {
         error: e instanceof Error ? e.message : String(e)
       }
     }
-    workingMemory.clearAll()
+    workingMemory.clearProfile(root)
     for (const file of filesToClear) {
       try {
         if (existsSync(file)) rmSync(file)
@@ -244,7 +247,7 @@ export function registerMemoryIpc(): void {
     } catch {
       /* skip */
     }
-    workingMemory.clear(sid)
+    workingMemory.clear(sid, root)
     invalidateIndexCache(root)
     getOrRebuildIndex()
     return { ok: true as const }
@@ -594,7 +597,7 @@ export function registerMemoryIpc(): void {
     try {
       const tempStore = new FactStore(defaultFactsPath(root))
       tempStore.load()
-      const active = tempStore.listActive().slice(0, 20)
+      const active = personalFacts(tempStore).slice(0, 20)
       if (active.length > 0) {
         let best = active[0], bestScore = 0
         for (const f of active) {
@@ -776,3 +779,4 @@ export function registerMemoryIpc(): void {
     }
   )
 }
+import { personalFacts } from '../memory/personalFacts'

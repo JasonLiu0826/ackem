@@ -41,7 +41,7 @@ export type VoiceRuntimeConfig = {
 export const DEFAULT_VOICE_RUNTIME_CONFIG: VoiceRuntimeConfig = {
   enabled: false,
   ttsEnabled: false,
-  asrModel: 'base',
+  asrModel: 'small',
   ttsEngine: 'auto',
   ttsVoice: 'xiaoxiao',
   ttsPiperModel: '',

@@ -25,9 +25,21 @@ export function ChannelConfirmCard({
   useEffect(() => {
     if (open) {
       setPicked(candidates?.[0]?.id ?? '')
-      setDir(cwd ?? '')
+      if (cwd) {
+        setDir(cwd)
+      } else {
+        // 默认工作目录: 用户桌面 (非程序员的"我的文件"概念)
+        window.ackem.defaultCwd().then((p) => { setDir((cur) => cur || p) }).catch(() => {})
+      }
     }
   }, [open, candidates, cwd])
+
+  const browse = async () => {
+    try {
+      const r = await window.ackem.selectFolder()
+      if (r?.path) setDir(r.path)
+    } catch { /* user cancelled */ }
+  }
 
   if (!open) return null
 
@@ -37,12 +49,21 @@ export function ChannelConfirmCard({
         <h3 className="mb-2 text-base font-semibold text-ink">确认 · {kind}</h3>
         <p className="mb-4 text-sm leading-relaxed text-ink-muted">{askMessage}</p>
         {kind === 'work_job' && (
-          <input
-            className="mb-4 w-full rounded-lg border border-surface-inset bg-transparent px-3 py-2 text-sm"
-            placeholder="工作目录"
-            value={dir}
-            onChange={(e) => setDir(e.target.value)}
-          />
+          <div className="mb-4 flex items-center gap-2">
+            <input
+              className="min-w-0 flex-1 rounded-lg border border-surface-inset bg-transparent px-3 py-2 text-sm"
+              placeholder="工作目录"
+              value={dir}
+              onChange={(e) => setDir(e.target.value)}
+            />
+            <button
+              type="button"
+              className="shrink-0 rounded-lg border border-surface-inset px-3 py-2 text-sm text-ink-muted hover:text-ink"
+              onClick={() => void browse()}
+            >
+              浏览
+            </button>
+          </div>
         )}
         {kind === 'plugin_ask' && candidates && (
           <select

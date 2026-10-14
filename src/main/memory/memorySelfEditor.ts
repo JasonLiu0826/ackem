@@ -8,6 +8,7 @@ import type { ContradictionCheck, LlmClient } from '../engine/types'
 import type { MemoryFact } from './semantic/types.js'
 import type { FactStore } from './factStore'
 import { ContradictionDetector } from './contradictionDetector'
+import { personalFacts } from './personalFacts'
 
 export type EditLogEntry = {
   at: string
@@ -30,7 +31,14 @@ export class MemorySelfEditor {
     llm: LlmClient
   ): Promise<string[]> {
     const results: string[] = []
-    const validPairs = pairs.filter(p => p.newFact.id !== p.existing.id && p.newFact.factLayer !== 'consolidated')
+    factStore.load()
+    const permitted = new Map(personalFacts(factStore).map(f => [f.id, f]))
+    const validPairs = pairs.flatMap(pair => {
+      const newFact = permitted.get(pair.newFact.id), existing = permitted.get(pair.existing.id)
+      return newFact && existing && newFact.id !== existing.id && newFact.factLayer !== 'consolidated'
+        && existing.factLayer !== 'consolidated' && !newFact.derivedFrom?.length && !existing.derivedFrom?.length
+        ? [{ newFact: { ...newFact }, existing: { ...existing } }] : []
+    })
     if (validPairs.length === 0) return results
 
     // 批量送检：2+ 对 → 一次 LLM 调用；1 对 → 单独调用
@@ -48,7 +56,10 @@ export class MemorySelfEditor {
     }
 
     factStore.load()
+    const current = new Map(personalFacts(factStore).map(f => [f.id, f]))
     for (const { check, pair } of checks) {
+      const a = current.get(pair.newFact.id), b = current.get(pair.existing.id)
+      if (!a || !b || a.indexRevision !== pair.newFact.indexRevision || b.indexRevision !== pair.existing.indexRevision || a.updatedAt !== pair.newFact.updatedAt || b.updatedAt !== pair.existing.updatedAt) continue
       const result = this.applyResolution(check, pair.newFact, pair.existing, factStore)
       if (result) results.push(result)
     }
@@ -61,6 +72,12 @@ export class MemorySelfEditor {
     existing: MemoryFact,
     factStore: FactStore
   ): string | null {
+    // A destructive merge must not copy information while discarding its required source.
+    // Keep distinct facts intact; explicit corrections use the governance path with provenance.
+    if ((check.judgment === 'reinforce' || check.action === 'merge') && newFact.summary !== existing.summary) {
+      this.log('flag', newFact.id, existing.id, '保留不同来源的事实，等待可追溯的更正或整合')
+      return '保留不同来源的事实'
+    }
     if (check.judgment === 'reinforce') {
       factStore.updateFact(existing.id, {
         summary: newFact.summary.length > existing.summary.length ? newFact.summary : existing.summary,

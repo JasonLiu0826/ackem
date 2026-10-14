@@ -1,5 +1,6 @@
+import {cliPermissionMode} from './permissionModes.js'
 export type CliCommand =
-  | { kind: 'repl'; sessionId?: string; cwd?: string; url?: string }
+  | { kind: 'repl'; permissionMode?:string; sessionId?: string; cwd?: string; url?: string }
   | { kind: 'daemon'; port?: number; stop?: boolean }
   | { kind: 'attach'; sessionId?: string; url?: string }
   | { kind: 'print'; prompt: string; json: boolean; permissionMode?: string }
@@ -45,7 +46,7 @@ export function parseArgv(argv: string[]): CliCommand {
       continue
     }
     if (a === '--permission-mode') {
-      permissionMode = args[++i]
+      permissionMode = cliPermissionMode(args[++i]??'')
       continue
     }
     if (a === '--cwd') {
@@ -72,5 +73,5 @@ export function parseArgv(argv: string[]): CliCommand {
     return { kind: 'print', prompt, json, permissionMode }
   }
 
-  return { kind: 'repl', sessionId, cwd }
+  return { kind: 'repl', sessionId, cwd,...(permissionMode?{permissionMode}:{}) }
 }

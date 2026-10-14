@@ -9,6 +9,7 @@ const DEFAULT_PORT = Number(process.env.ACKEMCODE_PORT || 8787)
 
 let spawned: ChildProcess | null = null
 let weSpawned = false
+let starting:Promise<{ok:boolean;reason?:string}>|null=null
 
 export function ackemCodeBaseUrl(): string {
   return process.env.ACKEMCODE_URL || `http://127.0.0.1:${DEFAULT_PORT}`
@@ -60,6 +61,11 @@ export function stopSpawnedDaemon(): void {
 }
 
 export async function ensureDaemon(): Promise<{ ok: boolean; reason?: string }> {
+  if(starting)return starting
+  starting=startDaemon()
+  try{return await starting}finally{starting=null}
+}
+async function startDaemon():Promise<{ok:boolean;reason?:string}>{
   const base = ackemCodeBaseUrl()
   const codeRoot = resolveCodeRoot()
   if (codeRoot) syncRuntimeLlm(codeRoot)
@@ -74,7 +80,8 @@ export async function ensureDaemon(): Promise<{ ok: boolean; reason?: string }> 
     return { ok: false, reason: '本机未接入任务运行时' }
   }
 
-  spawned = spawn(process.execPath, existsSync(tsx) ? [tsx, entry] : [entry], {
+  if(!existsSync(tsx))return {ok:false,reason:'AckemCode 缺少 tsx 运行依赖，请修复内核安装'}
+  const child = spawn(process.execPath, [tsx, entry], {
     cwd: codeRoot,
     detached: false,
     stdio: 'ignore',
@@ -85,16 +92,21 @@ export async function ensureDaemon(): Promise<{ ok: boolean; reason?: string }> 
       ELECTRON_RUN_AS_NODE: '1'
     }
   })
+  spawned=child
   weSpawned = true
-  spawned.on('exit', () => {
-    if (spawned) {
+  let launchError=''
+  child.on('error',error=>{launchError=error.message})
+  child.on('exit', (code) => {
+    launchError=launchError||`AckemCode 启动进程退出（${code}）`
+    if (spawned===child) {
       spawned = null
       weSpawned = false
     }
   })
 
-  for (let i = 0; i < 20; i++) {
+  for (let i = 0; i < 40; i++) {
     await sleep(250)
+    if(launchError)return {ok:false,reason:launchError}
     if (await ping(base)) return { ok: true }
   }
   return { ok: false, reason: 'AckemCode daemon 启动超时' }
@@ -102,7 +114,7 @@ export async function ensureDaemon(): Promise<{ ok: boolean; reason?: string }> 
 
 async function ping(base: string): Promise<boolean> {
   try {
-    const res = await fetch(`${base}/api/health`)
+    const res = await fetch(`${base}/api/health`,{signal:AbortSignal.timeout(1000)})
     return res.ok
   } catch {
     return false

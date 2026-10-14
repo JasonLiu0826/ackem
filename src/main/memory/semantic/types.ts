@@ -90,6 +90,7 @@ export interface DerivedFactCandidate {
   occurredAt: string | null
   scheduledFor: string | null
   timezone: string
+  temporalRange?: { fromLocalDate: string; toLocalDate: string }
 }
 
 export type InvalidationTarget =

@@ -15,6 +15,7 @@ import { getClock } from '../memory/temporal/clock.js'
 import { resolveUserTimezone } from '../memory/temporal/timezonePolicy.js'
 import { zonedDateParts, zonedLocalDate } from '../memory/temporal/zonedDate.js'
 import { composeRecall } from '../memory/recall/recallComposer.js'
+import { mergeReplyRecall } from '../memory/recall/replyRecall'
 import { resolveRecallComposerMode, type RecallComposerMode } from '../memory/recall/recallConfig.js'
 import type { RecallBundle } from '../memory/contracts.js'
 
@@ -154,12 +155,13 @@ export async function prepareTurnContext(args: {
 
     if (recallComposerMode === 'shadow') {
       recallComposerShadow = recallBundle
-    } else if (recallBundle.promptBlock.trim()) {
-      const merged =
-        `【Recall Composer】\n${recallBundle.promptBlock.trim()}\n\n${retrieval.tierBBlock}`.trim()
+    } else {
+      // Governed recall already applies corrections, privacy, expiry and evidence scopes.
+      // Legacy retrieval is not a second factual authority for explicit recall requests.
+      const merged = mergeReplyRecall(msg, recallBundle.promptBlock, retrieval.tierBBlock)
       retrieval = {
         ...retrieval,
-        tierBBlock: merged.slice(0, retrievalBudget + recallBudget)
+        tierBBlock: merged
       }
     }
   }

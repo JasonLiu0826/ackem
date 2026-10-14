@@ -1,9 +1,17 @@
+import { appendChatFiles } from '../chat/attachments'
+import { loadChatImages, imageParts } from '../chat/images'
+import { attachImagesToLastUser } from '../../shared/chatImages'
+import { cancelSearchSetup } from '../ackemcode/webSearch'
+import { peekChannelPlan } from '../channel/lastPlan'
+import { createReplyTransport } from '../chat/replyTransport'
+import { randomUUID } from 'node:crypto'
 // [ipc/chat] — 对话上下文构建、流式聊天、引擎状态、欲望栈、Trace
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { ipcMain, type IpcMainInvokeEvent } from 'electron'
 import { assembleMessages, mergeExtensionContextInjections } from '../context'
+import {registerPreparedContextFence} from '../chat/contextPublicationFence'
 import { assembleSocialMemberMessages } from '../context/promptAssembly'
 import { streamChatCompletion } from '../chat'
 import { markChatStreamEnd, markChatStreamStart } from '../desktop-agent/deliveryCoordinator'
@@ -37,7 +45,6 @@ import {
 import { createPersistentProvisionalProjection } from '../chat/companionStream'
 import { explainRouteVerdictForTurn } from '../chat/routeKpi'
 import { interpretInput } from '../engine/interpreter'
-import { resolveDispatchHonestyGuard } from '../extensions/dispatch/dispatchHonestyGuard'
 import {
   buildExtensionCatalogListingBlock,
   isExtensionCapabilityListingQuery
@@ -61,10 +68,9 @@ import { getOrCreateEngineCache, getOrInitEmbeddingProvider, ensureFactEmbedding
 import { isEmbeddingReadyForChat } from '../embedding/embeddingReadiness'
 import { buildEngineSnapshot, buildMemoryMetaFromFacts } from '../extensions/snapshot'
 import { buildUserInfoBlock } from '../memory/userDossier'
-import { shouldAskUserName, getAskNamePrompt } from '../memory/userName'
 import { setPendingTurn } from '../turnPending'
 import { beginChatTurn } from '../chat/turnCoordinator'
-import { orchestrateChannelTurn } from '../chat/orchestrateChannelTurn'
+import { orchestrateChannelTurn, WORK_DISPATCH_ACK } from '../chat/orchestrateChannelTurn'
 import { completeMemoryAuditShortcut } from '../chat/memoryAuditShortcut'
 import { isDesktopAgentToolingActive } from '../../shared/desktopAgent'
 import { registerAndFinalizeSkipTurn } from '../postChatTurn'
@@ -219,7 +225,7 @@ async function buildSocialMemberContext(
     turnIndex: args.turnIndex ?? 0,
     userText: args.userText,
     assistantText: '',
-  })
+  }, root)
 
   if (pre.skipLlm) {
     saveState(root, pre.newState, sessionId)
@@ -356,7 +362,16 @@ function buildRouteExplain(dataRoot: string, turnId: string) {
   }
 }
 
+const activeChatControllers = new Map<number, AbortController>()
+
 export function registerChatIpc(): void {
+  ipcMain.handle('chat:activity', () => { touchProactiveUserActivity(); return { ok: true } })
+  ipcMain.handle('chat:stop', (event) => {
+    const controller = activeChatControllers.get(event.sender.id)
+    controller?.abort()
+    cancelSearchSetup()
+    return { stopped: Boolean(controller) }
+  })
   ipcMain.handle('context:build', async (event, args: ContextBuildInvoke) => {
     if (!isEmbeddingReadyForChat()) {
       throw Object.assign(new Error('EMBEDDING_WARMING'), { code: 'EMBEDDING_WARMING' })
@@ -404,11 +419,12 @@ export function registerChatIpc(): void {
       .map((m) => m.content)
 
     const extCoordinator = getExtensionsCoordinator()
+    const visibleFacts = readableMemoryFacts(store), visibleFactIds = new Set(visibleFacts.map(f => f.id))
     const memoryMeta = buildMemoryMetaFromFacts(
-      store.listActive(),
+      visibleFacts,
       sessionId,
-      kg.listAll().length,
-      epStore.listAll().length
+      kg.listAll().filter(triple => triple.sourceFactIds.length && triple.sourceFactIds.every(id => visibleFactIds.has(id))).length,
+      readableMemoryEpisodes(epStore,root).length
     )
     const engineSnap = buildEngineSnapshot(state, settings, memoryMeta)
     extCoordinator?.updateSnapshot(engineSnap)
@@ -522,6 +538,8 @@ export function registerChatIpc(): void {
     }
 
     const phase = await orchestrateChannelTurn({
+      filePaths: args.filePaths,
+      imagePaths: args.imagePaths,
       turnConfirm: args.turnConfirm,
       userText: args.userText,
       recentMessages: args.recentMessages,
@@ -541,7 +559,7 @@ export function registerChatIpc(): void {
       onMilestone: (text) => event.sender.send('chat:status', text),
     })
     // 阶段 3-5 伴随流: 分类器等待期先行回应 (默认关; §17.3 门槛 6)。
-    const speculativeOn = speculativeEnabled() && !args.turnConfirm
+    const speculativeOn = interactionSurface === 'weixin' && speculativeEnabled() && !args.turnConfirm
     if (speculativeOn) {
       startSpeculative({
         turnId: chatTurn.turnId,
@@ -626,6 +644,19 @@ export function registerChatIpc(): void {
         skipLlm: true,
         channelPending: phase.channelPending,
         tracePreview: phase.preFromParallel.trace,
+        turnId: chatTurn.turnId,
+        messages: [],
+      }
+    }
+
+    // 自主派工出口 (2026-10-04): work 任务已进工作台, 聊天页只渲染固定 ack。
+    // 记账 (plan.proposed/decided + turn.finalized) 已在 orchestrate 内完成。
+    if (phase.workDispatch) {
+      return {
+        skipLlm: true,
+        channelDispatch: phase.workDispatch,
+        assistantAck: WORK_DISPATCH_ACK,
+        tracePreview: phase.preFromParallel?.trace,
         turnId: chatTurn.turnId,
         messages: [],
       }
@@ -724,26 +755,15 @@ export function registerChatIpc(): void {
       turnIndex: args.turnIndex ?? 0,
       userText: args.userText,
       assistantText: ''
-    })
+    }, root)
 
     const turnId = chatTurn.turnId
 
     const userTaskFrame = await resolveUserTaskFrame(settings, args.userText)
     const taskFrameSystemHint = buildTaskFrameSystemHint(userTaskFrame)
-    const honesty = resolveDispatchHonestyGuard({
-      userText: args.userText,
-      dispatchResult
-    })
-    // 名字主动询问：STRANGER阶段 ≥3轮 || FAMILIAR阶段 → 提示LLM问名字
-    const askNameStage = state.relationship.stage
-    const askNameTurnOk = askNameStage === 'FAMILIAR' || (askNameStage === 'STRANGER' && (args.turnIndex ?? 0) >= 3)
-    const askNameHint =
-      askNameTurnOk && shouldAskUserName(store)
-        ? `\n【重要提示】你还不知道用户的名字。请用你的人格风格自然地询问ta叫什么。不要直接说"请告诉我你的名字"——用你自己的说话方式。`
-        : undefined
-
+    // 可选称呼引导由用户档案规则结合对话判断，不按关系阶段强制触发。
     const mergedSystemHint =
-      [args.systemHint, taskFrameSystemHint, honesty.systemHint, askNameHint].filter(Boolean).join('\n\n') ||
+      [args.systemHint, taskFrameSystemHint].filter(Boolean).join('\n\n') ||
       undefined
 
     const userInfoBlock = buildUserInfoBlock(root, store)
@@ -788,7 +808,7 @@ export function registerChatIpc(): void {
         tracePreview: pre.trace,
         turnId,
         userTaskFrame,
-        dispatchBypassed: honesty.dispatchBypassed,
+        dispatchBypassed: false,
         dispatchTriggered,
         memoryFinalized: Boolean(redline),
         routeExplain: buildRouteExplain(root, turnId),
@@ -834,6 +854,7 @@ export function registerChatIpc(): void {
 
     const messages = assembleMessages({
       userText: knowledgeResolved.userTextForLlm,
+      responsePolicy: peekChannelPlan(sessionId, turnId)?.policy,
       explicitRel: args.explicitRel,
       recentMessages: args.recentMessages,
       index: snap,
@@ -858,7 +879,7 @@ export function registerChatIpc(): void {
 
     const locale = settings.locale === 'en' ? 'en' : 'zh'
     const waveSkipInput = {
-      asyncMultiMessageEnabled: settings.asyncMultiMessageEnabled,
+      asyncMultiMessageEnabled: interactionSurface === 'weixin' && settings.asyncMultiMessageEnabled === true,
       knowledgeTopic,
       planDocumentTopic,
       forcedWebSearchQuery,
@@ -905,6 +926,7 @@ export function registerChatIpc(): void {
       })
     }
 
+    registerPreparedContextFence(root,turnId,messages)
     return {
       messages,
       skipLlm: false,
@@ -915,7 +937,7 @@ export function registerChatIpc(): void {
       forcedWebSearchQuery,
       userTaskFrame,
       planDocumentTopic,
-      dispatchBypassed: honesty.dispatchBypassed,
+      dispatchBypassed: false,
       dispatchTriggered,
       useWaveChat: useWaveChat && Boolean(wavePlan && waveContext),
       wavePlan,
@@ -947,6 +969,37 @@ export function registerChatIpc(): void {
       return
     }
     const wc = event.sender
+    try {
+      if(Array.isArray(payload.fileHistory)){
+        const messages=payload.messages as Array<{role:string;content:unknown}>
+        const used=new Set<number>()
+        const current=Array.isArray(payload.filePaths)&&payload.filePaths.length?messages.map(m=>m.role).lastIndexOf('user'):-1
+        for(const item of [...payload.fileHistory.slice(-2)].reverse() as Array<{text:string;paths:string[]}>){
+          const index=messages.map((m,i)=>({m,i})).reverse().find(({m,i})=>m.role==='user'&&m.content===item.text&&!used.has(i)&&i!==current)?.i
+          if(index===undefined)continue;used.add(index)
+          messages[index]=(await appendChatFiles([messages[index]],item.paths))[0]
+        }
+      }
+      payload.messages=await appendChatFiles(payload.messages as Array<{role:string;content:unknown}>,payload.filePaths)
+    }catch(error){wc.send('chat:error',String(error));return}
+    if (Array.isArray(payload.imageHistory) && payload.imageHistory.length) {
+      try {
+        const messages=payload.messages as Array<{role:string;content:unknown}>
+        const history=payload.imageHistory.slice(-3) as Array<{text:string;paths:string[]}>
+        const used=new Set<number>()
+        for(const item of [...history].reverse()){
+          const index=messages.map((m,i)=>({m,i})).reverse().find(({m,i})=>m.role==='user'&&(typeof m.content==='string'?m.content:Array.isArray(m.content)?m.content[0]?.text:'')===item.text&&!used.has(i)&&(!(Array.isArray(payload.imagePaths)&&payload.imagePaths.length)||i!==messages.map(m=>m.role).lastIndexOf('user')))?.i
+          if(index===undefined)continue
+          used.add(index)
+          messages[index]=attachImagesToLastUser([messages[index]],imageParts(await loadChatImages(item.paths)))[0]
+        }
+      } catch(error) {wc.send('chat:error',`历史图片无法读取，请重新添加：${String(error)}`);return}
+    }
+    if (Array.isArray(payload.imagePaths) && payload.imagePaths.length) {
+      try { payload.messages=attachImagesToLastUser(payload.messages as Array<{role:string;content:unknown}>,imageParts(await loadChatImages(payload.imagePaths))); payload.useWaveChat=false }
+      catch(error) { wc.send('chat:error',String(error)); return }
+    }
+    if ((Array.isArray(payload.imagePaths)&&payload.imagePaths.length)||(Array.isArray(payload.imageHistory)&&payload.imageHistory.length)||(Array.isArray(payload.filePaths)&&payload.filePaths.length)||(Array.isArray(payload.fileHistory)&&payload.fileHistory.length)) { payload.useWaveChat=false; delete payload.knowledgeTopic; delete payload.suggestedSearchQuery; delete payload.planDocumentTopic }
     const root = currentDataRoot()
     const targetAgentId = resolveTargetAgentId(
       typeof payload.targetAgentId === 'string' ? payload.targetAgentId : undefined
@@ -967,11 +1020,23 @@ export function registerChatIpc(): void {
     if (lastIntensityMod !== 1.0) {
       payload.intensityMod = lastIntensityMod
     }
+    const controller = new AbortController()
+    activeChatControllers.get(wc.id)?.abort()
+    activeChatControllers.set(wc.id, controller)
     markChatStreamStart(sessionId)
     const runChat = async () => {
       try {
-        await streamChatCompletion(wc, payload, root)
+        const turnId = typeof payload.turnId === 'string' ? payload.turnId : randomUUID()
+        payload.turnId = turnId
+        const policy = peekChannelPlan(sessionId, turnId)?.policy ?? { origin: 'answer' as const, style: 'assistant' as const, status: 'not_executed' as const }
+        const transport = createReplyTransport((channel, ...args) => { if (!wc.isDestroyed()) wc.send(channel, ...args) }, { sessionId, turnId, replyId: `reply-${turnId}` }, policy)
+        const guarded = new Proxy(wc, { get(target, key) { if (key === 'send') return transport.send; const value = Reflect.get(target, key); return typeof value === 'function' ? value.bind(target) : value } })
+        const cancel = () => transport.cancel()
+        controller.signal.addEventListener('abort', cancel, { once: true })
+        try { await streamChatCompletion(guarded, payload, root, controller.signal) }
+        finally { controller.signal.removeEventListener('abort', cancel); if (controller.signal.aborted) transport.cancel(); else transport.finish() }
       } finally {
+        if (activeChatControllers.get(wc.id) === controller) activeChatControllers.delete(wc.id)
         markChatStreamEnd(sessionId)
       }
     }
@@ -997,7 +1062,14 @@ export function registerChatIpc(): void {
       ? sessionIdForAgent(targetAgentId)
       : currentSessionId()
     mkdirSync(dir, { recursive: true })
-    const trimmed = rows.slice(-2000)
+    const durable = loadUnifiedChatRows(root, sid).filter(row => row.origin === 'action_result' || row.origin === 'reminder' || row.origin === 'companionship')
+    const incoming = [...rows]
+    for (const row of durable) {
+      const index = incoming.findIndex(item => !!item && typeof item === 'object' && (item as { replyId?: string }).replyId === row.replyId)
+      if (index < 0) incoming.push(row)
+      else incoming[index] = row
+    }
+    const trimmed = incoming.slice(-2000)
     writeFileSync(join(dir, `chat-history-${sid}.json`), JSON.stringify(trimmed), 'utf-8')
     saveChatHistoryToDb(root, sid, trimmed)
   })
@@ -1059,3 +1131,4 @@ export function registerChatIpc(): void {
     return state.desireStack
   })
 }
+import { readableMemoryFacts, readableMemoryEpisodes } from '../memory/personalFacts'

@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { dirname, join } from 'node:path'
+import { dirname, isAbsolute, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { loadSettings, type AppSettings } from '../settings'
 
@@ -138,7 +138,9 @@ function fromEnvFile(codeRoot: string): LlmTriple | null {
  * 两边都没有真密钥时，保留已有文件，再试环境变量。
  */
 export function syncRuntimeLlm(codeRoot: string): RuntimeLlmSync {
-  const dest = join(codeRoot, 'data', 'settings.standalone.json')
+  const override = process.env.ACKEMCODE_DATA_DIR?.trim()
+  if (override && !isAbsolute(override)) throw new Error('ACKEMCODE_DATA_DIR must be an absolute path')
+  const dest = join(override ? resolve(override) : join(codeRoot, 'data'), 'settings.standalone.json')
   const existing = readStandalone(dest)
   let settings: AppSettings | null = null
   try {

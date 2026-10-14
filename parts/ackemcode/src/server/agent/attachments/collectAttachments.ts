@@ -28,6 +28,7 @@ export async function collectTurnStartAttachments(
     const source = h.source ?? 'workbench_chip'
     const loaded = await loadPathAsAttachment({
       relOrAbs: h.path,
+      allowOutsideCwd: true,
       cwd: opts.cwd,
       source,
       kind: h.kind,

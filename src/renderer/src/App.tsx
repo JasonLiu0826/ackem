@@ -11,7 +11,7 @@ import { TracePanel } from './components/TracePanel'
 import { DiaryPage } from './components/DiaryPage'
 import { GameModePage } from './components/GameModePage'
 import { ExtensionCenterPage } from './components/ExtensionCenterPage'
-import { CodePane } from './components/CodePane'
+import { WorkbenchPage } from './components/workbench/WorkbenchPage'
 import { TheaterView } from './components/TheaterView'
 import { CommandPalette } from './components/CommandPalette'
 import { PlanPanel } from './components/PlanPanel'
@@ -22,11 +22,12 @@ import { AssocNetworkView } from './components/memory-viz/AssocNetworkView'
 import { EmotionHeatmapView } from './components/memory-viz/EmotionHeatmapView'
 import { DecayCurveView } from './components/memory-viz/DecayCurveView'
 import { useAppStore, type Tab } from './store/appStore'
+import { useWorkbenchStore } from './store/workbenchStore'
 import { useUiStore } from './store/uiStore'
 import type { PermissionRequestPayload } from '../../shared/openforuPermissions'
 import { t, preloadI18n } from './lib/i18n'
 import { isAckemPreloadAvailable, formatMissingPreloadError, formatBootConnectingMessage } from './lib/rendererBoot'
-import { dismissBootSplash, setBootSplashStatus, signalBootSplashReady } from './lib/bootSplash'
+import { dismissBootSplash, setBootSplashStatus, setBootSplashSteps, signalBootSplashReady } from './lib/bootSplash'
 
 function MemoryRouter(): JSX.Element {
   const [view, setView] = useState<'archive' | 'search' | 'timeline' | 'import' | 'kggraph' | 'assoc' | 'heatmap' | 'decay'>('archive')
@@ -80,6 +81,7 @@ function MemoryRouter(): JSX.Element {
 }
 
 export default function App(): JSX.Element {
+  const [companionPanelOpen, setCompanionPanelOpen] = useState(false)
   const tab = useAppStore((s) => s.tab)
   const setTab = useAppStore((s) => s.setTab)
   const requestChatInputFocus = useAppStore((s) => s.requestChatInputFocus)
@@ -119,6 +121,16 @@ export default function App(): JSX.Element {
     })
   }, [bootReady, setTab, requestChatInputFocus, setViewLevel, setTheaterOpen, pushToast])
 
+  // 工作台内核事件全局订阅 (2026-10-04): 聊天派工在编程页未打开时也要实时入账,
+  // 订阅必须挂在 App 级而不是 WorkbenchPage (挂载才有), 否则派工过程会丢事件。
+  useEffect(() => {
+    if (typeof window.ackem === 'undefined') return
+    const stop = window.ackem.workbench.onEvent((payload) =>
+      useWorkbenchStore.getState().applyRuntimeEvent(payload))
+    const stopTasks = window.ackem.tasks.onEvent(event => useWorkbenchStore.getState().applyTaskEvent(event))
+    return () => { stop(); stopTasks() }
+  }, [])
+
   useEffect(() => {
     void (async () => {
       try {
@@ -137,7 +149,23 @@ export default function App(): JSX.Element {
         )
         await window.ackem.ensureLayout()
         setBootSplashStatus(t('boot.preparing') !== 'boot.preparing' ? t('boot.preparing') : '准备界面…')
-        setBootReady(true)
+
+        // 阶段 5: 等待全部初始化步骤完成才放行进入主界面。
+        // 不再仅凭 settings+layout 就放行——embedding/记忆/数据库必须就绪。
+        const bootSteps = await window.ackem.getBootSteps()
+        setBootSplashSteps(bootSteps.steps, bootSteps.allReady)
+        if (bootSteps.allReady) {
+          setBootReady(true)
+          signalBootSplashReady()
+          return
+        }
+        window.ackem.onBootStep((payload) => {
+          setBootSplashSteps(payload.steps, payload.allReady)
+          if (payload.allReady) {
+            setBootReady(true)
+            signalBootSplashReady()
+          }
+        })
       } catch (e) {
         setBootErr(e instanceof Error ? e.message : String(e))
       }
@@ -234,14 +262,15 @@ export default function App(): JSX.Element {
         <NavBar tab={tab} onTab={handleTab} />
         <div className="app-main bg-surface">
           {tab === 'chat' && (
-            <div className="flex min-h-0 min-w-0 flex-1">
-              <ChatPage key={chatResetKey} />
-              <aside className="w-[280px] shrink-0 overflow-y-auto border-l border-surface-inset/80 bg-surface-raised/50">
+            <div className="relative flex min-h-0 min-w-0 flex-1">
+              <ChatPage key={chatResetKey} companionPanelOpen={companionPanelOpen} onToggleCompanionPanel={() => setCompanionPanelOpen((open) => !open)} />
+              {companionPanelOpen && <aside className="chat-companion-sidebar w-[280px] shrink-0 overflow-y-auto border-l border-surface-inset/80 bg-surface-raised/50" aria-label="伴侣状态">
+                <button type="button" className="chat-copy-button" onClick={() => setCompanionPanelOpen(false)} aria-label="收起伴侣状态">收起状态面板</button>
                 <EmotionPanel />
-              </aside>
+              </aside>}
             </div>
           )}
-          {tab === 'code' && <CodePane />}
+          {tab === 'code' && <WorkbenchPage />}
           {tab === 'memory' && <MemoryRouter />}
           {tab === 'diary' && <DiaryPage />}
           {tab === 'gamemode' && <GameModePage />}

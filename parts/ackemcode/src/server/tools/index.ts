@@ -1,3 +1,4 @@
+import { awaitHostTaskReady, assertHostReadScope } from '../hostTaskFence.js'
 import fs from 'node:fs/promises'
 import type {
   ToolDefinition,
@@ -225,7 +226,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     function: {
       name: 'read_file',
       description:
-        'Read a file under the working directory (cat -n style). Always extracts text from PDF / Word (.docx) / PowerPoint (.pptx) / Excel (.xlsx). For PDFs use pages (e.g. "1-5", max 20); default is the first 10 pages. Vision/multimodal models also receive page images (or a native PDF on Anthropic). png/jpg/gif/webp attach as images only for vision models. Also allowed under the auto-memory directory. Use offset/limit for large extracts (max ~256KB without limit for plain text).',
+        'Read a file under the working directory (cat -n style). Always extracts text from PDF / Word (.docx) / PowerPoint (.pptx) / Excel (.xlsx). For PDFs use pages (e.g. "1-5", max 20); default is the first 10 pages. Vision/multimodal models also receive page images (or a native PDF on Anthropic). png/jpg/gif/webp attach as images only for vision models. mp4/mov/webm/mkv/avi/m4v videos provide metadata and six timestamped sample frames via local ffmpeg for vision models; audio is not decoded. Also allowed under the auto-memory directory. Use offset/limit for large extracts (max ~256KB without limit for plain text).',
       parameters: {
         type: 'object',
         properties: {
@@ -1351,6 +1352,8 @@ export async function executeTool(
   rawArgs: string,
   ctx: ToolContext
 ): Promise<ToolResult> {
+  await awaitHostTaskReady(name, ctx.signal)
+  if (ctx.signal?.aborted) throw new Error('aborted')
   let input: Record<string, unknown> = {}
   try {
     input = rawArgs ? (JSON.parse(rawArgs) as Record<string, unknown>) : {}
@@ -1358,6 +1361,7 @@ export async function executeTool(
     return { ok: false, output: 'Invalid JSON arguments' }
   }
 
+  assertHostReadScope(name,input,ctx.cwd)
   /** GM-WT: await async setCwd so CwdChanged + permissions settle mid-turn. */
   const settleCwd = async (next: string) => {
     await Promise.resolve(ctx.setCwd(next))
@@ -1518,6 +1522,7 @@ export async function executeTool(
         }
       }
       case 'enter_plan_mode': {
+        if (ctx.getMode() === 'bypassPermissions') return { ok: true, output: 'Full access remains active. Plan internally and proceed without approval.' }
         if (ctx.getMode() === 'plan') {
           return { ok: true, output: 'Already in plan mode.' }
         }
@@ -1528,7 +1533,7 @@ export async function executeTool(
           type: 'enter_plan_approval',
           requestId
         })
-        const decision = await ctx.interactions.wait<PlanDecisionPayload>(requestId)
+        const decision = await ctx.interactions.wait<PlanDecisionPayload>(requestId, 'plan')
         ctx.emit({ type: 'session_state', state: 'running' })
         if (decision.decision !== 'approve') {
           return {
@@ -1536,6 +1541,7 @@ export async function executeTool(
             output: 'User declined entering plan mode. Continue in the current mode.'
           }
         }
+        if (ctx.getMode() === 'bypassPermissions') return { ok: true, output: 'Full access remains active; proceed without plan approval.' }
         let planFilePath: string | undefined
         if (ctx.sessionId && ctx.onEnterPlanMode) {
           planFilePath = (await ctx.onEnterPlanMode(fromMode)) ?? undefined
@@ -1631,7 +1637,7 @@ export async function executeTool(
           plan,
           planFilePath: planFilePath ?? undefined
         })
-        const decision = await ctx.interactions.wait<PlanDecisionPayload>(requestId)
+        const decision = await ctx.interactions.wait<PlanDecisionPayload>(requestId, 'plan')
         ctx.emit({ type: 'session_state', state: 'running' })
         if (decision.decision === 'approve') {
           const edited = decision.plan?.trim()
@@ -1647,7 +1653,7 @@ export async function executeTool(
             ctx.onPlanFileUpdated?.(planFilePath, plan.length)
           }
           let nextMode: PermissionMode =
-            decision.mode === 'acceptEdits' ||
+            decision.mode === 'sessionType' || decision.mode === 'acceptEdits' ||
             decision.mode === 'auto' ||
             decision.mode === 'bypassPermissions' ||
             decision.mode === 'default'
@@ -2668,6 +2674,9 @@ export async function executeTool(
               ? input.type
               : undefined
         })
+        if (result.onboarding && ctx.getMode() === 'bypassPermissions') {
+          return { ok: false, output: result.output + '\nBrowser extension setup is missing; continue with available tools. No permission gate was opened.' }
+        }
         if (result.onboarding) {
           const requestId = createBrowserOnboardingRequestId()
           const card = result.onboarding
@@ -2849,7 +2858,7 @@ export async function executeTool(
         if (action !== 'keep' && action !== 'remove') {
           return { ok: false, output: 'action must be keep or remove' }
         }
-        const discard = Boolean(input.discard_changes)
+        const discard = ctx.getMode() === 'bypassPermissions' || Boolean(input.discard_changes)
         if (action === 'remove' && !discard) {
           const summary = await countWorktreeChanges(
             session.worktreePath,

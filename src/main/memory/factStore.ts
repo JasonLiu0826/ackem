@@ -62,6 +62,8 @@ import { cosineSimilarity } from './factEmbeddingCache'
 import { emptyFactChangeSet, noteFactChange } from './semantic/changeSet.js'
 import type { FactChangeKind, FactChangeSet, FactIndexPendingEntry } from './semantic/types.js'
 import { evaluateFactMerge } from './semantic/factMergePolicy.js'
+import { canMergeMemoryFact, canReadMemorySources } from './accessScope.js'
+import { personalFacts } from './personalFacts.js'
 import { getClock } from './temporal/clock.js'
 
 type FactsFile = { version: string; facts: MemoryFact[] }
@@ -270,20 +272,20 @@ export class FactStore {
   }
 
   /** Phase 2：FTS5 关键词检索（DB 可用时） */
-  searchByFts(query: string, topK: number): MemoryFact[] {
+  searchByFts(query: string, topK: number, allowedFactIds?: ReadonlySet<string>): MemoryFact[] {
     const dataRoot = dataRootFromFactsPath(this.path)
-    const ids = searchFactIdsFts(dataRoot, query, topK)
+    const ids = searchFactIdsFts(dataRoot, query, topK, allowedFactIds)
     if (ids.length === 0) return []
     const idSet = new Set(ids)
     return this.listActive().filter((f) => idSet.has(f.id))
   }
 
   countSharedBondFacts(): number {
-    return this.facts.filter((f) => f.status === 'active' && f.subcategory === 'OUR_BOND').length
+    return personalFacts(this).filter(f => f.subcategory === 'OUR_BOND').length
   }
 
   computeMemoirTrust(): number | null {
-    const ours = this.facts.filter((f) => f.status === 'active' && f.subcategory === 'OUR_BOND')
+    const ours = personalFacts(this).filter(f => f.subcategory === 'OUR_BOND')
     if (ours.length === 0) return null
     let w = 0
     let s = 0
@@ -348,11 +350,12 @@ export class FactStore {
     budgetChars: number,
     minConfidence: number,
     currentValence?: number,
-    opts?: { adultMode?: boolean }
+    opts?: { adultMode?: boolean; allowedIds?: ReadonlySet<string> }
   ): { facts: MemoryFact[]; chars: number } {
     const now = Date.now()
     const includeAdult = opts?.adultMode === true
     const ranked = this.listActive()
+      .filter(f => !opts?.allowedIds || opts.allowedIds.has(f.id))
       .filter((f) => f.confidence >= minConfidence)
       .filter((f) => includeAdult || (f.privacyLevel ?? 'normal') === 'normal')
       .map((f) => ({ f, s: this.scoreRelevance(f, now, currentValence) }))
@@ -498,7 +501,8 @@ export class FactStore {
     domain?: string,
     embedding?: number[],
     embeddingCache?: Map<string, number[]>,
-    ownerAgentId?: string
+    ownerAgentId?: string,
+    allowed?: (fact: MemoryFact) => boolean
   ): MemoryFact | null {
     const charSet = (s: string) => {
       const set = new Set<string>()
@@ -515,6 +519,7 @@ export class FactStore {
     let bestSim = 0
 
     for (const f of this.facts) {
+      if (allowed && !allowed(f)) continue
       if (f.status !== 'active' || f.subcategory !== subcategory) continue
       if (domain && f.domain !== domain) continue  // 同 domain 约束
       if (owner) {
@@ -581,6 +586,7 @@ export class FactStore {
     occurredAt?: string
     scheduledFor?: string
     contextJson?: Record<string, unknown>
+    sourceEventIds?: string[]
   }): AddFactResult {
     return this._addFactImpl(raw)
   }
@@ -632,12 +638,17 @@ export class FactStore {
     occurredAt?: string
     scheduledFor?: string
     contextJson?: Record<string, unknown>
+    sourceEventIds?: string[]
   }): AddFactResult {
     this.assertDbWritable()
     const sub = raw.subcategory as Subcategory
     const meta = isValidSubcategory(sub) ? CATEGORY_META[sub] : CATEGORY_META.MOOD
     const now = getClock().now().toISOString()
     const incomingConfidence = normalizeConfidence(raw.confidence ?? meta.defaultConfidence)
+    const scopeDb = this.useDb ? getDatabase(this.dataRoot) : null
+    const incomingSources = raw.sourceEventIds ?? []
+    if (scopeDb && !canReadMemorySources(scopeDb, incomingSources)) throw Error('Memory source access revoked')
+    const compatible = (f: MemoryFact) => !raw.derivedFrom?.length && (!scopeDb || canMergeMemoryFact(scopeDb, f.id, f.sourceSessionId, incomingSources))
 
     // O1: 事实去重 — Embedding + Jaccard 双条件（同 owner 内）
     const dedupeOwner = raw.ownerAgentId ?? getCurrentAgentId()
@@ -648,7 +659,8 @@ export class FactStore {
       raw.domain,
       raw.embedding,
       this._embeddingCache,
-      dedupeOwner
+      dedupeOwner,
+      compatible
     )
     if (existing) {
       Object.assign(existing, {
@@ -677,7 +689,7 @@ export class FactStore {
       return { fact: existing, isNew: false, mergedWith: existing.id }
     }
 
-    const policyDecision = evaluateFactMerge(this.listActive(), raw, { ownerAgentId: dedupeOwner })
+    const policyDecision = evaluateFactMerge(this.listActive().filter(compatible), raw, { ownerAgentId: dedupeOwner })
     if (policyDecision.action === 'update') {
       const target = this.byId.get(policyDecision.targetId)
       if (target) {
@@ -743,7 +755,7 @@ export class FactStore {
       involvesUser,
       occurredAt: raw.occurredAt,
       scheduledFor: raw.scheduledFor,
-      contextJson: raw.contextJson,
+      contextJson: incomingSources.length ? { ...raw.contextJson, sourceEventIds: incomingSources } : raw.contextJson,
     }
     // B: 自动提升——高权重事实自动成为核心记忆
     if (!fact.tier && fact.weight >= CORE_MEMORY_WEIGHT_THRESHOLD) {
@@ -802,7 +814,7 @@ export class FactStore {
   /** 名字降权：新增名字时，同 subject 的旧名字 weight-1 */
   downgradeNameFacts(subject: string): void {
     this.assertDbWritable()
-    for (const f of this.facts) {
+    for (const f of personalFacts(this)) {
       if (
         f.subcategory === 'BASIC_PROFILE' &&
         (f.subject === '用户姓名' || f.subject === '用户昵称') &&

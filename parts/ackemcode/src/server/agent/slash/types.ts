@@ -70,6 +70,7 @@ export type SlashContext = {
 
 export const SLASH_PERMISSION_MODES: PermissionMode[] = [
   'default',
+  'sessionType',
   'acceptEdits',
   'plan',
   'bypassPermissions',

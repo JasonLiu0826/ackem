@@ -16,7 +16,7 @@ export type Motive =
   | { kind: 'use' }
   | { kind: 'create' }
   | { kind: 'update'; boundName?: string }
-  | { kind: 'work'; reason: 'path' | 'persist' | 'folder' }
+  | { kind: 'work'; reason: 'path' | 'persist' | 'folder' | 'semantic' }
 
 const READ_KEYWORDS = ['帮我看看', '读一下', '看一下', '看看', '读取', '打开看看']
 const WEB_SEARCH_ACTIONS = [

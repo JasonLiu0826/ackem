@@ -3,6 +3,7 @@ import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from '
 import { basename, extname, join, relative } from 'node:path'
 import type { AppSettings } from './settings'
 import { resolveDataRoot } from './paths'
+import { canReadIndexedMemoryDocument } from './memory/documentScope'
 
 export type ChunkRecord = {
   id: string
@@ -11,6 +12,7 @@ export type ChunkRecord = {
   end: number
   text: string
   mtimeMs: number
+  sourceHash?: string
 }
 
 export type IndexSnapshot = {
@@ -120,6 +122,7 @@ export function buildIndex(settings: AppSettings): IndexSnapshot {
           end,
           text,
           mtimeMs: st.mtimeMs
+          ,sourceHash: createHash('sha256').update(raw).digest('hex')
         })
       })
     } catch {
@@ -182,13 +185,17 @@ export function searchChunks(
 ): { chunk: ChunkRecord; score: number }[] {
   const terms = tokenize(query)
   if (terms.length === 0) return []
+  const readable = new Map<string, boolean>()
+  const chunks = snap.chunks.filter(chunk => {
+    const key = `${chunk.relPath}:${chunk.sourceHash ?? ''}`
+    if (!readable.has(key)) readable.set(key, canReadIndexedMemoryDocument(snap.dataRoot, chunk.relPath, chunk.sourceHash))
+    return readable.get(key)
+  })
   // C5: 使用预计算的 docFreq，仅在未缓存时回退重建
-  const df: Map<string, number> = snap.docFreq
-    ? new Map(Object.entries(snap.docFreq))
-    : docFreq(snap.chunks)
-  const N = Math.max(1, snap.chunks.length)
+  const df = docFreq(chunks)
+  const N = Math.max(1, chunks.length)
   const scores: { chunk: ChunkRecord; score: number }[] = []
-  for (const c of snap.chunks) {
+  for (const c of chunks) {
     const tokens = tokenize(c.text)
     if (tokens.length === 0) continue
     const tf = new Map<string, number>()

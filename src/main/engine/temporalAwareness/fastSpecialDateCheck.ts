@@ -3,6 +3,7 @@
  * 与 detectSpecialDates 规则对齐：相识周年用 computeTimeDepth ±15 天窗口，非仅 MMDD 相等。
  */
 import type { FactStore } from '../../memory/factStore'
+import { personalFacts } from '../../memory/personalFacts'
 import { detectHolidayForLocalDate } from './holidayDetector'
 import { isAnniversaryWindowActive } from './timeDepthCalculator'
 
@@ -34,7 +35,7 @@ export function detectFastSpecialDateType(args: {
     return 'first_met_anniversary'
   }
 
-  for (const f of args.factStore.listActive()) {
+  for (const f of personalFacts(args.factStore)) {
     if ((f as { ageMeta?: { birthdayMMDD?: string } }).ageMeta?.birthdayMMDD === todayMMDD) {
       return 'birthday'
     }

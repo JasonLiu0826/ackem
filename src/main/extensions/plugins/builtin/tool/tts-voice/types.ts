@@ -12,14 +12,33 @@ export type InputChannel = 'dual' | 'voice-only' | 'text-only'
 export type VoicePipelineState = 'idle' | 'listening' | 'thinking' | 'speaking'
 
 /** TTS engine type */
-export type TtsEngineType = 'cosyvoice' | 'edge-tts' | 'local-sapi' | 'none'
+export type TtsEngineType = 'cosyvoice' | 'edge-tts' | 'local-sapi' | 'piper' | 'gpt-sovits' | 'none'
 
-/** ASR result from Python service */
+/** ASR result from Python service / sherpa final */
 export type AsrResult = {
   text: string
   confidence: number
   language: string
+  sessionId?: number
+  sequence?: number
 }
+
+export type AsrPartial = {
+  text: string
+  sessionId: number
+  sequence: number
+  stable: boolean
+}
+
+export type VoiceWorkerStatus =
+  | 'stopped'
+  | 'starting'
+  | 'ready'
+  | 'listening'
+  | 'stopping'
+  | 'crashed'
+  | 'restarting'
+  | 'error'
 
 /** TTS synthesis request */
 export type TtsRequest = {
@@ -37,6 +56,8 @@ export type VoiceHealthStatus = {
   gpu_available: boolean
   gpu_name: string
   port: number
+  asr_engine?: 'sherpa-onnx'
+  workerStatus?: VoiceWorkerStatus
 }
 
 /** IPC channel names for voice pipeline */
@@ -45,8 +66,10 @@ export const VOICE_IPC = {
   AUDIO_CHUNK: 'voice:audio-chunk',
   /** main → renderer: ASR started/stopped listening */
   LISTENING: 'voice:listening',
-  /** main → renderer: ASR transcript result */
+  /** main → renderer: ASR final transcript */
   TRANSCRIPT: 'voice:transcript',
+  /** main → renderer: ASR partial (streaming, not committed) */
+  TRANSCRIPT_PARTIAL: 'voice:transcript-partial',
   /** main → renderer: ASR processing / TTS model loading */
   THINKING: 'voice:thinking',
   /** main → renderer: TTS audio data (WAV) */

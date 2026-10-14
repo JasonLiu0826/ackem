@@ -1,9 +1,11 @@
+import type { ReactNode } from 'react'
 import type { Tab } from '../store/appStore'
 import { t } from '../lib/i18n'
+import { CodeNavIcon } from './CodeNavIcon'
 
-const ITEMS: { icon: string; label: string; tab: Tab }[] = [
+const ITEMS: { icon: ReactNode; label: string; tab: Tab }[] = [
   { icon: '💬', label: '对话', tab: 'chat' },
-  { icon: '⌨', label: '编程', tab: 'code' },
+  { icon: <CodeNavIcon />, label: '工作', tab: 'code' },
   { icon: '🧠', label: '记忆', tab: 'memory' },
   { icon: '📔', label: '日记', tab: 'diary' },
   { icon: '🎮', label: '游戏', tab: 'gamemode' },
@@ -50,7 +52,9 @@ export function ArcMenu({ open, onClose, onSelect }: Props): JSX.Element | null 
                 onClose()
               }}
             >
-              {item.icon}
+              <span className="nav-bead-icon" aria-hidden>
+                {item.icon}
+              </span>
             </button>
           )
         })}

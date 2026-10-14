@@ -6,6 +6,7 @@ import type { FactStore } from './factStore'
 import type { AssociationIndex, AssociationType } from './associationIndex'
 import { FactEmbeddingCache, cosineSimilarity } from './factEmbeddingCache'
 import { createLogger } from '../logger'
+import { readableMemoryFacts } from './personalFacts'
 
 const log = createLogger('association-cold-start')
 
@@ -319,7 +320,7 @@ export async function reseedAssociationGraphForDataRoot(dataRoot: string): Promi
       const provider = await getOrInitEmbeddingProvider(dataRoot)
       if (!provider?.ready()) return null
       const cache = new FactEmbeddingCache()
-      await cache.build(store.listActive(), provider)
+      await cache.build(readableMemoryFacts(store), provider)
       return cache.size() > 0 ? cache : null
     },
   })

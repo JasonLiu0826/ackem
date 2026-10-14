@@ -1,4 +1,4 @@
-// [S-15] 网页搜索 — Bing Skill manifest
+// [S-15] 网页搜索 — web_search Skill manifest
 
 import type { SkillManifest } from '../../../types'
 import type { DispatchConfig } from '../../../../protocols'
@@ -19,7 +19,7 @@ const WEB_SEARCH_DISPATCH: DispatchConfig = {
     '新闻、文档、版本更新等查询（天气除外）',
     'Companion 自身知识不足以回答的事实性问题'
   ],
-  summary: '通过 Bing 搜索网页获取实时信息，供 companion 引用后回答。',
+  summary: '使用与 AckemCode 相同的 web-search 搜索网页获取实时信息，供 companion 引用后回答。',
   keywords: ['搜索', '搜一下', '查一下', '百度', 'google', 'bing', '新闻', '最新'],
   invocation: ['帮我搜 {query}'],
   personality_hint: 'neutral'
@@ -31,31 +31,33 @@ export const WEB_SEARCH_MANIFEST: SkillManifest = {
   version: '1.0.0',
   category: 'skill',
   skillType: 'tool',
-  description: '通过 Bing 搜索网页，获取实时信息（新闻、文档等；天气请用 get_weather）',
+  description: '使用与 AckemCode 相同的 web-search 搜索网页，获取实时信息（新闻、文档等；天气请用 get_weather）',
   author: 'JasonLiu0826',
   license: 'AGPL-3.0',
   main: 'skill.ts',
   engineVersion: '>=0.1.0 <1.0.0',
   triggers: ['llm_function_call'],
   permissions: ['engine_read', 'network_outbound'],
-  timeoutMs: 30000,
+  timeoutMs: 120000,
   adultModeSafe: true,
   functionDef: {
     name: 'web_search',
     description:
-      '通过 Bing 搜索网页获取实时信息。用于新闻、价格、版本、最新事件等。**禁止**用于天气查询（天气必须用 get_weather）。',
+      '使用与 AckemCode 相同的 web-search 搜索网页获取实时信息。用于新闻、价格、版本、最新事件等。**禁止**用于天气查询（天气必须用 get_weather）。',
     parameters: {
       type: 'object',
       properties: {
         query: {
           type: 'string',
           description: '搜索关键词，由 LLM 从用户意图提取，尽量具体完整'
-        }
+        },
+        allowed_domains: { type: 'array', items: { type: 'string' }, description: '仅搜索这些域名，与 blocked_domains 二选一' },
+        blocked_domains: { type: 'array', items: { type: 'string' }, description: '排除这些域名，与 allowed_domains 二选一' }
       },
       required: ['query']
     }
   },
-  tags: ['builtin', 'search', 'bing', 's-15', 'core'],
+  tags: ['builtin', 'search', 'web-search', 's-15', 'core'],
   dispatch: WEB_SEARCH_DISPATCH
 }
 

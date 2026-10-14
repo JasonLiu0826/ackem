@@ -51,7 +51,8 @@ async function main(): Promise<void> {
         : undefined
   const session = await createSession({
     sessionId,
-    cwd
+    cwd,
+    ...(cmd.kind==='repl'&&cmd.permissionMode?{permissionMode:cmd.permissionMode as import('../shared/types.js').PermissionMode}:!sessionId?{permissionMode:'default' as const}:{})
   })
 
   const stdout = process.stdout

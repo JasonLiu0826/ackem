@@ -4,6 +4,7 @@
 
 import type { MemoryFact } from './semantic/types.js'
 import type { FactStore } from './factStore'
+import { personalFacts } from './personalFacts'
 
 export interface TimeHabit {
   hour: number
@@ -20,9 +21,10 @@ export interface TimeHabit {
 export function detectHabits(factStore: FactStore): TimeHabit[] {
   const thirtyDaysAgo = Date.now() - 30 * 86400000
   const habits: TimeHabit[] = []
+  const facts = personalFacts(factStore)
 
   for (let hour = 0; hour < 24; hour++) {
-    const hourFacts = factStore.listActive()
+    const hourFacts = facts
       .filter(f => new Date(f.createdAt).getHours() === hour)
       .filter(f => new Date(f.createdAt).getTime() > thirtyDaysAgo)
 

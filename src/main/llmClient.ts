@@ -45,7 +45,8 @@ export function createLlmJsonClient(settings: AppSettings) {
           settings,
           messages: params.messages,
           temperature: params.temperature,
-          max_tokens: params.max_tokens
+          max_tokens: params.max_tokens,
+          signal: params.signal
         })
       }
       const url = resolveChatCompletionsUrl(settings)

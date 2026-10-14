@@ -3,12 +3,12 @@
 // 设计文档：docs/memory/用户名字记忆_6_10_已设计待开发.md
 
 import type { FactStore } from './factStore'
+import { personalFacts } from './personalFacts'
 
 /** 取当前首选名字，按 weight 降序 → updatedAt 降序 */
 export function resolvePreferredName(store: FactStore): string | undefined {
   store.load()
-  const nameFacts = store
-    .listActive()
+  const nameFacts = personalFacts(store)
     .filter(
       (f) =>
         f.subcategory === 'BASIC_PROFILE' &&
@@ -30,8 +30,7 @@ export function resolveAllNames(store: FactStore): Array<{
   subject: string
 }> {
   store.load()
-  return store
-    .listActive()
+  return personalFacts(store)
     .filter(
       (f) =>
         f.subcategory === 'BASIC_PROFILE' &&
@@ -48,8 +47,7 @@ export function resolveAllNames(store: FactStore): Array<{
 /** 是否需要主动询问用户名字 */
 export function shouldAskUserName(store: FactStore): boolean {
   store.load()
-  return !store
-    .listActive()
+  return !personalFacts(store)
     .some(
       (f) =>
         f.subcategory === 'BASIC_PROFILE' &&
@@ -102,15 +100,15 @@ export function getAskNamePrompt(personalityId: string): string {
 /** 日记注入用的用户名字行 */
 export function buildUserNameLine(store: FactStore): string {
   const preferred = resolvePreferredName(store)
-  if (!preferred) return "你不知道用户的名字。用'ta'称呼。"
+  if (!preferred) return "尚不知道用户希望被怎样称呼。对话中自然使用“你”，不擅自叫用户“伴侣”“主人”或其他关系称谓；名字不是开始交流或执行任务的前提。只有在自然寒暄、相互介绍或用户主动谈及称呼时，才可根据对话选择合适契机，用一句简短的话询问用户希望被怎样称呼；不要每轮追加，不打断具体问题、任务、紧急事项或情绪支持。先查看对话历史：已经询问而用户未回答、转移话题或不愿透露时，不再追问；用户要求遗忘名字后不要重新索取。没有合适契机就继续正常回应。"
   const all = resolveAllNames(store)
-  if (all.length <= 1) return `你知道用户的名字：${preferred}。你可以叫ta的名字，也可以用你人格风格的称呼。`
+  if (all.length <= 1) return `你知道用户的名字：${preferred}。对话中自然沿用这个名字；不额外创造昵称或关系称谓。`
   const others = all
     .slice(1)
     .filter((n) => n.name !== preferred)
     .map((n) => n.name)
     .join('、')
   return others
-    ? `你知道用户的名字：${preferred}（ta也用过这些名字：${others}，但更喜欢被叫${preferred}）。你可以叫ta的名字，也可以用你人格风格的称呼。`
-    : `你知道用户的名字：${preferred}。你可以叫ta的名字，也可以用你人格风格的称呼。`
+    ? `你知道用户的名字：${preferred}（ta也用过这些名字：${others}，但更喜欢被叫${preferred}）。对话中自然沿用这个名字；不额外创造昵称或关系称谓。`
+    : `你知道用户的名字：${preferred}。对话中自然沿用这个名字；不额外创造昵称或关系称谓。`
 }

@@ -6,9 +6,11 @@
  */
 
 import { BrowserWindow, ipcMain } from 'electron'
-import { pcmInt16RmsEnergy, pcmInt16ToWav } from './audioWav'
-import { getEmotionInstruction } from './emotionVoiceMap'
-import { voiceService } from './pythonService'
+import { pcmInt16RmsEnergy } from './audioWav'
+import { TIER_TO_MODEL_ID } from './sherpa/catalog'
+import { DEFAULT_ENDPOINTING } from './sherpa/endpointing'
+import { speechModelManager } from './sherpa/modelManager'
+import { SherpaOnnxRecognizer } from './sherpa/SherpaOnnxRecognizer'
 import {
   checkVoiceEnvironment,
   installVoiceEnvironment,
@@ -22,7 +24,7 @@ import {
   prepareTextForTts,
   type VoiceRuntimeConfig
 } from './voiceRuntimeConfig'
-import type { InputChannel, VoiceMode, VoicePipelineState } from './types'
+import type { AsrPartial, InputChannel, VoiceHealthStatus, VoiceMode, VoicePipelineState } from './types'
 
 const SPEECH_ENERGY_THRESHOLD = 0.012
 const CHUNK_MS = 200
@@ -41,9 +43,11 @@ export class VoiceManager {
   private silenceMs = 0
   private interruptSpeechMs = 0
   private pttActive = false
-  private asrInFlight = false
   /** 剧院已打开且语音已启用 — 允许 TTS 即使未开麦 */
   private theaterSession = false
+  private recognizer: SherpaOnnxRecognizer | null = null
+  private sherpaStarting = false
+  private loadedModelId: string | null = null
 
   get currentState(): VoicePipelineState {
     return this.state
@@ -71,10 +75,17 @@ export class VoiceManager {
     if (this.ipcRegistered) return
     this.ipcRegistered = true
 
-    ipcMain.handle('voice:audio-chunk', (_event, buffer: ArrayBuffer) => {
-      void this.handleAudioChunk(buffer)
-      return { ok: true }
-    })
+    ipcMain.handle(
+      'voice:audio-chunk',
+      (
+        _event,
+        payload: ArrayBuffer | { pcm?: ArrayBuffer; sampleRate?: number; channels?: number }
+      ) => {
+        const pcm = payload instanceof ArrayBuffer ? payload : payload?.pcm
+        if (pcm) void this.handleAudioChunk(pcm)
+        return { ok: true }
+      }
+    )
 
     ipcMain.handle('voice:cancel-tts', () => {
       this.interrupt()
@@ -92,7 +103,7 @@ export class VoiceManager {
     })
 
     ipcMain.handle('voice:health', async () => {
-      return await voiceService.health()
+      return await this.health()
     })
 
     ipcMain.handle('voice:apply-settings', (_event, patch: Partial<VoiceRuntimeConfig>) => {
@@ -101,14 +112,20 @@ export class VoiceManager {
     })
 
     ipcMain.handle('voice:restart-service', async () => {
-      const ok = await voiceService.restart({ ttsEngine: this.config.ttsEngine })
+      const ok = await this.restartSherpa().catch(() => false)
       return { ok }
+    })
+
+    ipcMain.handle('voice:fresh-utterance', () => {
+      if (this.mode !== 'off') this.recognizer?.resetUtterance()
+      return { ok: true }
     })
 
     ipcMain.handle('voice:ptt-active', (_event, active: boolean) => {
       this.pttActive = Boolean(active)
-      if (!active && this.mode === 'ptt') {
-        void this.flushUtterance()
+      if (this.recognizer) {
+        if (active) void this.recognizer.start()
+        else void this.recognizer.stop()
       }
       return { ok: true }
     })
@@ -133,6 +150,12 @@ export class VoiceManager {
     })
   }
 
+  async disposeRecognizer(): Promise<void> {
+    await this.recognizer?.dispose()
+    this.recognizer = null
+    this.loadedModelId = null
+  }
+
   /** Unregister IPC handlers. */
   unregisterIpc(): void {
     if (!this.ipcRegistered) return
@@ -145,6 +168,7 @@ export class VoiceManager {
       'voice:health',
       'voice:apply-settings',
       'voice:restart-service',
+      'voice:fresh-utterance',
       'voice:ptt-active',
       'voice:check-environment',
       'voice:install-environment',
@@ -155,7 +179,6 @@ export class VoiceManager {
   }
 
   applySettings(patch: Partial<VoiceRuntimeConfig>): void {
-    const prevEngine = this.config.ttsEngine
     if (!GPT_SOVITS_VOICE_ENABLED && patch.ttsEngine === 'gpt-sovits') {
       patch = { ...patch, ttsEngine: 'auto' }
     }
@@ -167,16 +190,8 @@ export class VoiceManager {
     this.setPersonality(this.config.personalityPresetId)
     if (!this.config.enabled && this.mode !== 'off') {
       this.setMode('off')
-    }
-    if (patch.ttsEngine !== undefined && patch.ttsEngine !== prevEngine) {
-      void voiceService.restart({ ttsEngine: this.config.ttsEngine })
-    } else if (patch.ttsPiperModel !== undefined && this.config.ttsEngine === 'piper') {
-      void voiceService.restart({ ttsEngine: 'piper' })
-    } else if (
-      patch.ttsGptSovitsModel !== undefined &&
-      this.config.ttsEngine === 'gpt-sovits'
-    ) {
-      void voiceService.restart({ ttsEngine: 'gpt-sovits' })
+    } else if (this.config.enabled) {
+      void this.ensureSherpa()
     }
   }
 
@@ -192,9 +207,13 @@ export class VoiceManager {
     if (mode === 'off') {
       this.interrupt()
       this.resetUtterance()
+      void this.recognizer?.stop()
       this.setState('idle')
     } else if (this.state === 'idle') {
       this.setState('listening')
+      void this.ensureSherpa().then(() => {
+        if (this.mode !== 'ptt') void this.recognizer?.start()
+      })
     }
   }
 
@@ -215,7 +234,6 @@ export class VoiceManager {
       this.currentTtsController.abort()
       this.currentTtsController = null
     }
-    void voiceService.cancelTts()
     this.broadcastBrowserTtsCancel()
     if (this.state === 'speaking') {
       this.setState(this.mode === 'off' ? 'idle' : 'listening')
@@ -236,56 +254,13 @@ export class VoiceManager {
     this.setState('speaking')
     this.broadcastThinking(true)
 
-    const instruction = getEmotionInstruction(emotionLabel, this.config.personalityPresetId)
+    void emotionLabel
     const controller = new AbortController()
     this.currentTtsController = controller
-    let usedBrowserFallback = false
-
-    try {
-      const voiceArg =
-        this.config.ttsEngine === 'piper'
-          ? this.config.ttsPiperModel
-          : this.config.ttsEngine === 'gpt-sovits'
-            ? this.config.ttsGptSovitsModel
-            : this.config.ttsVoice
-      const synthTimeoutMs = this.config.ttsEngine === 'gpt-sovits' ? 120_000 : undefined
-      const audio = await voiceService.synthesize(
-        spoken,
-        instruction,
-        voiceArg,
-        synthTimeoutMs
-      )
-      if (controller.signal.aborted) return
-      if (!audio || audio.byteLength < 44) {
-        console.warn(
-          '[voiceManager] TTS synthesize returned empty audio, using browser speechSynthesis fallback'
-        )
-        this.broadcastBrowserTts(spoken)
-        usedBrowserFallback = true
-        return
-      }
-
-      const payload = new Uint8Array(audio)
-      for (const win of BrowserWindow.getAllWindows()) {
-        if (!win.isDestroyed()) {
-          win.webContents.send('voice:tts-audio', payload)
-        }
-      }
-    } catch (err) {
-      if (!controller.signal.aborted) {
-        console.error('[voiceManager] TTS error:', err)
-        this.broadcastBrowserTts(spoken)
-        usedBrowserFallback = true
-      }
-    } finally {
-      this.broadcastThinking(false)
-      if (this.currentTtsController === controller) {
-        this.currentTtsController = null
-        if (this.state === 'speaking' && !usedBrowserFallback) {
-          this.setState(this.mode === 'off' ? 'idle' : 'listening')
-        }
-      }
-    }
+    this.broadcastBrowserTts(spoken)
+    this.broadcastThinking(false)
+    this.currentTtsController = null
+    this.setState(this.mode === 'off' ? 'idle' : 'listening')
   }
 
   private broadcastBrowserTts(text: string): void {
@@ -321,9 +296,7 @@ export class VoiceManager {
         this.interruptSpeechMs += chunkMs
         if (this.interruptSpeechMs >= this.config.interruptThresholdMs) {
           this.interrupt()
-          this.utteranceChunks.push(Buffer.from(pcm.buffer, pcm.byteOffset, pcm.byteLength))
-          this.speechDetected = true
-          this.silenceMs = 0
+          this.recognizer?.pushPcm16(pcm, 16000)
           this.broadcastListening(true)
         }
       } else {
@@ -332,27 +305,9 @@ export class VoiceManager {
       return
     }
 
-    if (this.asrInFlight) return
-
-    if (energy >= SPEECH_ENERGY_THRESHOLD) {
-      this.utteranceChunks.push(Buffer.from(pcm.buffer, pcm.byteOffset, pcm.byteLength))
-      this.speechDetected = true
-      this.silenceMs = 0
-      this.broadcastListening(true)
-      if (this.state !== 'thinking') {
-        this.setState('listening')
-      }
-      return
-    }
-
-    if (!this.speechDetected) return
-
-    this.silenceMs += chunkMs
-    this.utteranceChunks.push(Buffer.from(pcm.buffer, pcm.byteOffset, pcm.byteLength))
-
-    if (this.silenceMs >= this.config.silenceThresholdMs) {
-      await this.flushUtterance()
-    }
+    this.recognizer?.pushPcm16(pcm, 16000)
+    if (energy >= SPEECH_ENERGY_THRESHOLD) this.broadcastListening(true)
+    if (this.state !== 'thinking') this.setState('listening')
   }
 
   private resetUtterance(): void {
@@ -361,42 +316,6 @@ export class VoiceManager {
     this.silenceMs = 0
     this.interruptSpeechMs = 0
     this.broadcastListening(false)
-  }
-
-  private async flushUtterance(): Promise<void> {
-    if (this.asrInFlight || !this.speechDetected) {
-      this.resetUtterance()
-      return
-    }
-
-    const pcm = Buffer.concat(this.utteranceChunks)
-    this.resetUtterance()
-
-    if (pcm.length < 3200) return // < 100ms at 16kHz
-
-    this.asrInFlight = true
-    this.setState('thinking')
-    this.broadcastThinking(true)
-
-    try {
-      const wav = pcmInt16ToWav(pcm)
-      const result = await voiceService.transcribe(wav.buffer.slice(wav.byteOffset, wav.byteOffset + wav.byteLength))
-      if (result?.text.trim()) {
-        for (const win of BrowserWindow.getAllWindows()) {
-          win.webContents.send('voice:transcript', result)
-        }
-      }
-    } catch (err) {
-      console.error('[voiceManager] ASR error:', err)
-    } finally {
-      this.asrInFlight = false
-      this.broadcastThinking(false)
-      if (this.mode !== 'off') {
-        this.setState('listening')
-      } else {
-        this.setState('idle')
-      }
-    }
   }
 
   private broadcastListening(active: boolean): void {
@@ -416,6 +335,109 @@ export class VoiceManager {
     this.state = state
     for (const win of BrowserWindow.getAllWindows()) {
       win.webContents.send('voice:state', state)
+    }
+  }
+
+  async health(): Promise<VoiceHealthStatus> {
+    const workerStatus = this.recognizer?.getStatus()
+    const sherpaLive = workerStatus === 'ready' || workerStatus === 'listening'
+    return {
+      asr_ready: sherpaLive,
+      tts_ready: false,
+      tts_engine: 'none',
+      tts_model_loaded: false,
+      gpu_available: false,
+      gpu_name: '',
+      port: 0,
+      asr_engine: 'sherpa-onnx',
+      workerStatus
+    }
+  }
+
+  private currentModelId(): string {
+    return TIER_TO_MODEL_ID.standard
+  }
+
+  private async ensureSherpa(): Promise<boolean> {
+    if (this.sherpaStarting) return Boolean(this.recognizer)
+    const modelId = this.currentModelId()
+    const ready = await speechModelManager.verifyReady(modelId)
+    if (!ready || !speechModelManager.runtimeHasSherpa()) {
+      return false
+    }
+    if (this.recognizer && (this.recognizer.getStatus() === 'ready' || this.recognizer.getStatus() === 'listening')) {
+      if (this.loadedModelId === modelId) return true
+      await this.recognizer.dispose()
+      this.recognizer = null
+      this.loadedModelId = null
+    }
+    this.sherpaStarting = true
+    try {
+      const created = !this.recognizer
+      const rec = this.recognizer ?? new SherpaOnnxRecognizer()
+      this.recognizer = rec
+      if (created) {
+        rec.onPartial((e) => this.broadcastPartial(e))
+        rec.onFinal((e) => {
+          this.broadcastFinal(e)
+        })
+        rec.onError((err) => {
+          this.broadcastAsrError(err.message)
+        })
+      }
+      await rec.initialize({
+        modelsDir: speechModelManager.modelsDir(),
+        modelId,
+        language: 'zh',
+        sampleRate: 16000,
+        endpointing: {
+          ...DEFAULT_ENDPOINTING,
+          minSilenceDurationMs: Math.max(600, this.config.silenceThresholdMs || 700)
+        }
+      })
+      this.loadedModelId = modelId
+      return true
+    } catch (err) {
+      console.error('[voiceManager] sherpa init failed:', err)
+      this.broadcastAsrError(err instanceof Error ? err.message : String(err))
+      return false
+    } finally {
+      this.sherpaStarting = false
+    }
+  }
+
+  private async restartSherpa(): Promise<boolean> {
+    await this.disposeRecognizer()
+    return this.ensureSherpa()
+  }
+
+  private broadcastPartial(e: AsrPartial): void {
+    this.broadcastListening(true)
+    for (const win of BrowserWindow.getAllWindows()) {
+      if (!win.isDestroyed()) win.webContents.send('voice:transcript-partial', e)
+    }
+  }
+
+  private broadcastFinal(e: { text: string; sessionId: number; sequence: number; confidence?: number; language?: string }): void {
+    const text = e.text.trim()
+    if (!text) return
+    this.broadcastListening(false)
+    for (const win of BrowserWindow.getAllWindows()) {
+      if (!win.isDestroyed()) {
+        win.webContents.send('voice:transcript', {
+          text,
+          confidence: e.confidence ?? 0,
+          language: e.language ?? 'zh',
+          sessionId: e.sessionId,
+          sequence: e.sequence
+        })
+      }
+    }
+  }
+
+  private broadcastAsrError(message: string): void {
+    for (const win of BrowserWindow.getAllWindows()) {
+      if (!win.isDestroyed()) win.webContents.send('voice:asr-error', { message })
     }
   }
 }

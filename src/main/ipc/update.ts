@@ -1,6 +1,7 @@
 import { ipcMain, app, shell } from 'electron'
 import type { UpdateChannel, UpdateStartRequest } from '../../shared/updateTypes'
-import { checkForUpdates, pickChannelInfo } from '../update/checkRelease'
+import { checkForUpdates, matchesConfirmedRelease, pickChannelInfo } from '../update/checkRelease'
+import { isNewerVersion } from '../../shared/semverCompare'
 import { runUpdatePreflight } from '../update/preflight'
 import { buildUpdateJob, spawnUpdaterProcess, writeUpdateJob } from '../update/spawnUpdater'
 import { loadSettings, saveSettings } from '../settings'
@@ -17,7 +18,7 @@ export function registerUpdateIpc(): void {
 
   ipcMain.handle(
     'update:start',
-    async (_e, req: UpdateStartRequest & { channel: UpdateChannel }) => {
+    async (_e, req: UpdateStartRequest) => {
       const pre = runUpdatePreflight()
       if (!pre.ok) {
         return { ok: false as const, reason: pre.reason }
@@ -28,13 +29,16 @@ export function registerUpdateIpc(): void {
       if (!info || !info.downloadUrl) {
         return { ok: false as const, reason: 'no_release' as const }
       }
+      if (!matchesConfirmedRelease(info, req) || !isNewerVersion(info.version, check.currentVersion)) {
+        return { ok: false as const, reason: 'release_changed' as const }
+      }
 
       const job = buildUpdateJob(pre.installDir, {
         channel: req.channel,
-        targetVersion: req.targetVersion || info.version,
-        downloadUrl: req.downloadUrl || info.downloadUrl,
-        expectedSize: req.expectedSize || info.size,
-        releasePageUrl: req.releasePageUrl || info.releasePageUrl
+        targetVersion: info.version,
+        downloadUrl: info.downloadUrl,
+        expectedSize: info.size,
+        releasePageUrl: info.releasePageUrl
       }, info.channel)
 
       const jobPath = writeUpdateJob(job)

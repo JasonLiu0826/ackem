@@ -1,10 +1,14 @@
 import type { WebContents } from 'electron'
+import { peekChannelPlan } from '../channel/lastPlan'
+import { guardReplyText } from '../channel/outputGuard'
 import type { AppSettings } from '../settings'
 import { finalizeTurnAfterStream } from '../postChatTurn'
+import { clearPendingTurn } from '../turnPending'
 import { notifyUiChatBubble } from '../uiWindow'
 import { createLogger } from '../logger'
 import type { WavePlan, WaveSpec } from '../../shared/wavePlan'
 import { buildWaveMessages, type WaveBuildContext } from './buildWaveMessages'
+import {contextPublicationFence} from './contextPublicationFence'
 import { selectWaveEndpoint } from './waveEndpoint'
 import { awaitDeferredEnrich, clearDeferredEnrich } from './deferredContext'
 import { TurnBubbleQueue } from './turnBubbleQueue'
@@ -96,6 +100,8 @@ async function streamOneWave(
   }
 
   const messages = buildWaveMessages(waveContext, wave, wavePlan.waveCount, priorAssistantParts)
+  const scope=contextPublicationFence('',{messages})
+  if(scope){waveContext.trustedContextChecks?.push(scope);if(!scope())throw Error('任务上下文已失效')}
   const endpoint = selectWaveEndpoint(wave.waveIndex, settings)
   const emittedParts: string[] = []
   const ctx = makeBubbleCtx(
@@ -135,7 +141,8 @@ async function streamOneWave(
 export async function streamChatWaves(
   webContents: WebContents,
   body: Record<string, unknown>,
-  dataRoot: string
+  dataRoot: string,
+  externalSignal?: AbortSignal
 ): Promise<void> {
   const settings = body.settings as AppSettings
   const wavePlan = body.wavePlan as WavePlan
@@ -145,6 +152,9 @@ export async function streamChatWaves(
     (typeof body.sessionId === 'string' ? body.sessionId : waveContext.settings.activeSessionId) ?? 'default'
   const intensityMod = typeof body.intensityMod === 'number' ? body.intensityMod : 1.0
   const controller = abortPreviousSession(sessionId)
+  const onExternalAbort = () => controller.abort()
+  if (externalSignal?.aborted) controller.abort()
+  externalSignal?.addEventListener('abort', onExternalAbort, { once: true })
   const signal = controller.signal
 
   const queue = new TurnBubbleQueue(webContents, wavePlan.waveCount, signal)
@@ -192,10 +202,11 @@ export async function streamChatWaves(
 
     if (signal.aborted) return
 
-    const assistantText =
+    const rawAssistantText =
       dedup.displayedSentences.length > 0
         ? dedup.displayedSentences.join('\n')
         : joinEmittedWaveParts(waveTexts.filter(Boolean))
+    const assistantText = guardReplyText(rawAssistantText, peekChannelPlan(sessionId, turnId)?.policy ?? { origin: 'answer', style: 'assistant', status: 'not_executed' })
 
     webContents.send('chat:done', { assistantText, turnId })
     notifyUiChatBubble({ text: assistantText, role: 'assistant' })
@@ -205,6 +216,8 @@ export async function streamChatWaves(
       webContents.send('chat:error', e instanceof Error ? e.message : String(e))
     }
   } finally {
+    externalSignal?.removeEventListener('abort', onExternalAbort)
+    if (externalSignal?.aborted && turnId) clearPendingTurn(turnId)
     clearTimeout(t)
     if (turnId) clearDeferredEnrich(turnId)
     if (abortBySession.get(sessionId) === controller) {

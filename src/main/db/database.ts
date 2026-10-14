@@ -13,6 +13,9 @@ import { migrateSchemaV15 } from './schemaV15'
 import { migrateSchemaV16 } from './schemaV16'
 import { migrateSchemaV17 } from './schemaV17'
 import { migrateSchemaV18 } from './schemaV18'
+import { migrateSchemaV19 } from './schemaV19'
+import { migrateSchemaV20 } from './schemaV20'
+import { migrateSchemaV22 } from './schemaV22'
 import { SCHEMA_V2_SQL } from './schemaV2'
 import { SCHEMA_V3_SQL } from './schemaV3'
 import { SCHEMA_V4_SQL } from './schemaV4'
@@ -126,8 +129,15 @@ function runMigrations(db: Database.Database): void {
   }
   if (current < 18) {
     migrateSchemaV18(db)
-    setSchemaVersion(db, CURRENT_SCHEMA_VERSION)
+    setSchemaVersion(db, 18)
   }
+  if(current < 19){
+    migrateSchemaV19(db)
+    setSchemaVersion(db, 19)
+  }
+  if (current < 20) { migrateSchemaV20(db); setSchemaVersion(db, 20) }
+  if (current < 21) { db.exec('CREATE TABLE IF NOT EXISTS task_archives (task_id TEXT PRIMARY KEY, archived_at INTEGER NOT NULL)'); setSchemaVersion(db, 21) }
+  if (current < 22) { migrateSchemaV22(db); setSchemaVersion(db, CURRENT_SCHEMA_VERSION) }
 }
 
 export { CURRENT_SCHEMA_VERSION }
@@ -214,6 +224,22 @@ export function clearStructuredData(dataRoot: string): void {
       DELETE FROM memory_episode_evidence;
       DELETE FROM memory_tombstones;
       DELETE FROM memory_jobs;
+      DELETE FROM task_execution_outbox;
+      DELETE FROM standing_triggers;
+      DELETE FROM observation_cursors;
+      DELETE FROM world_observations;
+      DELETE FROM standing_rules;
+      DELETE FROM task_decisions;
+      DELETE FROM task_goals;
+      DELETE FROM task_requests;
+      DELETE FROM task_input_inbox;
+      DELETE FROM task_input_principals;
+      DELETE FROM task_authority_grants;
+      DELETE FROM task_notification_outbox;
+      DELETE FROM task_notification_policy;
+      DELETE FROM task_archives;
+      DELETE FROM task_projection;
+      DELETE FROM system_knowledge;
       DELETE FROM memory_action_runs;
       DELETE FROM memory_event_payloads;
       DELETE FROM memory_events;

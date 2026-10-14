@@ -1,3 +1,5 @@
+import { peekChannelPlan } from './channel/lastPlan'
+import { guardReplyText } from './channel/outputGuard'
 import { saveState } from './engine/state-persistence'
 import { FactStore, defaultFactsPath } from './memory/factStore'
 import { KnowledgeGraph, defaultKgPath } from './memory/knowledgeGraph'
@@ -72,10 +74,10 @@ export async function registerAndFinalizeSkipTurn(args: {
     skipIngest = false,
   } = args
 
-  const recent = workingMemory.getRecent(sessionId)
+  const recent = workingMemory.getRecent(sessionId, dataRoot)
   const last = recent[recent.length - 1]
   if (!last || last.turnIndex !== turnIndex || last.userText !== userMsg) {
-    workingMemory.push(sessionId, { turnIndex, userText: userMsg, assistantText: '' })
+    workingMemory.push(sessionId, { turnIndex, userText: userMsg, assistantText: '' }, dataRoot)
   }
 
   const surface = args.surface ?? 'desktop'
@@ -114,19 +116,23 @@ export async function finalizeTurnAfterStream(args: {
   turnId?: string
   dataRoot: string
   assistantText: string
+  generationState?: 'incomplete'
   settings: AppSettings
 }): Promise<void> {
-  const { turnId, dataRoot, assistantText, settings } = args
+  const { turnId, dataRoot, settings } = args
+  let assistantText = args.assistantText
   if (!turnId) return
   const p = takePendingTurn(turnId)
   if (!p) return
 
+  assistantText = guardReplyText(assistantText, peekChannelPlan(p.sessionId ?? 'default', turnId)?.policy ?? { origin: 'answer', style: 'assistant', status: 'not_executed' })
   finalizeChatTurn({
     dataRoot,
     sessionId: p.sessionId,
     turnId,
     userText: p.userMsg,
     assistantText,
+    generationState: args.generationState,
     surface: readPendingSurface(p),
     deriveContext: {
       turnIndex: p.turnIndex,
@@ -184,7 +190,7 @@ async function finalizeTurnSyncPhase(args: {
   const { p, dataRoot, assistantText, settings, turnId } = args
 
   const sid = p.sessionId ?? 'default'
-  const recentExchanges = workingMemory.getRecent(sid)
+  const recentExchanges = workingMemory.getRecent(sid, dataRoot)
   const lastExchange = recentExchanges[recentExchanges.length - 1]
   if (lastExchange && !lastExchange.assistantText) {
     lastExchange.assistantText = assistantText

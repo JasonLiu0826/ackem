@@ -1,3 +1,4 @@
+import { normalizeReplyMetadata, type ReplyMetadata } from '../../../shared/response'
 import { create } from 'zustand'
 import type { AppSettings } from '../ackem'
 import type { DispatchTriggerStatus } from '../../../shared/dispatchTrigger'
@@ -36,7 +37,7 @@ export type SettingsDeepLink = {
 
 type Toast = { id: number; text: string }
 
-export type ChatMessageRow = { kind: 'message'; role: 'user' | 'assistant'; content: string }
+export type ChatMessageRow = ReplyMetadata & { kind: 'message'; role: 'user' | 'assistant'; content: string; images?: import('../../../shared/chatImages').ChatImage[]; files?: import('../../../shared/chatAttachments').ChatFile[]; createdAt?: number; reasoning?: string; reasoningStartedAt?: number; reasoningDurationMs?: number; generationState?: 'stopped' | 'error' | 'incomplete' }
 export type ChatSearchRow = { kind: 'search' } & SearchCardPayload
 export type ChatMemoryAuditRow = { kind: 'memoryAudit' } & MemoryAuditCardPayload
 export type ChatSystemRow = {
@@ -124,7 +125,15 @@ export function normalizeChatRow(raw: unknown): ChatRow | null {
     }
   }
   if ((o.role === 'user' || o.role === 'assistant') && typeof o.content === 'string') {
-    return { kind: 'message', role: o.role, content: o.content }
+    const sentAt = typeof o.sentAt === 'string' ? Date.parse(o.sentAt) : NaN
+    return { ...normalizeReplyMetadata(o), kind: 'message', role: o.role, content: o.content,
+      ...(Array.isArray(o.files) ? {files:o.files.filter((f):f is import('../../../shared/chatAttachments').ChatFile=>!!f&&typeof f==='object'&&(f.kind==='file'||f.kind==='video'||f.kind==='folder')&&typeof f.path==='string'&&typeof f.name==='string'&&typeof f.size==='number').slice(0,10)} : {}),
+      ...(Array.isArray(o.images) ? {images: o.images.filter((i):i is import('../../../shared/chatImages').ChatImage=>!!i&&typeof i==='object'&&typeof i.path==='string'&&typeof i.name==='string'&&typeof i.preview==='string'&&/^data:image\/(png|jpeg|gif|webp);base64,/.test(i.preview)).slice(0,4)} : {}),
+      ...(typeof o.createdAt === 'number' && Number.isFinite(o.createdAt) && o.createdAt > 0 ? { createdAt: o.createdAt } : Number.isFinite(sentAt) ? { createdAt: sentAt } : {}),
+      ...(typeof o.reasoningStartedAt === 'number' && Number.isFinite(o.reasoningStartedAt) && o.reasoningStartedAt > 0 ? { reasoningStartedAt: o.reasoningStartedAt } : {}),
+      ...(typeof o.reasoningDurationMs === 'number' && Number.isFinite(o.reasoningDurationMs) && o.reasoningDurationMs >= 0 ? { reasoningDurationMs: o.reasoningDurationMs } : {}),
+      ...(o.role === 'assistant' && typeof o.reasoning === 'string' ? { reasoning: o.reasoning } : {}),
+      ...(o.generationState === 'stopped' || o.generationState === 'error' || o.generationState === 'incomplete' ? { generationState: o.generationState } : {}) }
   }
   return null
 }

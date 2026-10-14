@@ -61,6 +61,12 @@ export const PERSONALITY_PRESETS: PersonalityPreset[] = [
     hiddenPersona: { T: 30, I: 80, S: 20, O: 65, R: 20 }, tags: ['dual-persona'], requiresAdult18: true },
 ]
 
+/** The explicit setting owns persona identity; neutral same-gender fallback for invalid old IDs. */
+export function selectedPersonality(settings: { personalityPresetId: string; companionGender: PresetGender }): PersonalityPreset {
+  return PERSONALITY_PRESETS.find(p => p.id === settings.personalityPresetId)
+    ?? PERSONALITY_PRESETS.find(p => p.id === (settings.companionGender === 'female' ? 'girl_next_door' : 'boy_next_door'))!
+}
+
 /** 男性人格在设置页的展示顺序（靠前 = 首屏推荐） */
 export const MALE_PRESET_DISPLAY_ORDER: readonly string[] = [
   'boy_next_door',
@@ -176,9 +182,7 @@ export function defaultPersonalitySlice(settings: {
   companionGender: PresetGender
   personalityPresetId: string
 }): FullState['personality'] {
-  const p = getPreset(settings.personalityPresetId)
-  if (p) return { presetId: p.id, T: p.T, I: p.I, S: p.S, O: p.O, R: p.R }
-  const fallback = PERSONALITY_PRESETS.find((x) => x.gender === settings.companionGender) ?? PERSONALITY_PRESETS[0]
+  const fallback = selectedPersonality(settings)
   return {
     presetId: fallback.id,
     T: fallback.T,

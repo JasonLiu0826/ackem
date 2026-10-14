@@ -879,7 +879,7 @@ export async function runPreLlmTurn(args: {
     const todayMMDD = zonedMonthDay(today, memoryTimeZone)
     const mmRanges = monthDayWindowRanges(today, memoryTimeZone, 7, 7)
     const birthdays: BirthdayEntry[] = []
-    try { for (const f of factStore.listActive()) { if ((f as any).ageMeta?.birthdayMMDD) birthdays.push({ subject: f.subject, birthdayMMDD: (f as any).ageMeta.birthdayMMDD }) } } catch { /* ok */ }
+    try { for (const f of personalFacts(factStore)) { if ((f as any).ageMeta?.birthdayMMDD) birthdays.push({ subject: f.subject, birthdayMMDD: (f as any).ageMeta.birthdayMMDD }) } } catch { /* ok */ }
     const anchorRows: AnchorEntry[] = []
     try {
       const db = getDatabase(dataRoot)
@@ -980,7 +980,7 @@ export async function runPreLlmTurn(args: {
     gapHours < 0.5 ? 'active_now' : gapHours < 2 ? 'recently_active' : gapHours < 12 ? 'idle' : 'likely_away'
   const memoryMeta = dataRoot
     ? buildMemoryMeta(dataRoot, sessionId)
-    : buildMemoryMetaFromFacts(factStore.listActive(), sessionId)
+    : buildMemoryMetaFromFacts(personalFacts(factStore), sessionId)
   const gateSnapshotMemory = memoryMeta
 
   let gateResultForTurn: import('../extensions/policy/types').ProactiveGateResult
@@ -1105,9 +1105,7 @@ export async function runPreLlmTurn(args: {
     sincerity: ev.sincerity,
     intensity: ev.intensity,
   })
-  if (rhythm.instruction && !asyncMultiMessage) {
-    psycheBlock += `\n\n【回复节奏】${rhythm.instruction}`
-  }
+  // Rhythm is retained for state/optional channel adapters; desktop prose has no forced split instruction.
 
   // 本地时钟：桌面 / 微信 lite 每轮必注入，避免问「几点了」瞎猜
   psycheBlock += '\n\n' + formatTimeContextBlock(nowDate)
@@ -1543,7 +1541,7 @@ export async function runPreLlmTurn(args: {
   }
   logTurn(trace)
 
-  const wmBlock = workingMemory.buildContextBlock(sessionId)
+  const wmBlock = workingMemory.buildContextBlock(sessionId, dataRoot)
   // 工作记忆前置到 Tier B 前。retriever 已按 retrievalBudget 控制内部块大小，
   // 仅在极端超限时（如工作记忆满载 + Tier B 满载）做最后兜底截断
   let tierBBlock = retrieval.tierBBlock
@@ -1600,3 +1598,4 @@ export async function runPreLlmTurn(args: {
     rhythmDecision: rhythm,
   }
 }
+import { personalFacts } from '../memory/personalFacts'

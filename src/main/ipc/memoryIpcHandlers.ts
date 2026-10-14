@@ -2,7 +2,9 @@ import { FactStore, defaultFactsPath } from '../memory/factStore.js'
 import type { MemoryControlCommand, MemoryTarget } from '../memory/contracts.js'
 import { resolveMemoryControlIntent } from '../memory/governance/controlIntent.js'
 import { loadSettings } from '../settings.js'
-import { invokeMemoryControl, invokeMemoryFeedbackDelete } from './memoryControlBridge.js'
+import { invokeMemoryControl } from './memoryControlBridge.js'
+import { getDatabase } from '../db/database.js'
+import { createMemoryAccess } from '../memory/accessScope.js'
 
 export type MemoryIpcRuntime = {
   dataRoot: () => string
@@ -19,13 +21,17 @@ export type MemoryIpcRuntime = {
  * - `memory:resolveControl` → ambiguous natural-language control → requiresConfirmation
  */
 export function createMemoryIpcHandlers(runtime: MemoryIpcRuntime) {
+  const userControl = (command: MemoryControlCommand) => {
+    const root = runtime.dataRoot(), db = getDatabase(root)
+    return invokeMemoryControl(root, { ...command, accessContextRef: db ? createMemoryAccess(db, { principal: 'user', purpose: 'user_memory_management' }) : undefined })
+  }
   return {
     memoryControl(command: MemoryControlCommand) {
-      return invokeMemoryControl(runtime.dataRoot(), command)
+      return userControl(command)
     },
 
     async memoryFeedbackDelete(factId: string) {
-      return invokeMemoryFeedbackDelete(runtime.dataRoot(), factId, runtime.sessionId())
+      return userControl({ kind: 'delete', target: { kind: 'fact', factId }, scope: 'memory_only', sessionId: runtime.sessionId() })
     },
 
     memoryRetire(factId: string): boolean {

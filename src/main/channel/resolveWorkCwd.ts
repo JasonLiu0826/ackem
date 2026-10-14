@@ -1,4 +1,5 @@
-import { existsSync } from 'node:fs'
+import { ensureDefaultWorkDirectory } from '../ackemcode/workDirectory'
+import { existsSync, mkdirSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import type { ChannelPlan } from '../../shared/channelPlan'
 
@@ -25,11 +26,18 @@ export function resolveWorkCwd(
   }
 
   const cwd = plan.cwd?.trim()
-  if (!cwd) return { error: '缺少工作目录' }
-  if (dataRoot && isAckemDataRoot(cwd, dataRoot)) {
-    return { error: '不可默认 Ackem data/ 为工作目录' }
+  if (cwd) {
+    if (dataRoot && isAckemDataRoot(cwd, dataRoot)) {
+      return { error: '不可默认 Ackem data/ 为工作目录' }
+    }
+    return { cwd }
   }
-  return { cwd }
+  // 用户没指定目录时给 Ackem 管理的默认工作区——
+  // 不是 data/ 根（红线），而是专门的 workspace 子目录。
+  if (dataRoot) {
+    return { cwd: ensureDefaultWorkDirectory(dataRoot) }
+  }
+  return { error: '缺少工作目录且无 dataRoot 可解析默认工作区' }
 }
 
 function isAckemDataRoot(cwd: string, dataRoot: string): boolean {

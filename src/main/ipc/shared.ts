@@ -31,6 +31,8 @@ let minecraftProvider: MinecraftProvider | null = null
 let registerExtensionsRendererPushRef: ((channel: string, payload: unknown) => void) | null = null
 
 export type ContextBuildInvoke = Omit<BuildContextArgs, 'index' | 'settings'> & {
+  filePaths?: string[]
+  imagePaths?: string[]
   sessionId?: string
   turnIndex?: number
   /** 社会页目标 Agent；default 为主 Chat */

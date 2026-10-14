@@ -146,9 +146,9 @@ export class KnowledgeGraph {
   }
 
   /** 按查询文本做关键词匹配，返回相关三元组 */
-  query(text: string, maxResults: number = KG_QUERY_MAX_TRIPLES): Triple[] {
+  query(text: string, maxResults: number = KG_QUERY_MAX_TRIPLES, allowedFactIds?: ReadonlySet<string>): Triple[] {
     const queryLower = text.toLowerCase()
-    const scored = this.triples.map(t => {
+    const scored = this.triples.filter(t => !allowedFactIds || (t.sourceFactIds.length > 0 && t.sourceFactIds.every(id => allowedFactIds.has(id)))).map(t => {
       let score = 0
       const text = `${t.subject} ${t.predicate} ${t.object}`.toLowerCase()
       // Full match on any entity
@@ -176,8 +176,8 @@ export class KnowledgeGraph {
       .map(({ t }) => t)
   }
 
-  buildContextBlock(text: string, charBudget: number = KG_CHAR_BUDGET): string {
-    const hits = this.query(text)
+  buildContextBlock(text: string, charBudget: number = KG_CHAR_BUDGET, allowedFactIds?: ReadonlySet<string>): string {
+    const hits = this.query(text, KG_QUERY_MAX_TRIPLES, allowedFactIds)
     if (hits.length === 0) return ''
     const lines = ['【知识图谱】']
     let chars = 0

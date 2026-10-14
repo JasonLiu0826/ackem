@@ -31,5 +31,3 @@ export function normalizeTag(tag: string): string {
 }
 
 export type ResolvedChannel = Exclude<UpdateChannel, 'auto'>
-
-export const CHANNEL_ORDER_AUTO: ResolvedChannel[] = ['gitee', 'github']

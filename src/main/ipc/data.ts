@@ -1,6 +1,13 @@
+import { captureChatAttachments } from '../chat/attachments'
+import {recordWorkAttachmentSources} from '../ackemcode/workAttachmentGrants'
+import { mkdtemp, writeFile, rm } from 'node:fs/promises'
+import { basename } from 'node:path'
+import { snapshotChatImages } from '../chat/images'
 // [ipc/data] — 设置、数据目录、导入、索引、文件系统、应用级通道
 
-import { dialog, ipcMain, shell, BrowserWindow } from 'electron'
+import { existsSync, mkdirSync, statSync, realpathSync } from 'node:fs'
+import { isAbsolute, join, resolve, relative } from 'node:path'
+import { app, dialog, ipcMain, shell, BrowserWindow } from 'electron'
 import { appendOrOverwriteAllowed, importExternalFiles, promoteImportToMemory, readRelFile } from '../fsops'
 import { searchChunks } from '../indexer'
 import { invalidateEngineCache, invalidateEmbeddingProvider, getCachedEmbeddingProvider } from '../engineCache'
@@ -8,6 +15,7 @@ import { reseedAssociationGraphForDataRoot } from '../memory/associationColdStar
 import { onDesktopAgentSettingsSaved } from '../desktop-agent/ipc'
 import { syncCompanionHarassScheduler } from '../extensions/plugins/builtin/desktop-companion/bootstrap'
 import { databasePath } from '../paths'
+import { previewChatFile } from '../chat/filePreview'
 import {
   currentDataRoot,
   getOrRebuildIndex,
@@ -172,6 +180,35 @@ export function registerDataIpc(): void {
     await shell.openPath(root)
   })
 
+  ipcMain.handle('dialog:selectChatAttachments', async (_event, kind?:string) => {
+    const result=await dialog.showOpenDialog({properties:['openFile','multiSelections'],filters:kind==='image'?[{name:'图片',extensions:['png','jpg','jpeg','gif','webp']}]:kind==='video'?[{name:'视频',extensions:['mp4','mov','webm','mkv','avi','m4v']}]:[{name:'文件、图片和视频',extensions:['*']}]})
+    if(result.canceled)return []
+    const root=currentDataRoot(),attachments=await captureChatAttachments(result.filePaths,root)
+    recordWorkAttachmentSources(root,attachments.map(a=>a.path));return attachments
+  })
+  ipcMain.handle('chat:captureAttachments', async (_event, entries:Array<{path?:string;name?:string;bytes?:ArrayBuffer}>) => {
+    if(!Array.isArray(entries)||entries.length>10)throw Error('最多添加 10 个附件')
+    const root=currentDataRoot();mkdirSync(join(root,'attachments'),{recursive:true})
+    const dir=await mkdtemp(join(root,'attachments','drop-'))
+    try{
+      const paths:string[]=[]
+      for(const entry of entries){
+        if(typeof entry.path==='string'&&entry.path){paths.push(entry.path);continue}
+        if(!(entry.bytes instanceof ArrayBuffer)||entry.bytes.byteLength>64*1024*1024||!entry.name)throw Error('拖拽文件无法读取，或内容超过 64MB；请使用＋选择本机文件')
+        const name=basename(entry.name);if(!name||name==='.'||name==='..')throw Error('附件文件名无效')
+        const itemDir=join(dir,String(paths.length));mkdirSync(itemDir)
+        const path=join(itemDir,name);await writeFile(path,Buffer.from(entry.bytes));paths.push(path)
+      }
+      const attachments=await captureChatAttachments(paths,root);recordWorkAttachmentSources(root,attachments.map(a=>a.path));return attachments
+    }finally{await rm(dir,{recursive:true,force:true})}
+  })
+
+  ipcMain.handle('dialog:selectChatImages', async () => {
+    const result=await dialog.showOpenDialog({properties:['openFile','multiSelections'],filters:[{name:'图片',extensions:['png','jpg','jpeg','gif','webp']}]})
+    if(result.canceled)return []
+    const root=currentDataRoot(),images=await snapshotChatImages(result.filePaths,root);recordWorkAttachmentSources(root,images.map(a=>a.path));return images
+  })
+
   ipcMain.handle('dialog:selectFiles', async () => {
     const r = await dialog.showOpenDialog({
       properties: ['openFile', 'multiSelections'],
@@ -181,8 +218,57 @@ export function registerDataIpc(): void {
       ]
     })
     if (r.canceled) return { paths: [] as string[] }
+    recordWorkAttachmentSources(currentDataRoot(),r.filePaths)
     return { paths: r.filePaths }
   })
+
+  ipcMain.handle('dialog:selectFolder', async () => {
+    const win = BrowserWindow.getFocusedWindow()
+    const r = win
+      ? await dialog.showOpenDialog(win, { properties: ['openDirectory'] })
+      : await dialog.showOpenDialog({ properties: ['openDirectory'] })
+    if (r.canceled) return { path: '' }
+    recordWorkAttachmentSources(currentDataRoot(),r.filePaths)
+    return { path: r.filePaths[0] ?? '' }
+  })
+
+  ipcMain.handle('app:default-cwd', () => {
+    // Ackem 管理的默认工作区 (非 data/ 根, 红线允许; 专为 work 任务设计)
+    try {
+      const root = resolveDataRoot(loadSettings())
+      const workspace = join(root, 'workspace')
+      mkdirSync(workspace, { recursive: true })
+      return workspace
+    } catch {
+      return app.getPath('home')
+    }
+  })
+
+  // 聊天/工作台产出文件的可点击打开 (2026-10-04): 渲染层把路径 token 渲染成
+  // data-reveal-path 链接, 主进程只允许打开 data 根内部的路径 (防任意路径打开)。
+  ipcMain.handle('shell:revealPath', (_e, rawPath: string) => {
+    try {
+      const clean = String(rawPath ?? '').trim().replace(/^["']+|["']+$/g, '')
+      if (!clean || clean.length > 500) return { ok: false }
+      const root = realpathSync(resolve(resolveDataRoot(loadSettings())))
+      const candidates = isAbsolute(clean) ? [clean] : [join(root, clean), join(root, 'workspace', clean)]
+      for (const candidate of candidates) {
+        if (!existsSync(candidate)) continue
+        const target = realpathSync(candidate)
+        const rel = relative(root, target)
+        if (rel === '..' || rel.startsWith('..\\') || rel.startsWith('../') || isAbsolute(rel)) continue
+        const st = statSync(target)
+        if (st.isDirectory()) void shell.openPath(target)
+        else shell.showItemInFolder(target)
+        return { ok: true, path: target }
+      }
+      return { ok: false }
+    } catch {
+      return { ok: false }
+    }
+  })
+
+  ipcMain.handle('chat:file-preview', (_e, path: string) => previewChatFile(currentDataRoot(), path))
 
   ipcMain.handle('import:files', (_e, paths: string[]) => {
     const root = currentDataRoot()

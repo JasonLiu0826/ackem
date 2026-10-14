@@ -12,6 +12,7 @@
 
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { Tokenizer } from '@huggingface/tokenizers'
 import type { EmbeddingProvider, LocalModelId } from './types'
 
 let ort: typeof import('onnxruntime-node') | null = null
@@ -46,6 +47,7 @@ interface ModelConfig {
 export class OnnxEmbeddingProvider implements EmbeddingProvider {
   private session: import('onnxruntime-node').InferenceSession | null = null
   private vocab = new Map<string, number>()
+  private tokenizer: Tokenizer | null = null
   private unkId = 100
   private maxLen = 512
   private dim = 512
@@ -146,6 +148,10 @@ export class OnnxEmbeddingProvider implements EmbeddingProvider {
     }
 
     const raw = JSON.parse(readFileSync(tokenizerPath, 'utf-8')) as TokenizerJson
+    // tokenizer.json carries the model's normalizer, BertPreTokenizer, WordPiece
+    // and post-processor. Reimplementing only the vocab silently destroys
+    // semantic separation even though ONNX inference still returns vectors.
+    this.tokenizer = new Tokenizer(raw, {})
     const vocabEntries = raw.model?.vocab
     if (!vocabEntries) throw new Error('tokenizer.json 缺少 model.vocab')
 
@@ -175,44 +181,18 @@ export class OnnxEmbeddingProvider implements EmbeddingProvider {
     }
   }
 
-  /** 简化的 tokenize：BPE-like 字符级分词 + 子词匹配 */
+  /** Apply the model's full tokenizer.json pipeline at its natural length. */
   private tokenize(text: string): { inputIds: number[]; attentionMask: number[] } {
-    const tokens: number[] = [this.cls()]
-    const chars = text.toLowerCase().trim()
-
-    // 逐字符查 vocab，同时尝试 2-char 匹配
-    let i = 0
-    while (i < chars.length && tokens.length < this.maxLen - 1) {
-      // 尝试 2-char 匹配
-      if (i + 1 < chars.length) {
-        const bigram = chars.slice(i, i + 2)
-        const id = this.vocab.get(bigram)
-        if (id !== undefined) {
-          tokens.push(id)
-          i += 2
-          continue
-        }
-      }
-      // 单字符匹配
-      const ch = chars[i]
-      const id = this.vocab.get(ch)
-      if (id !== undefined) {
-        tokens.push(id)
-      } else {
-        // 尝试 ## 前缀（BERT-style wordpiece）
-        const hashId = this.vocab.get(`##${ch}`)
-        tokens.push(hashId ?? this.unkId)
-      }
-      i++
+    if (!this.tokenizer) throw new Error('Tokenizer 未初始化')
+    const tokens = [...this.tokenizer.encode(text).ids]
+    if (tokens.length > this.maxLen) {
+      tokens.length = this.maxLen
+      tokens[this.maxLen - 1] = this.sep()
     }
 
-    tokens.push(this.sep())
-
-    // pad 到 maxLen
-    const padId = this.pad()
-    while (tokens.length < this.maxLen) tokens.push(padId)
-
-    const attentionMask = tokens.map(t => t === padId ? 0 : 1)
+    // Padding every input to 512 collapsed this exported model's embeddings.
+    // Single inputs stay unpadded; batches pad only to the longest item.
+    const attentionMask = tokens.map(() => 1)
     return { inputIds: tokens, attentionMask }
   }
 
@@ -224,47 +204,19 @@ export class OnnxEmbeddingProvider implements EmbeddingProvider {
   // ONNX 推理
   // ═══════════════════════════════════════════
 
-  /** 批量 tokenize：与单条 tokenize 相同，统一 pad 到 maxLen */
+  /** Batch uses the same tokenizer and pads only within this batch. */
   private tokenizeBatch(texts: string[]): { inputIds: number[][]; attentionMasks: number[][] } {
+    const tokenized = texts.map((text) => this.tokenize(text).inputIds)
+    const maxBatchLength = Math.max(...tokenized.map((ids) => ids.length))
     const padId = this.pad()
-    const tokenized = texts.map((text) => {
-      const tokens: number[] = [this.cls()]
-      const chars = text.toLowerCase().trim()
-      let i = 0
-      while (i < chars.length && tokens.length < this.maxLen - 1) {
-        if (i + 1 < chars.length) {
-          const bigram = chars.slice(i, i + 2)
-          const id = this.vocab.get(bigram)
-          if (id !== undefined) {
-            tokens.push(id)
-            i += 2
-            continue
-          }
-        }
-        const ch = chars[i]
-        const id = this.vocab.get(ch)
-        if (id !== undefined) {
-          tokens.push(id)
-        } else {
-          const hashId = this.vocab.get(`##${ch}`)
-          tokens.push(hashId ?? this.unkId)
-        }
-        i++
-      }
-      tokens.push(this.sep())
-      return tokens
-    })
-
-    const maxLen = this.maxLen
-
     const inputIds: number[][] = []
     const attentionMasks: number[][] = []
     for (const tokens of tokenized) {
       const ids = [...tokens]
-      while (ids.length < maxLen) ids.push(padId)
-      const attentionMask = ids.map((t) => (t === padId ? 0 : 1))
-      inputIds.push(ids.slice(0, maxLen))
-      attentionMasks.push(attentionMask)
+      const mask = tokens.map(() => 1)
+      while (ids.length < maxBatchLength) { ids.push(padId); mask.push(0) }
+      inputIds.push(ids)
+      attentionMasks.push(mask)
     }
     return { inputIds, attentionMasks }
   }
@@ -321,6 +273,12 @@ export class OnnxEmbeddingProvider implements EmbeddingProvider {
       const hiddenDim = shape[2]
       for (let b = 0; b < B; b++) {
         const pooled = new Float32Array(hiddenDim)
+        if (this.modelId.startsWith('bge-')) {
+          // BGE sentence-transformers config uses CLS pooling, not mean pooling.
+          for (let h = 0; h < hiddenDim; h++) pooled[h] = data[(b * seqLen) * hiddenDim + h]
+          out.push(this.l2Normalize(pooled, hiddenDim))
+          continue
+        }
         let validTokens = 0
         const attn = batchAttentionMasks[b]
         for (let s = 0; s < seqLen; s++) {
@@ -387,6 +345,10 @@ export class OnnxEmbeddingProvider implements EmbeddingProvider {
       const seqLen = shape[1]
       hiddenDim = shape[2]
       pooled = new Float32Array(hiddenDim)
+      if (this.modelId.startsWith('bge-')) {
+        for (let h = 0; h < hiddenDim; h++) pooled[h] = data[h]
+        return this.l2Normalize(pooled, hiddenDim)
+      }
       let validTokens = 0
       for (let s = 0; s < seqLen; s++) {
         if (attentionMask[s] === 0) continue

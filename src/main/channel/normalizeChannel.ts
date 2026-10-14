@@ -12,17 +12,17 @@ import { extractResidualSlots } from './residualSlots'
 export function normalizeChannel(
   json: IntentJson | null,
   catalog: CatalogEntry[],
-  context: { userText: string; match?: CatalogMatch | null }
+  context: { userText: string; match?: CatalogMatch | null; semantic?: boolean }
 ): ChannelPlan {
   const text = context.userText
   const match = context.match ?? { level: 'none' as const }
 
-  if (isOfficialBackupUtterance(text)) {
+  if (!context.semantic && isOfficialBackupUtterance(text)) {
     const backup = catalog.find(isOfficialBackupEntry)
     if (backup) return pluginPlan(backup.id, FILE_TAG)
   }
 
-  if (hasLocalWorkSignal(text)) {
+  if (!context.semantic && hasLocalWorkSignal(text)) {
     return pendingPlan('work_job', {
       intent: 'work',
       workKind: 'job',
@@ -32,6 +32,14 @@ export function normalizeChannel(
   }
 
   if (!json) return chatPlan('chat')
+  if (context.semantic && json.confidence !== undefined && json.confidence < 0.75 && json.clarify_question) {
+    return chatPlan('chat', {
+      grounding: `【本轮通道】chat\n【状态】本轮要求尚不明确，任务尚未下派。只澄清影响执行的范围：${json.clarify_question}`
+    })
+  }
+  if (context.semantic && (json.intent === 'chat' || json.intent === 'ask')) {
+    return chatPlan(json.intent, { tag: json.tag })
+  }
 
   // ── 残差 v2 (设计 §8.1/§8.3, 阶段 3-1): 建议字段接入硬改 ──
   // 低置信歧义 → 澄清 chat (不出卡不派活); candidate_hint 只作候选卡首位
@@ -74,7 +82,7 @@ export function normalizeChannel(
     return pendingPlan('create', { intent: 'create', workKind: 'factory', tag, params: slots })
   }
 
-  if (json.intent === 'work' || json.tag === FILE_TAG) {
+  if (json.intent === 'work' || json.fulfill === 'work' || (!context.semantic && json.tag === FILE_TAG)) {
     const slots = extractResidualSlots(text, json)
     return pendingPlan('work_job', {
       intent: 'work',

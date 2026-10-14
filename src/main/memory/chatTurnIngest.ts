@@ -34,6 +34,8 @@ export type MemoryWriteJobPayload = {
 }
 
 type MemoryWriteInnerOptions = {
+  sourceEventIds?: string[]
+  assertAccess?: () => void
   /** Persisted derive.chat_turn path must surface ingest failures to the job handler. */
   propagateIngestErrors?: boolean
   onFactsExtracted?: (facts: import('./ingest.js').PrefetchedFact[]) => void | Promise<void>
@@ -52,9 +54,10 @@ async function runMemoryWriteJobInner(
   innerOpts?: MemoryWriteInnerOptions
 ): Promise<void> {
   const { pending: p, dataRoot, assistantText, settings, syncFactIds = [] } = payload
+  innerOpts?.assertAccess?.()
 
   const sid = p.sessionId ?? 'default'
-  const recentExchanges = workingMemory.getRecent(sid)
+  const recentExchanges = workingMemory.getRecent(sid, dataRoot)
   const exchangesForEpisode = recentExchanges
     .filter((ex) => ex.assistantText)
     .map((ex) => ({ user: ex.userText, assistant: ex.assistantText }))
@@ -111,6 +114,8 @@ async function runMemoryWriteJobInner(
         adultPrivacyLevel,
         episodeEvidenceEventIds,
         terminalWorkSucceeded,
+        assertAccess: innerOpts?.assertAccess,
+        sourceEventIds: innerOpts?.sourceEventIds,
       }
     )
   } catch (e) {
@@ -305,6 +310,8 @@ async function runPersistedIngestPayload(
     engineEvent: Event
     prefetchedFacts?: import('./ingest.js').PrefetchedFact[]
     onFactsExtracted?: (facts: import('./ingest.js').PrefetchedFact[]) => void | Promise<void>
+    assertAccess?: () => void
+    sourceEventIds?: string[]
     stateSnapshot?: PersistedTurnStateSnapshot
   },
   innerOpts: MemoryWriteInnerOptions
@@ -345,7 +352,7 @@ async function runPersistedIngestPayload(
           settings: args.settings,
           syncFactIds: args.syncFactIds ?? []
         },
-        { ...innerOpts, onFactsExtracted: args.onFactsExtracted }
+        { ...innerOpts, onFactsExtracted: args.onFactsExtracted, assertAccess: args.assertAccess, sourceEventIds: args.sourceEventIds }
       ),
     { interactionSurface }
   )
@@ -367,6 +374,8 @@ export async function executePersistedChatIngest(args: {
   engineEvent: Event
   prefetchedFacts?: import('./ingest.js').PrefetchedFact[]
   onFactsExtracted?: (facts: import('./ingest.js').PrefetchedFact[]) => void | Promise<void>
+  assertAccess?: () => void
+  sourceEventIds?: string[]
   stateSnapshot?: PersistedTurnStateSnapshot
 }): Promise<void> {
   await runPersistedIngestPayload(args, { propagateIngestErrors: true })

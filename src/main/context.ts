@@ -1,3 +1,8 @@
+import { captureTaskContext } from './tasks/runtime'
+import {bindContextPublicationFence} from './chat/contextPublicationFence'
+import { systemContext } from './system/host'
+import { RUNTIME_ARCHITECTURE } from './prompt/runtime-architecture'
+import { buildResponsePolicyBlock, selectReplyPsyche, type ResponsePolicy } from '../shared/response'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { AppSettings } from './settings'
@@ -6,12 +11,14 @@ import type { ChunkRecord, IndexSnapshot } from './indexer'
 import { buildSystemPrompt } from './prompt/main-chat'
 import { searchChunks } from './indexer'
 import { assertReadableUnderDataRoot } from './whitelist'
-import { PERSONALITY_PRESETS, buildPresetVoiceGuide, type PersonalityPreset } from './personalityPresets'
+import { type PersonalityPreset } from './personalityPresets'
+import { buildSelectedPersonalityVoice, selectedPersonality } from './personalityVoice'
 import type { DispatchCatalogEntry, DispatchResult } from './extensions/protocols'
 
 export type ChatMessage = { role: 'system' | 'user' | 'assistant' | 'tool'; content: string; name?: string }
 
 export type BuildContextArgs = {
+  responsePolicy?: ResponsePolicy
   userText: string
   /** @path optional explicit attachment like memory/foo.md */
   explicitRel?: string
@@ -74,22 +81,13 @@ function stripFrontmatter(md: string): string {
 function readTierACompanion(dataRoot: string, settings: AppSettings): string {
   // 🆕 读当前人格，生成动态风格描述
   const stateJsonPath = join(dataRoot, 'companion', 'state.json')
-  let personalityHint = settings.companionSystemHint
-  let personalityLabel = settings.companionName
-  let voiceGuide = ''
-  let preset: PersonalityPreset | undefined
+  const preset: PersonalityPreset = selectedPersonality(settings)
+  const personalityLabel = preset.label
+  const personalityHint = buildPersonalityHint(preset, settings.adultContentMode && settings.ageConfirmed18)
   let ownerProfileHint = ''
   if (existsSync(stateJsonPath)) {
     try {
       const st = JSON.parse(readFileSync(stateJsonPath, 'utf-8'))
-      if (st.personality?.presetId) {
-        preset = PERSONALITY_PRESETS.find(p => p.id === st.personality.presetId)
-        if (preset) {
-          personalityLabel = preset.label
-          personalityHint = buildPersonalityHint(preset, settings.adultContentMode)
-          voiceGuide = buildPresetVoiceGuide(preset, settings.adultContentMode)
-        }
-      }
       if (settings.personalityConfigMode === 'inferred') {
         const six = st.userSixDimensions
         if (six && typeof six.E === 'number') {
@@ -98,16 +96,6 @@ function readTierACompanion(dataRoot: string, settings: AppSettings): string {
       }
     } catch { /* ignore */ }
   }
-  if (!preset) {
-    const fromSettings = PERSONALITY_PRESETS.find(p => p.id === settings.personalityPresetId)
-    if (fromSettings) {
-      preset = fromSettings
-      personalityLabel = fromSettings.label
-      personalityHint = buildPersonalityHint(fromSettings, settings.adultContentMode)
-      voiceGuide = buildPresetVoiceGuide(fromSettings, settings.adultContentMode)
-    }
-  }
-
   const statePath = join(dataRoot, 'companion', 'state.md')
   let state = ''
   if (existsSync(statePath)) {
@@ -115,13 +103,17 @@ function readTierACompanion(dataRoot: string, settings: AppSettings): string {
   }
   const now = new Date()
   const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  const companionStyle = settings.companionInteractionMode === 'companionship'
+  if (!companionStyle) {
+    ownerProfileHint = ''
+    state = ''
+  }
 
   return [
-    `【Tier A · 伴侣快照】`,
+    companionStyle ? `【Tier A · 伴侣快照】` : `【Tier A · 个人智能体快照】`,
     `当前日期：${dateStr}`,
-    `称呼：${settings.companionName}`,
+    `智能体名称（不是用户称呼）：${settings.companionName}`,
     `当前人格：${personalityLabel}`,
-    voiceGuide ? `【人格口吻 · 全轮优先】\n${voiceGuide}` : '',
     `风格参数：${personalityHint}`,
     ownerProfileHint,
     state ? `状态摘录：\n${state}` : ''
@@ -230,7 +222,7 @@ export function assembleMessages(args: BuildContextArgs): ChatMessage[] {
       }
     }
   }
-  const psyche = psycheBlock?.trim() ?? ''
+  const psyche = selectReplyPsyche(psycheBlock ?? '', settings.companionInteractionMode ?? 'assistant')
   const hint = systemHint?.trim() ?? ''
   const append = psycheAppend?.trim() ?? ''
   const psycheWithHint = [psyche, hint, append].filter(Boolean).join('\n\n')
@@ -238,6 +230,7 @@ export function assembleMessages(args: BuildContextArgs): ChatMessage[] {
     .filter((s) => s && s.trim().length > 0)
     .join('\n')
   const userInfo = userInfoBlock?.trim() ?? ''
+  const taskFacts=captureTaskContext(dataRoot)
   const sysParts = [
     buildSystemPrompt(settings),
     tierA,
@@ -245,7 +238,12 @@ export function assembleMessages(args: BuildContextArgs): ChatMessage[] {
     psycheWithHint,
     tierBCombined,
     tierC,
-    extBlock ? `【扩展上下文】\n${extBlock}` : ''
+    extBlock ? `【扩展上下文】\n${extBlock}` : '',
+    RUNTIME_ARCHITECTURE,
+    taskFacts.text,
+    systemContext(dataRoot,userText),
+    buildSelectedPersonalityVoice(settings),
+    buildResponsePolicyBlock({ ...(args.responsePolicy ?? { origin: 'answer', status: 'not_executed' }), style: settings.companionInteractionMode ?? 'assistant' })
   ].filter((p) => p && p.trim().length > 0)
   const system = sysParts.join('\n\n')
   const msgs: ChatMessage[] = [{ role: 'system', content: system }]
@@ -253,5 +251,6 @@ export function assembleMessages(args: BuildContextArgs): ChatMessage[] {
     msgs.push({ role: m.role, content: m.content })
   }
   msgs.push({ role: 'user', content: userText })
+  bindContextPublicationFence(msgs,taskFacts.isCurrent)
   return msgs
 }

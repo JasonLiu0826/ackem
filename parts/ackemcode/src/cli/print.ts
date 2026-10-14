@@ -1,3 +1,4 @@
+import {cliPermissionMode} from './permissionModes.js'
 import type { AgentEvent } from '../shared/types.js'
 import { abortTurn, createSession } from './client/api.js'
 import { postChat } from './client/sse.js'
@@ -22,15 +23,7 @@ export async function runPrintMode(
   await ensureDaemon({ spawnIfMissing: true })
   const session = await createSession({
     cwd: process.cwd(),
-    permissionMode:
-      cmd.permissionMode === 'bypassPermissions' ||
-      cmd.permissionMode === 'dontAsk' ||
-      cmd.permissionMode === 'acceptEdits' ||
-      cmd.permissionMode === 'default' ||
-      cmd.permissionMode === 'auto' ||
-      cmd.permissionMode === 'plan'
-        ? cmd.permissionMode
-        : 'acceptEdits'
+    permissionMode:cliPermissionMode(cmd.permissionMode)
   })
 
   let finalText = ''

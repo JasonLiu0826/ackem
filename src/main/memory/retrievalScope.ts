@@ -5,12 +5,16 @@
 
 import type { MemoryFact } from './semantic/types.js'
 import { ALL_INTERACTION_SURFACES, type InteractionSurface } from './provenance'
+import type Database from 'better-sqlite3'
+import { canReadMemoryObject } from './accessScope'
 
 export type RetrievalScope = {
   ownerAgentId: string
   sessionId: string
   interactionSurface: InteractionSurface
   adultMode: boolean
+  database?: Database.Database
+  accessContextRef?: string
 }
 
 /** 任意 Agent 同权：同 owner 下主聊 / 微信 / 导入 / 社会场景均可检出 */
@@ -18,6 +22,7 @@ const OWNER_VISIBLE_SURFACES = new Set<string>(ALL_INTERACTION_SURFACES)
 
 export function filterFactsForRetrieval(facts: MemoryFact[], scope: RetrievalScope): MemoryFact[] {
   return facts.filter((f) => {
+    if (scope.database && !canReadMemoryObject(scope.database, 'fact', f.id, f.sourceSessionId, scope.accessContextRef)) return false
     const owner = f.ownerAgentId ?? 'default'
     if (owner !== scope.ownerAgentId) return false
     const surface = f.interactionSurface ?? 'desktop_main'

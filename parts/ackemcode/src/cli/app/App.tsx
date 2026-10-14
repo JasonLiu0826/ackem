@@ -1,3 +1,4 @@
+import {CLI_PERMISSION_MODES} from '../permissionModes.js'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Box, Text, useApp, useInput, useStdout } from 'ink'
 import type { AgentEvent, EffortLevel, PermissionMode } from '../../shared/types.js'
@@ -305,13 +306,7 @@ function contextPickFromValue(v: string): number {
 
 const EFFORTS: EffortLevel[] = ['low', 'medium', 'high', 'max']
 const AGENTS = ['solo', 'auto', 'team'] as const
-const MODES: PermissionMode[] = [
-  'default',
-  'acceptEdits',
-  'auto',
-  'plan',
-  'bypassPermissions'
-]
+const MODES = CLI_PERMISSION_MODES
 
 function toolPath(input: unknown): string | undefined {
   if (!input || typeof input !== 'object') return undefined
@@ -349,11 +344,12 @@ function estimateTokens(items: HistoryItem[]): number {
 }
 
 function modeDisplay(mode: PermissionMode): string {
-  if (mode === 'default') return l('默认', 'default')
+  if (mode === 'default') return l('每次询问', 'ask every operation')
   if (mode === 'plan') return l('计划', 'plan')
   if (mode === 'auto') return l('自动', 'auto')
   if (mode === 'dontAsk') return l('不询问', 'dont ask')
-  if (mode === 'acceptEdits') return l('接受编辑', 'accept edits')
+  if (mode === 'sessionType') return l('同类型不再问', 'allow same type')
+  if (mode === 'acceptEdits') return l('自动允许编辑', 'accept edits')
   if (mode === 'bypassPermissions') return l('完全放开', 'bypass')
   return String(mode)
 }
@@ -553,7 +549,6 @@ export function App(props: {
       setModel(s.model)
       setEffort(s.effort)
       setAgent(s.agentTier || 'auto')
-      setModeState(s.permissionMode)
       if (s.contextWindow) setWindowTokens(s.contextWindow)
       setHasKey(Boolean(s.hasApiKey))
       setWebSearchReady(isWebSearchConfigured(s.webSearch as WebSearchSettingsHint | undefined))
@@ -885,7 +880,6 @@ export function App(props: {
       if (ev.settings.model) setModel(ev.settings.model)
       if (ev.settings.effort) setEffort(ev.settings.effort)
       if (ev.settings.agentTier) setAgent(ev.settings.agentTier)
-      if (ev.settings.permissionMode) setModeState(ev.settings.permissionMode)
       if (ev.settings.contextWindow) setWindowTokens(ev.settings.contextWindow)
     }
     if (ev.type === 'thinking') {
@@ -1000,7 +994,7 @@ export function App(props: {
       const sameType = allowedTypesRef.current.has(permissionClass(ev.toolName))
       const windowOk =
         windowAllowRef.current && !isDeleteOperation(ev.toolName, ev.input)
-      if (sameType || windowOk) {
+      if (mode !== 'default' && (sameType || windowOk)) {
         void sendPermission(sessionId, {
           requestId: ev.requestId,
           decision: 'allow',
@@ -2734,7 +2728,7 @@ export function App(props: {
         await sendPlanDecision(sessionId, {
           requestId: plan.requestId,
           decision: 'approve',
-          mode: 'acceptEdits',
+          mode: 'sessionType',
           message: planFeedback.trim() || undefined,
           plan: plan.plan,
           planWasEdited: plan.plan !== plan.initialPlan

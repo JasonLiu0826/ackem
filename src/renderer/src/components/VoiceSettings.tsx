@@ -128,13 +128,13 @@ export function VoiceSettings(): JSX.Element {
   }
 
   const envReady = Boolean(env?.ready)
-  const serviceOk = Boolean(health?.asr_ready && health?.tts_ready)
+  const serviceOk = Boolean(health?.asr_ready)
 
   return (
     <>
       <SettingsBlock
         title="语音环境"
-        hint="Ackem 可自动配置，无需手动安装 Python 或运行命令行"
+        hint="本地 sherpa-onnx，模型下载到用户目录，不进仓库"
         badge={
           envReady ? (
             <SettingsStatusBadge tone="ok">已就绪</SettingsStatusBadge>
@@ -149,29 +149,14 @@ export function VoiceSettings(): JSX.Element {
         {env ? (
           <div className="voice-env-steps">
             <StepRow
-              ok={env.python.ok}
-              label="Python 运行环境"
-              hint={env.python.message + (env.python.version ? ` · ${env.python.version}` : '')}
+              ok={Boolean(env.sherpaReady)}
+              label="本地识别（sherpa-onnx）"
+              hint={env.sherpaMessage ?? '模型下载到用户目录，不进仓库'}
             />
             <StepRow
-              ok={env.dependenciesOk}
-              label="语音识别 / 合成依赖"
-              hint={
-                env.dependenciesOk
-                  ? 'faster-whisper、pyttsx3（离线 TTS）等已安装'
-                  : env.missingDependencies.length
-                    ? `缺少: ${env.missingDependencies.join(', ')}`
-                    : '尚未安装'
-              }
-            />
-            <StepRow
-              ok={env.serviceRunning || serviceOk}
-              label="语音服务"
-              hint={
-                serviceOk
-                  ? `${health?.tts_engine ?? 'TTS'} · 服务运行中`
-                  : '服务未运行'
-              }
+              ok={serviceOk}
+              label="识别进程"
+              hint={serviceOk ? 'sidecar 运行中' : '尚未启动，开麦后会拉起'}
             />
           </div>
         ) : null}
@@ -184,11 +169,10 @@ export function VoiceSettings(): JSX.Element {
               disabled={installing || checking}
               onClick={() => void runInstall()}
             >
-              {installing ? '正在准备…（首次约 3–15 分钟）' : '一键准备语音环境'}
+              {installing ? '正在下载标准档…' : '下载并安装标准档'}
             </button>
             <p className="settings-field-footnote">
-              会自动下载内置 Python（约 300MB，仅 Windows 首次）并安装语音依赖，完成后自动启动服务。
-              发行版 exe 若已内置 python-embedded，则跳过下载。
+              下载 sherpa-onnx 运行时和标准档中文流式模型到用户目录。下好后可断网识别。
             </p>
           </div>
         ) : null}
@@ -208,7 +192,7 @@ export function VoiceSettings(): JSX.Element {
         <SettingsActionStack>
           <SettingsActionItem
             title="重新检测环境"
-            hint="检查 Python、依赖与服务状态"
+            hint="检查 sherpa 模型与识别进程"
             busy={checking}
             busyLabel="检测中…"
             actionLabel="检测"
@@ -232,7 +216,7 @@ export function VoiceSettings(): JSX.Element {
           hint={
             envReady
               ? '开启后可在剧院模式使用麦克风对话'
-              : '建议先点击上方「一键准备语音环境」'
+              : '建议先下载并安装标准档识别模型'
           }
           checked={settings.enabled}
           onChange={(checked) => {
@@ -264,19 +248,6 @@ export function VoiceSettings(): JSX.Element {
 
       {settings.enabled ? (
         <>
-          <SettingsBlock title="语音识别">
-            <SettingsField label="ASR 模型">
-              <select
-                value={settings.asrModel}
-                onChange={(e) => update({ asrModel: e.target.value as 'base' | 'small' })}
-                className="field-input w-full"
-              >
-                <option value="base">base — 快（约 1–3s）</option>
-                <option value="small">small — 准（约 2–5s）</option>
-              </select>
-            </SettingsField>
-          </SettingsBlock>
-
           <SettingsBlock
             title="TTS 播报"
             hint={TTS_BROADCAST_ENABLED ? undefined : '灰度中 · 接口已预留，后续开放'}
@@ -358,8 +329,7 @@ export function VoiceSettings(): JSX.Element {
                 </select>
                 <p className="settings-field-footnote">
                   导入路径（二选一）：<br />
-                  1. %APPDATA%\Ackem\voice-models\piper\你的音色名\<br />
-                  2. 开发版 Ackem\voice-service\models\piper\<br />
+                  %APPDATA%\Ackem\voice-models\piper\你的音色名\<br />
                   每个文件夹放一对同名 `.onnx` 与 `.onnx.json`。详见该目录下 README.md。
                 </p>
               </SettingsField>
@@ -448,8 +418,7 @@ export function VoiceSettings(): JSX.Element {
         </>
       ) : (
         <p className="settings-note settings-note--inset">
-          开启语音后，在剧院模式可使用<strong>麦克风输入</strong>（语音识别后发送）。
-          TTS 语音播报灰度中，Ackem 暂不以语音回复。首次使用点「一键准备语音环境」即可。
+          开启语音后，工作页 / 剧院可用麦克风。首次请下载并安装标准档。TTS 播报仍灰度关闭。
         </p>
       )}
     </>

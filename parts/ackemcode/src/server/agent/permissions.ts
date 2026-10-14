@@ -146,6 +146,8 @@ function askOrDontAsk(mode: PermissionMode, reason: string): PermissionEvalResul
 /**
  * Core decision — Claude Code hasPermissionsToUseToolInner spirit (simplified):
  * 1) deny rules
+ * Explicit default/sessionType/bypassPermissions are resolved first.
+ * Remaining legacy/acceptEdits modes:
  * 2) S13 risk gate (critical deny; high blocks auto-allow; classifier throw → fail-closed)
  * 2w) window allow (`*`) — skip all prompts except delete-shaped ops
  * 2b) session tool-class allow (allow_session) — skips even high risk / playwright
@@ -185,6 +187,13 @@ export function evaluatePermission(opts: {
   const toolName = normalizeToolName(opts.toolName)
   const { input, mode, rules } = opts
   const classify = opts.riskClassify ?? classifyToolRisk
+
+  // Explicit user-selected policies do not inherit legacy approval shortcuts.
+  if (mode === 'bypassPermissions') return { behavior: 'allow', reason: 'Full access: no permission gates' }
+  if (mode === 'default') return { behavior: 'ask', reason: 'Ask every operation' }
+  if (mode === 'sessionType') return opts.sessionToolClassAllows?.(toolName)
+    ? { behavior: 'allow', reason: 'Operation class approved for this session' }
+    : { behavior: 'ask', reason: 'First operation of this class requires approval' }
 
   // 1) Deny rules win
   const denied = findMatchingRule(rules.deny, toolName, input)
@@ -227,7 +236,7 @@ export function evaluatePermission(opts: {
     )
   }
 
-  if (risk.level === 'critical' && mode !== 'bypassPermissions') {
+  if (risk.level === 'critical') {
     return { behavior: 'deny', reason: risk.reason }
   }
 
@@ -259,8 +268,7 @@ export function evaluatePermission(opts: {
   }
 
   if (
-    (isPlaywrightEdgeTool(toolName) || isPlaywrightUnsafeScriptTool(toolName)) &&
-    mode !== 'bypassPermissions'
+    (isPlaywrightEdgeTool(toolName) || isPlaywrightUnsafeScriptTool(toolName))
   ) {
     return askOrDontAsk(
       mode,
@@ -285,7 +293,7 @@ export function evaluatePermission(opts: {
         matchedRule: allowed
       }
     }
-  } else if (mode !== 'bypassPermissions') {
+  } else {
     if (
       mode === 'plan' &&
       isPlanFileMutation(toolName, input, opts.planFilePath, opts.cwd ?? '')
@@ -302,9 +310,6 @@ export function evaluatePermission(opts: {
   // 4) Explicit ask rules
   const askRule = findMatchingRule(rules.ask, toolName, input)
   if (askRule) {
-    if (mode === 'bypassPermissions') {
-      return { behavior: 'allow', reason: 'bypassPermissions mode', matchedRule: askRule }
-    }
     if (mode === 'dontAsk') {
       return {
         behavior: 'deny',
@@ -320,9 +325,6 @@ export function evaluatePermission(opts: {
   }
 
   // 5) Mode transforms
-  if (mode === 'bypassPermissions') {
-    return { behavior: 'allow', reason: 'bypassPermissions mode' }
-  }
 
   if (mode === 'plan') {
     // readonly in plan: network still asks (unless allow rule already hit)
@@ -619,6 +621,7 @@ export class PermissionBroker {
         this.waiters.delete(requestId)
         resolve({
           decision: 'deny',
+          timedOut: true,
           message:
             'Permission prompt timed out after 120s. Confirm the tool when prompted, or allow it in permission rules.'
         })
@@ -658,6 +661,15 @@ export class PermissionBroker {
       released.push(id)
     }
     return released
+  }
+
+  /** Full-access transition releases all pending permission gates, including deletes. */
+  allowAllPending(): void {
+    for (const id of [...this.waiters.keys()]) this.resolve(id, 'allow')
+  }
+
+  pendingToolName(requestId: string): string | undefined {
+    return this.waiters.get(requestId)?.toolName
   }
 
   resolve(

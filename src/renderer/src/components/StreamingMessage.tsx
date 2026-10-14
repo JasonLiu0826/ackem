@@ -1,20 +1,22 @@
+import { MarkdownContent } from './MarkdownContent'
+
 type Props = {
   text: string
-  /** 流式进行中：纯文本 + 光标，不做 Markdown 解析 */
+  /** 流式进行中显示光标，正文始终使用同一套 Markdown 排版 */
   active?: boolean
   className?: string
 }
 
-/** LLM 首字流式：逐字打出，结束后再由 MarkdownContent 接管排版 */
+/** 流式与完成态共用 Markdown 排版；外层不保留 HTML 标签之间的格式换行 */
 export function StreamingMessage({ text, active = false, className }: Props): JSX.Element {
   return (
-    <span
-      className={['streaming-message whitespace-pre-wrap text-sm leading-relaxed', className]
+    <div
+      className={['streaming-message whitespace-normal', className]
         .filter(Boolean)
         .join(' ')}
     >
-      {text}
+      <MarkdownContent source={text} chat />
       {active ? <span className="streaming-message-cursor" aria-hidden /> : null}
-    </span>
+    </div>
   )
 }

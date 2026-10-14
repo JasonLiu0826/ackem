@@ -1,3 +1,4 @@
+import { canSendCompanionInitiative, recordCompanionInitiative } from '../../companion/initiativeState'
 import { loadSettings } from '../../settings'
 import { loadState, saveState } from '../../engine/state-persistence'
 import { createLogger } from '../../logger'
@@ -36,6 +37,7 @@ async function tickProactive(dataRoot: string, isPolling: () => boolean): Promis
   if (ticking) return
   ticking = true
   try {
+    if (!canSendCompanionInitiative()) return
     const settings = loadSettings()
     if (!isProactiveEnabled(settings)) return
     if (!isPolling()) return
@@ -79,6 +81,8 @@ async function tickProactive(dataRoot: string, isPolling: () => boolean): Promis
     const contextToken = loadContextToken(dataRoot, peer.peerId) ?? undefined
 
     await enqueuePeerTurn(peer.peerId, async () => {
+      if (!canSendCompanionInitiative(composed.raw)) return
+      recordCompanionInitiative(composed.raw)
       await sendWeixinOutboundSequence({
         account,
         peerId: peer.peerId,

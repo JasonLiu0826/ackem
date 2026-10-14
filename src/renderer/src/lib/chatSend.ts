@@ -1,3 +1,4 @@
+import { replyHistoryContent } from '../../../shared/response'
 /**
  * FIX-034 — Chat 发送关键路径（纯函数，供 ChatPage 与单测共用）
  */
@@ -95,21 +96,24 @@ export function buildChatSendOptimisticRows(
   userLine: string,
   recentLimit = 24
 ): ChatSendOptimisticRows {
-  const nextCore: ChatRow[] = [...rows, { kind: 'message', role: 'user', content: userLine }]
+  const nextCore: ChatRow[] = [...rows, { kind: 'message', role: 'user', content: userLine, createdAt: Date.now() }]
   const assistantIndex = nextCore.length
   const rowsWithPlaceholder: ChatRow[] = [
     ...nextCore,
-    { kind: 'message', role: 'assistant', content: '' }
+    { kind: 'message', role: 'assistant', content: '', createdAt: Date.now() }
   ]
   const recentMessages = nextCore
     .filter((m): m is Extract<ChatRow, { kind: 'message' }> => m.kind === 'message')
     .slice(-recentLimit)
-    .map((m) => ({ role: m.role, content: m.content }))
+    .filter(m => m.origin !== 'companionship')
+    .map((m) => ({ role: m.role, content: replyHistoryContent(m.content, m.origin, m.sourceLabel) }))
   return { userLine, rowsWithPlaceholder, assistantIndex, recentMessages }
 }
 
 export function buildChatContextRequest(params: {
   clean: string
+  filePaths?: string[]
+  imagePaths?: string[]
   userLine: string
   rel?: string
   recentMessages: Array<{ role: 'user' | 'assistant'; content: string }>
@@ -122,6 +126,8 @@ export function buildChatContextRequest(params: {
 }) {
   return {
     userText: params.clean || params.userLine,
+    imagePaths: params.imagePaths,
+    filePaths: params.filePaths,
     explicitRel: params.rel,
     recentMessages: params.recentMessages,
     sessionId: params.sessionId,

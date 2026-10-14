@@ -1,3 +1,4 @@
+import { chatContentText } from '../../../../../shared/chatImages'
 // [knowledge-presentation/knowledgeAnswer] — 纸面卡 + 伴侣短评（仅 LLM，不联网）
 
 import type { WebContents } from 'electron'
@@ -36,15 +37,7 @@ export type KnowledgeAnswerOutput = {
 
 const CARD_BODY_MAX_TOKENS = 3200
 
-function messageText(content: unknown): string {
-  if (typeof content === 'string') return content
-  if (content == null) return ''
-  try {
-    return JSON.stringify(content)
-  } catch {
-    return String(content)
-  }
-}
+function messageText(content: unknown): string { return chatContentText(content) }
 
 export function lastUserMessageFromContext(
   messages: Array<{ role: string; content: unknown }>

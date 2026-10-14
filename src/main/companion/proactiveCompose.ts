@@ -1,18 +1,19 @@
 import { createLlmJsonClient } from '../llmClient'
+import { guardReplyText } from '../channel/outputGuard'
 import { loadState } from '../engine/state-persistence'
 import { FactStore, defaultFactsPath } from '../memory/factStore'
+import { personalFacts } from '../memory/personalFacts'
+import { captureMemorySourceFence, validateMemorySourceFence } from '../memory/sourceFence'
 import type { AppSettings } from '../settings'
 import { getTimeContext } from '../extensions/plugins/builtin/desktop-companion/desktop-companion'
 import {
-  sanitizeDesktopProactiveMessage,
-  templateDesktopProactiveMessage
+  sanitizeDesktopProactiveMessage
 } from '../extensions/plugins/builtin/desktop-companion/proactiveNotificationMessage'
 import { createLogger } from '../logger'
 import { loadMergedRecentMessages } from '../chat/unifiedChatHistory'
 import {
   buildProactivePersonalityBlock,
   pickCompanionProactiveKind,
-  pickPersonalityProactiveFallback,
   type ProactiveMessageKind
 } from './proactivePersonalityContext'
 
@@ -29,16 +30,19 @@ export type ComposeCompanionProactiveInput = {
 }
 
 export function pickRecentFactFromRoot(dataRoot: string): string | null {
+  return pickRecentFactRecord(dataRoot)?.summary.trim().slice(0, 48) || null
+}
+
+function pickRecentFactRecord(dataRoot: string) {
   try {
     const store = new FactStore(defaultFactsPath(dataRoot))
     store.load()
-    const active = store.listActive()
+    const active = personalFacts(store).filter(fact => fact.sensitivity !== 'avoid')
     if (!active.length) return null
     const sorted = [...active].sort(
       (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
     )
-    const s = sorted[0]?.summary?.trim()
-    return s ? s.slice(0, 48) : null
+    return sorted[0] ?? null
   } catch {
     return null
   }
@@ -63,6 +67,7 @@ async function tryLlmCompanionProactive(args: {
   kind: ProactiveMessageKind
   harass?: boolean
   recentContext?: string
+  sourcesCurrent: () => boolean
 }): Promise<string | null> {
   try {
     const tc = getTimeContext()
@@ -93,7 +98,7 @@ async function tryLlmCompanionProactive(args: {
             `你是 Ackem，用户的 AI 伴侣。${channelLine}\n\n${personalityBlock}\n\n` +
             '禁止输出：设定说明、状态分析、任务复述、写作计划、数字指标、括号及括号内旁白、第三人称内心独白。' +
             `${formatLine} ` +
-            '不要客服腔，不要提 DeepSeek/GPT。'
+            '不要客服腔，不要提 DeepSeek/GPT。不要催用户回复，不要说用户在冷落你，不制造愧疚；只围绕当前相关话题表达一句有意义的关怀。'
         },
         {
           role: 'user' as const,
@@ -110,7 +115,9 @@ async function tryLlmCompanionProactive(args: {
       max_tokens: 192
     }
 
+    if (!args.sourcesCurrent()) return null
     let result = await llm.chatCompletionJsonDetailed(request)
+    if (!args.sourcesCurrent()) return null
     let cleaned = sanitizeDesktopProactiveMessage(result.text, 120)
 
     if ((!cleaned || result.truncated) && !args.harass) {
@@ -118,6 +125,7 @@ async function tryLlmCompanionProactive(args: {
         ...request,
         temperature: 0.72
       })
+      if (!args.sourcesCurrent()) return null
       cleaned = sanitizeDesktopProactiveMessage(result.text, 120)
     }
 
@@ -138,7 +146,10 @@ export async function composeCompanionProactiveMessage(
   }
 
   const presetId = input.settings.personalityPresetId
-  const fact = pickRecentFactFromRoot(input.dataRoot)
+  const factRecord = pickRecentFactRecord(input.dataRoot)
+  const fact = factRecord?.summary.trim().slice(0, 48) || null
+  const fence = captureMemorySourceFence(factRecord ? [factRecord] : [])
+  const sourcesCurrent = () => validateMemorySourceFence(input.dataRoot, fence)
   const ratio = input.settings.proactiveContextRatio ?? 0.7
   let recentContext: string | undefined
   if (ratio > 0) {
@@ -173,21 +184,15 @@ export async function composeCompanionProactiveMessage(
     kind,
     harass: input.harass,
     recentContext,
+    sourcesCurrent,
   })
 
-  if (!raw?.trim()) {
-    const fallback = pickPersonalityProactiveFallback(
-      presetId,
-      state.emotion.aff,
-      !!input.harass
-    )
-    if (!fallback) return null
-    return { raw: fallback, kind }
+  if (!raw?.trim() || !sourcesCurrent()) {
+    return null
   }
 
   const sanitized = sanitizeDesktopProactiveMessage(raw.trim(), 120)
-  if (sanitized) return { raw: sanitized, kind }
+  if (sanitized) return { raw: guardReplyText(sanitized, { origin: 'companionship', style: 'companionship', status: 'not_executed' }), kind }
 
-  const tc = getTimeContext()
-  return { raw: templateDesktopProactiveMessage(tc), kind }
+  return null
 }

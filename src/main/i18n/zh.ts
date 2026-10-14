@@ -547,7 +547,7 @@ export const zhResources: Record<string, string> = {
 
   // ═══ 主导航（FIX-035）═══
   'nav.chat': '对话',
-  'nav.code': '编程',
+  'nav.code': '工作',
   'nav.social': '社会',
   'nav.memory': '记忆',
   'nav.diary': '日记',

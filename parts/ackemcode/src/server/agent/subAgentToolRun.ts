@@ -1,3 +1,4 @@
+import { awaitHostTaskReady } from '../hostTaskFence.js'
 /**
  * B7-SA1 — single sub-agent tool call (shared by serial + parallel batches).
  */
@@ -76,6 +77,7 @@ export type SubAgentToolRunOutcome = {
 export async function runOneSubAgentTool(
   opts: SubAgentToolRunOpts
 ): Promise<SubAgentToolRunOutcome> {
+  await awaitHostTaskReady(opts.call.function.name, opts.signal)
   const { call } = opts
   if (opts.signal?.aborted) throw new Error('aborted')
 
@@ -123,7 +125,7 @@ export async function runOneSubAgentTool(
   let verdict = evaluatePermission({
     toolName: name,
     input: parsedInput,
-    mode: opts.getMode(),
+    mode: opts.parentPermissionMode === 'bypassPermissions' ? 'bypassPermissions' : opts.getMode(),
     rules: opts.permissionRules,
     additionalWorkingDirectories,
     sessionAllows: (t, inp) => {
@@ -182,7 +184,7 @@ export async function runOneSubAgentTool(
     return finish(denied, false)
   }
 
-  if (verdict.behavior === 'ask' && opts.permissions.sessionAllowsToolClass(name)) {
+  if (verdict.behavior === 'ask' && opts.getMode() !== 'default' && opts.permissions.sessionAllowsToolClass(name)) {
     verdict = { ...verdict, behavior: 'allow', reason: 'Allowed for this session (tool class)' }
   }
 
@@ -208,7 +210,7 @@ export async function runOneSubAgentTool(
       }
       throw new Error('user_rejected_tool')
     }
-    if (payload.decision === 'allow_session') {
+    if (payload.decision === 'allow_session' || opts.getMode() === 'sessionType') {
       opts.permissions.rememberSession(name)
     } else if (payload.decision === 'allow_always') {
       opts.permissions.rememberSession('*')
@@ -221,6 +223,9 @@ export async function runOneSubAgentTool(
     )
   }
 
+  if (opts.getMode() === 'sessionType') {
+    grantWorkingDirectoryForToolPath(name, parsedInput, opts.settings.cwd, opts.permissions)
+  }
   const result = await executeTool(name, call.function.arguments, {
     cwd: opts.settings.cwd,
     additionalWorkingDirectories: opts.permissions.getAdditionalWorkingDirectories(),
@@ -235,7 +240,7 @@ export async function runOneSubAgentTool(
     },
     multimodal: opts.settings.multimodal,
     signal: opts.signal,
-    getMode: opts.getMode,
+    getMode: () => opts.parentPermissionMode === 'bypassPermissions' ? 'bypassPermissions' : opts.getMode(),
     setMode: opts.setMode,
     interactions: opts.interactions,
     permissions: opts.permissions,

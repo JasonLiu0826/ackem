@@ -1,4 +1,5 @@
 export type HostTurnReceipt = {
+  hostTask?: { taskId: string; goalRevision: number; controlEpoch: number; fencingToken: number }
   hostRunId: string
   state: 'running' | 'requires_action' | 'succeeded' | 'failed' | 'aborted'
   revision: number
@@ -57,6 +58,15 @@ export function parseHostTurnReceipt(raw: unknown): HostTurnReceipt | undefined 
   }
   if (typeof o.completedAt === 'string' && o.completedAt) receipt.completedAt = o.completedAt
   if (typeof o.errorCode === 'string' && o.errorCode) receipt.errorCode = o.errorCode
+  if (o.hostTask !== undefined) {
+    if (!o.hostTask || typeof o.hostTask !== 'object' || Array.isArray(o.hostTask)) return undefined
+    const task = o.hostTask as Record<string, unknown>
+    if (typeof task.taskId !== 'string' || !task.taskId.trim()) return undefined
+    for (const key of ['goalRevision', 'controlEpoch', 'fencingToken']) {
+      if (typeof task[key] !== 'number' || !Number.isSafeInteger(task[key]) || (task[key] as number) < (key === 'controlEpoch' ? 0 : 1)) return undefined
+    }
+    receipt.hostTask = { taskId: task.taskId, goalRevision: task.goalRevision as number, controlEpoch: task.controlEpoch as number, fencingToken: task.fencingToken as number }
+  }
   return receipt
 }
 
@@ -82,24 +92,32 @@ export function parseTransportEvent(
   if (typeof record.type !== 'string' || !record.type) {
     return warning(sessionId, 'invalid_event', 'missing type')
   }
-  switch (record.type) {
+  // Validate before spreading the transport payload: a rejected receipt must
+  // never survive on the raw record handed to ledger adapters.
+  if (record.hostTurnReceipt !== undefined) {
+    const receipt = parseHostTurnReceipt(record.hostTurnReceipt)
+    if (!receipt) return warning(sessionId, 'invalid_event', 'hostTurnReceipt')
+    raw = { ...record, hostTurnReceipt: receipt }
+  }
+  const normalized = raw as Record<string, unknown>
+  switch (normalized.type) {
     case 'session_state':
       if (typeof record.state !== 'string' || !record.state) {
         return warning(sessionId, 'invalid_event', 'session_state.state')
       }
-      return { ok: true, event: record as AgentEvent }
+      return { ok: true, event: normalized as AgentEvent }
     case 'permission_request':
       if (typeof record.requestId !== 'string' || !record.requestId) {
         return warning(sessionId, 'invalid_event', 'permission_request.requestId')
       }
-      return { ok: true, event: record as AgentEvent }
+      return { ok: true, event: normalized as AgentEvent }
     case 'assistant_message':
       if (typeof record.text !== 'string') {
         return warning(sessionId, 'invalid_event', 'assistant_message.text')
       }
-      return { ok: true, event: record as AgentEvent }
+      return { ok: true, event: normalized as AgentEvent }
     case 'abort_ack':
-      return { ok: true, event: record as AgentEvent }
+      return { ok: true, event: normalized as AgentEvent }
     case 'done': {
       if (typeof record.ok !== 'boolean') {
         return warning(sessionId, 'invalid_event', 'done.ok')
@@ -107,7 +125,7 @@ export function parseTransportEvent(
       if (record.error !== undefined && typeof record.error !== 'string') {
         return warning(sessionId, 'invalid_event', 'done.error')
       }
-      const event: AgentEvent = { ...record, type: 'done', ok: record.ok }
+      const event: AgentEvent = { ...normalized, type: 'done', ok: record.ok }
       if (typeof record.error === 'string') event.error = record.error
       const receipt = parseHostTurnReceipt(record.hostTurnReceipt)
       if (receipt) event.hostTurnReceipt = receipt
@@ -118,11 +136,11 @@ export function parseTransportEvent(
       if (typeof record.message !== 'string') {
         return warning(sessionId, 'invalid_event', 'error.message')
       }
-      return { ok: true, event: record as AgentEvent }
+      return { ok: true, event: normalized as AgentEvent }
     default:
       if (GUARDED.has(record.type)) {
         return warning(sessionId, 'invalid_event', record.type)
       }
-      return { ok: true, event: record as AgentEvent }
+      return { ok: true, event: normalized as AgentEvent }
   }
 }

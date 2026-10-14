@@ -49,6 +49,8 @@ export type PrefetchedFact = {
 }
 
 export type IngestTurnOptions = {
+  sourceEventIds?: string[]
+  assertAccess?: () => void
   skipLlmExtraction?: boolean
   prefetchedFacts?: PrefetchedFact[]
   /** Persist the LLM decision before any derived fact is written. */
@@ -86,6 +88,7 @@ export class MemoryIngestPipeline {
     factEmbeddingCache?: Map<string, number[]>,
     options?: IngestTurnOptions
   ): Promise<void> {
+    options?.assertAccess?.()
     type ExtractedFactRow = {
       domain: string
       subcategory: string
@@ -115,6 +118,7 @@ export class MemoryIngestPipeline {
       )
       await options?.onFactsExtracted?.(ex.facts)
     }
+    options?.assertAccess?.()
 
     if (options?.lightDraftsFromSync) {
       factStore.load()
@@ -135,6 +139,7 @@ export class MemoryIngestPipeline {
     const pendingContradictions: Array<{ newFact: MemoryFact; existing: MemoryFact }> = []
     const newFactsThisTurn: MemoryFact[] = []
     for (const f of ex.facts) {
+      options?.assertAccess?.()
       const canonVet = vetCreatorContradictingFact(f)
       if (canonVet.reject) {
         log.info('CANON-M-5 reject Tier B fact', {
@@ -169,6 +174,7 @@ export class MemoryIngestPipeline {
         emotionalContext: emo,
         privacyLevel: options?.adultPrivacyLevel ?? 'normal',
         ageMeta: (f as any).ageMeta
+        ,sourceEventIds: options?.sourceEventIds
       })
 
       // FIX-022：时间锚点 — 放宽 recurring/relationship/milestone 写入门槛
@@ -334,6 +340,7 @@ export class MemoryIngestPipeline {
           { start: turnIndex - recentExchangesForEpisode!.length + 1, end: turnIndex },
           llm
         )
+        options?.assertAccess?.()
         if (result) {
           episodicStore!.load()
           const prev = episodicStore!.latest()

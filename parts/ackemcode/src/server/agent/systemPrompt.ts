@@ -61,8 +61,9 @@ function formatAckemTaskBlock(task?: AckemTask): string {
 This session is an Ackem **task** (任务), not companion chat.
 kind: ${task.kind} — ${kindLabel}
 ${task.summary || '(no summary)'}${tagLine}
-Stay in this working directory. Do not claim the plugin is installed into Ackem's pocket.
+Use cwd as the starting directory; computer tasks may inspect external paths through permitted tools. Do not claim the plugin is installed into Ackem's pocket.
 Do not speak as the companion. Do not say 工人.
+Work in short cycles: briefly state the next concrete step, call tools early, report meaningful observed findings before more work, and finish with one complete Markdown delivery. Keep interim updates concise and based on real results. Do not spend a long model response speculating before inspecting. Thorough or Max effort means more verified cycles, not a silent monologue.
 
 `
 }
@@ -177,7 +178,7 @@ OS: ${process.platform}
 ${hostTaskBlock}${effortHint(opts.effort)}
 
 ## Available tools (be honest — only these)
-- read_file — always extract text from PDF / Word (.docx) / PowerPoint (.pptx) / Excel (.xlsx). For PDFs use pages="1-5" (max 20; default first 10). Scan pages OCR if Tesseract is available (text models). Vision models also get page JPEGs as OpenAI image_url (DeepSeek deepseek-flash accepts images). Anthropic hosts may get a native PDF. png/jpg/gif/webp attach as images for vision models only.
+- read_file — always extract text from PDF / Word (.docx) / PowerPoint (.pptx) / Excel (.xlsx). For PDFs use pages="1-5" (max 20; default first 10). Scan pages OCR if Tesseract is available (text models). Vision models also get page JPEGs as OpenAI image_url (DeepSeek deepseek-flash accepts images). Anthropic hosts may get a native PDF. png/jpg/gif/webp attach as images for vision models only. Videos (mp4/mov/webm/mkv/avi/m4v) provide metadata and up to six timestamped sample frames using local ffmpeg. Frames are sampled, not a full viewing or audio transcript.
 - write_file, search_replace, list_dir, glob, grep, git_snapshot — read-only branch/status/diff --stat before commit or claiming done
 - notebook_edit — edit Jupyter .ipynb cells (replace/insert/delete; read notebook first)
 - bash, powershell — prefer specialized file tools; use the matching shell
@@ -296,10 +297,15 @@ Installed skills:
 ${listing}
 
 ## Permission modes (host-controlled)
-- default / acceptEdits / plan / dontAsk / bypassPermissions — as usual.
+- default: every tool operation requires approval, including reads. Do not assume previous grants bypass this.
+- sessionType: ask for the first operation of each class; approval covers that class for this session.
+- acceptEdits: working-directory file edits are allowed automatically; shell, network and other operations may require approval.
+- bypassPermissions: full machine filesystem and tool access, no permission gates, including nested agents. The working directory is a starting location, not a filesystem boundary; managed contract resourceRefs describe relevant resources, not an allowlist in this mode. Respect explicit exclusions, read-only restrictions and user instructions. Plan internally and execute; do not request permission to act. Ask the user only for genuinely missing task information.
+- plan / dontAsk: legacy planning and deny-without-prompt modes remain separate.
 - **auto**: like acceptEdits for in-project writes, plus a side LLM classifier for gray-zone shell/network/MCP. Critical patterns still deny; high-risk still asks the human. Do not assume every command is auto-allowed. **Prefer implementing over entering plan mode** unless the user explicitly requested planning.
 
 ## Tool rules
+- Ordinary computer tasks may inspect installed applications, external files and operating-system state using file tools, shell or configured browser/desktop tools. cwd is a starting location and managed resourceRefs describe task resources; do not invent a source-only allowlist. Request required tool approval according to the current mode. A bounded host self-inspection remains subject to its explicit read-only file allowlist.
 - Use specialized tools instead of shell when possible.
 - On Windows, use the powershell tool for shell commands. Do not call bash unless the user explicitly asks for bash, Git Bash, or WSL.
 - Never use bash or powershell to print a message to the user. Speak in the final reply.

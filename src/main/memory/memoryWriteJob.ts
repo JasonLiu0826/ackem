@@ -57,7 +57,7 @@ async function runMemoryWriteJob(payload: MemoryWriteJobPayload): Promise<void> 
   }
 
   const sid = p.sessionId ?? 'default'
-  const recentExchanges = workingMemory.getRecent(sid)
+  const recentExchanges = workingMemory.getRecent(sid, dataRoot)
   const exchangesForEpisode = recentExchanges
     .filter((ex) => ex.assistantText)
     .map((ex) => ({ user: ex.userText, assistant: ex.assistantText }))
@@ -170,7 +170,7 @@ async function applyActiveForgetIfNeeded(
   if (!topic) return
 
   const topicEmbed = await provider.embed(topic)
-  const allFacts = store.listActive()
+  const allFacts = readableMemoryFacts(store)
   let marked = 0
   for (const fact of allFacts) {
     if (fact.sensitivity === 'avoid') continue
@@ -179,8 +179,8 @@ async function applyActiveForgetIfNeeded(
     const { cosineSimilarity } = await import('./factEmbeddingCache')
     const cosine = cosineSimilarity(topicEmbed, factEmbed)
     if (cosine > 0.7) {
-      store.updateFact(fact.id, { sensitivity: 'avoid' })
-      marked++
+      const result = executeMemoryControl(dataRoot,{sessionId:fact.sourceSessionId,observedAt:new Date().toISOString(),timezone:'Asia/Shanghai'}, {kind:'mute',target:{kind:'fact',factId:fact.id}})
+      if (result.ok) marked++
     }
   }
   if (marked > 0) log.info('active forget applied', { topic, marked })
@@ -236,3 +236,5 @@ export async function drainAllMemoryWriteJobs(): Promise<void> {
 export function resetMemoryWriteQueuesForTests(): void {
   sessionQueues.clear()
 }
+import { readableMemoryFacts } from './personalFacts'
+import { executeMemoryControl } from './governance/executeControl'

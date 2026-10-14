@@ -1,3 +1,4 @@
+import { assertHostToolAllowed, awaitHostTaskReady, trackHostProcess } from '../../hostTaskFence.js'
 import { spawn } from 'node:child_process'
 import {
   annotateSandboxStderr,
@@ -12,7 +13,12 @@ import {
 } from './limits.js'
 import { getSessionHookEnvVars } from '../../hooks/sessionEnv.js'
 import { resolveBashExecutable, WINDOWS_BASH_UNAVAILABLE } from './resolveBash.js'
-import { killProcessTree } from './killProcessTree.js'
+import { killProcessTree, waitOwnedProcessGroup } from './killProcessTree.js'
+import { ownedWindowsJob } from './ownedWindowsJob.js'
+import { writeFileSync, unlinkSync } from 'node:fs'
+import { randomUUID } from 'node:crypto'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 
 export type ShellToolResult = {
   ok: boolean
@@ -57,6 +63,7 @@ export async function runShellTool(
   }
 
   try {
+    await awaitHostTaskReady(shell, signal)
     const result = await spawnPlan(
       cwd,
       command,
@@ -108,56 +115,66 @@ function spawnPlan(
       return
     }
 
-    const child = spawn(exe, args, {
+    assertHostToolAllowed(shell)
+    if (signal?.aborted) { resolve({ ok: false, output: 'Tool execution aborted by user.' }); return }
+    const stopFile=join(tmpdir(),`ackem-owned-stop-${randomUUID()}`),proof=`ACKEM_JOB_SETTLED_${randomUUID()}`
+    const owned=process.platform==='win32'?ownedWindowsJob(exe,args,cwd,{...plan.env,ACKEM_OWNED_JOB_STOP:stopFile,ACKEM_OWNED_JOB_PROOF:proof}):{executable:exe,args,env:plan.env}
+    const child = spawn(owned.executable, owned.args, {
       cwd,
-      env: plan.env,
+      env: owned.env,
       windowsHide: true,
+      detached: process.platform !== 'win32',
       shell: false
     })
 
+    const releaseProcess = trackHostProcess()
+    let cancellation: Promise<boolean> | undefined
+    let timeoutResult: ShellToolResult | undefined
     let stdout = ''
     let stderr = ''
+    let timer: ReturnType<typeof setTimeout> | undefined
     let settled = false
     const finish = (r: ShellToolResult) => {
       if (settled) return
       settled = true
+      if (timer) clearTimeout(timer)
+      if(process.platform==='win32')try{unlinkSync(stopFile)}catch{/* File is only created for cancellation. */}
       signal?.removeEventListener('abort', onAbort)
       resolve(r)
     }
 
-    const onAbort = () => {
-      killProcessTree(child)
-      finish({
-        ok: false,
-        output:
-          signal?.reason === 'sibling_error'
-            ? 'Cancelled: parallel tool call sibling errored'
-            : 'Tool execution aborted by user.'
+    const requestCancellation = () => {
+      if (cancellation) return
+      if(process.platform==='win32'){
+        try{writeFileSync(stopFile,'stop',{flag:'wx'});cancellation=Promise.resolve(true)}catch{cancellation=Promise.resolve(false)}
+      }else cancellation = killProcessTree(child)
+      void cancellation.then(confirmed => {
+        if (!confirmed) {
+          releaseProcess(false)
+          finish({ ok: false, output: 'Process-tree termination is not confirmed.' })
+        }
       })
+      // A successful kill still requires the owned shell close event.
+      const closeDeadline = setTimeout(() => {
+        if (!settled) {
+          void killProcessTree(child)
+          releaseProcess(false)
+          finish({ ok: false, output: 'Process exit is not confirmed.' })
+        }
+      }, 6_000)
+      closeDeadline.unref()
+      child.once('close', () => clearTimeout(closeDeadline))
     }
-    if (signal) {
-      if (signal.aborted) {
-        onAbort()
-        return
-      }
-      signal.addEventListener('abort', onAbort, { once: true })
-    }
+    const onAbort = () => { requestCancellation() }
 
-    const timer = setTimeout(() => {
-      killProcessTree(child)
-      const body =
-        shell === 'bash'
-          ? truncateShellOutput(stdout + (stderr ? `\n${stderr}` : ''))
-          : truncateShellOutput(
-              [stdout && `stdout:\n${stdout}`, stderr && `stderr:\n${stderr}`]
-                .filter(Boolean)
-                .join('\n')
-            )
-      finish({
-        ok: false,
-        output: `Timed out after ${timeoutMs}ms\n${body}`
-      })
+    timer = setTimeout(() => {
+      requestCancellation()
+      timeoutResult = { ok: false, output: `Timed out after ${timeoutMs}ms\n${truncateShellOutput(stdout + stderr)}` }
     }, timeoutMs)
+    if (signal) {
+      signal.addEventListener('abort', onAbort, { once: true })
+      if (signal.aborted) onAbort()
+    }
 
     child.stdout?.on('data', (d) => {
       stdout += d.toString()
@@ -166,8 +183,12 @@ function spawnPlan(
       stderr += d.toString()
     })
 
-    child.on('close', (code) => {
+    child.on('close', async (code) => {
+      const confirmed = process.platform==='win32' ? stderr.includes(proof) : cancellation ? await cancellation : !!child.pid&&await waitOwnedProcessGroup(child.pid,timeoutMs+6_000)
+      stderr=stderr.replace(proof,'').trim()
       clearTimeout(timer)
+      releaseProcess(confirmed)
+      if (timeoutResult) { finish(timeoutResult); return }
       if (signal?.aborted) {
         finish({
           ok: false,
@@ -208,6 +229,7 @@ function spawnPlan(
 
     child.on('error', (err) => {
       clearTimeout(timer)
+      releaseProcess(!child.pid)
       const isWin = process.platform === 'win32'
       const hint =
         shell === 'bash' && isWin

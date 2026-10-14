@@ -76,7 +76,7 @@ export function planExitRows(opts?: {
   autoAvailable?: boolean
   bypassAvailable?: boolean
 }): PlanExitOption[] {
-  return buildPlanExitOptions(opts)
+  return buildPlanExitOptions({...opts,autoAvailable:false,bypassAvailable:opts?.bypassAvailable??true}).map(row=>row.id==='yes-accept-edits'?{...row,labelZh:'批准，同类不再询问',labelEn:'Yes, allow the same tool type',mode:'sessionType' as const}:row)
 }
 
 export function planExitChoice(id: PlanExitOption['id']): {
@@ -89,7 +89,7 @@ export function planExitChoice(id: PlanExitOption['id']): {
   }
   const mode: PermissionMode =
     id === 'yes-accept-edits'
-      ? 'acceptEdits'
+      ? 'sessionType'
       : id === 'yes-auto'
         ? 'auto'
         : id === 'yes-bypass'

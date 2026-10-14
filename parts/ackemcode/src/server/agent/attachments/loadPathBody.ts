@@ -1,3 +1,4 @@
+import { extractVideoFile, isVideoExtension } from '../../tools/files/documents/video.js'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import {
@@ -38,17 +39,21 @@ export async function loadPathAsAttachment(opts: {
   source: AttachmentSource
   kind?: AttachmentKind
   charBudget: number
+  /** Only explicit host attachments may be outside the workspace. */
+  allowOutsideCwd?: boolean
   mediaCaps?: ModelMediaCaps
 }): Promise<Attachment | null> {
   const abs = path.resolve(opts.cwd, opts.relOrAbs)
-  if (!isInsideCwd(abs, opts.cwd)) return null
+  if (!opts.allowOutsideCwd && !isInsideCwd(abs, opts.cwd)) return null
   const normPath = normalizeAttachmentPath(opts.cwd, opts.relOrAbs)
 
   try {
     const st = await fs.stat(abs)
     if (st.isDirectory()) {
-      const names = (await fs.readdir(abs)).slice(0, DIR_CHILD_CAP)
-      const body = `${normPath}\n${names.join('\n')}`
+      const names:string[]=[]
+      const directory=await fs.opendir(abs)
+      for await(const entry of directory){names.push(entry.name);if(names.length>=DIR_CHILD_CAP)break}
+      const body = `${normPath}\n目录路径引用，仅列出最多 ${DIR_CHILD_CAP} 个直接子项；不递归读取，后续按任务需要使用工具查看。\n${names.join('\n')}`
       return {
         kind: 'dir',
         source: opts.source,
@@ -100,6 +105,10 @@ export async function loadPathAsAttachment(opts: {
       }
     }
 
+    if (isVideoExtension(ext)) {
+      const result=await extractVideoFile(abs,!!opts.mediaCaps?.vision)
+      return {kind:'file',source:opts.source,path:normPath,label:path.basename(abs),body:result.output,omitted:!result.ok,media:result.media}
+    }
     if (isDocumentExtension(ext)) {
       const extracted = await extractDocumentFile(abs, {}, opts.mediaCaps)
       const raw = extracted.ok ? extracted.output : extracted.output
@@ -118,7 +127,10 @@ export async function loadPathAsAttachment(opts: {
       }
     }
 
-    const raw = await fs.readFile(abs, 'utf8')
+    if(st.size>2*1024*1024)return {kind:'file',source:opts.source,path:normPath,label:path.basename(abs),body:`File attached (${st.size} bytes); use read_file or an appropriate tool to process ${normPath}`,omitted:true}
+    const buffer=await fs.readFile(abs)
+    const raw=buffer.toString('utf8')
+    if(buffer.includes(0)||raw.includes('\uFFFD'))return {kind:'file',source:opts.source,path:normPath,label:path.basename(abs),body:`Binary file attached (${st.size} bytes): ${normPath}. Contents have not been parsed; do not infer contents from the filename.`,omitted:false}
     const omitted =
       raw.length > FILE_CHAR_CAP || raw.length > opts.charBudget
     const body = omitted

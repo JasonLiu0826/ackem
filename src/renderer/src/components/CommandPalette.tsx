@@ -29,7 +29,7 @@ export function CommandPalette(): JSX.Element | null {
   const cmds: Cmd[] = useMemo(
     () => [
       { id: 'chat', label: '打开对话', run: () => setTab('chat') },
-      { id: 'code', label: '打开编程', run: () => setTab('code') },
+      { id: 'code', label: '打开工作', run: () => setTab('code') },
       { id: 'memory', label: '打开记忆', run: () => setTab('memory') },
       { id: 'diary', label: '打开日记', run: () => setTab('diary') },
       { id: 'settings', label: '打开设置', run: () => setTab('settings') },
@@ -71,8 +71,14 @@ export function CommandPalette(): JSX.Element | null {
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-[90] flex items-start justify-center bg-black/20 pt-[15vh] backdrop-blur-sm">
-      <div className="glass-panel w-[min(480px,92vw)] rounded-2xl p-2 shadow-glow-lg">
+    <div
+      className="fixed inset-0 z-[90] flex items-start justify-center bg-black/20 pt-[15vh] backdrop-blur-sm"
+      onMouseDown={() => setOpen(false)}
+    >
+      <div
+        className="glass-panel w-[min(480px,92vw)] rounded-2xl p-2 shadow-glow-lg"
+        onMouseDown={(e) => e.stopPropagation()}
+      >
         <input
           autoFocus
           value={q}

@@ -68,7 +68,7 @@ export class TurnBubbleQueue {
   }
 
   private notifyWaiters(): void {
-    if (!this.isAllDisplayed()) return
+    if (!this.aborted && !this.isAllDisplayed()) return
     while (this.waiters.length) {
       this.waiters.shift()?.()
     }

@@ -50,7 +50,7 @@ async function runEnrich(args: DeferredEnrichArgs): Promise<{ tierBBlock: string
   })
 
   let tierBBlock = prepared.retrieval.tierBBlock
-  const wmBlock = workingMemory.buildContextBlock(sessionId)
+  const wmBlock = workingMemory.buildContextBlock(sessionId, dataRoot)
   if (wmBlock && tierBBlock) {
     tierBBlock = [wmBlock, tierBBlock].join('\n\n')
   } else if (wmBlock) {

@@ -32,6 +32,7 @@ import { resolveUserTimezone } from './temporal/timezonePolicy.js'
 import { zonedLocalDate, zonedMonthDay } from './temporal/zonedDate.js'
 import { getDatabase } from '../db/database.js'
 import { loadTombstoneIndex } from './governance/tombstoneIndex.js'
+import { canReadMemoryObject } from './accessScope'
 
 export type RetrievalResult = {
   tierBBlock: string
@@ -92,11 +93,13 @@ export class MemoryRetriever {
     const interactionSurface: InteractionSurface =
       getCurrentInteractionSurface() ??
       (isPrimaryCompanion(agentId) ? 'desktop_main' : 'social_private')
+    const scopeDb = getDatabase(this.factStore.getDataRoot())
     const ownerScoped = filterFactsForRetrieval(this.factStore.listActive(), {
       ownerAgentId: agentId,
       sessionId: sessionId ?? (isPrimaryCompanion(agentId) ? 'default' : `social_${agentId}`),
       interactionSurface,
       adultMode,
+      database: scopeDb ?? undefined,
     })
     const visibleFacts = ownerScoped.filter(
       (f) => adultMode || (f.privacyLevel ?? 'normal') === 'normal'
@@ -110,7 +113,7 @@ export class MemoryRetriever {
       governanceVisible
     )
     const sessionFactIds = new Set(sessionFacts.map((f) => f.id))
-    const inSession = (f: MemoryFact) => sessionFactIds.has(f.id)
+    const inSession = (f: MemoryFact) => sessionFactIds.has(f.id) && (!scopeDb || canReadMemoryObject(scopeDb, 'fact', f.id, f.sourceSessionId))
 
     // 相关性调度：关系阶段缩放预算，信任下降时收紧
     const adjustedBudget = Math.round(budgetChars * hint.stageMultiplier)
@@ -120,11 +123,11 @@ export class MemoryRetriever {
       cap,
       MIN_CONFIDENCE_FOR_INJECTION,
       currentValence,
-      { adultMode }
+      { adultMode, allowedIds: sessionFactIds }
     )
     const selectedInSession = selected.filter(inSession)
 
-    const ftsHits = (SEMANTIC_SEARCH_ENABLED ? this.factStore.searchByFts(query, SEMANTIC_SEARCH_TOP_K) : []).filter(
+    const ftsHits = (SEMANTIC_SEARCH_ENABLED ? this.factStore.searchByFts(query, SEMANTIC_SEARCH_TOP_K, sessionFactIds) : []).filter(
       inSession
     )
 
@@ -146,7 +149,8 @@ export class MemoryRetriever {
         const embeddingResults = await this.vectorStore.searchAsync(
           query,
           EMBEDDING_SEARCH_TOP_K,
-          queryEmbed
+          queryEmbed,
+          sessionFactIds
         )
         embeddingHits = this.vectorStore.resolveFacts(
           embeddingResults.filter(r => r.score >= EMBEDDING_MIN_SCORE),
@@ -161,7 +165,7 @@ export class MemoryRetriever {
     // FIX-013 / FIX-039：shouldShortCircuit 仅影响 TF-IDF vectorHits；关联扩散（第 9 路）与 embedding 不受短路影响
     const vectorHits = !shouldShortCircuit && !embeddingActive && VECTOR_SEARCH_ENABLED && this.vectorStore
       ? this.vectorStore.resolveFacts(
-          this.vectorStore.search(query, VECTOR_SEARCH_TOP_K),
+          this.vectorStore.search(query, VECTOR_SEARCH_TOP_K, sessionFactIds),
           sessionFacts
         )
       : []
@@ -175,12 +179,12 @@ export class MemoryRetriever {
         `【时间回忆线索·${label}】用户可能在回忆与该时段相关的事，优先联想对应记忆。`
       const seenTemporalSemantic = new Set<string>()
       const pushSemantic = (f: MemoryFact) => {
-        if (seenTemporalSemantic.has(f.id) || f.status !== 'active') return
+        if (seenTemporalSemantic.has(f.id) || f.status !== 'active' || !inSession(f)) return
         seenTemporalSemantic.add(f.id)
         temporalSemanticHits.push(f)
       }
       if (SEMANTIC_SEARCH_ENABLED) {
-        for (const f of this.factStore.searchByFts(label, SEMANTIC_SEARCH_TOP_K)) pushSemantic(f)
+        for (const f of this.factStore.searchByFts(label, SEMANTIC_SEARCH_TOP_K, sessionFactIds)) pushSemantic(f)
         for (const f of searchBySemantics(sessionFacts, label, SEMANTIC_SEARCH_TOP_K)) {
           pushSemantic(f)
         }
@@ -192,10 +196,11 @@ export class MemoryRetriever {
             labelResults = await this.vectorStore.searchAsync(
               label,
               EMBEDDING_SEARCH_TOP_K,
-              temporalLabelEmbed
+              temporalLabelEmbed,
+              sessionFactIds
             )
           } else if (this.vectorStore.embedQuery) {
-            labelResults = await this.vectorStore.searchAsync(label, EMBEDDING_SEARCH_TOP_K)
+            labelResults = await this.vectorStore.searchAsync(label, EMBEDDING_SEARCH_TOP_K, undefined, sessionFactIds)
           } else {
             labelResults = []
           }
@@ -258,6 +263,8 @@ export class MemoryRetriever {
     const proactiveRanges = monthDayWindowRanges(nowDate, memoryTimeZone, 7, 7)
     const proactiveRangeSql = proactiveRanges.map(() => 'SUBSTR(anchor_date, 6, 5) BETWEEN ? AND ?').join(' OR ')
     const monthAgo = new Date(nowDate.getTime() - 30 * 86400000).toISOString()
+    const authorizedAnchorSql = `NOT EXISTS (SELECT 1 FROM json_each(linked_fact_ids) linked WHERE linked.value NOT IN (SELECT value FROM json_each(?))) AND json_array_length(linked_fact_ids)>0`
+    const authorizedFactIdsJson = JSON.stringify([...sessionFactIds])
     try {
       const { getDatabase } = await import('../db/database')
       const db = getDatabase(anchorDataRoot)
@@ -266,10 +273,11 @@ export class MemoryRetriever {
           `SELECT linked_fact_ids, emotional_valence, emotional_intensity
            FROM temporal_anchors
            WHERE anchor_type = 'recurring'
+             AND (${authorizedAnchorSql})
              AND (${proactiveRangeSql})
              AND (last_triggered_at IS NULL OR last_triggered_at < ?)
            ORDER BY emotional_intensity DESC LIMIT 3`
-        ).all(...proactiveRanges.flatMap((r) => [r.start, r.end]), monthAgo) as Array<{ linked_fact_ids: string; emotional_valence: number; emotional_intensity: number }>
+        ).all(authorizedFactIdsJson,...proactiveRanges.flatMap((r) => [r.start, r.end]), monthAgo) as Array<{ linked_fact_ids: string; emotional_valence: number; emotional_intensity: number }>
 
         const seenTemporal = new Set(mergedIds)
         for (const anchor of proactiveAnchors) {
@@ -299,10 +307,11 @@ export class MemoryRetriever {
           `SELECT linked_fact_ids, emotional_valence, emotional_intensity, anchor_date
            FROM temporal_anchors
            WHERE anchor_type = 'recurring'
+             AND (${authorizedAnchorSql})
              AND (${recurringRangeSql})
            ORDER BY emotional_intensity DESC
            LIMIT 5`
-        ).all(...recurringRanges.flatMap((r) => [r.start, r.end])) as Array<{ linked_fact_ids: string; emotional_valence: number; emotional_intensity: number; anchor_date: string }>
+        ).all(authorizedFactIdsJson,...recurringRanges.flatMap((r) => [r.start, r.end])) as Array<{ linked_fact_ids: string; emotional_valence: number; emotional_intensity: number; anchor_date: string }>
 
         // 策略 2：模糊时间锚点（最近/那时候）—— 最近 3 个月（本地日历）
         const fuzzyWindow = localDateWindow(now, memoryTimeZone, 90, 0)
@@ -310,10 +319,10 @@ export class MemoryRetriever {
         const fuzzyAnchors = db.prepare(
           `SELECT linked_fact_ids, emotional_valence, emotional_intensity
            FROM temporal_anchors
-           WHERE anchor_type = 'fuzzy' AND anchor_date >= ?
+           WHERE anchor_type = 'fuzzy' AND (${authorizedAnchorSql}) AND anchor_date >= ?
            ORDER BY emotional_intensity DESC
            LIMIT 3`
-        ).all(threeMonthsAgo) as Array<{ linked_fact_ids: string; emotional_valence: number; emotional_intensity: number }>
+        ).all(authorizedFactIdsJson,threeMonthsAgo) as Array<{ linked_fact_ids: string; emotional_valence: number; emotional_intensity: number }>
 
         const anchorRows = [...recurringAnchors, ...fuzzyAnchors]
         const seenTemporal = new Set(mergedIds)
@@ -361,11 +370,11 @@ export class MemoryRetriever {
       for (const seed of seeds) {
         const associations = this.associationIndex.getAssociations(seed.id, 0.3)
         for (const assoc of associations) {
-          activatedIds.add(assoc.id)
           const linkedId = assoc.fact_id_a === seed.id ? assoc.fact_id_b : assoc.fact_id_a
           if (seen.has(linkedId)) continue
           const linked = this.factStore.getById(linkedId)
           if (linked && linked.status === 'active' && linked.sensitivity !== 'avoid' && inSession(linked)) {
+            activatedIds.add(assoc.id)
             seen.add(linked.id)
             associationHits.push(linked)
           }
@@ -418,7 +427,7 @@ export class MemoryRetriever {
 
     // 近因衰减窗口（ms）：近 3 天内更新的记忆视为"近期"
     const RECENT_MS = 3 * 24 * 3600 * 1000
-    const ranked = [...factsForEcho].sort((a, b) => {
+    const ranked = factsForEcho.filter(inSession).sort((a, b) => {
       const ta = triggered.some((t) => t.id === a.id)
       const tb = triggered.some((t) => t.id === b.id)
       const saSem = semanticHits.some((s) => s.id === a.id)
@@ -466,7 +475,7 @@ export class MemoryRetriever {
     let coreBlock = ''
     const coreFacts = (
       sessionId ? filterFactsForSession(this.factStore.getCoreFacts(), sessionId) : this.factStore.getCoreFacts()
-    ).filter(governanceVisible)
+    ).filter(f => governanceVisible(f) && inSession(f))
     if (coreFacts.length > 0 && remaining > 100) {
       const coreBudget = Math.min(CORE_MEMORY_CHAR_BUDGET, Math.floor(remaining * 0.4))
       const coreLines: string[] = []
@@ -518,7 +527,7 @@ export class MemoryRetriever {
     // 4. 知识图谱（低优先级，用剩余空间）
     let kgBlock = ''
     if (this.kg && remaining > 150) {
-      kgBlock = this.kg.buildContextBlock(query)
+      kgBlock = this.kg.buildContextBlock(query, remaining, new Set(sessionFacts.filter(inSession).map(f => f.id)))
       if (tombDb && tomb.facts.size > 0) {
         const blocked: string[] = []
         const stmt = tombDb.prepare(`SELECT summary FROM memory_facts WHERE id = ?`)
@@ -544,7 +553,8 @@ export class MemoryRetriever {
     let episodesUsed = 0
     if (this.episodicStore && remaining > 150) {
       this.episodicStore.load()
-      let episodes = this.episodicStore.retrieve(query).filter((ep) => !tomb.episodes.has(ep.id))
+      const allowedEpisodeIds = new Set(this.episodicStore.listAll().filter(ep => !tomb.episodes.has(ep.id) && !!scopeDb && (!sessionId || ep.sourceSessionId === sessionId.trim()) && canReadMemoryObject(scopeDb,'episode',ep.id,ep.sourceSessionId)).map(ep => ep.id))
+      let episodes = this.episodicStore.retrieve(query,undefined,allowedEpisodeIds).filter((ep) => !tomb.episodes.has(ep.id) && !!scopeDb && canReadMemoryObject(scopeDb, 'episode', ep.id, ep.sourceSessionId))
       if (sessionId) {
         const sid = sessionId.trim() || 'default'
         episodes = episodes.filter((ep) => {

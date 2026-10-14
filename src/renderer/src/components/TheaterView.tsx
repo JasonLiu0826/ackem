@@ -4,6 +4,7 @@ import { applyTheme, toggleTheme, resolveInitialTheme, type ThemeMode } from '..
 import { useAppStore } from '../store/appStore'
 import { useUiStore } from '../store/uiStore'
 import { useChatSend } from '../hooks/useChatSend'
+import { useAsrDraft } from '../hooks/useAsrDraft'
 import { useVoicePipeline } from '../hooks/useVoicePipeline'
 import { loadVoiceSettings, syncVoiceSettingsToMain } from '../lib/voiceSettings'
 import { CompanionAvatar } from './CompanionAvatar'
@@ -12,7 +13,7 @@ import { ParticleFlow } from './ParticleFlow'
 import { SoundWaveOverlay } from './SoundWaveOverlay'
 import { useCompanionAvatar } from '../hooks/useCompanionAvatar'
 import { MarkdownContent } from './MarkdownContent'
-import { SearchPaperCard } from './SearchPaperCard'
+import { LegacyPaperMessage } from './LegacyPaperMessage'
 import { isVisibleSearchRow } from '../lib/chatStreamRows'
 
 /** 剧院光球显示尺寸（与 glowCanvasScale 配合，勿把 canvas 缩到 size 以免整体变小） */
@@ -40,7 +41,19 @@ export function TheaterView(): JSX.Element | null {
   const scrollAreaRef = useRef<HTMLDivElement>(null)
 
   // Voice pipeline
-  const voice = useVoicePipeline()
+  const voice = useVoicePipeline({ surface: 'theater', active: open })
+  const asr = useAsrDraft({
+    enabled: open,
+    getText: () => input,
+    setText: (text) => {
+      setInput(text)
+      setShowInput(true)
+    },
+    onVoiceOnlyFinal: (text) => {
+      void send(text)
+      setInput('')
+    }
+  })
   const voiceSettings = useMemo(() => loadVoiceSettings(), [open])
   const voiceActive =
     voice.state === 'listening' || voice.state === 'speaking' || voice.state === 'thinking'
@@ -146,21 +159,9 @@ export function TheaterView(): JSX.Element | null {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, textOnly])
 
-  // Handle ASR transcript → send or prefill input (dual channel)
   useEffect(() => {
-    const unsub = window.ackem.voice?.onTranscript?.((result) => {
-      const text = result.text.trim()
-      if (!text) return
-      const channel = loadVoiceSettings().inputChannel
-      if (channel === 'dual') {
-        setInput(text)
-        setShowInput(true)
-        return
-      }
-      void send(text)
-    })
-    return unsub
-  }, [send])
+    if (voice.micActive) asr.beginListen()
+  }, [voice.micActive, asr.beginListen])
 
   const streamingAssistantLen = useMemo(() => {
     for (let i = rows.length - 1; i >= 0; i--) {
@@ -241,8 +242,8 @@ export function TheaterView(): JSX.Element | null {
                 if (m.kind === 'search') {
                   if (!isVisibleSearchRow(m)) return null
                   return (
-                    <div key={`theater-search-${i}`} className="theater-paper-card">
-                      <SearchPaperCard {...m} />
+                    <div key={`theater-search-${i}`} className="theater-message">
+                      <LegacyPaperMessage {...m} />
                     </div>
                   )
                 }
@@ -297,7 +298,7 @@ export function TheaterView(): JSX.Element | null {
                 <input
                   {...bindComposerInput({
                     value: input,
-                    onChange: (e) => setInput(e.target.value),
+                    onChange: (e) => asr.onUserType(e.target.value),
                     onKeyDown: (e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault()
@@ -309,7 +310,7 @@ export function TheaterView(): JSX.Element | null {
                       }
                     }
                   })}
-                  placeholder="说点什么…"
+                  placeholder={asr.recognizing ? '识别中…' : '说点什么…'}
                   className="flex-1 border-0 bg-transparent px-3 py-2 text-sm outline-none"
                   autoFocus
                 />

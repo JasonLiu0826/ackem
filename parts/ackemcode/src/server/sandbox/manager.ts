@@ -10,6 +10,7 @@ import {
   windowsInstallInstructions
 } from '@anthropic-ai/sandbox-runtime'
 import type { PermissionRulesConfig } from '../agent/permissionRules.js'
+import {isFullMachineAccess} from '../hostTaskFence.js'
 import { buildSandboxRuntimeConfig } from './config.js'
 import {
   shouldUseSandbox,
@@ -207,6 +208,8 @@ export async function prepareSandboxedSpawn(opts: {
   dangerouslyDisableSandbox?: boolean
   signal?: AbortSignal
 }): Promise<SandboxSpawnPlan> {
+  // Full machine access is a live host policy, not a model-requested sandbox escape.
+  if(isFullMachineAccess())return unsandboxedPlan(opts)
   const input: SandboxToolInput = {
     command: opts.command,
     dangerouslyDisableSandbox: opts.dangerouslyDisableSandbox

@@ -1,3 +1,4 @@
+import { isHostInspection } from '../hostTaskFence.js'
 /**
  * Run matched hooks for an event — Claude Code executeHooks spirit.
  */
@@ -28,6 +29,7 @@ const TOOL_EVENTS = new Set<HookEventName>([
 ])
 
 export function isHooksDisabled(settingsDisabled?: boolean): boolean {
+  if (isHostInspection()) return true
   if (settingsDisabled === true) return true
   if (process.env.ACKEM_DISABLE_ALL_HOOKS === '1') return true
   if (process.env.CLAUDE_CODE_SIMPLE === '1') return true
@@ -100,7 +102,7 @@ export async function runHooks(opts: {
   /** settings.disableAllHooks */
   disabled?: boolean
 }): Promise<AggregatedHookResult> {
-  if (isHooksDisabled(opts.disabled) || !opts.config) return emptyResult()
+  if (isHostInspection('session_id' in opts.input ? String(opts.input.session_id) : undefined) || isHooksDisabled(opts.disabled) || !opts.config) return emptyResult()
 
   const groups = opts.config[opts.event]
   const matchQuery =

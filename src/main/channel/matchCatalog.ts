@@ -5,7 +5,7 @@ import { invocationPatternsFor } from './invocationPatterns'
 import { matchUserInvocationForDataRoot } from '../route/userInvocations.js'
 
 export type CatalogMatch =
-  | { level: 'high'; extensionId: string; reason: 'slash' | 'exact_name' | 'exact_alias' | 'invocation' }
+  | { level: 'high'; extensionId: string; reason: 'slash' | 'exact_name' | 'exact_alias' | 'invocation' | 'semantic' }
   | { level: 'medium'; extensionIds: string[]; reason: 'capability_tag' | 'family' }
   | { level: 'none' }
 

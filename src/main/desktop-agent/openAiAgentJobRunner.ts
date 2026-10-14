@@ -350,7 +350,7 @@ export async function runOpenAiDesktopAgentJob(opts: {
   const followUpMaxTokens = Math.max(INVESTIGATION_SYNTHESIZE_MIN_TOKENS, 1800)
 
   if (webSearchCompanionReply) {
-    assistantAcc = finalizePaperCardCompanionReply(webSearchCompanionReply)
+    assistantAcc = webSearchCompanionReply.trim()
   } else if (canDeliverTaskPlan && otherToolResults.length > 0) {
     sendJobStatus(webContents, chatSessionId, taskFrameFollowUpActivityLabel(userTaskFrame) ?? '整理结果…')
     const taskPlanHonesty =

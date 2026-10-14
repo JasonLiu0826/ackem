@@ -1,7 +1,8 @@
 import type { AgentEvent, HostTurnReceipt } from '../shared/types.js'
+import { parseHostTask } from './hostTaskFence.js'
 
 export type HostTurnSignal =
-  | { kind: 'start'; hostRunId: string; at: string }
+  | { kind: 'start'; hostRunId: string; at: string; hostTask?: HostTurnReceipt['hostTask'] }
   | { kind: 'permission_wait'; at: string }
   | { kind: 'resume'; at: string }
   | { kind: 'succeeded'; at: string }
@@ -32,6 +33,11 @@ export function parseHostTurnReceipt(raw: unknown): HostTurnReceipt | undefined 
   }
   if (typeof o.completedAt === 'string' && o.completedAt) receipt.completedAt = o.completedAt
   if (typeof o.errorCode === 'string' && o.errorCode) receipt.errorCode = o.errorCode
+  if (o.hostTask !== undefined) {
+    const task = parseHostTask(o.hostTask)
+    if (!task) return undefined
+    receipt.hostTask = { taskId: task.taskId, goalRevision: task.goalRevision, controlEpoch: task.controlEpoch, fencingToken: task.fencingToken }
+  }
   return receipt
 }
 
@@ -93,13 +99,14 @@ export async function beginHostTurn(
   previous: HostTurnReceipt | undefined,
   hostRunId: string,
   at: string,
-  write: (receipt: HostTurnReceipt) => Promise<void>
+  write: (receipt: HostTurnReceipt) => Promise<void>,
+  hostTask?: HostTurnReceipt['hostTask']
 ): Promise<BeginHostTurnResult> {
   const id = hostRunId.trim()
   if (isSameHostRun(previous, id)) {
     return { receipt: previous, proceed: false, reason: 'duplicate' }
   }
-  const next = applyHostTurnSignal(previous, { kind: 'start', hostRunId: id, at })
+  const next = applyHostTurnSignal(previous, { kind: 'start', hostRunId: id, at, hostTask })
   const committed = await commitDurableReceipt(previous, next, write)
   const started = committed.trusted?.hostRunId === id && committed.trusted.state === 'running'
   return {
@@ -147,6 +154,7 @@ export function applyHostTurnSignal(
     if (!hostRunId) return current
     if (current?.hostRunId === hostRunId) return current
     return {
+      ...(signal.hostTask ? { hostTask: { ...signal.hostTask } } : {}),
       hostRunId,
       state: 'running',
       revision: 1,

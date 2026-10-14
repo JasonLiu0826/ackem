@@ -1,3 +1,4 @@
+import { assertHostToolAllowed, awaitHostTaskReady, consumeHostModelBudget } from '../hostTaskFence.js'
 import { nanoid } from 'nanoid'
 import type {
   AckemTask,
@@ -28,7 +29,6 @@ import {
   type PermissionRulesConfig
 } from './permissionRules.js'
 import {
-  coercePermissionModeUnderPolicy,
   resolveEffectivePermissionRules
 } from './permissionsLoader.js'
 import { initializeSandbox } from '../sandbox/index.js'
@@ -497,7 +497,7 @@ async function prepareCall(
       argumentsJson = JSON.stringify(parsedInput)
     }
     preDecision = pre.permissionDecision
-    if (pre.blocking || pre.permissionDecision === 'deny') {
+    if (mode !== 'bypassPermissions' && (pre.blocking || pre.permissionDecision === 'deny')) {
       const msg =
         pre.blockMessage ||
         pre.permissionDecisionReason ||
@@ -598,10 +598,10 @@ async function prepareCall(
   }
 
   let needAsk = verdict.behavior === 'ask'
-  if (preDecision === 'allow' && needAsk) {
+  if (preDecision === 'allow' && needAsk && mode !== 'default' && mode !== 'sessionType') {
     needAsk = false
   }
-  if (preDecision === 'ask') {
+  if (preDecision === 'ask' && mode !== 'bypassPermissions') {
     needAsk = true
   }
 
@@ -649,8 +649,8 @@ async function prepareCall(
         }
       }
       if (
-        pr.permissionAuto?.behavior === 'allow' ||
-        pr.permissionDecision === 'allow'
+        (pr.permissionAuto?.behavior === 'allow' && mode !== 'default' && mode !== 'sessionType') ||
+        (pr.permissionDecision === 'allow' && mode !== 'default' && mode !== 'sessionType')
       ) {
         if (
           pr.permissionAuto?.behavior === 'allow' &&
@@ -674,7 +674,7 @@ async function prepareCall(
     }
   }
 
-  if (needAsk && opts.permissions.sessionAllowsToolClass(name)) {
+  if (needAsk && mode !== 'default' && opts.permissions.sessionAllowsToolClass(name)) {
     needAsk = false
   }
 
@@ -697,6 +697,7 @@ async function prepareCall(
     })
     opts.emit({ type: 'session_state', state: 'running' })
     if (payload.decision === 'deny') {
+      if(payload.timedOut)opts.emit({type:'status',code:'permission_timeout',requestId,message:'审批等待已超时，任务已停止；当前操作未执行，可重新发送要求继续。'})
       const msg = payload.message?.trim()
         ? `User denied this tool call: ${payload.message.trim()}`
         : 'User denied this tool call.'
@@ -712,7 +713,7 @@ async function prepareCall(
         early: { ok: false, output: msg }
       }
     }
-    if (payload.decision === 'allow_session') {
+    if (payload.decision === 'allow_session' || mode === 'sessionType') {
       opts.permissions.rememberSession(name)
     } else if (payload.decision === 'allow_always') {
       opts.permissions.rememberSession('*')
@@ -725,6 +726,9 @@ async function prepareCall(
     )
   }
 
+  if (mode === 'sessionType') {
+    grantWorkingDirectoryForToolPath(name, parsedInput, opts.cwd, opts.permissions)
+  }
   return { call, name, parsedInput, argumentsJson }
 }
 
@@ -894,21 +898,6 @@ export async function runAgentTurn(opts: {
           message: 'permissions: managed-only (policy rules exclusive)'
         })
       }
-      if (
-        eff.policy.disableBypassPermissionsMode &&
-        getMode() === 'bypassPermissions'
-      ) {
-        const next = coercePermissionModeUnderPolicy(
-          getMode(),
-          eff.policy
-        ) as PermissionMode
-        setMode(next)
-        emit({
-          type: 'status',
-          message:
-            'permissions: bypassPermissions disabled by managed policy → default'
-        })
-      }
       if (eff.strippedApplied && eff.stripped.length) {
         emit({
           type: 'status',
@@ -1037,6 +1026,7 @@ export async function runAgentTurn(opts: {
       hostAttachments: opts.hostAttachments,
       mediaCaps
     })
+    if(opts.hostAttachments?.length)opts.emit({type:'attachments_loaded',items:atts.map(a=>({path:a.path,kind:a.kind,omitted:a.omitted,body:a.body.slice(0,3000),mediaCount:a.media?.length??0}))})
     const msg = attachmentsToUserMessage(atts, {
       detail: mediaCaps.imageDetail,
       nativePdf: mediaCaps.nativePdf
@@ -1274,11 +1264,13 @@ export async function runAgentTurn(opts: {
     return true
   }
 
-  const startedAt = Date.now()
-  const elapsed = () => Math.max(1, Math.round((Date.now() - startedAt) / 1000))
+  let thinkingMs=0,thinkingStarted:number|undefined,thinkingTimer:ReturnType<typeof setInterval>|undefined
+  const elapsed=()=>Math.round((thinkingMs+(thinkingStarted===undefined?0:Date.now()-thinkingStarted))/1000)
+  const endThinking=()=>{if(thinkingStarted===undefined)return;thinkingMs+=Date.now()-thinkingStarted;thinkingStarted=undefined;clearInterval(thinkingTimer);emit({type:'thinking',phase:'end',elapsedSec:elapsed()})}
+  const beginThinking=()=>{endThinking();thinkingStarted=Date.now();emit({type:'thinking',phase:'start',elapsedSec:elapsed()});thinkingTimer=setInterval(()=>emit({type:'thinking',phase:'update',elapsedSec:elapsed()}),1000);thinkingTimer.unref()}
 
   emit({ type: 'session_state', state: 'running' })
-  emit({ type: 'thinking', phase: 'start', text: '理解任务并规划下一步…', elapsedSec: 0 })
+  emit({ type: 'status', message: '正在准备任务…' })
   emit({ type: 'status', message: 'thinking…' })
 
   // S06: checkpoint per user turn (CC fileHistoryMakeSnapshot before tools)
@@ -1676,7 +1668,7 @@ export async function runAgentTurn(opts: {
           type: 'error',
           message: `Session token budget exceeded (~${estimateMessagesTokens(messages)} ≥ ${maxBudgetTokens})`
         })
-        emit({ type: 'thinking', phase: 'end', elapsedSec: elapsed() })
+        endThinking()
         emit({ type: 'session_state', state: 'idle' })
         sweepOrphanedPermissions()
         memoryPrefetch?.abort()
@@ -1690,12 +1682,7 @@ export async function runAgentTurn(opts: {
       })
       await injectMemoryPrefetchIfReady()
 
-      emit({
-        type: 'thinking',
-        phase: 'update',
-        text: turns === 1 ? '正在调用模型…' : `继续执行（第 ${turns} 轮）…`,
-        elapsedSec: elapsed()
-      })
+      beginThinking()
 
       const agentTier = normalizeAgentTier(settings.agentTier)
       const allTools = filterToolsForAgentTier(
@@ -1713,6 +1700,7 @@ export async function runAgentTurn(opts: {
       }
 
       const runOneFull = async (call: ToolCall, toolSignal?: AbortSignal) => {
+        await awaitHostTaskReady(call.function.name, toolSignal ?? signal)
         const effectiveSignal = toolSignal ?? signal
         const prepared = await prepareCall(call, {
           getMode,
@@ -1929,6 +1917,7 @@ export async function runAgentTurn(opts: {
       let streamContent = ''
 
       tokenUsage.emit({ messages, tools: toolsForModel, force: true })
+      consumeHostModelBudget(Math.ceil(JSON.stringify({messages,tools:toolsForModel}).length/3))
 
       try {
         if (useStreaming) {
@@ -1952,6 +1941,7 @@ export async function runAgentTurn(opts: {
             multimodal: settings.multimodal,
             handlers: {
               onContentDelta: (text) => {
+                endThinking()
                 streamContent += text
                 emit({ type: 'assistant_delta', text })
                 tokenUsage.emit({
@@ -1961,6 +1951,7 @@ export async function runAgentTurn(opts: {
                 })
               },
               onToolCallReady: ({ call }) => {
+                endThinking()
                 // Start tools mid-stream (CC content_block_stop spirit).
                 // Do NOT push tool_results into messages until assistant is appended.
                 streamStartedTools += 1
@@ -2069,6 +2060,7 @@ export async function runAgentTurn(opts: {
         }
       }
 
+      endThinking()
       // Ensure assistant is defined (TypeScript)
       assistant = assistant!
 
@@ -2091,6 +2083,7 @@ export async function runAgentTurn(opts: {
         if (text && !useStreaming) {
           emit({ type: 'assistant_delta', text })
         }
+        if(text)emit({type:'assistant_message',text,final:false})
 
         try {
           if (streamingExecutor && streamStartedTools > 0) {
@@ -2171,7 +2164,7 @@ export async function runAgentTurn(opts: {
               }
             }
             fillMissingToolResults(messages, calls, emit, ABORT_TOOL_RESULT)
-            emit({ type: 'thinking', phase: 'end', elapsedSec: elapsed() })
+            endThinking()
             emit({ type: 'session_state', state: 'idle' })
             emit({
               type: 'done',
@@ -2259,7 +2252,7 @@ export async function runAgentTurn(opts: {
 
       // R1: output-token truncation recovery (finish_reason === 'length', no tools).
       if (isOutputTruncated(assistant)) {
-        if (text) emit({ type: 'assistant_message', text, final: false })
+        if (text) emit({ type: 'assistant_message', text, final: false, incomplete:true })
         if (!lengthRecoveryUsed) {
           lengthRecoveryUsed = true
           messages.push({
@@ -2274,7 +2267,7 @@ export async function runAgentTurn(opts: {
           turns -= 1
           continue
         }
-        emit({ type: 'thinking', phase: 'end', elapsedSec: elapsed() })
+        endThinking()
         emit({ type: 'session_state', state: 'idle' })
         const outTrunc = messages.filter((m) => m.role !== 'system')
         await runExtractMemories(outTrunc)
@@ -2362,7 +2355,7 @@ export async function runAgentTurn(opts: {
             type: 'error',
             message: `Stop hook still blocking after ${MAX_STOP_HOOK_CONTINUES} continuations — forcing turn close`
           })
-          emit({ type: 'thinking', phase: 'end', elapsedSec: elapsed() })
+          endThinking()
           emit({ type: 'session_state', state: 'idle' })
           sweepOrphanedPermissions()
           memoryPrefetch?.abort()
@@ -2384,12 +2377,14 @@ export async function runAgentTurn(opts: {
 
       memoryPrefetch?.abort()
       sweepOrphanedPermissions()
-      emit({ type: 'thinking', phase: 'end', elapsedSec: elapsed() })
+      endThinking()
       emit({ type: 'session_state', state: 'idle' })
       const outOk = messages.filter((m) => m.role !== 'system')
       // R4: persist final session summary so resume sees the end state
       void updateSessionMemory(sessMem, messages, turns)
       await runExtractMemories(outOk)
+      // Async completion work cannot turn a superseded host fence into success.
+      assertHostToolAllowed()
       emitDueCron(getCron, emit, messageQueue)
       emit({ type: 'done', ok: true })
       return outOk
@@ -2401,7 +2396,7 @@ export async function runAgentTurn(opts: {
         ? `${configuredMaxTurns} + browser→${turnCap}`
         : String(configuredMaxTurns)
     emit({ type: 'error', message: `Reached maxTurns (${capLabel})` })
-    emit({ type: 'thinking', phase: 'end', elapsedSec: elapsed() })
+    endThinking()
     emit({ type: 'session_state', state: 'idle' })
     sweepOrphanedPermissions()
     emitDueCron(getCron, emit, messageQueue)
@@ -2417,7 +2412,7 @@ export async function runAgentTurn(opts: {
     const pendingCalls = lastAsst?.tool_calls
     if ((msg === 'aborted' || signal?.aborted) && pendingCalls?.length) {
       fillMissingToolResults(messages, pendingCalls, emit, ABORT_TOOL_RESULT)
-      emit({ type: 'thinking', phase: 'end', elapsedSec: elapsed() })
+      endThinking()
       const deferDone = hasQueuedFollowUp()
       if (!deferDone) {
         emit({ type: 'session_state', state: 'idle' })
@@ -2435,7 +2430,7 @@ export async function runAgentTurn(opts: {
       return messages.filter((m) => m.role !== 'system')
     }
     if (msg === 'aborted' || signal?.aborted) {
-      emit({ type: 'thinking', phase: 'end', elapsedSec: elapsed() })
+      endThinking()
       const deferDone = hasQueuedFollowUp()
       if (!deferDone) {
         emit({ type: 'session_state', state: 'idle' })
@@ -2450,7 +2445,7 @@ export async function runAgentTurn(opts: {
     }
     if (isPromptTooLongError(msg) || /prompt.?too.?long/i.test(msg)) {
       emit({ type: 'error', message: msg })
-      emit({ type: 'thinking', phase: 'end', elapsedSec: elapsed() })
+      endThinking()
       emit({ type: 'session_state', state: 'idle' })
       emit({ type: 'done', ok: false, error: TURN_DONE_ERRORS.promptTooLong })
       return messages.filter((m) => m.role !== 'system')
@@ -2458,7 +2453,7 @@ export async function runAgentTurn(opts: {
     // R1: LLM API retries (+ optional fallback model) all exhausted.
     if (e instanceof LlmRetryExhaustedError) {
       emit({ type: 'error', message: msg })
-      emit({ type: 'thinking', phase: 'end', elapsedSec: elapsed() })
+      endThinking()
       emit({ type: 'session_state', state: 'idle' })
       emit({ type: 'done', ok: false, error: TURN_DONE_ERRORS.apiRetryExhausted })
       return messages.filter((m) => m.role !== 'system')
@@ -2484,7 +2479,7 @@ export async function runAgentTurn(opts: {
     }
     const shown = formatTurnError(msg)
     emit({ type: 'error', message: shown })
-    emit({ type: 'thinking', phase: 'end', elapsedSec: elapsed() })
+    endThinking()
     emit({ type: 'session_state', state: 'idle' })
     emit({ type: 'done', ok: false, error: shown })
     return messages.filter((m) => m.role !== 'system')

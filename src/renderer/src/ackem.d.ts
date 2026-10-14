@@ -215,6 +215,17 @@ export type BuildContextResult = {
     cwd?: string
     candidates?: Array<{ id: string; name: string }>
   }
+  /** 自主派工 (2026-10-04): work 任务已进工作台固定 Ackem 任务, 聊天只回 ack。 */
+  channelDispatch?: {
+    taskId: string
+    turnId: string
+    cwd: string
+    sessionId: string
+    queued: boolean
+    runId: string
+  }
+  /** 与主进程落账一致的固定 ack 文本。 */
+  assistantAck?: string
   /** L0.5 知识整理主题（触发纸面卡，不联网） */
   knowledgeTopic?: string
   /** @deprecated 同 knowledgeTopic */
@@ -340,6 +351,19 @@ export type CreatorMemoryUiBundle = {
 }
 
 export type AckemApi = {
+  webSearch: {
+    status: () => Promise<import('../../shared/webSearch').WebSearchStatus>
+    pending: () => Promise<import('../../shared/webSearch').WebSearchSetupRequest[]>
+    configure: (input: import('../../shared/webSearch').WebSearchConfiguration) => Promise<import('../../shared/webSearch').WebSearchStatus>
+    cancel: (requestId: string) => Promise<{ ok: boolean }>
+    onSetup: (fn: (input: import('../../shared/webSearch').WebSearchSetupRequest) => void) => () => void
+  }
+
+  getAppVersion: () => Promise<string>
+  checkUpdate: () => Promise<import('../../shared/updateTypes').UpdateCheckResult>
+  startUpdate: (request: import('../../shared/updateTypes').UpdateStartRequest) => Promise<{ ok: true; jobPath: string } | { ok: false; reason: string }>
+  getUpdateChannelPreference: () => Promise<import('../../shared/updateTypes').UpdateChannel>
+  setUpdateChannelPreference: (channel: import('../../shared/updateTypes').UpdateChannel) => Promise<import('../../shared/updateTypes').UpdateChannel>
   i18n: {
     t: (key: string, params?: Record<string, string | number>) => Promise<string>
     getLocale: () => Promise<string>
@@ -353,7 +377,16 @@ export type AckemApi = {
   getDataRoot: () => Promise<{ path: string; relativePath: string; mode: string; databasePath: string }>
   ensureLayout: () => Promise<{ path: string }>
   openDataFolder: () => Promise<void>
+  selectChatAttachments: (kind?: 'image'|'file'|'video') => Promise<import('../../shared/chatAttachments').ChatAttachment[]>
+  captureChatAttachments: (entries:Array<{path?:string;name?:string;bytes?:ArrayBuffer}>) => Promise<import('../../shared/chatAttachments').ChatAttachment[]>
+  selectChatImages: () => Promise<import('../../shared/chatImages').ChatImage[]>
   selectFiles: () => Promise<{ paths: string[] }>
+  defaultCwd: () => Promise<string>
+  revealPath: (path: string) => Promise<{ ok: boolean; path?: string }>
+  previewChatFile: (path: string) => Promise<import('../../main/chat/filePreview').FilePreviewResult>
+  getBootSteps: () => Promise<{ steps: Array<{ label: string; done: boolean }>; allReady: boolean }>
+  onBootStep: (fn: (payload: { steps: Array<{ label: string; done: boolean }>; allReady: boolean }) => void) => () => void
+  selectFolder: () => Promise<{ path: string }>
   getPathForFile: (file: File) => string
   importFiles: (paths: string[]) => Promise<{ copied: string[]; errors: string[] }>
   promoteImport: (rel: string) => Promise<{ ok: boolean; to?: string; error?: string }>
@@ -375,6 +408,8 @@ export type AckemApi = {
   >
   buildContext: (args: {
     userText: string
+    filePaths?: string[]
+    imagePaths?: string[]
     explicitRel?: string
     recentMessages: { role: 'user' | 'assistant'; content: string }[]
     sessionId?: string
@@ -392,13 +427,86 @@ export type AckemApi = {
   codePart: {
     ensure: () => Promise<{ ok: boolean; reason?: string }>
   }
+  tasks: {
+    runQueuedNow: (taskId:string)=>Promise<{ok:boolean}>
+    submit(request: import('../../shared/tasks').TaskSubmitRequest): Promise<import('../../shared/tasks').TaskSubmitResult>
+    cancel(requestId:string): Promise<import('../../shared/tasks').TaskSubmitResult>
+    stop(taskId: string): Promise<import('../../shared/tasks').TaskSnapshot>
+    remove(taskId: string): Promise<{ok:boolean;missing?:boolean}>
+    clearManaged(projectionIds?:string[]):Promise<{ok:true;taskIds:string[];staleTaskIds?:string[]}>
+    list(): Promise<import('../../shared/tasks').TaskSnapshot[]>
+    snapshot(taskId: string): Promise<import('../../shared/tasks').TaskSnapshot | null>
+    grantGoal(input:import('../../shared/longTerm').GoalGrantInput):Promise<import('../../shared/longTerm').Goal>
+    revokeGoal(id:string):Promise<void>
+    changeGoalState(input:{id:string;state:'paused'|'active'|'cancelled'|'abandoned'}):Promise<import('../../shared/longTerm').Goal>
+    goals():Promise<import('../../shared/longTerm').Goal[]>
+    decisions(id:string):Promise<import('../../shared/longTerm').DecisionRecord[]>
+    correctDecision(input:{id:string;basis:string}):Promise<import('../../shared/longTerm').DecisionRecord>
+    grantRule(input:import('../../shared/longTerm').RuleGrantInput):Promise<import('../../shared/longTerm').StandingRule>
+    revokeRule(id:string):Promise<void>
+    rules():Promise<import('../../shared/longTerm').StandingRule[]>
+    worldState(ids:string[]):Promise<{tasks:import('../../shared/tasks').TaskSnapshot[];observations:import('../../shared/longTerm').Observation[]}>
+    onEvent(callback: (event: import('../../shared/tasks').TaskEvent) => void): () => void
+  }
+  workbench: {
+    environment: () => Promise<{kernelHealth:'connected'|'disconnected'|'unknown'}>
+    openDefaultDirectory: () => Promise<{ok:boolean}>
+    modelInfo: (sessionId?: string) => Promise<{ model: string; effort: import('./store/workbenchStore').EffortLevel; effortLevels: import('./store/workbenchStore').EffortLevel[] }>
+    supervisionList: () => Promise<import('../../shared/workSupervision').SupervisedTask[]>
+    supervisionAnswer: (input:{taskId:string;requestId:string;answers:Record<string,string>}) => Promise<{ok:boolean}>
+    supervisionApproval: (input:{taskId:string;requestId:string;allow:boolean}) => Promise<{ok:boolean}>
+    supervisionControl: (input:{sessionId:string;resume?:boolean}) => Promise<{ok:boolean}>
+    onTaskApproval: (fn:(approval:import('../../shared/workSupervision').TaskApproval)=>void) => (()=>void)
+    loadCatalog: () => Promise<unknown>
+    saveCatalog: (catalog: unknown) => Promise<{ ok: boolean }>
+    open: (input: { cwd?: string; sessionId?: string }) => Promise<{ cwd: string; sessionId: string; mode?: string;permissionMode?:string;policyRevision?:number; hostTurnReceipt?: { state: string } }>
+    snapshot: (sessionId: string) => Promise<{ missing?:boolean;executionQuiescent?:boolean;hostTask?:unknown; supervisionState?: import('../../shared/workSupervision').SupervisedTask['state']; sessionId: string; mode?: string;permissionMode?:string;policyRevision?:number;standaloneReceipt?:{requestId:string;state:string}; hostTurnReceipt?: { hostRunId: string; state: string }; history?: Array<{ role?: string; content?: unknown }> }>
+    queue: (sessionId: string) => Promise<{ items: Array<{ id: string; text: string }> }>
+    removeQueued: (input: { sessionId: string; itemId: string }) => Promise<{ ok: boolean }>
+    send: (input: import('../../shared/tasks').StandaloneWorkInput) => Promise<{requestId:string;sessionId?:string;cancelled?:boolean;queued?:boolean}>
+    inputQueue: (taskId:string)=>Promise<{items:Array<{id:string;text:string}>}>
+    promoteInput: (requestId:string)=>Promise<{ok:boolean}>
+    cancelTaskQueue: (taskId:string)=>Promise<{ok:boolean}>
+    cancelInput: (requestId:string)=>Promise<{ok:boolean}>
+    enqueue: (input: { sessionId: string; text: string }) => Promise<{ ok: boolean; queued: boolean; id?: string; queueLength?: number }>
+    permission: (input: { sessionId: string; requestId: string; decision: 'allow' | 'deny'; toolName?: string }) => Promise<{ ok: boolean }>
+    planDecision: (input: { sessionId: string; requestId: string; decision: 'approve' | 'reject' }) => Promise<{ ok: boolean }>
+    answer: (input: { sessionId: string; requestId: string; answers: Record<string, string>; cancelled?: boolean }) => Promise<{ ok: boolean }>
+    abort: (sessionId: string) => Promise<unknown>
+    mode: (input: { sessionId: string; mode: 'default' | 'acceptEdits' | 'bypassPermissions';mutationId?:string;expectedPolicyRevision?:number }) => Promise<{ ok: boolean; mode: string;permissionMode?:string;policyRevision?:number;mutationId?:string }>
+    readFile: (input: { cwd: string; path: string }) => Promise<string>
+    createFile: (input: { cwd: string; name: string }) => Promise<string>
+    terminal: (input: { cwd: string; command: string }) => Promise<{ stdout: string; stderr: string }>
+    cliLaunch: (input: import('../../shared/terminal').CliLaunchInput) => Promise<import('../../shared/terminal').ExternalCliSnapshot>
+    cliOpen: (input: import('../../shared/terminal').CliOpenInput) => Promise<import('../../shared/terminal').CliTerminalSnapshot>
+    cliInput: (input: {terminalId:string;data:string}) => Promise<void>
+    cliResize: (input: {terminalId:string;cols:number;rows:number}) => Promise<void>
+    cliClose: (terminalId:string) => Promise<{ok:boolean}>
+    cliCloseTask: (taskId:string) => Promise<{ok:boolean}>
+    onCliData: (callback:(event:import('../../shared/terminal').CliTerminalEvent)=>void) => ()=>void
+    /** 持续终端: 同 cwd 复用常驻 PowerShell, cd/环境变量跨命令保留。 */
+    terminalExec: (input: { cwd: string; command: string }) => Promise<{ output: string }>
+    terminalDispose: (cwd: string) => Promise<{ ok: boolean }>
+    /** 内核文件历史快照 (准确单轮变更的权威来源)。 */
+    fileHistory: (sessionId: string) => Promise<{ snapshots: unknown; latestMessageId: string | null }>
+    /** 回滚 (dryRun=true 时只返回将回滚的文件清单, 不动磁盘)。 */
+    rewind: (input: { sessionId: string; messageId?: string; dryRun: boolean }) => Promise<{ ok: boolean; filesChanged?: string[]; messageId?: string }>
+    /** 编辑上一轮并重跑: 内核先回滚该轮文件再以新文本重跑 (SSE 事件走 onEvent)。 */
+    rerunLast: (input: { taskId: string; turnId: string; sessionId: string; text: string; cwd: string; attachments?: Array<{kind: 'doc'|'folder'|'image'|'video';path:string;name:string}> }) => Promise<{ runId: string }>
+    onEvent: (cb: (payload: { taskId: string; turnId: string; event: unknown; goalRevision?:number; controlEpoch?:number }) => void) => () => void
+  }
   readRel: (rel: string, maxBytes?: number) => Promise<{ ok: boolean; text?: string; error?: string }>
   writeAllowed: (
     rel: string,
     content: string,
     mode: 'append' | 'overwrite'
   ) => Promise<{ ok: true } | { ok: false; error: string }>
+  stopChat: () => Promise<{ stopped: boolean }>
   startChat: (payload: {
+    filePaths?: string[]
+    imagePaths?: string[]
+    imageHistory?: Array<{text:string;paths:string[]}>
+    fileHistory?: Array<{text:string;paths:string[]}>
     messages: unknown[]
     settings: AppSettings
     turnId?: string
@@ -965,12 +1073,17 @@ export type AckemApi = {
   onDiaryAutoGenerated: (fn: (payload: { date: string; type: string }) => void) => void
   onChatChunk: (fn: (s: string) => void) => void
   onChatReasoning: (fn: (s: string) => void) => void
+  touchChatActivity?: () => Promise<unknown>
+  onTaskReplyProgress?: (fn: (event: { sessionId: string; runId: string; text: string; at: number }) => void) => () => void
+  onReplyEvent?: (fn: (event: import('../../shared/response').ReplyEvent) => void) => () => void
+  onChatDelivery?: (fn: (event: { sessionId: string; row: unknown }) => void) => () => void
   onChatStreamStart: (fn: () => void) => void
   onChatDone: (
     fn: (meta?: {
       memoryWrites?: string[]
       assistantText?: string
       turnId?: string
+      sessionId?: string
       stateDelta?: { turnId?: string; bubbles: Array<{ key: string; label: string; delta: number; reason: string }> }
     }) => void
   ) => void
@@ -1001,6 +1114,7 @@ export type AckemApi = {
     applySettings: (patch: Record<string, unknown>) => Promise<{ ok: boolean }>
     restartService: () => Promise<{ ok: boolean }>
     setPttActive: (active: boolean) => Promise<{ ok: boolean }>
+    freshUtterance: () => Promise<{ ok: boolean }>
     checkEnvironment: () => Promise<VoiceEnvReport>
     installEnvironment: () => Promise<{ ok: boolean; error?: string }>
     setTheaterSession: (active: boolean) => Promise<{ ok: boolean }>
@@ -1012,13 +1126,27 @@ export type AckemApi = {
       gpu_available: boolean
       gpu_name: string
       port: number
+      asr_engine?: 'sherpa-onnx' | 'python'
+      workerStatus?: string
       piper_voices?: Array<{ id: string; label: string; language: string }>
       gpt_sovits_voices?: Array<{ id: string; label: string; language: string }>
     } | null>
     onTtsAudio: (fn: (audio: ArrayBuffer) => void) => () => void
     onTtsSpeakText: (fn: (payload: { text: string }) => void) => () => void
     onTtsSpeakCancel: (fn: () => void) => () => void
-    onTranscript: (fn: (result: { text: string; confidence: number }) => void) => () => void
+    onTranscript: (fn: (result: {
+      text: string
+      confidence: number
+      sessionId?: number
+      sequence?: number
+    }) => void) => () => void
+    onTranscriptPartial: (fn: (result: {
+      text: string
+      sessionId: number
+      sequence: number
+      stable: boolean
+    }) => void) => () => void
+    onAsrError: (fn: (result: { message: string }) => void) => () => void
     onStateChange: (fn: (state: string) => void) => () => void
     onListening: (fn: (active: boolean) => void) => () => void
     onThinking: (fn: (active: boolean) => void) => () => void
@@ -1115,21 +1243,12 @@ export type AckemApi = {
 
 export type VoiceEnvReport = {
   ready: boolean
-  python: {
-    ok: boolean
-    source: 'bundled' | 'system' | 'missing'
-    path?: string
-    version?: string
-    message: string
-  }
-  scriptOk: boolean
-  scriptPath: string
-  dependenciesOk: boolean
-  missingDependencies: string[]
-  serviceRunning: boolean
   canAutoInstall: boolean
   summary: string
   detail: string
+  sherpaReady: boolean
+  sherpaModelId: string | null
+  sherpaMessage: string
 }
 
 declare global {

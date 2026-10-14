@@ -46,10 +46,10 @@ export function tryCreateEpisodeFromWorkTerminal(input: WorkTerminalEpisodeInput
   workEpisodeFaultHookForTests?.('before_insert')
   const ep = buildEpisodeRecord(
     {
-      summary: input.runSummary.slice(0, 480) || '用户完成一项可信工作任务',
+      summary: `[执行成功] ${input.runSummary.slice(0, 460) || '一次工作执行已返回可信结果'}`,
       emotionalIntensity: 0.55,
-      dominantEmotion: '完成',
-      keywords: ['工作', '完成']
+      dominantEmotion: '执行成功',
+      keywords: ['工作', '执行']
     },
     {
       episodeId,

@@ -380,6 +380,7 @@ export interface LlmClient {
     messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>
     temperature: number
     max_tokens?: number
+    signal?: AbortSignal
   }): Promise<string>
 }
 

@@ -167,7 +167,7 @@ export function extractSubject(toolName: string, input: unknown): string {
     return String(obj.path ?? '')
   }
   if (toolName === 'read_file' || toolName === 'write_file' || toolName === 'search_replace') {
-    return String(obj.path ?? '')
+    return String(obj.path ?? obj.file_path ?? '')
   }
   if (toolName === 'glob') return String(obj.pattern ?? '')
   if (toolName === 'grep') return String(obj.pattern ?? '')

@@ -1,3 +1,4 @@
+import { isHostInspection } from '../hostTaskFence.js'
 /**
  * Run a single command/http hook — CC executeHooks spirit (exit 2 = blocking).
  */
@@ -348,6 +349,7 @@ export async function executeHook(
   signal?: AbortSignal,
   execOpts?: ExecuteHookOpts
 ): Promise<SingleHookResult> {
+  if (isHostInspection('session_id' in input ? String(input.session_id) : undefined)) return { exitCode: 0, stdout: '', stderr: '', blocking: false, blockMessage: '' }
   if (hook.type === 'command') {
     return runCommandHook(hook, input, cwd, signal, execOpts)
   }

@@ -7,6 +7,7 @@ import type { EmotionalContext, LlmClient } from '../engine/types'
 import type { FactStore } from './factStore'
 import { isValidSubcategory, SUBCATEGORIES, type Subcategory } from './taxonomy'
 import { CONSOLIDATION_TEMPERATURE } from '../prompt/memory-consolidation'
+import { personalFacts } from './personalFacts'
 
 function subcategoryToDomain(sub: string): string {
   for (const [domain, subs] of Object.entries(SUBCATEGORIES)) {
@@ -39,7 +40,7 @@ export class MemoryConsolidator {
     turnIndex: number
   ): Promise<number> {
     factStore.load()
-    const recent = factStore.listActive()
+    const recent = personalFacts(factStore).map(f => ({ ...f }))
       .filter(f => !f.factLayer || f.factLayer === 'raw')
       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
       .slice(0, CONSOLIDATION_MAX_FACTS_INPUT)
@@ -62,6 +63,9 @@ export class MemoryConsolidator {
     } catch {
       return 0
     }
+    factStore.load()
+    const currentIds = new Set(personalFacts(factStore).map(f => `${f.id}:${f.indexRevision ?? 0}:${f.updatedAt}`))
+    if (recent.some(f => !currentIds.has(`${f.id}:${f.indexRevision ?? 0}:${f.updatedAt}`))) return 0
 
     let insights: Array<{
       subcategory: string

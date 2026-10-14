@@ -1,3 +1,5 @@
+import { WebSearchSettings } from './settings/WebSearchSettings'
+import { OutputTokenSettings } from './settings/OutputTokenSettings'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { AppSettings, LlmProvider, PresetGender, SocialAgentSummary } from '../ackem'
 import { t, getLocale, setLocale, refreshI18n } from '../lib/i18n'
@@ -494,12 +496,9 @@ export function SettingsPage(): JSX.Element {
           title={t('settings.companionProactiveTitle')}
           hint={t('settings.companionProactiveHint')}
         >
-          <SettingsToggleRow
-            title={t('settings.companionHarassEnabled')}
-            hint={t('settings.companionHarassHint')}
-            checked={form.companionHarassEnabled ?? false}
-            onChange={(v) => void persistPatch({ companionHarassEnabled: v })}
-          />
+          <SettingsToggleRow title="陪伴表达" hint="开启后保留更丰富的性格与亲密表达；关闭时优先使用个人智能体的任务语气。" checked={form.companionInteractionMode === 'companionship'} onChange={v => void persistPatch({ companionInteractionMode: v ? 'companionship' : 'assistant' })} />
+          <SettingsToggleRow title="主动陪伴聊天" hint="默认关闭。开启后每天最多两次，未回应不再催聊；不影响任务结果和已约定提醒。" checked={form.companionshipProactiveEnabled === true} onChange={v => void persistPatch({ companionshipProactiveEnabled: v })} />
+          <SettingsToggleRow title="夜间停止陪伴打扰" hint="按设置时区，22:00–08:00 不主动陪聊；任务结果仍会交付。" checked={form.companionshipQuietHours !== false} onChange={v => void persistPatch({ companionshipQuietHours: v })} />
         </SettingsBlock>
         </SettingsGroup>}
 
@@ -558,19 +557,10 @@ export function SettingsPage(): JSX.Element {
                     onChange={(e) => setForm({ ...form, anthropicApiVersion: e.target.value })}
                   />
                 </label>
-                <label className="block text-xs font-medium text-ink-muted">
-                  {t("settings.maxTokens")}
-                  <input
-                    type="number"
-                    className="field-input mt-1"
-                    value={form.anthropicMaxTokens}
-                    onChange={(e) =>
-                      setForm({ ...form, anthropicMaxTokens: Math.max(256, Number(e.target.value) || 8192) })
-                    }
-                  />
-                </label>
               </>
             )}
+            <OutputTokenSettings settings={form} onChange={patch => setForm({ ...form, ...patch })} />
+            <WebSearchSettings />
             <label className="block text-xs font-medium text-ink-muted">
               {form.llmProvider === 'anthropic'
                 ? t("settings.anthropicApiKey")

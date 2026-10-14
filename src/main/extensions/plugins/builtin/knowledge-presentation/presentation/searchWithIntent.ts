@@ -1,3 +1,4 @@
+import { chatContentText } from '../../../../../../shared/chatImages'
 // [searchWithIntent] — 意图澄清 → 网页搜索 → 结果相关性筛选
 
 import type { AppSettings } from '../../../../../settings'
@@ -21,14 +22,7 @@ export function lastUserMessageFromContext(
 ): string {
   const last = [...messages].reverse().find(m => m.role === 'user')
   if (!last) return ''
-  const c = last.content
-  if (typeof c === 'string') return c
-  if (c == null) return ''
-  try {
-    return JSON.stringify(c)
-  } catch {
-    return String(c)
-  }
+  return chatContentText(last.content)
 }
 
 export async function runIntentAwareWebSearch(

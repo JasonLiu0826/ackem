@@ -24,7 +24,7 @@ import { JobRepository } from '../jobs/jobRepository.js'
 import type { Clock } from '../temporal/clock.js'
 import { getClock } from '../temporal/clock.js'
 import { zonedLocalDate, zonedLocalMidnightUtc } from '../temporal/zonedDate.js'
-import { resolveRelativeLocalDate } from '../temporal/temporalParser.js'
+import { resolveRelativeMention } from '../temporal/temporalParser.js'
 import { classifyChatUserEvidenceKind } from '../derivation/chatUserEvidence.js'
 import { composeRecall } from '../recall/recallComposer.js'
 import { executeMemoryControl } from '../governance/executeControl.js'
@@ -168,6 +168,7 @@ function appendEvent(
 function baseMeta(
   partial: Pick<MemoryEventMeta, 'eventId' | 'sessionId' | 'turnId' | 'correlationId' | 'causationEventId' | 'nature' | 'eventType' | 'surface' | 'actor' | 'status' | 'evidenceKind' | 'observedAt' | 'occurredAt' | 'timezone' | 'localDate' | 'idempotencyKey'> & {
     completedAt?: string | null
+    scheduledFor?: string | null
   }
 ): MemoryEventMeta {
   return {
@@ -240,11 +241,17 @@ function writeStarted(
   const observedAt = turn.observedAt || now.toISOString()
   const localDate = zonedLocalDate(new Date(observedAt), turn.timezone)
   // 相对时间入账（设计 §8.1）：绑定 observedAt + timezone 解析，绝不在异步任务里重新以“现在”解释；
-  // 解析失败（无相对短语或短语超出现有规则）则保持 null
-  const resolvedLocalDate = resolveRelativeLocalDate(turn.userText, observedAt, turn.timezone)
-  const scheduledFor = resolvedLocalDate
-    ? zonedLocalMidnightUtc(resolvedLocalDate, turn.timezone).toISOString()
-    : null
+  // 只有 plan 类短语（明天/后天/下周/下周三/N天后）写 scheduledFor；past 类（昨天/上周/N天前/去年）
+  // 是过去发生时间或范围，不是计划，保持 null，避免把过去事件误标为未来日程。
+  const mention = resolveRelativeMention(turn.userText, observedAt, turn.timezone)
+  const scheduledFor =
+    mention && mention.kind === 'plan'
+      ? zonedLocalMidnightUtc(mention.localDate, turn.timezone).toISOString()
+      : null
+  const occurredAt =
+    mention?.kind === 'past' && !mention.range
+      ? zonedLocalMidnightUtc(mention.localDate, turn.timezone).toISOString()
+      : mention?.range ? null : observedAt
   const eventId = randomUUID()
   const content = {
     turnId: turn.turnId,
@@ -253,7 +260,8 @@ function writeStarted(
     userText: turn.userText,
     surface: turn.surface,
     timezone: turn.timezone,
-    scheduledFor: scheduledFor ?? null
+    scheduledFor: scheduledFor ?? null,
+    temporalRange: mention?.range ?? null
   }
   const inserted = appendEvent(
     db,
@@ -271,7 +279,7 @@ function writeStarted(
       status: null,
       evidenceKind: classifyChatUserEvidenceKind(turn.userText),
       observedAt,
-      occurredAt: observedAt,
+      occurredAt,
       scheduledFor,
       timezone: turn.timezone,
       localDate,

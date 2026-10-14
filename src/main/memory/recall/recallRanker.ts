@@ -132,6 +132,11 @@ function compareTieBreak(
   if (mode === 'id_only') {
     return a.id.localeCompare(b.id)
   }
+  if (a.source === 'fact' && b.source === 'fact' &&
+      a.semanticScore !== undefined && b.semanticScore !== undefined) {
+    const semantic = b.semanticScore - a.semanticScore
+    if (Math.abs(semantic) > 0.000001) return semantic
+  }
   const lex = b.lexicalScore - a.lexicalScore
   if (lex !== 0) return lex
   const aW = a.evidenceSupportingWeight ?? a.evidenceEventIds.length

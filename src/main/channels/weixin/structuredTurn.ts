@@ -141,7 +141,7 @@ export async function runWeixinStructuredTurn(args: {
     taskFrame.delivery === 'markdown_table' ? 'table' : 'search'
 
   return {
-    companionReply: synth.companionReply,
+    companionReply: '', // Search is one complete answer; do not send it twice.
     cardBody: synth.cardBody,
     displayTitle: synth.displayTitle,
     kind

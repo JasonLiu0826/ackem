@@ -5,6 +5,7 @@ import { peekPendingTurn } from './turnPending'
 export type ChatDonePayload = {
   memoryWrites?: string[]
   assistantText?: string
+  generationState?: 'incomplete'
   turnId?: string
   stateDelta?: TurnStateDelta
 }

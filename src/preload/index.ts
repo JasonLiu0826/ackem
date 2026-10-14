@@ -121,6 +121,11 @@ const gamemodeMinecraft = {
 }
 
 contextBridge.exposeInMainWorld('ackem', {
+  getAppVersion: (): Promise<string> => ipcRenderer.invoke('update:getAppVersion'),
+  checkUpdate: (): Promise<import('../shared/updateTypes').UpdateCheckResult> => ipcRenderer.invoke('update:check'),
+  startUpdate: (request: import('../shared/updateTypes').UpdateStartRequest): Promise<{ ok: true; jobPath: string } | { ok: false; reason: string }> => ipcRenderer.invoke('update:start', request),
+  getUpdateChannelPreference: (): Promise<import('../shared/updateTypes').UpdateChannel> => ipcRenderer.invoke('update:getChannelPreference'),
+  setUpdateChannelPreference: (channel: import('../shared/updateTypes').UpdateChannel): Promise<import('../shared/updateTypes').UpdateChannel> => ipcRenderer.invoke('update:setChannelPreference', channel),
   getSettings: (): Promise<AppSettings> => ipcRenderer.invoke('settings:get'),
   getCanon: (): Promise<{ name: string; birthDate: string; creator: { name: string; github: string; role: string; bio: string } }> =>
     ipcRenderer.invoke('canon:get'),
@@ -144,7 +149,21 @@ contextBridge.exposeInMainWorld('ackem', {
     ipcRenderer.invoke('data:getRoot'),
   ensureLayout: (): Promise<{ path: string }> => ipcRenderer.invoke('data:ensureLayout'),
   openDataFolder: (): Promise<void> => ipcRenderer.invoke('shell:openData'),
+  selectChatAttachments: (kind?: 'image'|'file'|'video'): Promise<import('../shared/chatAttachments').ChatAttachment[]> => ipcRenderer.invoke('dialog:selectChatAttachments',kind),
+  captureChatAttachments: (entries:Array<{path?:string;name?:string;bytes?:ArrayBuffer}>): Promise<import('../shared/chatAttachments').ChatAttachment[]> => ipcRenderer.invoke('chat:captureAttachments',entries),
+  selectChatImages: (): Promise<import('../shared/chatImages').ChatImage[]> => ipcRenderer.invoke('dialog:selectChatImages'),
   selectFiles: (): Promise<{ paths: string[] }> => ipcRenderer.invoke('dialog:selectFiles'),
+  selectFolder: (): Promise<{ path: string }> => ipcRenderer.invoke('dialog:selectFolder'),
+  defaultCwd: (): Promise<string> => ipcRenderer.invoke('app:default-cwd'),
+  revealPath: (path: string): Promise<{ ok: boolean; path?: string }> =>
+    ipcRenderer.invoke('shell:revealPath', path) as Promise<{ ok: boolean; path?: string }>,
+  previewChatFile: (path: string) => ipcRenderer.invoke('chat:file-preview', path),
+  getBootSteps: (): Promise<{ steps: Array<{ label: string; done: boolean }>; allReady: boolean }> =>
+    ipcRenderer.invoke('boot:get-steps'),
+  onBootStep: (fn: (payload: { steps: Array<{ label: string; done: boolean }>; allReady: boolean }) => void) => {
+    ipcRenderer.removeAllListeners('boot:step')
+    ipcRenderer.on('boot:step', (_e, payload) => fn(payload))
+  },
   getPathForFile: (file: File) => webUtils.getPathForFile(file),
   importFiles: (paths: string[]): Promise<{ copied: string[]; errors: string[] }> =>
     ipcRenderer.invoke('import:files', paths),
@@ -166,6 +185,8 @@ contextBridge.exposeInMainWorld('ackem', {
   search: (q: string, limit?: number) => ipcRenderer.invoke('index:search', q, limit),
   buildContext: (args: {
     userText: string
+    filePaths?: string[]
+    imagePaths?: string[]
     explicitRel?: string
     recentMessages: { role: 'user' | 'assistant'; content: string }[]
     sessionId?: string
@@ -178,14 +199,116 @@ contextBridge.exposeInMainWorld('ackem', {
   }): Promise<BuildContextResult> => ipcRenderer.invoke('context:build', args),
   workbenchFollow: (args: { chatSessionId?: string; text: string }) =>
     ipcRenderer.invoke('workbench:follow', args) as Promise<{ ok: boolean; reason?: string }>,
+  webSearch: {
+    status: () => ipcRenderer.invoke('web-search:status'),
+    pending: () => ipcRenderer.invoke('web-search:pending'),
+    configure: (input: import('../shared/webSearch').WebSearchConfiguration) => ipcRenderer.invoke('web-search:configure', input),
+    cancel: (requestId: string) => ipcRenderer.invoke('web-search:cancel', requestId),
+    onSetup: (fn: (input: import('../shared/webSearch').WebSearchSetupRequest) => void) => {
+      const listener = (_event: unknown, input: import('../shared/webSearch').WebSearchSetupRequest) => fn(input)
+      ipcRenderer.on('chat:web-search-setup', listener)
+      return () => ipcRenderer.removeListener('chat:web-search-setup', listener)
+    }
+  },
   codePart: {
     ensure: () =>
       ipcRenderer.invoke('codepart:ensure') as Promise<{ ok: boolean; reason?: string }>
   },
+    tasks: {
+      submit: (request: import('../shared/tasks').TaskSubmitRequest) => ipcRenderer.invoke('tasks:submit', request),
+      cancel: (requestId:string) => ipcRenderer.invoke('tasks:cancel',requestId),
+      stop: (taskId: string) => ipcRenderer.invoke('tasks:stop', taskId),
+      runQueuedNow: (taskId:string) => ipcRenderer.invoke('tasks:run-queued-now',taskId),
+      remove: (taskId: string) => ipcRenderer.invoke('tasks:remove', taskId),
+      clearManaged: (projectionIds?:string[]) => ipcRenderer.invoke('tasks:clear-managed',projectionIds),
+      list: () => ipcRenderer.invoke('tasks:list'),
+      snapshot: (taskId: string) => ipcRenderer.invoke('tasks:snapshot', taskId),
+      grantGoal: (input:import('../shared/longTerm').GoalGrantInput)=>ipcRenderer.invoke('tasks:goal-grant',input),
+      revokeGoal: (id:string)=>ipcRenderer.invoke('tasks:goal-revoke',id),
+      changeGoalState:(input:{id:string;state:'paused'|'active'|'cancelled'|'abandoned'})=>ipcRenderer.invoke('tasks:goal-state',input),
+      goals: ()=>ipcRenderer.invoke('tasks:goals'),
+      decisions: (id:string)=>ipcRenderer.invoke('tasks:decisions',id),
+      correctDecision: (input:{id:string;basis:string})=>ipcRenderer.invoke('tasks:decision-correct',input),
+      grantRule: (input:import('../shared/longTerm').RuleGrantInput)=>ipcRenderer.invoke('tasks:rule-grant',input),
+      revokeRule: (id:string)=>ipcRenderer.invoke('tasks:rule-revoke',id),
+      rules: ()=>ipcRenderer.invoke('tasks:rules'),
+      worldState: (ids:string[])=>ipcRenderer.invoke('tasks:world-state',ids),
+      onEvent: (callback: (event: import('../shared/tasks').TaskEvent) => void) => {
+        const listener = (_event: Electron.IpcRendererEvent, event: import('../shared/tasks').TaskEvent): void => callback(event)
+        ipcRenderer.on('tasks:event', listener)
+        return () => ipcRenderer.removeListener('tasks:event', listener)
+      }
+    },
+    workbench: {
+      environment: () => ipcRenderer.invoke('system:manifest'),
+      openDefaultDirectory: () => ipcRenderer.invoke('workbench:open-default-directory'),
+      modelInfo: (sessionId?: string) => ipcRenderer.invoke('workbench:model-info', sessionId),
+      supervisionList: () => ipcRenderer.invoke('workbench:supervision-list'),
+      supervisionAnswer: (input:{taskId:string;requestId:string;answers:Record<string,string>})=>ipcRenderer.invoke('workbench:supervision-answer',input),
+      supervisionApproval: (input: {taskId:string;requestId:string;allow:boolean}) => ipcRenderer.invoke('workbench:supervision-approval',input),
+      supervisionControl: (input: {sessionId:string;resume?:boolean}) => ipcRenderer.invoke('workbench:supervision-control',input),
+      onTaskApproval: (fn: (approval: import('../shared/workSupervision').TaskApproval) => void) => {
+        const listener=(_e:unknown,approval:import('../shared/workSupervision').TaskApproval)=>fn(approval)
+        ipcRenderer.on('chat:task-approval',listener)
+        return()=>ipcRenderer.removeListener('chat:task-approval',listener)
+      },
+      loadCatalog: () => ipcRenderer.invoke('workbench:catalog-load'),
+      saveCatalog: (catalog: unknown) => ipcRenderer.invoke('workbench:catalog-save', catalog),
+      open: (input: { cwd?: string; sessionId?: string }) => ipcRenderer.invoke('workbench:open', input),
+      snapshot: (sessionId: string) => ipcRenderer.invoke('workbench:snapshot', sessionId),
+      queue: (sessionId: string) => ipcRenderer.invoke('workbench:queue', sessionId),
+      removeQueued: (input: { sessionId: string; itemId: string }) => ipcRenderer.invoke('workbench:queue-remove', input),
+      send: (input: import('../shared/tasks').StandaloneWorkInput) => ipcRenderer.invoke('workbench:send', input),
+      inputQueue: (taskId:string) => ipcRenderer.invoke('workbench:input-queue',taskId),
+      promoteInput: (requestId:string) => ipcRenderer.invoke('workbench:promote-input',requestId),
+      cancelTaskQueue: (taskId:string)=>ipcRenderer.invoke('workbench:cancel-task-queue',taskId),
+      cancelInput: (requestId:string) => ipcRenderer.invoke('workbench:cancel-input',requestId),
+      enqueue: (input: { sessionId: string; text: string }) => ipcRenderer.invoke('workbench:enqueue', input),
+      permission: (input: { sessionId: string; requestId: string; decision: 'allow' | 'deny'; toolName?: string }) => ipcRenderer.invoke('workbench:permission', input),
+      planDecision: (input: { sessionId: string; requestId: string; decision: 'approve' | 'reject' }) => ipcRenderer.invoke('workbench:plan-decision', input),
+      answer: (input: { sessionId: string; requestId: string; answers: Record<string, string>; cancelled?: boolean }) => ipcRenderer.invoke('workbench:answer', input),
+      abort: (sessionId: string) => ipcRenderer.invoke('workbench:abort', sessionId),
+      mode: (input: { sessionId: string; mode: 'default' | 'acceptEdits' | 'bypassPermissions' }) => ipcRenderer.invoke('workbench:mode', input),
+      readFile: (input: { cwd: string; path: string }) => ipcRenderer.invoke('workbench:file-read', input),
+      createFile: (input: { cwd: string; name: string }) => ipcRenderer.invoke('workbench:file-create', input),
+      cliLaunch: (input: import('../shared/terminal').CliLaunchInput) => ipcRenderer.invoke('workbench:cli-launch', input) as Promise<import('../shared/terminal').ExternalCliSnapshot>,
+      cliOpen: (input: import('../shared/terminal').CliOpenInput) => ipcRenderer.invoke('workbench:cli-open', input) as Promise<import('../shared/terminal').CliTerminalSnapshot>,
+      cliInput: (input: {terminalId:string;data:string}) => ipcRenderer.invoke('workbench:cli-input',input),
+      cliResize: (input: {terminalId:string;cols:number;rows:number}) => ipcRenderer.invoke('workbench:cli-resize',input),
+      cliClose: (terminalId:string) => ipcRenderer.invoke('workbench:cli-close',terminalId),
+      cliCloseTask: (taskId:string) => ipcRenderer.invoke('workbench:cli-close-task',taskId),
+      onCliData: (callback: (event:import('../shared/terminal').CliTerminalEvent)=>void) => {
+        const listener=(_event:unknown,payload:import('../shared/terminal').CliTerminalEvent)=>callback(payload)
+        ipcRenderer.on('workbench:cli-data',listener)
+        return()=>ipcRenderer.removeListener('workbench:cli-data',listener)
+      },
+      terminal: (input: { cwd: string; command: string }) => ipcRenderer.invoke('workbench:terminal', input),
+    terminalExec: (input: { cwd: string; command: string }) => ipcRenderer.invoke('workbench:terminal-exec', input) as Promise<{ output: string }>,
+    terminalDispose: (cwd: string) => ipcRenderer.invoke('workbench:terminal-dispose', cwd) as Promise<{ ok: boolean }>,
+    fileHistory: (sessionId: string) => ipcRenderer.invoke('workbench:file-history', sessionId) as Promise<unknown>,
+    rewind: (input: { sessionId: string; messageId?: string; dryRun: boolean }) => ipcRenderer.invoke('workbench:rewind', input) as Promise<{ ok: boolean; filesChanged?: string[]; messageId?: string }>,
+    rerunLast: (input: { taskId: string; turnId: string; sessionId: string; text: string; cwd: string; attachments?: Array<{kind: 'doc'|'folder'|'image'|'video';path:string;name:string}> }) => ipcRenderer.invoke('workbench:rerun-last', input) as Promise<{ runId: string }>,
+      onEvent: (cb: (payload: { taskId: string; turnId: string; event: unknown; goalRevision?:number; controlEpoch?:number }) => void) => {
+        const listener = (_event: Electron.IpcRendererEvent, payload: { taskId: string; turnId: string; event: unknown; goalRevision?:number; controlEpoch?:number }) => cb(payload)
+        ipcRenderer.on('workbench:event', listener)
+        return () => ipcRenderer.removeListener('workbench:event', listener)
+      }
+    },
   readRel: (rel: string, maxBytes?: number) => ipcRenderer.invoke('fs:readRel', rel, maxBytes),
   writeAllowed: (rel: string, content: string, mode: 'append' | 'overwrite') =>
     ipcRenderer.invoke('fs:writeAllowed', rel, content, mode),
+  touchChatActivity: () => ipcRenderer.invoke('chat:activity'),
+  onTaskReplyProgress: (fn: (event: { sessionId: string; runId: string; text: string; at: number }) => void) => {
+    const listener = (_e: unknown, event: { sessionId: string; runId: string; text: string; at: number }) => fn(event)
+    ipcRenderer.on('chat:task-progress', listener)
+    return () => ipcRenderer.removeListener('chat:task-progress', listener)
+  },
+  stopChat: () => ipcRenderer.invoke('chat:stop'),
   startChat: (payload: {
+    filePaths?: string[]
+    imagePaths?: string[]
+    imageHistory?: Array<{text:string;paths:string[]}>
+    fileHistory?: Array<{text:string;paths:string[]}>
     messages: unknown[]
     settings: AppSettings
     turnId?: string
@@ -558,6 +681,16 @@ contextBridge.exposeInMainWorld('ackem', {
     ipcRenderer.removeAllListeners('chat:reasoning')
     ipcRenderer.on('chat:reasoning', (_e, s: string) => fn(s))
   },
+  onReplyEvent: (fn: (event: import('../shared/response').ReplyEvent) => void) => {
+    const listener = (_e: unknown, event: import('../shared/response').ReplyEvent) => fn(event)
+    ipcRenderer.on('chat:reply', listener)
+    return () => ipcRenderer.removeListener('chat:reply', listener)
+  },
+  onChatDelivery: (fn: (event: { sessionId: string; row: unknown }) => void) => {
+    const listener = (_e: unknown, event: { sessionId: string; row: unknown }) => fn(event)
+    ipcRenderer.on('chat:delivery', listener)
+    return () => ipcRenderer.removeListener('chat:delivery', listener)
+  },
   onChatStreamStart: (fn: () => void) => {
     ipcRenderer.removeAllListeners('chat:stream-start')
     ipcRenderer.on('chat:stream-start', () => fn())
@@ -841,6 +974,7 @@ contextBridge.exposeInMainWorld('ackem', {
       ipcRenderer.invoke('voice:apply-settings', patch),
     restartService: () => ipcRenderer.invoke('voice:restart-service'),
     setPttActive: (active: boolean) => ipcRenderer.invoke('voice:ptt-active', active),
+    freshUtterance: () => ipcRenderer.invoke('voice:fresh-utterance'),
     checkEnvironment: () => ipcRenderer.invoke('voice:check-environment'),
     installEnvironment: () => ipcRenderer.invoke('voice:install-environment'),
     setTheaterSession: (active: boolean) => ipcRenderer.invoke('voice:set-theater-session', active),
@@ -866,10 +1000,30 @@ contextBridge.exposeInMainWorld('ackem', {
       ipcRenderer.on('voice:tts-speak-cancel', () => fn())
       return () => ipcRenderer.removeAllListeners('voice:tts-speak-cancel')
     },
-    onTranscript: (fn: (result: { text: string; confidence: number }) => void) => {
-      ipcRenderer.removeAllListeners('voice:transcript')
-      ipcRenderer.on('voice:transcript', (_e, result) => fn(result))
-      return () => ipcRenderer.removeAllListeners('voice:transcript')
+    onTranscript: (fn: (result: {
+      text: string
+      confidence: number
+      sessionId?: number
+      sequence?: number
+    }) => void) => {
+      const handler = (_e: unknown, result: Parameters<typeof fn>[0]) => fn(result)
+      ipcRenderer.on('voice:transcript', handler)
+      return () => ipcRenderer.removeListener('voice:transcript', handler)
+    },
+    onTranscriptPartial: (fn: (result: {
+      text: string
+      sessionId: number
+      sequence: number
+      stable: boolean
+    }) => void) => {
+      const handler = (_e: unknown, result: Parameters<typeof fn>[0]) => fn(result)
+      ipcRenderer.on('voice:transcript-partial', handler)
+      return () => ipcRenderer.removeListener('voice:transcript-partial', handler)
+    },
+    onAsrError: (fn: (result: { message: string }) => void) => {
+      const handler = (_e: unknown, result: Parameters<typeof fn>[0]) => fn(result)
+      ipcRenderer.on('voice:asr-error', handler)
+      return () => ipcRenderer.removeListener('voice:asr-error', handler)
     },
     onStateChange: (fn: (state: string) => void) => {
       ipcRenderer.removeAllListeners('voice:state')

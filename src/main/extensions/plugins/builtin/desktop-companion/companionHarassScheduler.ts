@@ -1,3 +1,5 @@
+import { canSendCompanionInitiative, recordCompanionInitiative } from '../../../../companion/initiativeState'
+import { randomUUID } from 'node:crypto'
 import type { BrowserWindow } from 'electron'
 import { Notification } from 'electron'
 import { createLogger } from '../../../../logger'
@@ -46,6 +48,9 @@ export function deliverCompanionProactiveMessage(args: {
   const message =
     sanitizeDesktopProactiveMessage(args.message, 120) ??
     templateDesktopProactiveMessage(timeContext)
+  if (!canSendCompanionInitiative(message)) return
+  recordCompanionInitiative(message)
+  const proactiveId = args.proactiveId ?? randomUUID()
   const displayMode = args.displayMode ?? 'both'
 
   if (displayMode !== 'chat_only' && Notification.isSupported()) {
@@ -65,7 +70,10 @@ export function deliverCompanionProactiveMessage(args: {
         role: 'assistant',
         content: message,
         channel: 'desktop',
-        proactiveId: args.proactiveId,
+        proactiveId,
+        replyId: `initiative-${proactiveId}`,
+        origin: 'companionship',
+        sourceLabel: '陪伴互动',
       }, engineSessionId())
     } catch {
       /* non-critical */
@@ -87,7 +95,7 @@ async function tickCompanionHarass(): Promise<void> {
   harassTicking = true
   try {
     const settings = loadSettings()
-    if (!settings.companionHarassEnabled) return
+    if (!settings.companionHarassEnabled || !canSendCompanionInitiative()) return
 
     if (!shouldHarassTickForPersonality(settings.personalityPresetId)) {
       log.debug('harass tick skipped for low-initiative personality', {
@@ -140,7 +148,7 @@ function scheduleNextHarassTick(): void {
   }
 
   const settings = loadSettings()
-  if (!settings.companionHarassEnabled) return
+  if (!settings.companionHarassEnabled || !canSendCompanionInitiative()) return
 
   const delayMs = pickPersonalityHarassDelayMs(settings.personalityPresetId)
   harassTimer = setTimeout(() => {

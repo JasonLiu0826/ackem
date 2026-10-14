@@ -1,5 +1,6 @@
 import { getDatabase } from '../../db/database.js'
 import { getCachedEmbeddingProvider } from '../../engineCache.js'
+import { embeddingIndexSignature } from '../embedding/signature.js'
 import {
   computeCorpusHash,
   deleteFactEmbeddingsAllModels,
@@ -26,7 +27,7 @@ export type EmbeddingProjectionResult = {
 function resolveModelSignature(dataRoot: string): string | null {
   const provider = getCachedEmbeddingProvider(dataRoot)
   if (!provider?.ready()) return null
-  return provider.name()
+  return embeddingIndexSignature(provider.name())
 }
 
 function pendingForFact(entries: FactIndexPendingEntry[], factId: string): FactIndexPendingEntry[] {

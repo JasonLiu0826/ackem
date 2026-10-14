@@ -482,7 +482,7 @@ export async function runSubAgent(opts: RunSubAgentOpts): Promise<RunSubAgentRes
     opts.permissionModeOverride ??
     ((builtInType === 'Explore' || builtInType === 'Plan') && !custom
       ? 'plan'
-      : 'default')
+      : opts.parentPermissionMode ?? 'default')
   const getMode = () => mode
   const setMode = (_m: PermissionMode) => {
     /* explore/plan/verification locked; general/fork ignore mode changes */

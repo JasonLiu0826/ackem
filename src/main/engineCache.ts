@@ -3,6 +3,7 @@
 // 使用 TTL + 脏标记模式，按数据根路径隔离
 
 import { FactStore, defaultFactsPath } from './memory/factStore'
+import { readableMemoryFacts } from './memory/personalFacts'
 import { EpisodicStore, defaultEpisodesPath } from './memory/episodicStore'
 import { KnowledgeGraph, defaultKgPath } from './memory/knowledgeGraph'
 import { VectorStore } from './memory/vectorStore'
@@ -33,6 +34,7 @@ import {
   setEmbeddingPhase,
 } from './embedding/embeddingReadiness'
 import type { MemoryFact } from './memory/semantic/types.js'
+import { embeddingIndexSignature } from './memory/embedding/signature.js'
 
 const log = createLogger('engine-cache')
 
@@ -168,10 +170,10 @@ export async function ensureFactEmbeddingsReady(entry: EngineCacheEntry): Promis
     if (!provider?.ready()) return
 
     wireVectorStoreEmbeddings(entry.vs, provider)
-    const activeFacts = entry.store.listActive().filter((f) => f.status === 'active')
+    const activeFacts = readableMemoryFacts(entry.store).map(f => ({ ...f }))
     if (activeFacts.length === 0) return
 
-    const modelSig = provider.name()
+    const modelSig = embeddingIndexSignature(provider.name())
     const corpusHash = computeCorpusHash(activeFacts)
     const activeIds = new Set(activeFacts.map((f) => f.id))
 
@@ -181,11 +183,12 @@ export async function ensureFactEmbeddingsReady(entry: EngineCacheEntry): Promis
     if (db) {
       const storedHash = getStoredCorpusHash(db, modelSig)
       if (storedHash === corpusHash) {
-        loaded = loadFactEmbeddings(db, modelSig)
+        loaded = new Map([...loadFactEmbeddings(db, modelSig)].filter(([id]) => activeIds.has(id)))
         if (loaded.size >= activeFacts.length * 0.9) {
           entry.vs.loadDenseCacheFromMap(loaded, corpusHash)
           syncFactStoreEmbeddingCache(entry)
           deleteStaleFactEmbeddings(db, modelSig, activeIds)
+          if (modelSig !== provider.name()) deleteFactEmbeddingsForModel(db, provider.name())
           return
         }
       }
@@ -197,14 +200,21 @@ export async function ensureFactEmbeddingsReady(entry: EngineCacheEntry): Promis
     if (missing.length > 0) {
       const texts = missing.map(factText)
       const embeds = await provider.embedBatch(texts)
+      entry.store.load()
+      const currentIds = new Set(readableMemoryFacts(entry.store).map(f => `${f.id}:${f.indexRevision ?? 0}:${f.updatedAt}`))
       for (let i = 0; i < missing.length; i++) {
+        if (!currentIds.has(`${missing[i].id}:${missing[i].indexRevision ?? 0}:${missing[i].updatedAt}`)) continue
         if (embeds[i]?.length > 0) merged.set(missing[i].id, embeds[i])
       }
     }
 
     // 全量 rebuild fallback
-    if (merged.size < activeFacts.length) {
-      await entry.vs.buildDenseCache(activeFacts)
+    entry.store.load()
+    const currentAllowed = readableMemoryFacts(entry.store)
+    const currentAllowedIds = new Set(currentAllowed.map(f => f.id))
+    for (const id of merged.keys()) if (!currentAllowedIds.has(id)) merged.delete(id)
+    if (merged.size < currentAllowed.length) {
+      await entry.vs.buildDenseCache(currentAllowed)
       syncFactStoreEmbeddingCache(entry)
     } else {
       entry.vs.loadDenseCacheFromMap(merged, corpusHash)
@@ -212,7 +222,8 @@ export async function ensureFactEmbeddingsReady(entry: EngineCacheEntry): Promis
     }
 
     if (db) {
-      const toWrite = activeFacts
+      const finalAllowed = new Set(readableMemoryFacts(entry.store).map(f => `${f.id}:${f.indexRevision ?? 0}:${f.updatedAt}`))
+      const toWrite = activeFacts.filter(f => finalAllowed.has(`${f.id}:${f.indexRevision ?? 0}:${f.updatedAt}`))
         .map((f) => {
           const vector = entry.store._embeddingCache?.get(f.id)
           return vector?.length ? { factId: f.id, updatedAt: f.updatedAt, vector } : null
@@ -222,6 +233,7 @@ export async function ensureFactEmbeddingsReady(entry: EngineCacheEntry): Promis
         upsertFactEmbeddings(db, modelSig, toWrite)
         setStoredCorpusHash(db, modelSig, corpusHash)
         deleteStaleFactEmbeddings(db, modelSig, activeIds)
+        if (modelSig !== provider.name()) deleteFactEmbeddingsForModel(db, provider.name())
       }
     }
   })().finally(() => {
@@ -242,9 +254,12 @@ export async function refreshFactEmbeddingsForIds(
   const provider = embeddingProviderMap.get(dataRoot)
   if (!entry || !provider?.ready()) return
 
+  const allowedFactIds = new Set(readableMemoryFacts(entry.store).map(f => f.id))
   const facts = factIds
     .map((id) => entry.store.getById(id))
     .filter((f): f is MemoryFact => f !== undefined && f.status === 'active')
+      .filter(f => allowedFactIds.has(f.id))
+      .map(f => ({ ...f }))
   if (facts.length === 0) return
 
   wireVectorStoreEmbeddings(entry.vs, provider)
@@ -252,10 +267,13 @@ export async function refreshFactEmbeddingsForIds(
   const embeds = await provider.embedBatch(texts)
   if (!entry.store._embeddingCache) entry.store._embeddingCache = new Map()
   const db = getDatabase(dataRoot)
-  const modelSig = provider.name()
+  const modelSig = embeddingIndexSignature(provider.name())
   const toWrite: Array<{ factId: string; updatedAt: string; vector: number[] }> = []
+  entry.store.load()
+  const currentAllowed = new Set(readableMemoryFacts(entry.store).map(f => `${f.id}:${f.indexRevision ?? 0}:${f.updatedAt}`))
 
   for (let i = 0; i < facts.length; i++) {
+      if (!currentAllowed.has(`${facts[i].id}:${facts[i].indexRevision ?? 0}:${facts[i].updatedAt}`)) continue
     const vec = embeds[i]
     if (!vec?.length) continue
     entry.store._embeddingCache.set(facts[i].id, vec)
@@ -263,7 +281,10 @@ export async function refreshFactEmbeddingsForIds(
   }
 
   // 重建 vs dense from map
-  const corpusHash = computeCorpusHash(entry.store.listActive())
+  const visibleFacts = readableMemoryFacts(entry.store)
+  const visibleIds = new Set(visibleFacts.map(f => f.id))
+  for (const id of entry.store._embeddingCache.keys()) if (!visibleIds.has(id)) entry.store._embeddingCache.delete(id)
+  const corpusHash = computeCorpusHash(visibleFacts)
   entry.vs.loadDenseCacheFromMap(entry.store._embeddingCache, corpusHash)
 
   if (db && toWrite.length > 0) {
@@ -283,7 +304,7 @@ export function scheduleEmbeddingRebuild(dataRoot: string): Promise<void> {
     const provider = await getOrInitEmbeddingProvider(dataRoot)
     if (!provider?.ready()) return
 
-    if (db) deleteFactEmbeddingsForModel(db, provider.name())
+    if (db) deleteFactEmbeddingsForModel(db, embeddingIndexSignature(provider.name()))
 
     invalidateEngineCache(dataRoot)
     const entry = cacheMap.get(dataRoot)

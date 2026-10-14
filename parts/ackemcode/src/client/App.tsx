@@ -217,6 +217,7 @@ const EFFORTS: EffortLevel[] = ['low', 'medium', 'high']
 const MODES: PermissionMode[] = [
   'default',
   'plan',
+  'sessionType',
   'acceptEdits',
   'auto',
   'bypassPermissions',

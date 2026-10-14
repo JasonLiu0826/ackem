@@ -13,6 +13,8 @@ import {
   type RecallRankerPolicy
 } from './recallRanker.js'
 import { emptyRecallTrace, finalizeRecallTrace } from './recallTrace.js'
+import { attachFactSemanticScores } from './semanticScoring.js'
+import { canReadMemoryObject, canReadMemorySources } from '../accessScope.js'
 
 export type ComposeRecallOptions = {
   policy?: RecallRankerPolicy
@@ -171,8 +173,13 @@ export async function composeRecall(
     episode: candidates.filter((c) => c.source === 'episode').length
   }
 
+  await attachFactSemanticScores(dataRoot, db, query.text, candidates)
+
+  const currentCandidates = candidates.filter(c => c.source === 'action'
+    ? canReadMemorySources(db, c.evidenceEventIds, query.accessContextRef)
+    : canReadMemoryObject(db, c.source, c.id.slice(c.source.length + 1), c.factSessionId ?? c.episodeSessionId ?? '', query.accessContextRef))
   const tRank = Date.now()
-  const { items, filtered } = rankCandidates(candidates, intents, policy, query.sessionId, query)
+  const { items, filtered } = rankCandidates(currentCandidates, intents, policy, query.sessionId, query)
   const rankMs = Date.now() - tRank
 
   const buckets = bucketItems(intents, items)

@@ -5,6 +5,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { detectContradictions, readSelfMd, type Contradiction } from '../engine/mirror'
 import type { FactStore } from './factStore'
+import { personalFacts } from './personalFacts'
 
 export type MirrorFindingRecord = Contradiction & {
   detectedAt: string
@@ -78,8 +79,7 @@ export function appendMirrorFindings(
 
 export function buildSelfPerceptionCorpus(factStore: FactStore): string {
   factStore.load()
-  return factStore
-    .listActive()
+  return personalFacts(factStore)
     .filter((f) => f.subcategory === 'SELF_PERCEPTION' || f.subcategory === 'OUR_BOND')
     .map((f) => f.summary)
     .join('。')

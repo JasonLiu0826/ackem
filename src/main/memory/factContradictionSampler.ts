@@ -7,6 +7,7 @@ import {
 } from '../engine/ackemParams'
 import type { MemoryFact } from './semantic/types.js'
 import type { FactStore } from './factStore'
+import { personalFacts } from './personalFacts'
 
 function charJaccard(a: MemoryFact, b: MemoryFact): number {
   const aSet = new Set([...a.subject, ...a.summary])
@@ -25,8 +26,7 @@ export function sampleSimilarFactPairs(
   maxPairs = PERIODIC_CONTRADICTION_SAMPLE_PAIRS
 ): Array<{ newFact: MemoryFact; existing: MemoryFact }> {
   factStore.load()
-  const active = factStore
-    .listActive()
+  const active = personalFacts(factStore)
     .filter((f) => f.factLayer !== 'consolidated')
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
 

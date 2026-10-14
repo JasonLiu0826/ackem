@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Tray, Menu, nativeImage } from 'electron'
+import { app, ipcMain, BrowserWindow, Tray, Menu, nativeImage } from 'electron'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { registerBundledNativeDllPaths } from './nativeDllPath'
@@ -46,6 +46,28 @@ if (!gotSingleInstanceLock) {
 // 桌面陪伴由 desktop-companion 插件 bootstrap 管理
 let mainWindow: BrowserWindow | null = null
 let tray: Tray | null = null
+
+/** 阶段 5 启动初始化: 记录真实步骤并发送给渲染层，全部关键步骤完成前不放行。 */
+const bootSteps: Array<{ label: string; done: boolean }> = [
+  { label: '数据目录就绪', done: false },
+  { label: '数据库创建', done: false },
+  { label: '记忆系统注册', done: false },
+  { label: '任务队列恢复', done: false },
+  { label: '语义索引恢复', done: false },
+  { label: '记忆任务调度启动', done: false },
+  { label: 'Embedding 模型加载', done: false },
+]
+
+function markBootStep(label: string): void {
+  const step = bootSteps.find((s) => s.label === label)
+  if (step) step.done = true
+  broadcastToRenderers('boot:step', { steps: bootSteps.map((s) => ({ ...s })) })
+}
+
+function markAllBootStepsDone(): void {
+  for (const s of bootSteps) s.done = true
+  broadcastToRenderers('boot:step', { steps: bootSteps.map((s) => ({ ...s })), allReady: true })
+}
 
 function createWindow(): void {
   const devUrl = process.env['ELECTRON_RENDERER_URL']
@@ -172,10 +194,12 @@ app.whenReady().then(async () => {
   const s = loadSettings()
   const dataRoot = resolveDataRoot(s)
   ensureDataLayout(dataRoot)
+  markBootStep('数据目录就绪')
   const { seedIfNeeded } = await import('./social/agents/agentRegistry.js')
   seedIfNeeded(dataRoot)
   const { runUnifiedBondMigration } = await import('./migration/unifiedBondMigration.js')
   runUnifiedBondMigration(dataRoot)
+  markBootStep('数据库创建')
   setLogDir(join(dataRoot, 'logs'))
 
   const { registerMemorySystemFactory } = await import('./memory/bootstrap.js')
@@ -187,9 +211,16 @@ app.whenReady().then(async () => {
       loadReceipt: async (runtimeId) => (await getCodeSessionSnapshot(runtimeId))?.hostTurnReceipt
     })
   )
+  markBootStep('记忆系统注册')
   try {
+    // Adopt old job queues before their former scheduler can promote them.
+    const { getTaskRuntime } = await import('./tasks/runtime.js')
+    const taskRuntime=getTaskRuntime(dataRoot)
     const { resumeQueuedWork } = await import('./channel/executeChannel.js')
     await resumeQueuedWork(dataRoot)
+    const { recoverChatTaskDeliveries } = await import('./ipc/workbench.js')
+    recoverChatTaskDeliveries(dataRoot)
+    await taskRuntime.coordinator.recover()
   } catch (e) {
     log.warn('work recovery failed', { error: String(e) })
   }
@@ -216,6 +247,12 @@ app.whenReady().then(async () => {
 
   registerIpc()
   registerUiIpc()
+
+  // 启动初始化步骤查询 — 渲染层连接时获取当前状态
+  ipcMain.handle('boot:get-steps', () => ({
+    steps: bootSteps.map((s) => ({ ...s })),
+    allReady: bootSteps.every((s) => s.done)
+  }))
   createWindow()
   createTray()
 
@@ -255,11 +292,13 @@ app.whenReady().then(async () => {
         const { setEmbeddingPhase } = await import('./embedding/embeddingReadiness.js')
         setEmbeddingPhase('loading_provider')
         await warmupEmbeddingAtStartup(dataRoot, getOrRebuildIndex())
+        markBootStep('Embedding 模型加载')
       } catch (e) {
         log.warn('embedding warmup failed', { error: String(e) })
         const { setEmbeddingPhase } = await import('./embedding/embeddingReadiness.js')
         setEmbeddingPhase('degraded', { error: String(e) })
       }
+      markAllBootStepsDone()
     })()
 
     if (mainWindow) {

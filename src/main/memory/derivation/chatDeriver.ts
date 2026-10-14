@@ -56,6 +56,11 @@ export function deriveChatFacts(
 
     if (!text.trim()) continue
 
+    // LLM 已就同一用户事件提炼出有效事实时，deterministic 规则只做兜底、不重复派生：
+    // 避免同义事实因 subcategory 不同（LLM draft 常为 NOW）无法合并而双写。
+    const coveredByLlm = validatedLlmDrafts.some((d) => d.evidenceEventIds.includes(ev.meta.eventId))
+    if (coveredByLlm) continue
+
     out.push({
 
       subject: '用户',
@@ -65,8 +70,11 @@ export function deriveChatFacts(
       domain: 'DAILY_LIFE',
 
       // 明确自我断言（“我喜欢/我住在/我习惯”等）是身份/生活类信息，属跨会话记忆；
+      // 但带期限的自述（scheduledFor 非空，如“我喜欢下周去西湖跑步”）是一次性计划/事件，
+      // 不是长期偏好——期限过后不得成为跨会话长期 LIFE_STORY，按临时 NOTE 处理。
       // 更正仍是临时 NOTE；助手/寒暄不进入此分支。
-      subcategory: ev.meta.evidenceKind === 'user_correction' ? 'NOTE' : 'LIFE_STORY',
+      subcategory:
+        ev.meta.evidenceKind === 'user_correction' || ev.meta.scheduledFor ? 'NOTE' : 'LIFE_STORY',
 
       confidence: ev.meta.evidenceKind === 'user_correction' ? 0.95 : 0.85,
 
@@ -75,6 +83,15 @@ export function deriveChatFacts(
       occurredAt: ev.meta.occurredAt,
 
       scheduledFor: ev.meta.scheduledFor,
+
+      temporalRange: (() => {
+        const range = ev.payload.content.temporalRange
+        if (!range || typeof range !== 'object') return undefined
+        const value = range as Record<string, unknown>
+        return typeof value.fromLocalDate === 'string' && typeof value.toLocalDate === 'string'
+          ? { fromLocalDate: value.fromLocalDate, toLocalDate: value.toLocalDate }
+          : undefined
+      })(),
 
       timezone: ev.meta.timezone
 

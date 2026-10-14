@@ -1,4 +1,4 @@
-// [S-15] 网页搜索 — Bing Skill
+// [S-15] 网页搜索 — AckemCode web_search
 
 import { createLogger } from '../../../../../logger.js'
 import { formatSearchResults, searchWebWithMeta } from '../../../../plugins/builtin/knowledge-presentation/presentation/search.js'
@@ -25,10 +25,10 @@ async function execute(invocation: SkillInvocation): Promise<SkillResult> {
     }
   }
 
-  log.info('web_search 开始搜索', { called: true, query, engine: 'bing' })
+  log.info('web_search 开始搜索', { called: true, query, engine: 'web-search' })
 
   try {
-    const { results, engine } = await searchWebWithMeta(query)
+    const { results, engine } = await searchWebWithMeta(query, { allowed_domains: invocation.args?.allowed_domains as string[] | undefined, blocked_domains: invocation.args?.blocked_domains as string[] | undefined })
     const durationMs = Date.now() - start
     log.info('web_search 搜索完成', {
       called: true,
@@ -65,7 +65,7 @@ async function execute(invocation: SkillInvocation): Promise<SkillResult> {
     })
     return {
       ok: false,
-      output: '',
+      output: `web-search 未取得结果：${msg}。不得据此编造新闻或声称已经搜索成功。`,
       error: msg,
       injectToContext: false,
       events: [],

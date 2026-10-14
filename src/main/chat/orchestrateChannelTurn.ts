@@ -1,4 +1,5 @@
 import { routeChannel } from '../channel/routeChannel'
+import { handleChatTaskInput, chatTaskCandidates } from '../tasks/runtime'
 import { executeChannel, abortPinnedWork, recordPluginStop, type ExecuteResult } from '../channel/executeChannel'
 import {
   peekAllPending,
@@ -16,11 +17,13 @@ import { resolveIntent } from '../extensions/dispatch/intentResolver'
 import { acceptDispatchExtension, rejectDispatchExtension } from '../extensions/dispatch/contextPipeline'
 import type { ClassifyClient } from '../channel/classifyIntent'
 import type { CatalogEntry } from '../channel/catalogTypes'
+import type { ChannelPlan } from '../../shared/channelPlan'
 import type { ExtensionsCoordinator } from '../extensions/coordinator'
 import type { DispatchResult, EngineSnapshot } from '../extensions/protocols'
 import { runPreLlmTurn, type PreLlmResult } from '../engine/orchestrator'
 import type { TurnConfirm } from '../../shared/channelPlan'
 import { currentSessionId } from '../ipc/shared'
+import { abortChatWorkDispatch, dispatchChatWorkJob, type ChatWorkDispatch } from '../ipc/workbench'
 import { saveState } from '../engine/state-persistence'
 import { createRouteTrace } from '../channel/routeTrace'
 import {
@@ -31,6 +34,9 @@ import {
 import {
   closeConfirmCard,
   commitTurnConfirm,
+  decideChatPlan,
+  proposeChatPlan,
+  finalizeChatTurn,
   type BeginChatTurnResult,
   type ChatSurface
 } from './turnCoordinator'
@@ -55,8 +61,13 @@ export type ChannelPendingCard = {
   candidates?: Array<{ id: string; name: string }>
 }
 
+/** 自主派工时聊天页渲染的固定 ack (与主进程落账文本一致)。 */
+export const WORK_DISPATCH_ACK = '收到，任务已接收。执行过程会留在工作页，完成后我会交付结果。'
+
 export type ChannelTurnPhase = {
   channelPending?: ChannelPendingCard
+  /** 自主派工 (2026-10-04 用户指令): work 任务不弹卡, 直接进工作台固定任务。 */
+  workDispatch?: ChatWorkDispatch
   preFromParallel?: PreLlmResult
   dispatchResult?: DispatchResult
   extraDispatchInjections: string[]
@@ -71,6 +82,8 @@ export type ChannelTurnPhase = {
  * 确认、路由、执行、确认卡收口。IPC 只负责 Electron 参数和最终拼装。
  */
 export async function orchestrateChannelTurn(args: {
+  filePaths?: string[]
+  imagePaths?: string[]
   turnConfirm?: TurnConfirm
   userText: string
   recentMessages?: Array<{ role: string; content: string }>
@@ -111,6 +124,7 @@ export async function orchestrateChannelTurn(args: {
   } = args
   let skipRouteChannel = redlineHit
   let dispatchResult: DispatchResult | undefined
+  let workDispatch: ChatWorkDispatch | undefined
   const extraDispatchInjections: string[] = []
   let resolvedMessageForKnowledge: string | undefined
   let dispatchMs = 0
@@ -119,6 +133,80 @@ export async function orchestrateChannelTurn(args: {
   const names = Object.fromEntries(catalogEntries.map((e) => [e.id, e.name]))
   const trace = createRouteTrace()
   let verdictLedgerFailed: string | null = null
+
+  /**
+   * 自主执行 (2026-10-04 用户指令「不要弹窗，智能体要自主做事」):
+   * work 计划 → 直接派工进工作台固定 Ackem 任务; 其余计划 → 自动补第一候选后
+   * 内联执行。先记 verdict 再产生副作用, 与 route:exec 分支同一纪律。
+   * skipVerdict: confirm 出口在分支顶部已记过 verdict, 不得重复记。
+   */
+  const runPlanAutonomously = async (
+    plan: ChannelPlan,
+    text: string,
+    motive: string,
+    opts: { index?: number; skipVerdict?: boolean } = {}
+  ): Promise<void> => {
+    if (!opts.skipVerdict) {
+      commitVerdict({
+        channel: plan.channel,
+        motive,
+        exitRuleId: 'route:exec',
+        planId: plan.planId
+      })
+    }
+    if (plan.channel === 'work') {
+      try {
+        const index = opts.index ?? 0
+        const dispatch = await dispatchChatWorkJob({
+          text,
+          filePaths: args.filePaths,
+          imagePaths: args.imagePaths,
+          chatSessionId: sessionId,
+          cwd: plan.cwd,
+          inspectionScope: typeof plan.params.inspectionScope==='string'?plan.params.inspectionScope:undefined,
+          dataRoot: root,
+          turnId: index ? `${chatTurn.turnId}-${index}` : chatTurn.turnId,
+          correlationId: chatTurn.correlationId
+        })
+        if (!workDispatch) workDispatch = dispatch
+        rememberChannelPlan(sessionId, plan, true, chatTurn.turnId, { status: dispatch.queued ? 'queued' : 'running', runId: dispatch.runId })
+        extraDispatchInjections.push(`【已派工】任务已交给工作台执行（工作目录 ${dispatch.cwd}），完成前请稍等。`)
+      } catch (e) {
+        rememberChannelPlan(sessionId, plan, false, chatTurn.turnId)
+        extraDispatchInjections.push(`【派工失败】${e instanceof Error ? e.message : String(e)}`)
+      }
+      return
+    }
+    if (!plan.extensionId && plan.candidateExtensionIds?.length) plan.extensionId = plan.candidateExtensionIds[0]
+    const exec = await executeChannel({
+      plan,
+      userText: text,
+      chatSessionId: sessionId,
+      coordinator: extCoordinator,
+      snapshot: engineSnap,
+      dataRoot: root,
+      turnId: chatTurn.turnId,
+      correlationId: chatTurn.correlationId
+    })
+    extraDispatchInjections.push(...exec.extraInjections)
+    if (exec.memoryDegraded && exec.error) extraDispatchInjections.push(`【记忆降级】${exec.error}`)
+    else if (!actionLooksLive(exec) && exec.error) extraDispatchInjections.push(`【执行未完成】${exec.error}`)
+    rememberChannelPlan(sessionId, plan, actionLooksLive(exec), chatTurn.turnId, exec)
+    if (plan.channel === 'plugin' && plan.extensionId && actionLooksLive(exec)) {
+      acceptDispatchExtension(root, plan.extensionId)
+      rememberLastPlugin(
+        sessionId,
+        plan.extensionId,
+        catalogEntries.find((e) => e.id === plan.extensionId)?.name ?? plan.extensionId
+      )
+      dispatchResult = {
+        decision: 'auto_invoke',
+        extensionId: plan.extensionId,
+        confidence: 1,
+        reasoning: 'autonomous-route'
+      }
+    }
+  }
 
   /**
    * Route v2 §6.1 (Codex D1, 审计整改 #1): record the verdict the moment the
@@ -191,22 +279,12 @@ export async function orchestrateChannelTurn(args: {
       rejectDispatchExtension(sessionId, pendingBefore.plan.extensionId, { dataRoot: root })
     }
     if (confirmed.ok) {
-      if (confirmed.plan.pendingConfirm) {
-        // Verdict was committed above with exit confirm:chain + pendingConfirm.
-        rememberChannelPlan(sessionId, confirmed.plan, false)
-        const current = peekPendingAction(sessionId)
-        channelPending = current
-          ? pendingViewOf(current, names, peekAllPending(sessionId).length - 1)
-          : {
-              planId: confirmed.plan.planId ?? '',
-              kind: confirmed.plan.pendingConfirm,
-              askMessage: askMessageFor(confirmed.plan, names),
-              cwd: confirmed.plan.cwd,
-              candidates: confirmed.plan.candidateExtensionIds?.map((id) => ({
-                id,
-                name: names[id] ?? id
-              }))
-            }
+      // 旧版确认卡遗留输入仍生效: 用户在卡里填过的目录/插件选择优先。
+      if (turnConfirm.cwd) confirmed.plan.cwd = turnConfirm.cwd
+      if (turnConfirm.extensionId) confirmed.plan.extensionId = turnConfirm.extensionId
+      if (confirmed.plan.pendingConfirm || confirmed.plan.channel === 'work') {
+        // 自主干道: 链式确认与 work 一律不弹卡 (verdict 已在分支顶部记过)。
+        await runPlanAutonomously(confirmed.plan, userText, 'confirm', { skipVerdict: true })
       } else {
         // Verdict was committed above (confirm:accepted) before executeChannel.
         const exec = await executeChannel({
@@ -222,7 +300,7 @@ export async function orchestrateChannelTurn(args: {
         extraDispatchInjections.push(...exec.extraInjections)
         if (exec.memoryDegraded && exec.error) extraDispatchInjections.push(`【记忆降级】${exec.error}`)
         else if (!actionLooksLive(exec) && exec.error) extraDispatchInjections.push(`【执行未完成】${exec.error}`)
-        rememberChannelPlan(sessionId, confirmed.plan, actionLooksLive(exec))
+        rememberChannelPlan(sessionId, confirmed.plan, actionLooksLive(exec), chatTurn.turnId, exec)
         if (confirmed.plan.channel === 'plugin' && confirmed.plan.extensionId && actionLooksLive(exec)) {
           acceptDispatchExtension(root, confirmed.plan.extensionId)
           rememberLastPlugin(
@@ -238,20 +316,26 @@ export async function orchestrateChannelTurn(args: {
           }
         }
         if (confirmed.next) {
-          channelPending = pendingViewOf(confirmed.next, names, peekAllPending(sessionId).length - 1)
+          // 链式后续: 自主执行, 不再弹下一张卡。
+          await runPlanAutonomously(confirmed.next.plan, confirmed.next.sourceText || userText, 'confirm', { index: 1, skipVerdict: true })
         }
       }
     } else {
       // Verdict was committed above (confirm:rejected / confirm:invalid).
       extraDispatchInjections.push(`【确认未执行】${confirmed.reason}`)
       if (confirmed.next) {
-        channelPending = pendingViewOf(confirmed.next, names, peekAllPending(sessionId).length - 1)
+        await runPlanAutonomously(confirmed.next.plan, confirmed.next.sourceText || userText, 'confirm', { index: 1, skipVerdict: true })
       }
     }
   } else {
-    const resolved = await resolveIntent(userText, sessionId, llm)
+    const hasTaskObjects = !redlineHit && chatTaskCandidates(root,sessionId).length>0
+    const resolved = hasTaskObjects ? {resolvedMessage:userText} : await resolveIntent(userText, sessionId, llm)
     resolvedMessageForKnowledge = resolved.resolvedMessage
     if (!redlineHit) {
+      const related = await handleChatTaskInput(root,{requestId:chatTurn.turnId,origin:'chat',conversationId:sessionId,text:resolved.resolvedMessage,attachments:[...(args.imagePaths??[]).map(path=>({path,kind:'image' as const})),...(args.filePaths??[]).map(path=>({path,kind:'file' as const}))]},onMilestone,()=>commitVerdict({channel:'chat',motive:'task-object-control',exitRuleId:'task:object-resolved'}))
+      if(related){skipRouteChannel=true;extraDispatchInjections.push(`【任务事实回执】${related.message}\n任务ID：${related.taskId??''}。只回应本轮要求，不能把等待/停止请求说成完成。`)}
+    }
+    if (!redlineHit && !skipRouteChannel) {
       const shortcut = resolveTurnShortcuts({
         sessionId,
         dataRoot: root,
@@ -261,15 +345,12 @@ export async function orchestrateChannelTurn(args: {
       })
       if (shortcut.kind === 'patch') {
         skipRouteChannel = true
-        commitVerdict({
-          channel: shortcut.plan.channel,
-          motive: 'shortcut',
-          exitRuleId: 'shortcut:patch',
-          pendingConfirm: shortcut.plan.pendingConfirm,
-          planId: shortcut.plan.planId
-        })
-        rememberChannelPlan(sessionId, shortcut.plan, false)
-        channelPending = pendingViewOf(shortcut.action, names)
+        // 「补一下」自主执行: 原文+补充直接派工/执行, 不再回卡。
+        await runPlanAutonomously(
+          shortcut.plan,
+          `${shortcut.action.sourceText}\n补充：${resolved.resolvedMessage}`,
+          'shortcut'
+        )
       } else if (shortcut.kind === 'patch_failed') {
         skipRouteChannel = true
         commitVerdict({ channel: 'chat', motive: 'shortcut', exitRuleId: 'shortcut:patch_failed' })
@@ -284,6 +365,8 @@ export async function orchestrateChannelTurn(args: {
         })
         if (shortcut.control.verb === 'abort_work') {
           await abortPinnedWork(sessionId, root)
+          // 派工进工作台的运行也一并停 (2026-10-04 自主管线)
+          await abortChatWorkDispatch().catch(() => false)
         }
         if (shortcut.control.verb === 'stop_plugin') {
           const extensionId = shortcut.control.extensionId ?? getLastPlugin(sessionId, root)?.extensionId
@@ -306,6 +389,10 @@ export async function orchestrateChannelTurn(args: {
         }
       }
     }
+    if(!skipRouteChannel&&!turnConfirm&&((args.imagePaths?.length??0)+(args.filePaths?.length??0)>0)){
+      await runPlanAutonomously({channel:'work',intent:'work',tag:null,params:{},grounding:'用户附件由 AckemCode 内核读取，工作页留存执行与验收记录。'},resolved.resolvedMessage,'attachment')
+      skipRouteChannel=true
+    }
     const tDispatch = Date.now()
     const [routed, prePartial] = await Promise.all([
       skipRouteChannel
@@ -318,6 +405,7 @@ export async function orchestrateChannelTurn(args: {
             llm,
             catalogFailed,
             onResidual,
+            onMilestone,
             trace,
             dataRoot: root
           }),
@@ -332,34 +420,14 @@ export async function orchestrateChannelTurn(args: {
     if (routed) {
       extraDispatchInjections.push(routed.plan.grounding)
       if (routed.split && routed.extras?.length) {
-        commitVerdict({
-          channel: routed.plan.channel,
-          motive: routed.motive.kind,
-          exitRuleId: 'route:split_pending',
-          pendingConfirm: routed.plan.pendingConfirm,
-          planId: routed.plan.planId
-        })
-        rememberChannelPlan(sessionId, routed.plan, false)
-        const actions = savePendingActions(
-          sessionId,
-          [
-            { sourceText: resolved.resolvedMessage, plan: routed.plan },
-            ...routed.extras.map((plan) => ({ sourceText: resolved.resolvedMessage, plan }))
-          ],
-          revision
-        )
-        channelPending = pendingViewOf(actions[0], names, actions.length - 1)
+        // 自主干道: 拆分任务逐条自主执行, 不再存成待确认卡。
+        const plans = [routed.plan, ...routed.extras]
+        for (let i = 0; i < plans.length; i++) {
+          await runPlanAutonomously(plans[i]!, resolved.resolvedMessage, routed.motive.kind, { index: i })
+        }
       } else if (routed.plan.pendingConfirm) {
-        commitVerdict({
-          channel: routed.plan.channel,
-          motive: routed.motive.kind,
-          exitRuleId: 'route:pending',
-          pendingConfirm: routed.plan.pendingConfirm,
-          planId: routed.plan.planId
-        })
-        rememberChannelPlan(sessionId, routed.plan, false)
-        const saved = savePendingAction(sessionId, resolved.resolvedMessage, routed.plan, revision)
-        channelPending = pendingViewOf(saved, names)
+        // 自主干道: work 派工进工作台, 插件卡自动补第一候选, 不再弹确认卡。
+        await runPlanAutonomously(routed.plan, resolved.resolvedMessage, routed.motive.kind)
       } else {
         // 整改 #1: commit BEFORE executeChannel so an execution throw still
         // leaves a verdict, and the ledger order is verdict → plan/execute.
@@ -382,7 +450,7 @@ export async function orchestrateChannelTurn(args: {
         extraDispatchInjections.push(...exec.extraInjections)
         if (exec.memoryDegraded && exec.error) extraDispatchInjections.push(`【记忆降级】${exec.error}`)
         else if (!actionLooksLive(exec) && exec.error) extraDispatchInjections.push(`【执行未完成】${exec.error}`)
-        rememberChannelPlan(sessionId, routed.plan, actionLooksLive(exec))
+        rememberChannelPlan(sessionId, routed.plan, actionLooksLive(exec), chatTurn.turnId, exec)
         if (routed.plan.channel === 'plugin' && routed.plan.extensionId && actionLooksLive(exec)) {
           rememberLastPlugin(
             sessionId,
@@ -409,8 +477,8 @@ export async function orchestrateChannelTurn(args: {
   // a turn whose verdict write failed goes to the error counter via
   // verdictLedgerFailed; the next turn writes normally (一次失败、下次可写).
 
-  if (skipRouteChannel && !turnConfirm) {
-    rememberChannelPlan(sessionId, chatPlan('chat'), false)
+  if (skipRouteChannel && !turnConfirm && !workDispatch) {
+    rememberChannelPlan(sessionId, chatPlan('chat'), false, chatTurn.turnId)
   }
 
   if (channelPending && preFromParallel) {
@@ -427,6 +495,7 @@ export async function orchestrateChannelTurn(args: {
     })
     return {
       channelPending,
+      workDispatch,
       preFromParallel,
       dispatchResult,
       extraDispatchInjections,
@@ -439,8 +508,35 @@ export async function orchestrateChannelTurn(args: {
     }
   }
 
+  // 自主派工收口: plan.proposed + plan.decided(accepted) + turn.finalized(ack)。
+  // 跳过 LLM, 聊天页直接渲染同一句 ack, 历史与记忆两侧一致。
+  if (workDispatch) {
+    const proposed = proposeChatPlan({
+      dataRoot: root,
+      turnId: chatTurn.turnId,
+      plan: {
+        planId: workDispatch.turnId,
+        nature: 'work',
+        intent: 'work_job',
+        targetId: workDispatch.cwd,
+        summary: WORK_DISPATCH_ACK,
+        requiresConfirmation: false
+      }
+    })
+    decideChatPlan({ dataRoot: root, planId: workDispatch.turnId, accepted: true })
+    finalizeChatTurn({
+      dataRoot: root,
+      sessionId,
+      turnId: chatTurn.turnId,
+      userText,
+      assistantText: WORK_DISPATCH_ACK,
+      surface
+    })
+  }
+
   return {
     channelPending,
+    workDispatch,
     preFromParallel,
     dispatchResult,
     extraDispatchInjections,

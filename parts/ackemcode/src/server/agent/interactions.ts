@@ -22,14 +22,14 @@ export type { AskUserAnswerPayload, PlanDecisionPayload }
 export class InteractionBroker {
   private waiters = new Map<
     string,
-    { resolve: (v: unknown) => void; reject: (e: Error) => void }
+    { resolve: (v: unknown) => void; reject: (e: Error) => void; kind?: 'plan' }
   >()
 
-  wait<T>(requestId: string): Promise<T> {
+  wait<T>(requestId: string, kind?: 'plan'): Promise<T> {
     return new Promise((resolve, reject) => {
       this.waiters.set(requestId, {
         resolve: (v) => resolve(v as T),
-        reject
+        reject, kind
       })
     })
   }
@@ -40,6 +40,12 @@ export class InteractionBroker {
     this.waiters.delete(requestId)
     w.resolve(value)
     return true
+  }
+
+  approvePendingPlans(): void {
+    for (const [id, waiter] of [...this.waiters]) {
+      if (waiter.kind === 'plan') this.resolve(id, { decision: 'approve', mode: 'bypassPermissions' })
+    }
   }
 
   pendingCount(): number {

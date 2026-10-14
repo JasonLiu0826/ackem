@@ -59,6 +59,13 @@ export type MemoryEventType =
   | 'memory.forgotten'
   | 'memory.deleted'
   | 'route.verdict'
+  | 'task.created'
+  | 'task.input_received'
+  | 'task.revised'
+  | 'task.stopped'
+  | 'task.transitioned'
+  | 'task.observed'
+  | 'system.inspection_committed'
 
 export type MemoryActor = 'user' | 'ackem' | 'plugin_runtime' | 'ackemcode_runtime' | 'system'
 
@@ -365,6 +372,7 @@ export interface CorrectedClaim {
 }
 
 export type MemoryControlContextFields = {
+  accessContextRef?: string
   sessionId?: string
   timezone?: string
   turnId?: string | null
@@ -379,6 +387,7 @@ export type MemoryControlCommand = MemoryControlContextFields &
   )
 
 export type MemoryControlErrorCode =
+  | 'scope_denied'
   | 'source_turn_required'
   | 'source_turn_mismatch'
   | 'projection_failed'
@@ -471,6 +480,8 @@ export interface MemoryJobRunner {
 }
 
 export interface RecallQuery {
+  /** Opaque host-issued consumer reference; domain/principal supplied by a model is not authority. */
+  accessContextRef?: string
   sessionId: string
   text: string
   observedAt: string

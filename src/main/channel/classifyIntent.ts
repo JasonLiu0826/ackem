@@ -26,11 +26,12 @@ export async function classifyIntent(input: {
   const timer = setTimeout(() => {
     timedOut = true
     controller.abort()
-  }, input.timeoutMs ?? 2500)
+  }, input.timeoutMs ?? 15000)
   const envelope = [
+    '【执行职责】Ackem 主聊天负责理解、协调与交付；AckemCode 工作页可以真实检查本机文件、目录、已安装应用和项目，执行终端及文件操作。插件只代表下面明确启用的能力。选择通道不代表已经执行，运行可用性和权限由实际执行入口核验。',
     '【已启用能力】',
     input.catalog
-      .filter((e) => e.status === 'active')
+      .filter((e) => e.status === 'active' && !e.rejectedInSession)
       .map((e) => `- ${e.name}（${e.capabilityTag ?? 'untagged'}）`)
       .join('\n') || '（无）',
     '',
@@ -45,15 +46,21 @@ export async function classifyIntent(input: {
   ].join('\n')
 
   try {
-    const raw = await input.llm.chatCompletionJson({
-      messages: [
-        { role: 'system', content: CLASSIFY_SYSTEM_PROMPT },
-        { role: 'user', content: envelope }
-      ],
-      temperature: 0,
-      max_tokens: 512,
-      signal: controller.signal
+    const deadline = new Promise<never>((_resolve, reject) => {
+      controller.signal.addEventListener('abort', () => reject(Error('route_decision_timeout')), { once: true })
     })
+    const raw = await Promise.race([
+      input.llm.chatCompletionJson({
+        messages: [
+          { role: 'system', content: CLASSIFY_SYSTEM_PROMPT },
+          { role: 'user', content: envelope }
+        ],
+        temperature: 0,
+        max_tokens: 1024,
+        signal: controller.signal
+      }),
+      deadline
+    ])
     const parsed = parseIntentJson(raw)
     if (parsed) input.onOutcome?.('ok')
     else input.onOutcome?.('invalid_json')

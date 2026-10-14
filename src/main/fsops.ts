@@ -1,6 +1,7 @@
 import { appendFileSync, copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { basename, dirname, join, resolve } from 'node:path'
 import { assertReadableUnderDataRoot, sanitizeRelativeWritePath } from './whitelist'
+import { approvePersonalMemoryDocument } from './memory/documentScope'
 
 export function appendOrOverwriteAllowed(
   dataRoot: string,
@@ -61,6 +62,7 @@ export function promoteImportToMemory(dataRoot: string, relImport: string): { ok
   mkdirSync(dirname(toAbs), { recursive: true })
   try {
     copyFileSync(from, toAbs)
+    approvePersonalMemoryDocument(dataRoot, toRel)
     return { ok: true, to: toRel }
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : String(e) }

@@ -71,7 +71,7 @@ export async function executeOpenAiToolBatch(args: {
       webSearchCompanionReply = merged.companionReply
       toolResults.push({
         name: 'web_search',
-        content: '检索摘录纸面卡已生成（见聊天区上方卡片）。请用伴侣口吻简短回应，勿重复卡片全文。'
+        content: webSearchCompanionReply ?? ''
       })
       writes.push(merged.memoryWrite)
     }
@@ -187,7 +187,7 @@ export async function executeOpenAiToolBatch(args: {
           webSearchCompanionReply = presented.companionReply
           toolResults.push({
             name: 'web_search',
-            content: '检索摘录纸面卡已生成（见聊天区上方卡片）。请用伴侣口吻简短回应，勿重复卡片全文。'
+            content: webSearchCompanionReply ?? ''
           })
           writes.push(presented.memoryWrite)
         } else {

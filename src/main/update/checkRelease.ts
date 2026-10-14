@@ -1,8 +1,7 @@
-import type { ReleaseChannelInfo, UpdateCheckResult } from '../../shared/updateTypes'
+import type { ReleaseChannelInfo, UpdateCheckResult, UpdateStartRequest } from '../../shared/updateTypes'
 import { compareSemver, isNewerVersion, parseSemver } from '../../shared/semverCompare'
 import { app } from 'electron'
 import {
-  CHANNEL_ORDER_AUTO,
   GITEE,
   GITHUB,
   normalizeTag,
@@ -130,11 +129,12 @@ export function pickChannelInfo(
 ): ReleaseChannelInfo | undefined {
   if (channel === 'github') return github?.error ? undefined : github
   if (channel === 'gitee') return gitee?.error ? undefined : gitee
-  for (const ch of CHANNEL_ORDER_AUTO) {
-    const info = ch === 'github' ? github : gitee
-    if (info && !info.error && info.version) return info
-  }
   return pickLatest(github, gitee)
+}
+
+/** The renderer's confirmation is a constraint; only fresh server metadata supplies the URL. */
+export function matchesConfirmedRelease(info: ReleaseChannelInfo, request: UpdateStartRequest): boolean {
+  return info.version === request.targetVersion && info.downloadUrl === request.downloadUrl
 }
 
 export async function checkForUpdates(): Promise<UpdateCheckResult> {

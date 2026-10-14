@@ -8,6 +8,7 @@ import { dirname, join } from 'node:path'
 import { ACTIVE_RECALL_MIN_INTERVAL, ACTIVE_RECALL_PROBABILITY } from '../engine/ackemParams'
 import type { MemoryFact } from './semantic/types.js'
 import type { FactStore } from './factStore'
+import { personalFacts } from './personalFacts'
 import { cosineSimilarity } from './factEmbeddingCache'
 
 export type RecallRecord = { factId: string; recalledAtTurn: number }
@@ -49,7 +50,8 @@ export class ActiveRecall {
     if (roll >= ACTIVE_RECALL_PROBABILITY) return null
 
     factStore.load()
-    const cores = factStore.getCoreFacts()
+    const visible = new Set(personalFacts(factStore).map(f => f.id))
+    const cores = factStore.getCoreFacts().filter(f => visible.has(f.id))
     if (cores.length === 0) return null
 
     const recentIds = new Set(

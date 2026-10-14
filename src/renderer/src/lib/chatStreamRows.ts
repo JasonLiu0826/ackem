@@ -9,15 +9,9 @@ export function insertMemoryAuditCardIntoRows(
 ): ChatRow[] {
   const n = [...prev]
   const row: ChatRow = { kind: 'memoryAudit', ...payload }
-  let insertAt = n.length
-  for (let i = n.length - 1; i >= 0; i--) {
-    const r = n[i]
-    if (r.kind === 'message' && r.role === 'assistant') {
-      insertAt = i
-      break
-    }
-  }
   const streamIdx = streamingAssistantIndexRef.current
+  const target = streamIdx != null ? n[streamIdx] : undefined
+  const insertAt = target?.kind === 'message' && target.role === 'assistant' ? streamIdx! : n.length
   if (streamIdx != null && insertAt <= streamIdx) {
     streamingAssistantIndexRef.current = streamIdx + 1
   }
@@ -32,15 +26,9 @@ export function insertSearchCardIntoRows(
 ): ChatRow[] {
   const n = [...prev]
   const row: ChatRow = { kind: 'search', ...payload }
-  let insertAt = n.length
-  for (let i = n.length - 1; i >= 0; i--) {
-    const r = n[i]
-    if (r.kind === 'message' && r.role === 'assistant') {
-      insertAt = i
-      break
-    }
-  }
   const streamIdx = streamingAssistantIndexRef.current
+  const target = streamIdx != null ? n[streamIdx] : undefined
+  const insertAt = target?.kind === 'message' && target.role === 'assistant' ? streamIdx! : n.length
   if (streamIdx != null && insertAt <= streamIdx) {
     streamingAssistantIndexRef.current = streamIdx + 1
   }

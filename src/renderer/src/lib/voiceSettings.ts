@@ -24,7 +24,7 @@ export const TTS_BROADCAST_ENABLED = false
 
 export const DEFAULT_VOICE_SETTINGS: VoiceSettingsState = {
   enabled: false,
-  asrModel: 'base',
+  asrModel: 'small',
   ttsEngine: 'auto',
   ttsVoice: 'xiaoxiao',
   ttsPiperModel: '',
@@ -43,6 +43,7 @@ export function loadVoiceSettings(): VoiceSettingsState {
     const raw = localStorage.getItem(VOICE_SETTINGS_STORAGE_KEY)
     if (raw) {
       const parsed = { ...DEFAULT_VOICE_SETTINGS, ...JSON.parse(raw) } as VoiceSettingsState
+      parsed.asrModel = 'small'
       if (!GPT_SOVITS_VOICE_ENABLED && parsed.ttsEngine === 'gpt-sovits') {
         parsed.ttsEngine = 'auto'
       }

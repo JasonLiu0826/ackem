@@ -1,3 +1,6 @@
+import { openAiOutputTokenParams } from '../shared/outputTokens'
+import {contextPublicationFence} from './chat/contextPublicationFence'
+import { readOpenAiReplyWithContinuation } from './openAiReplyContinuation'
 import type { WebContents } from 'electron'
 import type { AppSettings } from './settings'
 import { finalizeTurnAfterStream } from './postChatTurn'
@@ -36,7 +39,6 @@ import { runForcedWebSearchTurn } from './extensions/plugins/builtin/knowledge-p
 import { isLlmMockMode } from './llmMockMode'
 import { mockChatStreamText } from './llmMockResponses'
 import { taskFrameFollowUpActivityLabel, taskFrameWorkingActivityLabel, skillToolActivityLabel } from './chatStatusLabels'
-import { finalizePaperCardCompanionReply } from './paperCard/finalizeCompanionReply'
 import {
   parseUserTaskFrameFromBody,
   runWebSearchWithTaskFrame
@@ -200,21 +202,50 @@ export function toolNames(opts?: ToolsPayloadOptions): string[] {
   return names
 }
 
-export async function streamChatCompletion(
+export async function streamChatCompletion(webContents:WebContents,body:Record<string,unknown>,dataRoot:string,externalSignal?:AbortSignal):Promise<void>{
+  const guard=contextPublicationFence(dataRoot,body)
+  if(!guard&&!body.useWaveChat)return streamChatCompletionCore(webContents,body,dataRoot,externalSignal)
+  const guards=guard?[guard]:[]
+  if(body.waveContext&&typeof body.waveContext==='object')body.waveContext={...body.waveContext,trustedContextChecks:guards}
+  const controller=new AbortController()
+  const abort=()=>controller.abort()
+  if(externalSignal?.aborted)abort()
+  externalSignal?.addEventListener('abort',abort,{once:true})
+  let invalidated=false
+  const current=()=>{try{return guards.every(check=>check())}catch{return false}}
+  const invalidate=()=>{
+    if(invalidated)return
+    invalidated=true;controller.abort()
+    if(!webContents.isDestroyed()){
+      webContents.send('chat:replace','')
+      webContents.send('chat:error','任务要求或授权已更新，这条旧回复已停止。')
+    }
+  }
+  const guarded=new Proxy(webContents,{get(target,name){if(name==='send')return(channel:string,...args:unknown[])=>{if(!current()){invalidate();return}if(!invalidated)target.send(channel,...args)};const value=Reflect.get(target,name);return typeof value==='function'?value.bind(target):value}})
+  const timer=setInterval(()=>{if(!current())invalidate()},50);timer.unref()
+  try{if(!current()){invalidate();return}await streamChatCompletionCore(guarded,body,dataRoot,controller.signal)}
+  finally{clearInterval(timer);externalSignal?.removeEventListener('abort',abort)}
+}
+
+async function streamChatCompletionCore(
   webContents: WebContents,
   body: Record<string, unknown>,
-  dataRoot: string
+  dataRoot: string,
+  externalSignal?: AbortSignal
 ): Promise<void> {
   const settings = body.settings as AppSettings
   if (body.useWaveChat && body.wavePlan && body.waveContext) {
-    return streamChatWaves(webContents, body, dataRoot)
+    return streamChatWaves(webContents, body, dataRoot, externalSignal)
   }
   if ((settings.llmProvider ?? 'openai') === 'anthropic') {
-    return streamAnthropicMessages(webContents, body, dataRoot)
+    return streamAnthropicMessages(webContents, body, dataRoot, externalSignal)
   }
   const messages = body.messages as unknown[]
   const url = resolveChatCompletionsUrl(settings)
   const controller = new AbortController()
+  const onExternalAbort = () => controller.abort()
+  if (externalSignal?.aborted) controller.abort()
+  externalSignal?.addEventListener('abort', onExternalAbort, { once: true })
   const desktopAgentChatMode = body.desktopAgentChatMode === true
   // 桌面助手已退役：本机活走通道 work，不再把电脑工具交给伴侣循环。
   const agentActive = false
@@ -224,6 +255,7 @@ export async function streamChatCompletion(
   const toolAcc = new Map<number, ToolCallAcc>()
   let assistantAcc = ''
   let round1Text = ''
+  let responseTruncated = false
   const knowledgeTopic = (
     (typeof body.knowledgeTopic === 'string' ? body.knowledgeTopic : '') ||
     (typeof body.suggestedSearchQuery === 'string' ? body.suggestedSearchQuery : '')
@@ -240,7 +272,7 @@ export async function streamChatCompletion(
     model: settings.model,
     messages,
     stream: true,
-    max_tokens: useKnowledgeCard ? undefined : Math.min(2048, settings.anthropicMaxTokens ?? 1024)
+    ...openAiOutputTokenParams(settings)
   }
   // 主动策略 Loop：intensityMod 调制温度（0.5~1.5 乘到基线 0.6）
   const intensityMod = typeof body.intensityMod === 'number' ? body.intensityMod : 1.0
@@ -271,6 +303,7 @@ export async function streamChatCompletion(
       signal: controller.signal
     }))
   ) {
+    externalSignal?.removeEventListener('abort', onExternalAbort)
     clearTimeout(abortTimer)
     return
   }
@@ -287,8 +320,9 @@ export async function streamChatCompletion(
         userTaskFrame
       )
     } catch (e) {
-      webContents.send('chat:error', e instanceof Error ? e.message : String(e))
+      if (!externalSignal?.aborted) webContents.send('chat:error', e instanceof Error ? e.message : String(e))
     } finally {
+      externalSignal?.removeEventListener('abort', onExternalAbort)
       clearTimeout(abortTimer)
     }
     return
@@ -309,7 +343,8 @@ export async function streamChatCompletion(
         (text) => webContents.send('chat:status', text)
       )
       webContents.send('chat:replace', companion)
-      sendChatDone(webContents, {
+      if (externalSignal?.aborted) return
+    sendChatDone(webContents, {
         memoryWrites: [`KNOWLEDGE 整理「${knowledgeTopic}」`],
         assistantText: companion,
         turnId: turnIdOnly
@@ -322,8 +357,9 @@ export async function streamChatCompletion(
         settings
       })
     } catch (e) {
-      webContents.send('chat:error', e instanceof Error ? e.message : String(e))
+      if (!externalSignal?.aborted) webContents.send('chat:error', e instanceof Error ? e.message : String(e))
     } finally {
+      externalSignal?.removeEventListener('abort', onExternalAbort)
       clearTimeout(abortTimer)
     }
     return
@@ -344,7 +380,8 @@ export async function streamChatCompletion(
         (text) => webContents.send('chat:status', text)
       )
       webContents.send('chat:replace', companion)
-      sendChatDone(webContents, {
+      if (externalSignal?.aborted) return
+    sendChatDone(webContents, {
         memoryWrites: [`PLAN 计划书「${planDocumentTopic}」`],
         assistantText: companion,
         turnId: turnIdOnly
@@ -357,8 +394,9 @@ export async function streamChatCompletion(
         settings
       })
     } catch (e) {
-      webContents.send('chat:error', e instanceof Error ? e.message : String(e))
+      if (!externalSignal?.aborted) webContents.send('chat:error', e instanceof Error ? e.message : String(e))
     } finally {
+      externalSignal?.removeEventListener('abort', onExternalAbort)
       clearTimeout(abortTimer)
     }
     return
@@ -386,7 +424,8 @@ export async function streamChatCompletion(
       } else {
         webContents.send('chat:replace', mockText)
       }
-      sendChatDone(webContents, {
+      if (externalSignal?.aborted) return
+    sendChatDone(webContents, {
         memoryWrites: [],
         assistantText: mockText,
         turnId
@@ -399,8 +438,9 @@ export async function streamChatCompletion(
         settings
       })
     } catch (e) {
-      webContents.send('chat:error', e instanceof Error ? e.message : String(e))
+      if (!externalSignal?.aborted) webContents.send('chat:error', e instanceof Error ? e.message : String(e))
     } finally {
+      externalSignal?.removeEventListener('abort', onExternalAbort)
       clearTimeout(abortTimer)
     }
     return
@@ -417,7 +457,8 @@ export async function streamChatCompletion(
     ) {
       notifyChatStreamStart(webContents)
       webContents.send('chat:replace', DESKTOP_AGENT_TASK_START_ACK)
-      sendChatDone(webContents, {
+      if (externalSignal?.aborted) return
+    sendChatDone(webContents, {
         memoryWrites: [],
         assistantText: DESKTOP_AGENT_TASK_START_ACK,
         turnId
@@ -459,23 +500,11 @@ export async function streamChatCompletion(
     }
 
     const streamLlmRound = async (streamToUi: boolean): Promise<string> => {
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: buildLlmHeaders(settings),
-        body: JSON.stringify(reqBody),
-        signal: controller.signal
+      const result = await readOpenAiReplyWithContinuation(webContents, url, reqBody, {
+        headers: buildLlmHeaders(settings), signal: controller.signal, streamToUi, toolAcc
       })
-      if (!res.ok || !res.body) {
-        const errText = await res.text().catch(() => res.statusText)
-        webContents.send('chat:error', `HTTP ${res.status}: ${errText.slice(0, 500)}`)
-        return ''
-      }
-      return readOpenAiChatCompletionStream(webContents, res, {
-        streamToUi,
-        pacedSentences: streamToUi,
-        signal: controller.signal,
-        toolAcc
-      })
+      responseTruncated = result.truncated
+      return result.text
     }
 
     const userMsg = userMsgEarly ?? lastUserMessageFromContext(allMsgsEarly)
@@ -553,6 +582,7 @@ export async function streamChatCompletion(
       for (let attempt = 0; attempt < 2; attempt++) {
         toolAcc.clear()
         round1Text = await streamLlmRound(streamUi)
+        if (externalSignal?.aborted) return
         if (round1Text.trim() || toolAcc.size > 0) break
         if (attempt === 0 && streamUi) {
           log.warn('llm.empty_reply_retry')
@@ -765,11 +795,11 @@ export async function streamChatCompletion(
     }
 
     if (webSearchCompanionReply) {
-      assistantAcc = finalizePaperCardCompanionReply(webSearchCompanionReply)
+      assistantAcc = webSearchCompanionReply.trim()
       webContents.send('chat:replace', assistantAcc)
     } else if (canDeliverTaskPlan && otherToolResults.length > 0) {
       webContents.send('chat:status', taskFrameFollowUpActivityLabel(userTaskFrame))
-      const followUpPaced = !runAgentLoop
+      let followUpPartial = ''
       const taskPlanHonesty =
         finalTaskProgress?.allPassed === true
           ? buildTaskPlanFollowUpHonestyBlock(finalTaskProgress)
@@ -785,35 +815,27 @@ export async function streamChatCompletion(
           userTaskFrame,
           extraSuffix || undefined
         )
-        const followRes = await fetch(url, {
-          method: 'POST',
-          headers: buildLlmHeaders(settings),
-          body: JSON.stringify(followReq),
-          signal: controller.signal
+        const result = await readOpenAiReplyWithContinuation(webContents, url, followReq, {
+          headers: buildLlmHeaders(settings), signal: controller.signal, streamToUi: true,
+          toolAcc: new Map(), onTextDelta: text => { followUpPartial += text }
         })
-        if (followRes.ok && followRes.body) {
-          const streamed = await readOpenAiChatCompletionStream(webContents, followRes, {
-            streamToUi: true,
-            pacedSentences: followUpPaced,
-            signal: controller.signal
-          })
-          if (streamed) {
-            assistantAcc = runAgentLoop ? streamed.trim() : finalizePaperCardCompanionReply(streamed)
-            if (!followUpPaced) {
-              webContents.send('chat:replace', assistantAcc)
-            }
-          }
-        } else if (!followRes.ok) {
-          const errBody = await followRes.text().catch(() => '')
-          console.error('[chat] follow-up LLM call failed', followRes.status, errBody.slice(0, 300))
+        responseTruncated = result.truncated
+        if (result.text) {
+          // Ordinary tool replies are full answers, not the paper-card companion's short aside.
+          assistantAcc = result.text.trim()
+          webContents.send('chat:replace', assistantAcc)
         }
       } catch (e) {
+        responseTruncated = true
+        if (followUpPartial) assistantAcc = followUpPartial
+        webContents.send('chat:status', '回答连接中断，已保留收到的内容。')
         console.error('[chat] follow-up LLM error', e)
       }
     }
 
+    if (externalSignal?.aborted) return
     if (otherToolResults.length > 0 && !assistantAcc) {
-      assistantAcc = buildToolResultsFallback(otherToolResults)
+      assistantAcc = buildToolResultsFallback(otherToolResults, settings)
       webContents.send('chat:replace', assistantAcc)
     } else if (!assistantAcc.trim() && round1Text && canDeliverTaskPlan) {
       assistantAcc = round1Text
@@ -840,18 +862,20 @@ export async function streamChatCompletion(
       webContents.send('chat:replace', assistantAcc)
     }
 
-    const rememberedPlan = peekChannelPlan(chatSessionId)
+    const rememberedPlan = peekChannelPlan(chatSessionId, turnIdEarly)
     if (rememberedPlan) {
-      const guarded = outputGuard(assistantAcc, rememberedPlan.plan, rememberedPlan.executed)
+      const guarded = outputGuard(assistantAcc, rememberedPlan.plan, rememberedPlan.executed, rememberedPlan.policy)
       if (guarded !== assistantAcc) {
         assistantAcc = guarded
         webContents.send('chat:replace', assistantAcc)
       }
     }
 
+    if (externalSignal?.aborted) return
     sendChatDone(webContents, {
       memoryWrites: writes,
       assistantText: assistantAcc,
+      ...(responseTruncated ? { generationState: 'incomplete' as const } : {}),
       turnId: turnIdLoop
     })
     notifyUiChatBubble({ text: assistantAcc, role: 'assistant' })
@@ -859,12 +883,15 @@ export async function streamChatCompletion(
       turnId: turnIdLoop,
       dataRoot,
       assistantText: assistantAcc,
+      ...(responseTruncated ? { generationState: 'incomplete' as const } : {}),
       settings
     })
   } catch (e) {
     if (turnIdEarly) clearPendingTurn(turnIdEarly)
-    webContents.send('chat:error', e instanceof Error ? e.message : String(e))
+    if (!externalSignal?.aborted) webContents.send('chat:error', e instanceof Error ? e.message : String(e))
   } finally {
+    externalSignal?.removeEventListener('abort', onExternalAbort)
+    if (externalSignal?.aborted && turnIdEarly) clearPendingTurn(turnIdEarly)
     clearTimeout(abortTimer)
   }
 }

@@ -1,3 +1,4 @@
+import { touchCompanionActivity, canSendCompanionInitiative } from './initiativeState'
 import type { BrowserWindow } from 'electron'
 import { createLogger } from '../logger'
 import { loadSettings } from '../settings'
@@ -28,6 +29,7 @@ export function setProactiveMainWindowGetter(fn: () => BrowserWindow | null): vo
 
 export function touchProactiveUserActivity(): void {
   lastUserActivityMs = Date.now()
+  touchCompanionActivity()
 }
 
 function pickIntervalMs(freq: 'low' | 'medium' | 'high'): number {
@@ -41,7 +43,7 @@ function scheduleNextTick(): void {
     timer = null
   }
   const settings = loadSettings()
-  if (settings.proactiveEnabled === false) return
+  if (settings.proactiveEnabled === false || settings.companionshipProactiveEnabled !== true) return
 
   const freq = settings.proactiveFrequency ?? 'medium'
   const delayMs = pickIntervalMs(freq)
@@ -56,8 +58,9 @@ async function tickProactive(): Promise<void> {
   ticking = true
   try {
     const settings = loadSettings()
-    if (settings.proactiveEnabled === false) return
+    if (settings.proactiveEnabled === false || settings.companionshipProactiveEnabled !== true) return
 
+    if (!canSendCompanionInitiative()) return
     const quietMs = settings.proactiveUserQuietMs ?? 60_000
     if (Date.now() - lastUserActivityMs < quietMs) {
       log.debug('proactive deferred — user recently active')

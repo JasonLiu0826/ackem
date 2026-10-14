@@ -103,11 +103,11 @@ export class EpisodicStore {
   }
 
   /** Retrieve episodes relevant to a query by keyword + emotional intensity */
-  retrieve(query: string, maxResults: number = EPISODE_RETRIEVAL_MAX): Episode[] {
+  retrieve(query: string, maxResults: number = EPISODE_RETRIEVAL_MAX, allowedIds?: ReadonlySet<string>): Episode[] {
     if (this.episodes.length === 0) return []
     const qLower = query.toLowerCase()
 
-    const scored = this.episodes.map(ep => {
+    const scored = this.episodes.filter(ep => !allowedIds || allowedIds.has(ep.id)).map(ep => {
       let score = 0
       // Keyword match
       for (const kw of ep.keywords) {

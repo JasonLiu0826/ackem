@@ -1,4 +1,6 @@
+import {trustedFrom,toReceiptEvent} from '../ackemcode/receiptProjection'
 import type { ChannelPlan } from '../../shared/channelPlan'
+import {randomUUID} from 'node:crypto'
 import type { ExtensionsCoordinator } from '../extensions/coordinator'
 import type { EngineSnapshot } from '../extensions/protocols'
 import { executeDispatchedExtension } from '../extensions/dispatch/dispatchExecutor'
@@ -388,6 +390,13 @@ async function launchOrQueueWork(input: {
     })
   }
   if (!input.dataRoot) return memoryFailure('记忆不可用，未启动任务')
+  if(plan.workKind!=='factory'){
+    try{
+      const {dispatchChatWorkJob}=await import('../tasks/chatWorkDispatch')
+      const dispatch=await dispatchChatWorkJob({dataRoot:input.dataRoot,text:input.userText,turnId:input.turnId??`direct:${input.chatSessionId}:${input.correlationId??randomUUID()}`,correlationId:input.correlationId??randomUUID(),chatSessionId:input.chatSessionId,cwd,inspectionScope:typeof plan.params.inspectionScope==='string'?plan.params.inspectionScope:undefined})
+      return result({extraInjections:[plan.grounding,'任务已持久化接收，最终结果仍需执行与验收'],handedToWorker:true,queued:dispatch.queued,runId:dispatch.runId,status:dispatch.queued?'queued':'running'})
+    }catch(error){return memoryFailure(String((error as Error).message))}
+  }
   const port = openActionPort(input.dataRoot)
   if (!port) return memoryFailure('记忆不可用，未启动任务')
 
@@ -573,37 +582,7 @@ function applyWorkStreamEvent(
   }
 }
 
-function trustedFrom(raw: AgentEvent['hostTurnReceipt']): TrustedHostReceipt | undefined {
-  if (!raw) return undefined
-  return {
-    hostRunId: raw.hostRunId,
-    state: raw.state,
-    revision: raw.revision,
-    updatedAt: raw.updatedAt,
-    errorCode: raw.errorCode
-  }
-}
-
-function toReceiptEvent(
-  event: AgentEvent | { type: 'disconnected' } | { type: 'http_error'; message: string } | { type: 'protocol_warning'; detail: string }
-): import('../memory/contracts.js').AckemCodeReceipt {
-  if (event.type === 'disconnected') return { type: 'disconnected' }
-  if (event.type === 'http_error' && 'message' in event) {
-    return { type: 'unverified', reason: String(event.message || 'http_error') }
-  }
-  if (event.type === 'protocol_warning' && 'detail' in event) {
-    return { type: 'unverified', reason: String(event.detail || 'bad_sse') }
-  }
-  if (event.type === 'permission_request') {
-    const requestId = 'requestId' in event ? event.requestId : ''
-    const reason = 'reason' in event ? event.reason : 'permission'
-    return { type: 'waiting_permission', requestId: String(requestId ?? ''), reason: String(reason ?? 'permission') }
-  }
-  if (event.type === 'done' && event.ok === true) return { type: 'done', ok: true, resultSummary: '' }
-  if (event.type === 'done' && event.ok === false) return { type: 'done', ok: false, errorCode: String(event.error ?? 'runtime_failed') }
-  if (event.type === 'abort_ack') return { type: 'aborted' }
-  return { type: 'unverified', reason: event.type }
-}
+export {trustedFrom,toReceiptEvent} from '../ackemcode/receiptProjection'
 
 export async function resumeQueuedWork(dataRoot: string): Promise<void> {
   const memory = getMemorySystem(dataRoot)
@@ -624,6 +603,16 @@ export async function promoteNextJob(
   const port = openActionPort(dataRoot)
   if (!port) return
   if (sessionHasLiveWork(port, chatSessionId)) return
+  const head = port.listOpen(chatSessionId).filter(run => run.status === 'queued').sort((a, b) => (a.queueOrder ?? 0) - (b.queueOrder ?? 0))[0]
+  if(head&&head.execution?.workKind!=='factory'){
+    const {getTaskRuntime}=await import('../tasks/runtime')
+    await getTaskRuntime(dataRoot).coordinator.pump();return
+  }
+  if (head?.execution?.params?.chatDelivery === true) {
+    const { resumeChatWorkQueue } = await import('../ipc/workbench')
+    await resumeChatWorkQueue(dataRoot, chatSessionId)
+    return
+  }
   const promoted = port.promoteNext(chatSessionId)
   const execution = promoted.ok ? promoted.run?.execution : undefined
   if (!promoted.ok || !promoted.run || !execution?.cwd || !execution.prompt) return
@@ -651,6 +640,10 @@ export async function followPinnedWork(
   dataRoot?: string
 ): Promise<{ ok: boolean; reason?: string }> {
   if (!dataRoot) return { ok: false, reason: '记忆不可用，跟一句未发送' }
+  const {getTaskRuntime}=await import('../tasks/runtime')
+  const managed=getTaskRuntime(dataRoot).repository.visibleList().filter(t=>t.originConversationId===chatSessionId&&['running','waiting_user','reviewing','unknown','paused'].includes(t.state))
+  if(managed.length===1){const accepted=await getTaskRuntime(dataRoot).coordinator.submit({requestId:randomUUID(),origin:'chat',conversationId:chatSessionId,taskId:managed[0].id,text},false,{kind:'amend',taskId:managed[0].id});return{ok:accepted.disposition==='applied',reason:accepted.message}}
+  if(managed.length>1)return{ok:false,reason:'请明确要继续哪个任务'}
   const port = openActionPort(dataRoot)
   if (!port) return { ok: false, reason: '记忆不可用，跟一句未发送' }
   const live = port.listOpen(chatSessionId).find(
@@ -674,6 +667,9 @@ export async function followPinnedWork(
 
 export async function abortPinnedWork(chatSessionId: string, dataRoot?: string): Promise<void> {
   if (!dataRoot) return
+  const {getTaskRuntime}=await import('../tasks/runtime')
+  const managed=getTaskRuntime(dataRoot).repository.visibleList().filter(t=>t.originConversationId===chatSessionId&&['queued','running','waiting_user','reviewing','unknown'].includes(t.state))
+  if(managed.length){for(const task of managed)getTaskRuntime(dataRoot).coordinator.stop(task.id);return}
   const port = openActionPort(dataRoot)
   if (!port) return
   const live = port.listOpen(chatSessionId).find((run) => run.nature === 'work' && (run.status === 'running' || run.status === 'waiting_permission'))

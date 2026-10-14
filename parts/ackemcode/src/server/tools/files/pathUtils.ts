@@ -5,6 +5,7 @@
 import path from 'node:path'
 import fs from 'node:fs/promises'
 import fsSync from 'node:fs'
+import {isFullMachineAccess} from '../../hostTaskFence.js'
 
 const MAX_REALPATH_WALK = 64
 
@@ -206,6 +207,7 @@ export function resolveInCwd(
   allowRoots?: string[] | null
 ): string {
   const resolved = expandPath(cwd, filePath)
+  if(isFullMachineAccess())return resolved
   const root = path.resolve(cwd)
   if (isInsideRootLexical(resolved, root)) {
     assertContainedInRoot(root, resolved)

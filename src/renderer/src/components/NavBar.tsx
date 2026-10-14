@@ -1,13 +1,14 @@
-import type { ReactElement } from 'react'
+import type { ReactElement, ReactNode } from 'react'
 import { t } from '../lib/i18n'
+import { CodeNavIcon } from './CodeNavIcon'
 import { companionAvatarStatusLabel } from '../../../shared/companionSkin'
 import { CompanionAvatar } from './CompanionAvatar'
 import { LightCore } from './LightCore'
 import { useAppStore, type Tab } from '../store/appStore'
 
-const items: { id: Tab; labelKey: string; icon: string }[] = [
+const items: { id: Tab; labelKey: string; icon: ReactNode }[] = [
   { id: 'chat', labelKey: 'nav.chat', icon: '💬' },
-  { id: 'code', labelKey: 'nav.code', icon: '⌨' },
+  { id: 'code', labelKey: 'nav.code', icon: <CodeNavIcon /> },
   { id: 'memory', labelKey: 'nav.memory', icon: '🧠' },
   { id: 'diary', labelKey: 'nav.diary', icon: '📔' },
   { id: 'gamemode', labelKey: 'nav.gamemode', icon: '🎮' },

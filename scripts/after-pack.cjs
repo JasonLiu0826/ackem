@@ -35,7 +35,8 @@ function resolveRealNodeModules(root) {
 
 /** Default export is used by electron-builder afterPack. */
 module.exports = async function afterPack(context) {
-  const root = join(context.appOutDir, '..', '..')
+  require('./bundle-console-node.cjs')(join(context.appOutDir,'resources'))
+  const root = context.packager.projectDir
   const src = resolveRealNodeModules(root)
   const dest = join(context.appOutDir, 'resources', 'ackemcode', 'node_modules')
   if (!src) {

@@ -8,11 +8,52 @@ function escapeHtml(s: string): string {
 }
 
 export function renderInline(text: string): string {
-  return escapeHtml(text)
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/~~(.+?)~~/g, '<del>$1</del>')
-    .replace(/`(.+?)`/g, '<code class="bg-surface-raised px-1 rounded text-xs">$1</code>')
+  return linkifyFilePaths(
+    escapeHtml(text)
+      .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/gi, (_match, label: string, rawUrl: string) => {
+        try {
+          const url = new URL(rawUrl.replace(/&amp;/g, '&'))
+          if (url.protocol !== 'http:' && url.protocol !== 'https:') return label
+          const safeHref = escapeHtml(url.href).replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+          return `<a href="${safeHref}" target="_blank" rel="noopener noreferrer">${label}</a>`
+        } catch { return label }
+      })
+      .replace(/\[([^\]]+)\]\(([^\s)]+)\)/g, (match, label: string, path: string) => {
+        const clean = path.startsWith('&lt;') && path.endsWith('&gt;') ? path.slice(4, -4) : path
+        return !/^[a-z]+:/i.test(clean) || /^[A-Za-z]:[\\/]/.test(clean) ? (EXACT_FILE_RE.test(clean) ? fileAnchor(clean, label) : match) : match
+      })
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      .replace(/~~(.+?)~~/g, '<del>$1</del>')
+      .replace(/`(.+?)`/g, '<code class="bg-surface-raised px-1 rounded text-xs">$1</code>')
+  )
+}
+
+/**
+ * 产出文件路径 → 可点击链接 (2026-10-04 用户反馈: 聊天里的文件要能直接打开)。
+ * 只匹配带扩展名的多段相对/绝对路径 (staging/hello.txt、workspace\a\b.md),
+ * 避免把日期、普通词组误判成路径; 已有 <a> 锚点内不再嵌套。
+ * 实际打开由主进程 shell:revealPath 校验 (仅 data 根内), 不存在的路径点开提示。
+ */
+const FILE_EXT = '(?:txt|md|log|json|csv|ts|tsx|js|jsx|html|css|yaml|yml|xml|py|rs|go|sql|sh|bat|ps1|toml|ini|env|c|cpp|h|pdf|png|jpg|jpeg|svg|docx|xlsx)'
+const FILE_PATH_RE = new RegExp(`(?<![\\p{L}\\p{N}_@:/.-])((?:[A-Za-z]:[\\\\/])?(?:[\\p{L}\\p{N}_().~@-]+[\\\\/])*[\\p{L}\\p{N}_().~-]+\\.${FILE_EXT})(?![\\p{L}\\p{N}_])`, 'giu')
+const EXACT_FILE_RE = new RegExp(`^(?![a-z]+://).+\\.${FILE_EXT}$`, 'iu')
+function fileAnchor(path: string, label = path): string {
+  const safe = path.replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+  return `<a href="#" data-reveal-path="${safe}" class="md-file-link" title="预览文件">${label}</a>`
+}
+
+function linkifyFilePaths(html: string): string {
+  // Never match tag attributes, existing links or fenced code. Inline code paths can contain spaces.
+  return html.split(/(<a\s[^>]*>[\s\S]*?<\/a>|<code[^>]*>[\s\S]*?<\/code>|<[^>]+>)/g).map((part) => {
+    if (part.startsWith('<a ')) return part
+    if (part.startsWith('<code')) {
+      return part.replace(/^(<code[^>]*>)([\s\S]*)(<\/code>)$/, (_match, start: string, text: string, end: string) =>
+        !text.includes('<') && EXACT_FILE_RE.test(text) ? `${start}${fileAnchor(text)}${end}` : part)
+    }
+    if (part.startsWith('<')) return part
+    return part.replace(FILE_PATH_RE, (path) => fileAnchor(path))
+  }).join('')
 }
 
 function isTableRow(line: string): boolean {
@@ -180,6 +221,7 @@ export function renderMarkdown(md: string, options?: RenderMarkdownOptions): str
   const html: string[] = []
   let inCodeBlock = false
   let codeBuf: string[] = []
+  let codeLanguage = ''
   let listKind: 'ul' | 'ol' | null = null
 
   function closeList(): void {
@@ -206,13 +248,14 @@ export function renderMarkdown(md: string, options?: RenderMarkdownOptions): str
     if (trimmed.startsWith('```')) {
       if (inCodeBlock) {
         html.push(
-          `<pre class="bg-surface-raised rounded-lg p-3 my-2 overflow-x-auto text-xs"><code>${escapeHtml(codeBuf.join('\n'))}</code></pre>`
+          `<pre data-language="${codeLanguage}" class="bg-surface-raised rounded-lg p-3 my-2 overflow-x-auto text-xs"><code>${escapeHtml(codeBuf.join('\n'))}</code></pre>`
         )
         codeBuf = []
         inCodeBlock = false
       } else {
         closeList()
         inCodeBlock = true
+        codeLanguage = trimmed.slice(3).trim().toLowerCase().replace(/[^a-z0-9#+-]/g, '')
       }
       continue
     }
@@ -303,7 +346,7 @@ export function renderMarkdown(md: string, options?: RenderMarkdownOptions): str
   closeList()
   if (inCodeBlock) {
     html.push(
-      `<pre class="bg-surface-raised rounded-lg p-3 my-2 overflow-x-auto text-xs"><code>${escapeHtml(codeBuf.join('\n'))}</code></pre>`
+      `<pre data-language="${codeLanguage}" class="bg-surface-raised rounded-lg p-3 my-2 overflow-x-auto text-xs"><code>${escapeHtml(codeBuf.join('\n'))}</code></pre>`
     )
   }
 

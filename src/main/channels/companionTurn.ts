@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto'
+import { guardReplyText } from '../channel/outputGuard'
 import { join } from 'node:path'
 import { assembleMessages } from '../context'
 import { assembleSocialMemberMessages } from '../context/promptAssembly'
@@ -197,7 +198,7 @@ async function runCompanionTurnInner(
     }
   }
 
-  workingMemory.push(sessionId, { turnIndex, userText, assistantText: '' })
+  workingMemory.push(sessionId, { turnIndex, userText, assistantText: '' }, root)
 
   saveState(root, pre.newState, sessionId)
   state = pre.newState
@@ -270,8 +271,11 @@ async function runCompanionTurnInner(
           messages: messages as Parameters<typeof runWeixinStructuredTurn>[0]['messages'],
           userText
         })
+        const policy = { origin: 'answer' as const, style: 'assistant' as const, status: 'not_executed' as const }
+        structured.companionReply = guardReplyText(structured.companionReply, policy)
+        structured.cardBody = guardReplyText(structured.cardBody, policy)
 
-        const recent = workingMemory.getRecent(sessionId)
+        const recent = workingMemory.getRecent(sessionId, root)
         const last = recent[recent.length - 1]
         if (last && !last.assistantText) {
           last.assistantText = structured.companionReply
@@ -325,7 +329,7 @@ async function runCompanionTurnInner(
 
   let assistantText: string
   try {
-    assistantText = (await chatPromise).trim()
+    assistantText = guardReplyText((await chatPromise).trim(), { origin: 'answer', style: 'assistant', status: 'not_executed' })
   } catch (e) {
     log.error('stream failed', e)
     assistantText = '抱歉，我这边刚才没处理好，你再发一次好吗？'
@@ -335,7 +339,7 @@ async function runCompanionTurnInner(
     assistantText = '…'
   }
 
-  const recent = workingMemory.getRecent(sessionId)
+  const recent = workingMemory.getRecent(sessionId, root)
   const last = recent[recent.length - 1]
   if (last && !last.assistantText) last.assistantText = assistantText
 

@@ -1,3 +1,7 @@
+import { anthropicImageContent } from '../shared/chatImages'
+import { resolveAnthropicOutputBudget } from './outputTokenBudget'
+import { peekChannelPlan } from './channel/lastPlan'
+import { guardReplyText } from './channel/outputGuard'
 // [anthropicMessages] — Claude / Anthropic Messages API（原生协议）
 // 职责：URL、请求头、OpenAI 形态 messages 转换、SSE 流式解析、非流式 JSON 调用
 // 引用：./settings, ./fsops, ./postChatTurn
@@ -36,7 +40,6 @@ import {
 } from './taskFrame'
 import { notifyChatStreamStart } from './openAiSseStream'
 import { streamChatWaves } from './chat/waveChat'
-import { createPacedStreamEmitter } from './chat/pacedStreamEmitter'
 import { finalizePaperCardCompanionReply } from './paperCard/finalizeCompanionReply'
 import { isDesktopAgentToolingActive } from '../shared/desktopAgent'
 import { INVESTIGATION_SYNTHESIZE_MIN_TOKENS } from '../shared/investigation'
@@ -175,10 +178,10 @@ type OaiMsg = { role: string; content?: unknown }
 
 export function openAiMessagesToAnthropic(messages: unknown[]): {
   system?: string
-  messages: Array<{ role: 'user' | 'assistant'; content: string }>
+  messages: Array<{ role: 'user' | 'assistant'; content: string | Array<Record<string,unknown>> }>
 } {
   const systemParts: string[] = []
-  const out: Array<{ role: 'user' | 'assistant'; content: string }> = []
+  const out: Array<{ role: 'user' | 'assistant'; content: string | Array<Record<string,unknown>> }> = []
   for (const m of messages as OaiMsg[]) {
     if (!m || typeof m !== 'object') continue
     if (m.role === 'system') {
@@ -187,8 +190,7 @@ export function openAiMessagesToAnthropic(messages: unknown[]): {
       continue
     }
     if (m.role === 'user' || m.role === 'assistant') {
-      const c = typeof m.content === 'string' ? m.content : JSON.stringify(m.content ?? '')
-      out.push({ role: m.role, content: c })
+      out.push({ role: m.role, content: anthropicImageContent(m.content) })
       continue
     }
     /* tool 等：当前对话拼装不包含 tool 消息；若将来有则跳过 */
@@ -220,7 +222,8 @@ function isRecord(x: unknown): x is Record<string, unknown> {
 export async function streamAnthropicMessages(
   webContents: WebContents,
   body: Record<string, unknown>,
-  dataRoot: string
+  dataRoot: string,
+  externalSignal?: AbortSignal
 ): Promise<void> {
   const settings = body.settings as AppSettings
   const pendingTurnId = typeof body.turnId === 'string' ? body.turnId : undefined
@@ -230,6 +233,9 @@ export async function streamAnthropicMessages(
   const rawMessages = body.messages as unknown[]
   const url = resolveAnthropicMessagesUrl(settings)
   const controller = new AbortController()
+  const onExternalAbort = () => controller.abort()
+  if (externalSignal?.aborted) controller.abort()
+  externalSignal?.addEventListener('abort', onExternalAbort, { once: true })
   const desktopAgentChatMode = body.desktopAgentChatMode === true
   // 桌面助手已退役：本机活走通道 work，不再把电脑工具交给伴侣循环。
   const agentActive = false
@@ -252,10 +258,7 @@ export async function streamAnthropicMessages(
 
   const { system, messages: amMsgs } = openAiMessagesToAnthropic(rawMessages)
   const ctxMsgsEarly = rawMessages as Array<{ role: string; content: unknown }>
-  const maxTokens = Math.max(
-    256,
-    Math.min(200_000, Number(settings.anthropicMaxTokens) || 8192)
-  )
+  const maxTokens = await resolveAnthropicOutputBudget(settings, url, buildAnthropicHeaders(settings))
 
   const req: Record<string, unknown> = {
     model: settings.model,
@@ -271,9 +274,6 @@ export async function streamAnthropicMessages(
   const sendTools = !settings.disableChatTools
   const toolsOpts: ToolsPayloadOptions = { settings, desktopAgentChatMode }
   const streamRound1ToUi = !useKnowledgeCard && !usePlanDocumentCard && !agentActive
-  const pacedEmitter = streamRound1ToUi
-    ? createPacedStreamEmitter(webContents, { signal: controller.signal })
-    : undefined
   const forcedWebSearchQueryRaw = (
     typeof body.forcedWebSearchQuery === 'string' ? body.forcedWebSearchQuery : ''
   ).trim()
@@ -297,6 +297,7 @@ export async function streamAnthropicMessages(
       signal: controller.signal
     }))
   ) {
+    externalSignal?.removeEventListener('abort', onExternalAbort)
     clearTimeout(abortTimer)
     return
   }
@@ -313,8 +314,9 @@ export async function streamAnthropicMessages(
         userTaskFrame
       )
     } catch (e) {
-      webContents.send('chat:error', e instanceof Error ? e.message : String(e))
+      if (!externalSignal?.aborted) webContents.send('chat:error', e instanceof Error ? e.message : String(e))
     } finally {
+      externalSignal?.removeEventListener('abort', onExternalAbort)
       clearTimeout(abortTimer)
     }
     return
@@ -348,6 +350,7 @@ export async function streamAnthropicMessages(
         sessionId: chatSessionId,
         userText: userMsgEarly
       })
+      externalSignal?.removeEventListener('abort', onExternalAbort)
       clearTimeout(abortTimer)
       return
     }
@@ -357,15 +360,17 @@ export async function streamAnthropicMessages(
       !isContinueTaskPlanIntent(userMsgEarly)
     ) {
       const convBody = { ...body, desktopAgentChatMode: false }
+      externalSignal?.removeEventListener('abort', onExternalAbort)
       clearTimeout(abortTimer)
-      return streamAnthropicMessages(webContents, convBody, dataRoot)
+      return streamAnthropicMessages(webContents, convBody, dataRoot, externalSignal)
     }
     try {
       await runAnthropicDesktopAgentLoop(webContents, body, dataRoot)
     } catch (e) {
       if (turnIdEarly) clearPendingTurn(turnIdEarly)
-      webContents.send('chat:error', e instanceof Error ? e.message : String(e))
+      if (!externalSignal?.aborted) webContents.send('chat:error', e instanceof Error ? e.message : String(e))
     } finally {
+      externalSignal?.removeEventListener('abort', onExternalAbort)
       clearTimeout(abortTimer)
     }
     return
@@ -398,8 +403,9 @@ export async function streamAnthropicMessages(
         settings
       })
     } catch (e) {
-      webContents.send('chat:error', e instanceof Error ? e.message : String(e))
+      if (!externalSignal?.aborted) webContents.send('chat:error', e instanceof Error ? e.message : String(e))
     } finally {
+      externalSignal?.removeEventListener('abort', onExternalAbort)
       clearTimeout(abortTimer)
     }
     return
@@ -432,8 +438,9 @@ export async function streamAnthropicMessages(
         settings
       })
     } catch (e) {
-      webContents.send('chat:error', e instanceof Error ? e.message : String(e))
+      if (!externalSignal?.aborted) webContents.send('chat:error', e instanceof Error ? e.message : String(e))
     } finally {
+      externalSignal?.removeEventListener('abort', onExternalAbort)
       clearTimeout(abortTimer)
     }
     return
@@ -501,15 +508,11 @@ export async function streamAnthropicMessages(
         if (delta.type === 'text_delta' && typeof delta.text === 'string') {
           onDelta(delta.text)
           if (streamRound1ToUi) {
-            if (pacedEmitter) {
-              pacedEmitter.onDelta(delta.text)
-            } else {
-              if (!streamStarted) {
-                streamStarted = true
-                notifyChatStreamStart(webContents)
-              }
-              webContents.send('chat:chunk', delta.text)
+            if (!streamStarted) {
+              streamStarted = true
+              notifyChatStreamStart(webContents)
             }
+            webContents.send('chat:chunk', delta.text)
           }
         }
         if (
@@ -564,9 +567,6 @@ export async function streamAnthropicMessages(
       const pl = parseSseDataLine(lineBuf)
       if (pl !== null && !handlePayload(pl)) return
     }
-    if (pacedEmitter) {
-      await pacedEmitter.markDone()
-    }
 
     const toolResults: Array<{ name: string; id?: string; content: string }> = []
     const userMsg = lastUserMessageFromContext(ctxMsgsEarly)
@@ -599,7 +599,7 @@ export async function streamAnthropicMessages(
         webSearchCompanionReply = merged.companionReply
         toolResults.push({
           name: 'web_search',
-          content: '检索摘录纸面卡已生成（见聊天区上方卡片）。'
+          content: webSearchCompanionReply ?? ''
         })
         writes.push(merged.memoryWrite)
       }
@@ -686,7 +686,7 @@ export async function streamAnthropicMessages(
             toolResults.push({
               name: 'web_search',
               id: String(idx),
-              content: '检索摘录纸面卡已生成（见聊天区上方卡片）。'
+              content: webSearchCompanionReply ?? ''
             })
             writes.push(presented.memoryWrite)
           } else {
@@ -722,7 +722,7 @@ export async function streamAnthropicMessages(
 
     const otherToolResults = toolResults.filter(tr => tr.name !== 'append_memory')
     if (webSearchCompanionReply) {
-      assistantAcc = finalizePaperCardCompanionReply(webSearchCompanionReply)
+      assistantAcc = webSearchCompanionReply.trim()
       webContents.send('chat:replace', assistantAcc)
     } else if (otherToolResults.length > 0) {
       webContents.send('chat:status', taskFrameFollowUpActivityLabel(userTaskFrame))
@@ -732,10 +732,7 @@ export async function streamAnthropicMessages(
         )
         const followReq: Record<string, unknown> = {
           model: settings.model,
-          max_tokens: Math.max(
-            agentActive ? INVESTIGATION_SYNTHESIZE_MIN_TOKENS : 600,
-            maxTokens
-          ),
+          max_tokens: maxTokens,
           messages: followMsgs,
           stream: false
         }
@@ -764,8 +761,9 @@ export async function streamAnthropicMessages(
       }
     }
 
+    if (externalSignal?.aborted) return
     if (otherToolResults.length > 0 && !assistantAcc) {
-      assistantAcc = buildToolResultsFallback(otherToolResults)
+      assistantAcc = buildToolResultsFallback(otherToolResults, settings)
       webContents.send('chat:replace', assistantAcc)
     } else if (otherToolResults.length === 0 && round1Text) {
       assistantAcc = round1Text
@@ -779,6 +777,8 @@ export async function streamAnthropicMessages(
       webContents.send('chat:replace', assistantAcc)
     }
 
+    if (externalSignal?.aborted) return
+    assistantAcc = guardReplyText(assistantAcc, peekChannelPlan(typeof body.sessionId === 'string' ? body.sessionId : 'default', turnId)?.policy ?? { origin: 'answer', style: 'assistant', status: 'not_executed' })
     webContents.send('chat:done', {
       memoryWrites: writes,
       assistantText: assistantAcc,
@@ -793,8 +793,10 @@ export async function streamAnthropicMessages(
     })
   } catch (e) {
     if (pendingTurnId) clearPendingTurn(pendingTurnId)
-    webContents.send('chat:error', e instanceof Error ? e.message : String(e))
+    if (!externalSignal?.aborted) webContents.send('chat:error', e instanceof Error ? e.message : String(e))
   } finally {
+    externalSignal?.removeEventListener('abort', onExternalAbort)
+    if (externalSignal?.aborted && turnIdEarly) clearPendingTurn(turnIdEarly)
     clearTimeout(abortTimer)
   }
 }
@@ -814,11 +816,12 @@ export async function anthropicMessagesJsonDetailed(params: {
   messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>
   temperature: number
   max_tokens?: number
+  signal?: AbortSignal
 }): Promise<{ text: string; truncated: boolean }> {
   const { settings } = params
   const url = resolveAnthropicMessagesUrl(settings)
   const { system, messages: amMsgs } = openAiMessagesToAnthropic(params.messages as unknown[])
-  const cap = Math.max(256, Math.min(200_000, Number(settings.anthropicMaxTokens) || 8192))
+  const cap = await resolveAnthropicOutputBudget(settings, resolveAnthropicMessagesUrl(settings), buildAnthropicHeaders(settings))
   const maxTokens = params.max_tokens != null
     ? Math.min(Math.max(64, params.max_tokens), cap)
     : cap
@@ -834,7 +837,8 @@ export async function anthropicMessagesJsonDetailed(params: {
   const res = await fetch(url, {
     method: 'POST',
     headers: buildAnthropicHeaders(settings),
-    body: JSON.stringify(body)
+    body: JSON.stringify(body),
+    signal: params.signal??AbortSignal.timeout(settings.timeoutMs||120_000)
   })
   const text = await res.text()
   if (!res.ok) throw new Error(`Anthropic ${res.status}: ${text.slice(0, 500)}`)

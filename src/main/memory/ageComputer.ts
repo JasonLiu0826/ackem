@@ -4,6 +4,7 @@
 
 import type { AgeMeta } from './semantic/types.js'
 import type { FactStore } from './factStore'
+import { personalFacts } from './personalFacts'
 
 /** 从 ageMeta 反推出生年份 */
 export function inferBirthYear(
@@ -48,8 +49,7 @@ export function computeCurrentAge(record: AgeMeta, now: Date = new Date()): numb
 /** 从 FactStore 取所有人的年龄记录（从结构化 ageMeta 读取） */
 export function getAllAgeRecords(store: FactStore): Array<{ factId: string; subject: string; record: AgeMeta }> {
   store.load()
-  return store
-    .listActive()
+  return personalFacts(store)
     .filter((f) => f.ageMeta && f.ageMeta.age > 0)
     .map((f) => ({
       factId: f.id,
@@ -61,8 +61,7 @@ export function getAllAgeRecords(store: FactStore): Array<{ factId: string; subj
 /** 取用户当前年龄 */
 export function resolveUserAge(store: FactStore): { age: number; isEstimate: boolean } | null {
   store.load()
-  const candidates = store
-    .listActive()
+  const candidates = personalFacts(store)
     .filter(
       (f) =>
         f.ageMeta &&
@@ -84,8 +83,7 @@ export function resolveUserAge(store: FactStore): { age: number; isEstimate: boo
 /** 年龄的自然语言呈现 */
 export function buildAgeLine(store: FactStore): string {
   store.load()
-  const candidates = store
-    .listActive()
+  const candidates = personalFacts(store)
     .filter(
       (f) =>
         f.ageMeta &&

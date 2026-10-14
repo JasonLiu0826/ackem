@@ -2,10 +2,13 @@ import type { IndexSnapshot } from '../indexer'
 import type { AppSettings } from '../settings'
 import type { ChatMessage } from '../context'
 import { assembleMessages } from '../context'
+import {bindContextPublicationFence,contextPublicationFence} from './contextPublicationFence'
 import type { WaveSpec } from '../../shared/wavePlan'
 import { formatTimeContextBlock } from '../extensions/plugins/builtin/desktop-companion/desktop-companion'
 
 export type WaveBuildContext = {
+  /** In-process only; stream wrapper replaces any deserialized value. */
+  trustedContextChecks?:Array<()=>boolean>
   userText: string
   explicitRel?: string
   recentMessages: { role: 'user' | 'assistant'; content: string }[]
@@ -137,5 +140,7 @@ export function buildWaveMessages(
       msgs.splice(insertAt, 0, { role: 'assistant', content: part.trim() })
     }
   }
+  const guard=contextPublicationFence('',{messages:base})
+  if(guard)bindContextPublicationFence(msgs,guard)
   return msgs
 }

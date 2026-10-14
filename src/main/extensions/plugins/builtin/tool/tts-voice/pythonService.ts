@@ -216,6 +216,7 @@ export class PythonVoiceService {
   }
 
   async transcribe(audioWav: ArrayBuffer): Promise<TranscribeResult | null> {
+    if (!this.baseUrl || this.state !== 'ready') return null
     try {
       const resp = await fetch(`${this.baseUrl}/transcribe/raw`, {
         method: 'POST',

@@ -42,7 +42,7 @@ export async function runOfflineThoughtGeneration(input: {
   try {
     const store = new FactStore(defaultFactsPath(input.dataRoot))
     store.load()
-    const active = store.listActive().slice(0, 20)
+    const active = personalFacts(store).slice(0, 20)
     if (active.length > 0 && store._embeddingCache && store._embeddingCache.size > 0) {
       const embeds = active.map(f => store._embeddingCache!.get(f.id) ?? [])
       // 找"最不闲聊"的事实（最高权重 × 最强情感强度的作为首选）
@@ -83,3 +83,4 @@ export const offlineThoughtSkill: SkillHandler = {
   manifest: OFFLINE_THOUGHT_MANIFEST,
   execute
 }
+import { personalFacts } from '../../../../memory/personalFacts'

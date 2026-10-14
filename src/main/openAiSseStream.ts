@@ -1,4 +1,7 @@
 import type { WebContents } from 'electron'
+import { createReasoningStream } from './reasoningStream'
+import { createLogger } from './logger'
+const log = createLogger('llm-stream')
 import { createPacedStreamEmitter } from './chat/pacedStreamEmitter'
 import { REPLY_INTER_SENTENCE_GAP_MS } from '../shared/replyPacing'
 
@@ -40,18 +43,21 @@ function processSseLine(
   streamToUi: boolean,
   onStreamStart: () => void,
   onTextDelta?: (s: string) => void,
-  pacedEmitter?: ReturnType<typeof createPacedStreamEmitter>
+  pacedEmitter?: ReturnType<typeof createPacedStreamEmitter>,
+  onFinish?: (reason: string) => void
 ): void {
   if (!trimmed.startsWith('data:')) return
   const data = trimmed.slice(5).trim()
-  if (data === '[DONE]') return
+  if (data === '[DONE]') { onFinish?.('done'); return }
   try {
     const json = JSON.parse(data) as {
       choices?: Array<{
+        finish_reason?: string | null
         delta?: {
           content?: string
           /** DeepSeek-R1 类思考模型的权衡文本 — 单独通道, 不进正文气泡。 */
           reasoning_content?: string | null
+          reasoning?: string | null
           tool_calls?: Array<{
             index?: number
             id?: string
@@ -60,21 +66,15 @@ function processSseLine(
         }
       }>
     }
-    const delta = json.choices?.[0]?.delta
-    if (delta?.reasoning_content) {
+    const choice = json.choices?.[0]
+    if (choice?.finish_reason) onFinish?.(choice.finish_reason)
+    const delta = choice?.delta
+    if (delta?.reasoning_content || delta?.reasoning) {
       // 思考中内容走独立事件 — 渲染层折叠灰度显示 (DeepSeek 式), 不进气泡。
-      webContents.send('chat:reasoning', delta.reasoning_content)
+      webContents.send('chat:reasoning', delta.reasoning_content || delta.reasoning)
     }
     if (delta?.content) {
-      onStreamStart()
       onTextDelta?.(delta.content)
-      if (streamToUi) {
-        if (pacedEmitter) {
-          pacedEmitter.onDelta(delta.content)
-        } else {
-          webContents.send('chat:chunk', delta.content)
-        }
-      }
     }
     if (delta?.tool_calls?.length) {
       mergeToolCalls(toolAcc, delta.tool_calls)
@@ -92,7 +92,8 @@ function flushSseBuffer(
   final: boolean,
   onStreamStart: () => void,
   onTextDelta?: (s: string) => void,
-  pacedEmitter?: ReturnType<typeof createPacedStreamEmitter>
+  pacedEmitter?: ReturnType<typeof createPacedStreamEmitter>,
+  onFinish?: (reason: string) => void
 ): string {
   const parts = buffer.split('\n')
   if (!final) {
@@ -105,7 +106,8 @@ function flushSseBuffer(
         streamToUi,
         onStreamStart,
         onTextDelta,
-        pacedEmitter
+        pacedEmitter,
+        onFinish
       )
     }
     return incomplete
@@ -120,7 +122,8 @@ function flushSseBuffer(
         streamToUi,
         onStreamStart,
         onTextDelta,
-        pacedEmitter
+        pacedEmitter,
+        onFinish
       )
     }
   }
@@ -139,6 +142,7 @@ export async function readOpenAiChatCompletionStream(
     onTextDelta?: (s: string) => void
     toolAcc?: Map<number, ToolCallAcc>
     signal?: AbortSignal
+    onFinish?: (reason: string) => void
   } = {}
 ): Promise<string> {
   const {
@@ -165,10 +169,22 @@ export async function readOpenAiChatCompletionStream(
       : undefined
 
   let round1Text = ''
-  const onDelta = (s: string) => {
+  let finishReason: string | undefined
+  const onFinish = (reason: string) => {
+    if (reason === 'done' && finishReason) return
+    finishReason = reason === 'done' ? 'stop' : reason
+    options.onFinish?.(finishReason)
+  }
+  const splitter = createReasoningStream((s) => {
     round1Text += s
     onTextDelta?.(s)
-  }
+    onStreamStart()
+    if (streamToUi) {
+      if (pacedEmitter) pacedEmitter.onDelta(s)
+      else webContents.send('chat:chunk', s)
+    }
+  }, (s) => webContents.send('chat:reasoning', s))
+  const onDelta = (s: string) => splitter.push(s)
 
   const reader = res.body.getReader()
   const decoder = new TextDecoder()
@@ -185,9 +201,11 @@ export async function readOpenAiChatCompletionStream(
       false,
       onStreamStart,
       onDelta,
-      pacedEmitter
+      pacedEmitter,
+      onFinish
     )
   }
+  buffer += decoder.decode()
   flushSseBuffer(
     webContents,
     buffer,
@@ -196,10 +214,14 @@ export async function readOpenAiChatCompletionStream(
     true,
     onStreamStart,
     onDelta,
-    pacedEmitter
+    pacedEmitter,
+    onFinish
   )
+  splitter.finish()
   if (pacedEmitter) {
     await pacedEmitter.markDone()
   }
+  log.info('stream.finished', { finishReason: finishReason ?? 'disconnected', answerChars: round1Text.length })
+  if (!finishReason) throw new Error("回复连接提前结束，已保留收到的内容，请重试。")
   return round1Text
 }

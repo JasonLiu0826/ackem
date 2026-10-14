@@ -4,18 +4,22 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { loadVoiceSettings, syncVoiceSettingsToMain, TTS_BROADCAST_ENABLED } from '../lib/voiceSettings'
-import { useUiStore } from '../store/uiStore'
+import { useUiStore, type VoiceSurface } from '../store/uiStore'
 
 const SAMPLE_RATE = 16000
 
 type VoicePipelineState = 'idle' | 'listening' | 'speaking' | 'thinking' | 'error'
 
-export function useVoicePipeline() {
+export function useVoicePipeline(opts: { surface: VoiceSurface; active?: boolean }) {
+  const surface = opts.surface
+  const surfaceActive = opts.active !== false
   const [state, setState] = useState<VoicePipelineState>('idle')
   const [error, setError] = useState<string | null>(null)
   const [micActive, setMicActive] = useState(false)
 
   const setVoiceListening = useUiStore((s) => s.setVoiceListening)
+  const voiceOwner = useUiStore((s) => s.voiceOwner)
+  const setVoiceOwner = useUiStore((s) => s.setVoiceOwner)
   const settingsRef = useRef(loadVoiceSettings())
 
   const streamRef = useRef<MediaStream | null>(null)
@@ -70,6 +74,7 @@ export function useVoicePipeline() {
   }, [])
 
   const startListening = useCallback(async () => {
+    if (!surfaceActive || streamRef.current) return
     const s = loadVoiceSettings()
     settingsRef.current = s
     if (!s.enabled) {
@@ -79,6 +84,9 @@ export function useVoicePipeline() {
     }
 
     try {
+      setVoiceOwner(surface)
+      await new Promise((r) => setTimeout(r, 40))
+      if (useUiStore.getState().voiceOwner !== surface) return
       await syncSettings()
       unlockAudio()
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -102,8 +110,11 @@ export function useVoicePipeline() {
         window.ackem.voice?.sendAudioChunk(int16.buffer)
       }
 
+      const mute = ctx.createGain()
+      mute.gain.value = 0
       source.connect(processor)
-      processor.connect(ctx.destination)
+      processor.connect(mute)
+      mute.connect(ctx.destination)
       processorRef.current = processor
 
       await window.ackem.voice?.setMode?.(s.voiceMode)
@@ -117,10 +128,19 @@ export function useVoicePipeline() {
       const msg = err instanceof Error ? err.message : String(err)
       setError(`麦克风访问失败: ${msg}`)
       setState('error')
+      if (useUiStore.getState().voiceOwner === surface) setVoiceOwner(null)
     }
-  }, [unlockAudio, ensureCaptureContext, setVoiceListening, syncSettings])
+  }, [
+    surface,
+    surfaceActive,
+    setVoiceOwner,
+    unlockAudio,
+    ensureCaptureContext,
+    setVoiceListening,
+    syncSettings
+  ])
 
-  const stopListening = useCallback(() => {
+  const stopLocalCapture = useCallback(() => {
     if (processorRef.current) {
       try {
         processorRef.current.disconnect()
@@ -133,13 +153,20 @@ export function useVoicePipeline() {
       streamRef.current.getTracks().forEach((t) => t.stop())
       streamRef.current = null
     }
-    void window.ackem.voice?.setMode?.('off')
-    void window.ackem.voice?.setPttActive?.(false)
     pttActiveRef.current = false
     setMicActive(false)
     setState('idle')
     setVoiceListening(false)
   }, [setVoiceListening])
+
+  const stopListening = useCallback(() => {
+    stopLocalCapture()
+    if (useUiStore.getState().voiceOwner === surface) {
+      useUiStore.getState().setVoiceOwner(null)
+      void window.ackem.voice?.setMode?.('off')
+      void window.ackem.voice?.setPttActive?.(false)
+    }
+  }, [stopLocalCapture, surface])
 
   const playTts = useCallback(
     async (audioBuffer: ArrayBuffer) => {
@@ -240,6 +267,14 @@ export function useVoicePipeline() {
   }, [])
 
   useEffect(() => {
+    if (!surfaceActive && micActive) stopListening()
+  }, [surfaceActive, micActive, stopListening])
+
+  useEffect(() => {
+    if (voiceOwner !== surface && micActive) stopLocalCapture()
+  }, [voiceOwner, surface, micActive, stopLocalCapture])
+
+  useEffect(() => {
     void syncSettings()
     return () => {
       stopListening()
@@ -313,11 +348,18 @@ export function useVoicePipeline() {
 function downsampleTo16k(input: Float32Array, inputSampleRate: number): Float32Array {
   if (inputSampleRate === SAMPLE_RATE) return input
   const ratio = inputSampleRate / SAMPLE_RATE
-  const newLength = Math.round(input.length / ratio)
+  const newLength = Math.floor(input.length / ratio)
   const result = new Float32Array(newLength)
   for (let i = 0; i < newLength; i++) {
-    const srcIndex = Math.round(i * ratio)
-    result[i] = input[Math.min(srcIndex, input.length - 1)]
+    const start = Math.floor(i * ratio)
+    const end = Math.min(input.length, Math.floor((i + 1) * ratio))
+    let sum = 0
+    let n = 0
+    for (let j = start; j < end; j++) {
+      sum += input[j]
+      n++
+    }
+    result[i] = n ? sum / n : 0
   }
   return result
 }

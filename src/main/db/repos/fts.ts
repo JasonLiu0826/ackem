@@ -137,17 +137,19 @@ function buildFtsMatch(query: string): string | null {
 }
 
 /** FTS5 MATCH；返回 fact id 列表 */
-export function searchFactIdsFts(dataRoot: string, query: string, limit: number): string[] {
+export function searchFactIdsFts(dataRoot: string, query: string, limit: number, allowedFactIds?: ReadonlySet<string>): string[] {
   const db = getDatabase(dataRoot)
   if (!db) return []
   const match = buildFtsMatch(query)
   if (!match) return []
+  if (allowedFactIds && !allowedFactIds.size) return []
+  const allowed = allowedFactIds ? JSON.stringify([...allowedFactIds]) : null
   try {
     const rows = db
       .prepare(
-        `SELECT fact_id FROM memory_facts_fts WHERE memory_facts_fts MATCH ? ORDER BY rank LIMIT ?`
+        `SELECT fact_id FROM memory_facts_fts WHERE memory_facts_fts MATCH ? AND (? IS NULL OR fact_id IN (SELECT value FROM json_each(?))) ORDER BY rank LIMIT ?`
       )
-      .all(match, limit) as { fact_id: string }[]
+      .all(match, allowed, allowed, limit) as { fact_id: string }[]
     if (rows.length > 0) return rows.map((r) => r.fact_id)
   } catch {
     /* fall through to LIKE */
@@ -157,9 +159,9 @@ export function searchFactIdsFts(dataRoot: string, query: string, limit: number)
     .prepare(
       `SELECT id FROM memory_facts WHERE status = 'active' AND (
         summary LIKE ? OR triggers_text LIKE ? OR subject LIKE ?
-      ) LIMIT ?`
+      ) AND (? IS NULL OR id IN (SELECT value FROM json_each(?))) LIMIT ?`
     )
-    .all(like, like, like, limit) as { id: string }[]
+    .all(like, like, like, allowed, allowed, limit) as { id: string }[]
   return fallback.map((r) => r.id)
 }
 

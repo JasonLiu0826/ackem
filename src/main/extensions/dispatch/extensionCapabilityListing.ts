@@ -1,10 +1,6 @@
 import type { DispatchCatalogEntry, DispatchConfig } from '../protocols'
 import { isCoreExtension } from '../../../shared/coreExtensions'
-import {
-  DESKTOP_AGENT_GRAYSCALE_BANNER_ZH,
-  isDesktopAgentGrayscalePreview
-} from '../../../shared/desktopAgentFeature'
-import { isDesktopAgentSettingsReady, type DesktopAgentSettingsSlice } from '../../../shared/desktopAgent'
+import type { AppSettings } from '../../settings'
 
 const MIN_LEN = 4
 
@@ -45,9 +41,9 @@ const STATUS_LABEL: Record<DispatchCatalogEntry['status'], string> = {
 
 export type ExtensionCatalogListingOptions = {
   maxChars?: number
-  /** 电脑助手模式已开启时的详细能力小节 */
+  /** 兼容旧调用者；现行能力清单不注入已退役模式。 */
   desktopAgentSection?: string
-  settings?: DesktopAgentSettingsSlice & { disableChatTools?: boolean }
+  settings?: Partial<AppSettings>
 }
 
 export function isExtensionCapabilityListingQuery(message: string): boolean {
@@ -111,30 +107,15 @@ function formatUnavailableEntryLine(entry: DispatchCatalogEntry): string {
 }
 
 /** 平台级功能（非扩展库 catalog 条目）的可用性说明 */
-export function buildPlatformFeaturesSection(
-  settings?: DesktopAgentSettingsSlice & { disableChatTools?: boolean }
-): string {
-  const lines = ['【平台功能 · 非扩展库】']
-
-  if (isDesktopAgentGrayscalePreview()) {
-    lines.push(`- 【暂未开放】电脑助手：${DESKTOP_AGENT_GRAYSCALE_BANNER_ZH}`)
-  } else if (!isDesktopAgentSettingsReady(settings ?? {})) {
-    lines.push(
-      '- 【未就绪】电脑助手：已在产品中开放，但用户尚未完成设置。需到 设置 → 模型与连接 → 电脑助手 启用并确认风险，再在聊天栏开启「电脑助手」模式。'
-    )
-  } else {
-    lines.push(
-      '- 【可用·需开启模式】电脑助手：设置已就绪；用户需在聊天栏点开「电脑助手」后，方可操作本机文件与应用（实验）。'
-    )
-  }
-
-  lines.push(
-    '- 【可用】对话陪伴 / 长期记忆 / 情绪感知 / 知识整理卡片：本体能力，无需扩展。',
+export function buildPlatformFeaturesSection(_settings?: Partial<AppSettings>): string {
+  return [
+    '【平台功能 · 现行架构】',
+    '- 【可用】chat（聊天）：对话、长期记忆、性格情绪表达、解释与 Markdown 知识整理，支持用户提交图片（所选模型需支持识图）。',
     '- 【可用】记忆导入：记忆页可导入 txt / md / json。',
-    '- 【可用】OpenForU Plan：用户可说「帮我做一个 XX Skill/插件」共创可部署扩展。'
-  )
-
-  return lines.join('\n')
+    '- plugin（插件）：调用下方清单中当前启用的现成能力。',
+    '- 【可用】work（任务 · AckemCode）：Ackem 可自主调用、读取真实进度和工具结果、审批普通请求、验收并返工；用户随时可接管。处理指定文件、目录、项目与命令，创建或修改插件；需要按实际路由、确认、权限及运行时状态执行，不能仅凭能力介绍声称已经开始或完成。',
+    '具体插件的权限范围不等于任务通道的全局权限范围。'
+  ].join('\n')
 }
 
 /** 将扩展库 catalog 格式化为 LLM 上下文块（按可用/不可用分组，字符预算内截断） */
@@ -148,26 +129,23 @@ export function buildExtensionCatalogListingBlock(
 
   const lines: string[] = [
     '【扩展能力清单 · 本轮自动检索】',
-    '用户正在询问 Ackem 的能力/功能。你必须基于下列清单如实介绍，保持伴侣口吻。',
+    '用户正在询问 Ackem 的能力/功能。基于现行架构和下列清单自然介绍，只回答用户关注的能力。',
     '硬性规则：',
     '1) 仅「【可用】」项可以说「我能帮你…」并举例触发方式；「【不可用】」「【暂未开放】」只能说明存在或原因，禁止假称能执行。',
     '2) 禁止编造未在清单中的扩展、Skill、插件或假称本轮已执行某操作。',
-    '3) 不要敷衍「功能多着呢」却不举例；至少概括本体能力 + 2~3 个【可用】扩展；若有【不可用】/【暂未开放】项可各提 1 个。',
+    '3) 不要敷衍「功能多着呢」却不举例；按用户问题概括聊天、已启用插件和 AckemCode 任务，不为了凑条目介绍未开放或退役功能。',
     ''
   ]
 
   lines.push(buildPlatformFeaturesSection(options?.settings), '')
 
-  if (options?.desktopAgentSection) {
-    lines.push(options.desktopAgentSection, '')
-  }
 
   if (usable.length > 0) {
     lines.push(`扩展库 · 当前可用（${usable.length}）：`)
     for (const entry of usable) lines.push(formatUsableEntryLine(entry))
     lines.push('')
   } else {
-    lines.push('扩展库 · 当前可用：暂无（可到扩展中心启用，或用 Plan 新建）。', '')
+    lines.push('扩展库 · 当前可用：暂无（可到扩展中心启用，或通过 AckemCode 任务创建）。', '')
   }
 
   if (unavailable.length > 0) {
@@ -180,7 +158,7 @@ export function buildExtensionCatalogListingBlock(
   }
 
   lines.push(
-    '回复建议：先一句话概括 Ackem 能做什么，再按平台功能 → 可用扩展 →（如有）暂不可用/未开放 分层说明；用户想新能力时引导 Plan。'
+    '回复建议：先一句话概括 Ackem 能做什么，再按平台功能 → 可用扩展 →（如有）暂不可用/未开放 分层说明；用户想创建新能力时说明 AckemCode 任务与确认流程，不空口承诺执行。'
   )
 
   let block = lines.join('\n')

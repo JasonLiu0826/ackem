@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto'
+import { peekChannelPlan } from '../channel/lastPlan'
 import { createLogger } from '../logger.js'
 import {
   MemorySystemFactoryNotRegisteredError,
@@ -192,6 +193,7 @@ export function finalizeChatTurn(args: {
   turnId: string
   userText: string
   assistantText: string
+  generationState?: 'incomplete'
   surface: ChatSurface
   occurredAt?: string
   deriveContext?: TurnDeriveContext
@@ -222,7 +224,7 @@ export function finalizeChatTurn(args: {
     try {
       return appendUnifiedChatMessage(
         args.dataRoot,
-        { role, content, channel: args.surface, turnId: args.turnId },
+        { role, content, channel: args.surface, turnId: args.turnId, ...(role === 'assistant' ? { generationState: args.generationState, replyId: `reply-${args.turnId}`, origin: peekChannelPlan(args.sessionId, args.turnId)?.policy.origin ?? 'answer', runId: peekChannelPlan(args.sessionId, args.turnId)?.policy.runId } : {}) },
         args.sessionId
       )
     } catch (e) {

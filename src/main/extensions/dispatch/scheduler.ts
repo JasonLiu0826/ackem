@@ -30,7 +30,7 @@ const GLOBAL_SESSION = '__autonomous__'
 export type DispatchSchedulerOptions = {
   coordinator: ExtensionsCoordinator
   getSnapshot: () => EngineSnapshot | null
-  onProactiveMessage?: (payload: { extensionId: string; message: string }) => void
+  onProactiveMessage?: (payload: { extensionId: string; message: string; eventId: string }) => void
 }
 
 let timer: ReturnType<typeof setInterval> | null = null
@@ -214,7 +214,7 @@ export async function tickAutonomousDispatch(opts: DispatchSchedulerOptions): Pr
           const message = result.output
           recordProactiveMessage(dataRoot, now)
           log.info('autonomous dispatch', { extensionId: entry.id, policyReason: policyVerdict.reason })
-          opts.onProactiveMessage?.({ extensionId: entry.id, message })
+          opts.onProactiveMessage?.({ extensionId: entry.id, message, eventId: invocation.invocationId })
         } else {
           log.info('autonomous dispatch (silent output)', {
             extensionId: entry.id,
@@ -235,7 +235,7 @@ export async function tickAutonomousDispatch(opts: DispatchSchedulerOptions): Pr
       const invocation = await handler.getProactiveInvocation(snapshot)
       const result = await opts.coordinator.executeSkill(invocation)
       if (result.ok && result.output) {
-        opts.onProactiveMessage?.({ extensionId: handler.manifest.id, message: result.output })
+        opts.onProactiveMessage?.({ extensionId: handler.manifest.id, message: result.output, eventId: invocation.invocationId })
       }
     } catch {
       /* ignore legacy proactive skills */

@@ -504,7 +504,13 @@ export class SqliteActionCoordinator implements ActionCoordinator {
     const validation = validateTransition(row.status, args.toStatus, {
       trustedReceipt: args.trustedReceipt,
     })
-    if (!validation.ok) {
+    // A newer authenticated snapshot can observe the same nonterminal state
+    // (e.g. state broadcast followed by permission request). Persist its cursor
+    // without treating observation as a second, illegal state transition.
+    const sameRuntimeObservation = args.trustedReceipt && args.runtimeRevision !== undefined &&
+      !!row.runtime_id && row.runtime_id === args.runtimeId && row.status === args.toStatus &&
+      ['running', 'waiting_permission', 'unknown'].includes(row.status)
+    if (!validation.ok && !sameRuntimeObservation) {
       return this.fail(validation.code, `cannot transition ${row.status} -> ${args.toStatus}`)
     }
 

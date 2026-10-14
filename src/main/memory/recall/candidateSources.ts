@@ -16,12 +16,14 @@ import {
 import { recallTextRelevance } from './recallLexical.js'
 import { resolveActionStatusEvidenceEventIds } from './actionStatusEvidence.js'
 import { loadTombstoneIndex } from '../governance/tombstoneIndex.js'
+import { canReadMemoryObject, canReadMemorySources } from '../accessScope.js'
 
 export type RecallCandidate = {
   id: string
   source: 'action' | 'fact' | 'episode'
   text: string
   lexicalScore: number
+  semanticScore?: number
   confidence: number
   evidenceEventIds: string[]
   occurredAt: string | null
@@ -77,10 +79,10 @@ export function loadActionCandidates(
       `SELECT run_id, nature, status, target_id, session_id, updated_at, correlation_id,
               last_event_id, request_event_id
        FROM memory_action_runs
-       WHERE session_id = ? AND status IN (${OPEN_ACTION_STATUSES.map(() => '?').join(',')})
+       WHERE (session_id = ? OR json_extract(execution_json, '$.params.chatSessionId') = ?) AND status IN (${OPEN_ACTION_STATUSES.map(() => '?').join(',')})
        ORDER BY updated_at DESC`
     )
-    .all(query.sessionId, ...OPEN_ACTION_STATUSES) as ActionRow[]
+    .all(query.sessionId, query.sessionId, ...OPEN_ACTION_STATUSES) as ActionRow[]
 
   const terminal: ActionRow[] = []
   let afterObservedAt: string | undefined
@@ -88,10 +90,10 @@ export function loadActionCandidates(
   const pageSize = 200
   for (let page = 0; page < 5; page++) {
     const clauses = [
-      'session_id = ?',
+      "(session_id = ? OR json_extract(execution_json, '$.params.chatSessionId') = ?)",
       `status NOT IN (${OPEN_ACTION_STATUSES.map(() => '?').join(',')})`
     ]
-    const params: unknown[] = [query.sessionId, ...OPEN_ACTION_STATUSES]
+    const params: unknown[] = [query.sessionId, query.sessionId, ...OPEN_ACTION_STATUSES]
     if (afterObservedAt && afterRunId) {
       clauses.push('(updated_at < ? OR (updated_at = ? AND run_id < ?))')
       params.push(afterObservedAt, afterObservedAt, afterRunId)
@@ -120,6 +122,8 @@ export function loadActionCandidates(
 
   return merged
     .filter((r) => {
+      const evidence = resolveActionStatusEvidenceEventIds(db, { last_event_id: r.last_event_id, request_event_id: r.request_event_id, correlation_id: r.correlation_id, nature: r.nature, status: r.status })
+      if ((r.nature === 'work' && !evidence.length) || !canReadMemorySources(db, evidence, query.accessContextRef)) return false
       if (seen.has(r.run_id)) return false
       seen.add(r.run_id)
       if (wantWork && !wantPlugin) return r.nature === 'work'
@@ -204,6 +208,7 @@ export function loadFactCandidates(
   const rows = database.prepare(`SELECT * FROM memory_facts`).all() as Record<string, unknown>[]
   return rows
     .filter((row) => !tombstones.facts.has(String(row.id)))
+    .filter((row) => canReadMemoryObject(database, 'fact', String(row.id), String(row.source_session_id), query.accessContextRef))
     .map((row) => mapFactRow(row, query, intents, evidenceIndex.get(String(row.id))))
 }
 
@@ -215,7 +220,7 @@ export function loadEpisodeCandidates(
   const database = db ?? getDatabase(dataRoot)
   const evidenceIndex = database ? loadEpisodeEvidenceIndex(database) : new Map<string, EpisodeEvidenceMeta>()
   const tombstones = database ? loadTombstoneIndex(database) : { facts: new Set(), episodes: new Set(), events: new Set() }
-  const episodes: Episode[] = loadEpisodesFromDb(dataRoot).filter((ep) => !tombstones.episodes.has(ep.id))
+  const episodes: Episode[] = loadEpisodesFromDb(dataRoot).filter((ep) => !tombstones.episodes.has(ep.id) && !!database && canReadMemoryObject(database, 'episode', ep.id, ep.sourceSessionId, query.accessContextRef))
   return episodes.map((ep) => {
     const text = ep.summary
     const ev = evidenceIndex.get(ep.id)

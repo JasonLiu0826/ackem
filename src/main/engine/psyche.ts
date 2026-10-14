@@ -148,9 +148,9 @@ export function buildPsycheBlock(
     `你此刻的情绪基调接近：${labelZh}。`,
     `你与对话者的气氛：${m.atmosphere === 'warm' ? '偏暖' : m.atmosphere === 'cool' ? '微凉' : '日常平稳'}。`,
     `态度倾向：${expr.tone}。`,
-    `回复长度：${expr.length === 'SHORT' ? '简短' : expr.length === 'MEDIUM' ? '适中' : '可稍长'}。`,
+    '表达可简洁，但必须完整回应本轮目标；不得让情绪决定是否回答或省略执行结果。',
     expr.proximity === 'DEFENSIVE' ? '你现在心理上想保持一点距离。' : '',
-    silent || expr.mode === 'SILENT_CANDIDATE' ? '本轮你可以话很少，或用极短句回应。' : '',
+    silent || expr.mode === 'SILENT_CANDIDATE' ? '可以克制地表达，但仍完整回答用户。' : '',
     barrierHint ?? ''
   ].filter(Boolean)
 

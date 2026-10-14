@@ -1,3 +1,4 @@
+import { extractVideoFile, isVideoExtension } from './documents/video.js'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { cwdNote, resolveFileToolPath } from './pathUtils.js'
@@ -146,6 +147,8 @@ export async function readFileTool(
     memoryDir,
     readState
   }
+
+  if (isVideoExtension(ext)) return extractVideoFile(abs,!!mediaCaps?.vision)
 
   if (isDocumentExtension(ext)) {
     const extracted = await extractDocumentFile(abs, input, mediaCaps)

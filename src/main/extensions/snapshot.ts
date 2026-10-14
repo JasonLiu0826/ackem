@@ -9,6 +9,7 @@ import { EpisodicStore, defaultEpisodesPath } from '../memory/episodicStore'
 import { KnowledgeGraph, defaultKgPath } from '../memory/knowledgeGraph'
 import { filterFactsForSession, summariesForSession } from '../memory/sessionFacts'
 import type { MemoryFact } from '../memory/semantic/types.js'
+import { readableMemoryFacts, readableMemoryEpisodes } from '../memory/personalFacts'
 
 export type EngineMemoryMeta = {
   activeFactCount: number
@@ -39,13 +40,15 @@ export function buildMemoryMeta(dataRoot: string, sessionId: string): EngineMemo
   const store = new FactStore(defaultFactsPath(dataRoot))
   store.load()
   const epStore = new EpisodicStore(defaultEpisodesPath(dataRoot))
+  epStore.load()
   const kg = new KnowledgeGraph(defaultKgPath(dataRoot))
   kg.load()
+  const facts = readableMemoryFacts(store), ids = new Set(facts.map(f => f.id))
   return buildMemoryMetaFromFacts(
-    store.listActive(),
+    facts,
     sessionId,
-    kg.listAll().length,
-    epStore.listAll().length
+    kg.listAll().filter(triple => triple.sourceFactIds?.length && triple.sourceFactIds.every(id => ids.has(id))).length,
+    readableMemoryEpisodes(epStore,dataRoot).length
   )
 }
 

@@ -48,7 +48,7 @@ function trustedWorkSuccess(events: MemoryEvent[]): MemoryEvent | undefined {
 
 
 
-/** Work completion facts only from trusted succeeded runtime receipt — never from assistant prose. */
+/** One execution receipt is not task acceptance. Task completion has separate current-goal evidence. */
 
 export function deriveWorkFacts(events: MemoryEvent[]): DerivedFactCandidate[] {
 
@@ -86,13 +86,13 @@ export function deriveWorkFacts(events: MemoryEvent[]): DerivedFactCandidate[] {
 
     {
 
-      subject: '工作任务',
+      subject: '工作执行',
 
-      summary: `[工作完成] ${summary} (source=${source}; fetchedAt=${fetchedAt})`,
+      summary: `[执行成功] ${summary} (source=${source}; fetchedAt=${fetchedAt})`,
 
-      domain: 'DAILY_LIFE',
+      domain: 'PURSUITS',
 
-      subcategory: 'PLANS',
+      subcategory: 'PROJECTS',
 
       confidence: 0.9,
 

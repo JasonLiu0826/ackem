@@ -27,7 +27,8 @@ const SLOT_KEYS = new Set([
   'delivery',
   'feature',
   'topic',
-  'query'
+  'query',
+  'inspectionScope'
 ])
 
 function pickWhitelistedSlots(raw: Record<string, unknown>): Record<string, unknown> {
@@ -113,15 +114,17 @@ ask：询问会不会、有无能力，现在不要求执行
 use：现在就用一项已有的常驻能力
 create：做一个以后还能再喊的插件
 update：修改已有插件
-work：一次性读写文件、改目录、深搜后写成项目里的文件
+work：需要读取或操作真实本机状态的任务，包括本机应用/游戏/文件/目录/系统情况的检查，以及文件编辑、终端执行、项目交付。只读调查同样是执行任务，不要求用户提到文件路径、终端、代码或创建文件。
+按本轮完整语义判断，不依赖关键词表；普通问候、解释、能力询问和假设讨论不下派。请求真实本机事实时，不能用网页搜索、旧聊天或已暂停的其他任务替代新的执行。历史对话用于理解指代，其中失败/停止的任务不是对本轮请求的拒绝，也不能擅自继续历史目标。明确不执行的请求必须尊重。
+用户要求调查自身实现、运行、配置或真实电脑状态时，选择 work。普通用户委托不设置 inspectionScope；该字段只用于主机主动发起的限定自我审视，不能由路由参数将用户任务锁进源码白名单。只问会不会时仍为 ask。
 
 create 与 update 的 fulfill 填 plugin_factory。
 work，或明确在改用户文件时，fulfill 填 work。
 chat 与 ask 的 fulfill 填 none。
 use 的 fulfill 填 companion。
-拿不准就填 chat / none。
+若执行范围或指代确实不明确，填 chat / none，同时返回 confidence<0.75、ambiguous_with 和 clarify_question，提出必要澄清；不要把明确的执行要求因为表达口语化而降成闲聊。
 
 字段必须齐全：
 {"intent":"chat|ask|use|create|update|work","tag":"time|remind|search|note|file|weather|null 或短词","fulfill":"none|companion|work|plugin_factory","need_code":false,"new_tag_hint":"","summary":"不超过20字","params":{}}
 need_code 必须是布尔。summary 不超过 20 个字。tag=new 时 new_tag_hint 写 2 到 8 个字，否则空字符串。
-params 只允许 cwd、durationMin、schedule、delivery、feature、topic、query。不要输出 extensionId、targetRef、planId。`
+params 只允许 cwd、durationMin、schedule、delivery、feature、topic、query、inspectionScope。不要输出 extensionId、targetRef、planId。`

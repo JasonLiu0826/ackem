@@ -8,6 +8,7 @@ import type { DerivedFactCandidate, FactChangeSet } from '../semantic/types.js'
 
 import { flushFactStoreIndexProjections } from '../semantic/semanticMemory.js'
 import { filterDerivedCandidatesByTombstones } from '../governance/tombstoneGuard.js'
+import { canMergeMemoryFact, canReadMemorySources } from '../accessScope.js'
 
 import type { DbTx, JobRepository } from '../jobs/jobRepository.js'
 
@@ -100,6 +101,7 @@ function findExistingFactForCandidate(
       (f) =>
 
         f.sourceSessionId === session &&
+        (!getDatabase(store.getDataRoot()) || canMergeMemoryFact(getDatabase(store.getDataRoot())!, f.id, f.sourceSessionId, c.evidenceEventIds)) &&
 
         f.sourceTurnIndex === turnIndex &&
 
@@ -156,6 +158,7 @@ function writeDerivedFactsSync(
   const factIds: string[] = []
 
   for (const c of candidates) {
+    if (!db || !canReadMemorySources(db, c.evidenceEventIds)) continue
 
     let factId = findExistingFactForCandidate(store, c, sessionId, turnIndex)
 
@@ -182,10 +185,13 @@ function writeDerivedFactsSync(
         emotionalContext: DEFAULT_EMO,
 
         triggers: [],
+        sourceEventIds: c.evidenceEventIds,
 
         occurredAt: c.occurredAt ?? undefined,
 
-        scheduledFor: c.scheduledFor ?? undefined
+        scheduledFor: c.scheduledFor ?? undefined,
+
+        contextJson: c.temporalRange ? { temporalRange: c.temporalRange } : undefined
 
       })
 

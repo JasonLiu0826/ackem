@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { UpdateChannel, UpdateCheckResult } from '../../../../shared/updateTypes'
+import { isNewerVersion } from '../../../../shared/semverCompare'
 import { t } from '../../lib/i18n'
 import { ConfirmDialog } from '../ConfirmDialog'
 import {
@@ -66,7 +67,7 @@ export function UpdateSettingsPanel(): JSX.Element {
     return check.latest
   }, [check, channel])
 
-  const canUpdate = Boolean(packaged && selectedRelease?.version && check?.updateAvailable)
+  const canUpdate = Boolean(packaged && selectedRelease?.version && check && isNewerVersion(selectedRelease.version, check.currentVersion))
 
   const onChannelChange = async (next: UpdateChannel) => {
     setChannel(next)

@@ -9,7 +9,8 @@ export const SLOT_KEYS = new Set([
   'delivery',
   'feature',
   'topic',
-  'query'
+  'query',
+  'inspectionScope'
 ])
 
 export function pickSlots(raw: Record<string, unknown> | undefined): Record<string, unknown> {

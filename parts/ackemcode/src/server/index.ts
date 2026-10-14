@@ -1,5 +1,8 @@
+import { TASK_PROTOCOL, sameHostTask, setHostTaskHeld, settleHostTaskHold, releaseHostTaskHold, setHostInspectionSession, parseHostTask, updateHostTask, withHostTaskFence, type HostTaskContext } from './hostTaskFence.js'
+import { runWebSearch, resolveProviderConfig, isWebSearchEnabled } from './tools/webSearch/index.js'
 import express from 'express'
 import cors from 'cors'
+import { HOST_SESSION_BINDING_HEADER, hashHostBinding, isManagedSession, newHostBinding, ownsHostSession, validHostBinding } from './hostSessionBinding.js'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { nanoid } from 'nanoid'
@@ -14,6 +17,7 @@ import type {
   PermissionMode
 } from '../shared/types.js'
 import { ALWAYS_ALLOW_REGULAR_TOOLS_RULE } from './agent/permissions.js'
+import { EFFORT_LEVELS, isEffortLevel } from '../shared/types.js'
 import {
   loadSettings,
   loadStandaloneSettings,
@@ -176,6 +180,8 @@ type Session = {
   permissions: PermissionBroker
   interactions: InteractionBroker
   mode: PermissionMode
+  permissionMode?:PermissionMode
+  policyRevision:number
   todos: TodoItem[]
   /** In-memory read-before-write tracking (not persisted). */
   readFileState: ReadFileState
@@ -234,6 +240,14 @@ type Session = {
   ackemTask?: AckemTask
   /** Latest host turn receipt. Undefined until a chat supplies hostRunId. */
   hostTurnReceipt?: HostTurnReceipt
+  hostSessionBindingHash?: string
+  hostTask?: HostTaskContext
+  hostTaskStopped?: boolean
+  hostProcessPending?: number
+  hostProcessUnknown?: boolean
+  hostTaskHeld?: boolean
+  hostTaskHoldUnknown?: boolean
+  hostTaskStopUnknown?: boolean
 }
 
 const sessions = new Map<string, Session>()
@@ -531,6 +545,7 @@ function buildSlashContext(
  * between-turn drain spirit).
  */
 async function pumpIdleSessionQueue(session: Session): Promise<void> {
+  if (session.hostTaskStopped) return
   if (session.turnRunning) return
   if (!session.messageQueue.length) return
 
@@ -541,17 +556,18 @@ async function pumpIdleSessionQueue(session: Session): Promise<void> {
   }
 
   const send = (event: AgentEvent) => {
+    if(['mode_changed','permission_request','plan_approval','enter_plan_approval','ask_user'].includes(event.type))event={...event,permissionMode:session.permissionMode??session.mode,policyRevision:session.policyRevision,controlEpoch:session.hostTask?.controlEpoch}
     session.sseEmit?.(event)
   }
 
   try {
-    if (session.mode === 'default') session.mode = settings.permissionMode
     if (!session.runtimeCwd) session.runtimeCwd = settings.cwd
 
     let nextUserText: string | null = null
     let guard = 0
     const MAX_CHAIN = 8
     while (guard < MAX_CHAIN) {
+      if (session.hostTaskStopped) break
       guard += 1
       if (!nextUserText) {
         const batch = session.messageQueue.takeBetweenTurnBatch(
@@ -591,14 +607,14 @@ async function pumpIdleSessionQueue(session: Session): Promise<void> {
       const controller = session.abort
       send({ type: 'session_state', state: 'running' })
       session.currentTurnUserText = nextUserText ?? session.currentTurnUserText
-      const history = await runAgentTurn({
+      const history = await withHostTaskFence(session, () => runAgentTurn({
         settings: {
           ...settings,
           cwd: session.runtimeCwd || settings.cwd,
           model: session.sessionModel || settings.model
         },
         history: session.history,
-        userText: nextUserText,
+        userText: nextUserText!,
         permissions: session.permissions,
         interactions: session.interactions,
         readFileState: session.readFileState,
@@ -664,7 +680,7 @@ async function pumpIdleSessionQueue(session: Session): Promise<void> {
             commits
           )
         }
-      })
+      }))
       session.history = history
       await persist(session)
       nextUserText = null
@@ -683,6 +699,7 @@ function newSessionSkeleton(id: string): Session {
     permissions: new PermissionBroker(),
     interactions: new InteractionBroker(),
     mode: 'default',
+    permissionMode: 'default',policyRevision:1,
     todos: [],
     readFileState: createReadFileState(),
     worktree: null,
@@ -716,9 +733,18 @@ const persistTail = new Map<string, Promise<void>>()
 function captureSession(session: Session): PersistedSession {
   return {
     version: 2,
+    hostSessionBindingHash: session.hostSessionBindingHash,
+    runtimeCwd: session.runtimeCwd,
+    ackemTask: session.ackemTask,
+    hostTask: session.hostTask,
+    hostTaskStopped: session.hostTaskStopped,
+    hostTaskHoldUnknown: session.hostTaskHoldUnknown,
+    hostProcessUnknown: session.hostProcessUnknown,
+    hostProcessPending: session.hostProcessPending,
     id: session.id,
     updatedAt: new Date().toISOString(),
     mode: session.mode,
+    permissionMode:session.permissionMode??session.mode,policyRevision:session.policyRevision,
     todos: session.todos,
     history: session.history,
     sessionAllows: session.permissions.exportSessionMemory(),
@@ -798,10 +824,14 @@ async function hydrateFromDisk(id: string): Promise<Session | null> {
   history = applyContextCollapseCommits(history, collapseCommits)
   const session: Session = {
     id: disk.id,
+    hostSessionBindingHash: disk.hostSessionBindingHash,
+    runtimeCwd: disk.runtimeCwd,
+    ackemTask: parseAckemTask(disk.ackemTask),
     history,
     permissions,
     interactions: new InteractionBroker(),
     mode: disk.mode || 'default',
+    permissionMode: disk.permissionMode??(disk.mode==='plan'?'default':disk.mode),policyRevision:disk.policyRevision??1,
     todos: disk.todos || [],
     readFileState: createReadFileState(),
     worktree: null,
@@ -822,6 +852,9 @@ async function hydrateFromDisk(id: string): Promise<Session | null> {
     turnRunning: false,
     snipRecords: [...snipRecords],
     collapseCommits: [...collapseCommits],
+    hostTaskStopUnknown: Boolean(disk.hostTask && (disk.hostTaskHoldUnknown || disk.hostProcessUnknown || disk.hostProcessPending || disk.hostTurnReceipt?.state === 'running' || disk.hostTurnReceipt?.state === 'requires_action')),
+    hostTask: disk.hostTask,
+    hostTaskStopped: disk.hostTask ? true : undefined,
     hostTurnReceipt: disk.hostTurnReceipt
   }
   // R9: restore durable cron jobs across process / session resume
@@ -834,7 +867,9 @@ async function hydrateFromDisk(id: string): Promise<Session | null> {
 
 async function getSession(id: string): Promise<Session | null> {
   if (sessions.has(id)) return sessions.get(id)!
-  return hydrateFromDisk(id)
+  const session = await hydrateFromDisk(id)
+  if (session) setHostInspectionSession(session.id, session.hostTask?.readOnly === true)
+  return session
 }
 
 async function fireSetupHook(sessionId: string): Promise<void> {
@@ -858,12 +893,14 @@ async function fireSetupHook(sessionId: string): Promise<void> {
   }
 }
 
-async function getOrCreateSession(id?: string): Promise<Session> {
+async function getOrCreateSession(id?: string, initialTask?: HostTaskContext): Promise<Session> {
   if (id) {
     const existing = await getSession(id)
     if (existing) return existing
     if (isValidSessionId(id)) {
       const session = newSessionSkeleton(id)
+      if (initialTask) updateHostTask(session, initialTask)
+      setHostInspectionSession(session.id, initialTask?.readOnly === true)
       sessions.set(session.id, session)
       void fireSetupHook(session.id)
       return session
@@ -871,6 +908,8 @@ async function getOrCreateSession(id?: string): Promise<Session> {
   }
 
   const session = newSessionSkeleton(nanoid())
+  if (initialTask) updateHostTask(session, initialTask)
+  setHostInspectionSession(session.id, initialTask?.readOnly === true)
   sessions.set(session.id, session)
   void fireSetupHook(session.id)
   return session
@@ -905,9 +944,53 @@ export async function seedRunningChatForTests(input: {
 export const app = express()
 app.use(cors())
 app.use(express.json({ limit: '4mb' }))
+// Enforce ownership before any endpoint can read private context or change execution.
+// The caller's origin/task name is descriptive data, never authorization.
+app.use('/api/session', async (req, res, next) => {
+  const rawId = req.path === '/' ? req.body?.sessionId : req.path.split('/')[1]
+  if (typeof rawId !== 'string' || !rawId) { next(); return }
+  try {
+    const id = req.path === '/' ? rawId.trim() : decodeURIComponent(rawId)
+    const session = await getSession(id)
+    if (session && isManagedSession(session) && !ownsHostSession(session, req.get(HOST_SESSION_BINDING_HEADER))) {
+      res.status(403).json({ error: 'host_session_binding_required' }); return
+    }
+    if (session && !isManagedSession(session) && req.method !== 'GET' && (req.body?.hostTask !== undefined || req.path.endsWith('/host-task'))) {
+      res.status(409).json({ error: 'host_session_unmanaged' }); return
+    }
+    next()
+  } catch { res.status(500).json({ error: 'session_lookup_failed' }) }
+})
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, name: 'AckemCode', version: '0.1.0' })
+  res.json({ ok: true, name: 'AckemCode', version: '0.1.0', ...TASK_PROTOCOL })
+})
+
+
+app.post('/api/session/:id/host-task-hold', async (req, res) => {
+  const session = await getSession(req.params.id)
+  if (!session) { res.status(404).json({ error: 'session not found' }); return }
+  const context = parseHostTask(req.body?.hostTask)
+  if (!context || typeof req.body?.held !== 'boolean') { res.status(400).json({ error: 'invalid_host_task_hold' }); return }
+  try {
+    setHostTaskHeld(session, context, req.body.held)
+    res.json({ ok: true, held: Boolean(session.hostTaskHeld) })
+  } catch (e) { res.status(409).json({ error: e instanceof Error ? e.message : String(e) }) }
+})
+
+app.post('/api/session/:id/host-task', async (req, res) => {
+  const session = await getSession(req.params.id)
+  if (!session) { res.status(404).json({ error: 'session not found' }); return }
+  const next = parseHostTask(req.body?.hostTask)
+  if (!next) { res.status(400).json({ error: 'invalid_host_task' }); return }
+  try {
+    await withReceiptLock(session.id, async () => {
+      updateHostTask(session, next, req.body?.stopped === true)
+      setHostInspectionSession(session.id, next.readOnly === true)
+      await persist(session)
+    })
+    res.json({ ok: true, hostTask: session.hostTask, stopped: session.hostTaskStopped })
+  } catch (e) { res.status(409).json({ error: e instanceof Error ? e.message : String(e) }) }
 })
 
 app.get('/api/llm/vendors', async (_req, res) => {
@@ -1062,9 +1145,56 @@ app.get('/api/slash/commands', async (req, res) => {
   }
 })
 
+/** Main Ackem and the CLI use the same settings and exact web_search implementation. */
+function publicWebSearchStatus(settings: Awaited<ReturnType<typeof loadSettings>>) {
+  const cfg = resolveProviderConfig(settings.webSearch)
+  const enabled = isWebSearchEnabled()
+  const ready = enabled && (cfg.provider === 'mock' || (cfg.provider === 'custom' ? Boolean(cfg.customUrl) : ['tavily', 'serpapi', 'brave'].includes(cfg.provider) && Boolean(cfg.apiKey)))
+  return { ready, enabled, provider: cfg.provider, configuredProvider: settings.webSearch?.provider ?? 'auto', hasApiKey: Boolean(cfg.apiKey), customUrl: settings.webSearch?.customUrl ?? '', maxResults: cfg.maxResults }
+}
+app.get('/api/web-search/config', async (_req, res) => {
+  res.json(publicWebSearchStatus(await loadSettings()))
+})
+app.put('/api/web-search/config', async (req, res) => {
+  const input = req.body as Record<string, unknown>
+  if (!['auto', 'tavily', 'serpapi', 'brave', 'custom'].includes(String(input.provider))) { res.status(400).json({ error: '请选择有效的搜索服务商' }); return }
+  if (input.apiKey !== undefined && typeof input.apiKey !== 'string') { res.status(400).json({ error: '密钥必须是文本' }); return }
+  if (input.customUrl !== undefined && typeof input.customUrl !== 'string') { res.status(400).json({ error: '搜索地址必须是文本' }); return }
+  if (input.provider === 'custom') {
+    try { const url = new URL(String(input.customUrl)); if (!['http:', 'https:'].includes(url.protocol) || !String(input.customUrl).includes('{query}')) throw Error() }
+    catch { res.status(400).json({ error: '自定义搜索须使用 http(s) 地址并包含 {query}' }); return }
+  }
+  if (input.maxResults !== undefined && (!Number.isInteger(input.maxResults) || Number(input.maxResults) < 1 || Number(input.maxResults) > 20)) { res.status(400).json({ error: '结果数量须为 1 至 20' }); return }
+  const previous = (await loadSettings()).webSearch
+  const next = await saveSettings({ webSearch: { ...previous, provider: input.provider as 'auto' | 'tavily' | 'serpapi' | 'brave' | 'custom', ...(typeof input.apiKey === 'string' && input.apiKey.trim() ? { apiKey: input.apiKey.trim() } : {}), ...(typeof input.customUrl === 'string' ? { customUrl: input.customUrl.trim() } : {}), ...(input.maxResults !== undefined ? { maxResults: Number(input.maxResults) } : {}) } })
+  res.json(publicWebSearchStatus(next))
+})
+app.post('/api/web-search', async (req, res) => {
+  const settings = await loadSettings()
+  const status = publicWebSearchStatus(settings)
+  if (!status.ready) { res.json({ ok: false, configurationRequired: status.enabled, output: status.enabled ? '请先配置 web-search 搜索服务商。' : 'web-search 已被运行环境禁用。' }); return }
+  const controller = new AbortController()
+  const abort = () => { if (!res.writableEnded) controller.abort() }
+  res.on('close', abort)
+  try { res.json(await runWebSearch({ input: req.body, settings: settings.webSearch, signal: controller.signal })) }
+  finally { res.off('close', abort) }
+})
+
 app.get('/api/settings', async (_req, res) => {
   const s = await loadSettings()
   res.json(publicSettingsView(s))
+})
+
+/** Only execution metadata is exposed to the host composer, never credentials. */
+app.get('/api/model-info', async (req, res) => {
+  try {
+    const session = typeof req.query.sessionId === 'string' ? await getSession(req.query.sessionId) : undefined
+    if (session && isManagedSession(session) && !ownsHostSession(session, req.get(HOST_SESSION_BINDING_HEADER))) {
+      res.status(403).json({ error: 'host_session_binding_required' }); return
+    }
+    const settings = await loadSettings()
+    res.json({ model: session?.sessionModel || settings.model, effort: settings.effort, effortLevels: EFFORT_LEVELS })
+  } catch { res.status(500).json({ error: 'session_lookup_failed' }) }
 })
 
 /** Effective merged permission rules (user/project/local/host + optional strip). */
@@ -1491,39 +1621,83 @@ app.post('/api/session', async (req, res) => {
     cwd?: string
     permissionMode?: PermissionMode
     ackemTask?: unknown
+    hostTask?: unknown
   }
   const want = typeof body.sessionId === 'string' ? body.sessionId.trim() : ''
-  const session = await getOrCreateSession(want || undefined)
-  if (typeof body.cwd === 'string' && body.cwd.trim()) {
-    session.runtimeCwd = path.resolve(body.cwd.trim())
-  } else if (!session.runtimeCwd) {
-    session.runtimeCwd = process.cwd()
-  }
-  if (
-    body.permissionMode === 'default' ||
-    body.permissionMode === 'plan' ||
-    body.permissionMode === 'acceptEdits' ||
-    body.permissionMode === 'auto' ||
-    body.permissionMode === 'bypassPermissions' ||
-    body.permissionMode === 'dontAsk'
-  ) {
-    session.mode = body.permissionMode
-  }
-  const ackemTask = parseAckemTask(body.ackemTask)
-  if (ackemTask) {
-    session.ackemTask = ackemTask
-    console.log('[ackemTask]', session.id, ackemTask.kind, ackemTask.summary)
-  }
-  const restored = Boolean(want && session.id === want && session.history.length > 0)
-  res.json({
-    sessionId: session.id,
-    restored,
-    mode: session.mode,
-    todos: session.todos,
-    historyLength: session.history.length,
-    cwd: session.runtimeCwd || null,
-    ackemTask: session.ackemTask ?? null
-  })
+  const initialTask = parseHostTask(body.hostTask)
+  if (body.hostTask !== undefined && !initialTask) { res.status(400).json({ error: 'invalid_host_task' }); return }
+  const incomingBinding = req.get(HOST_SESSION_BINDING_HEADER)
+  if (incomingBinding !== undefined && !validHostBinding(incomingBinding)) { res.status(400).json({ error: 'invalid_host_session_binding' }); return }
+  const lockId = want && isValidSessionId(want) ? want : nanoid()
+  // Creation, ownership lookup and attach mutations must be one operation.
+  // Middleware alone cannot authorize two callers racing a missing ID.
+  try {
+    await withReceiptLock(lockId, async () => {
+      const loaded = await getSession(lockId)
+      const existing = sessions.get(lockId) ?? loaded
+      if (existing && isManagedSession(existing) && !ownsHostSession(existing, incomingBinding)) {
+        res.status(403).json({ error: 'host_session_binding_required' }); return
+      }
+      if (existing && !isManagedSession(existing) && initialTask) {
+        res.status(409).json({ error: 'host_session_unmanaged' }); return
+      }
+      const session = existing ?? newSessionSkeleton(lockId)
+      let createdBinding: string | undefined
+      if (!existing && (initialTask || incomingBinding)) {
+        createdBinding = incomingBinding || newHostBinding()
+        session.hostSessionBindingHash = hashHostBinding(createdBinding)
+      }
+      if (!existing) {
+        if (initialTask) updateHostTask(session, initialTask)
+        setHostInspectionSession(session.id, initialTask?.readOnly === true)
+        sessions.set(session.id, session)
+        void fireSetupHook(session.id)
+      }
+      if (existing && initialTask) {
+        try { if (session.turnRunning) throw Error('host_task_busy'); updateHostTask(session, initialTask) }
+        catch (e) { res.status(409).json({ error: e instanceof Error ? e.message : String(e) }); return }
+      }
+      if (typeof body.cwd === 'string' && body.cwd.trim()) {
+        session.runtimeCwd = path.resolve(body.cwd.trim())
+      } else if (!session.runtimeCwd) {
+        session.runtimeCwd = process.cwd()
+      }
+      if (
+        body.permissionMode === 'default' ||
+        body.permissionMode === 'plan' ||
+        body.permissionMode === 'sessionType' || body.permissionMode === 'acceptEdits' ||
+        body.permissionMode === 'auto' ||
+        body.permissionMode === 'bypassPermissions' ||
+        body.permissionMode === 'dontAsk'
+      ) {
+        const next=existing&&session.mode==='plan'&&body.permissionMode!=='plan'?'plan':body.permissionMode
+        const changed=session.mode!==next||body.permissionMode!=='plan'&&session.permissionMode!==body.permissionMode
+        if(existing&&changed)session.policyRevision++
+        if(body.permissionMode!=='plan')session.permissionMode=body.permissionMode
+        session.mode=next
+      }
+      const ackemTask = parseAckemTask(body.ackemTask)
+      if (ackemTask) {
+        session.ackemTask = ackemTask
+        console.log('[ackemTask]', session.id, ackemTask.kind, ackemTask.summary)
+      }
+      const restored = Boolean(want && session.id === want && session.history.length > 0)
+      try { await persistHostTurn(session) }
+      catch { res.status(500).json({ error: 'session_not_persisted' }); return }
+      res.json({
+        // Only the creator receives a newly issued capability; snapshots never include it.
+        ...(!incomingBinding && createdBinding ? { hostSessionBinding: createdBinding } : {}),
+        sessionId: session.id,
+        restored,
+        mode: session.mode,
+        permissionMode:session.permissionMode??(session.mode==='plan'?'default':session.mode),policyRevision:session.policyRevision,
+        todos: session.todos,
+        historyLength: session.history.length,
+        cwd: session.runtimeCwd || null,
+        ackemTask: session.ackemTask ?? null
+      })
+    })
+  } catch { res.status(500).json({ error: 'session_lookup_failed' }) }
 })
 
 /** Full snapshot for UI hydrate / debug (loads disk if needed). */
@@ -1533,9 +1707,11 @@ app.get('/api/session/:id', async (req, res) => {
     res.status(404).json({ error: 'session not found' })
     return
   }
+  if(!session.hostTaskStopUnknown&&settleHostTaskHold(session,!session.turnRunning&&!session.backgroundAgents.list().some(a=>a.status==='running')))await persist(session)
   res.json({
     sessionId: session.id,
     mode: session.mode,
+    permissionMode:session.permissionMode??(session.mode==='plan'?'default':session.mode),policyRevision:session.policyRevision,
     todos: session.todos,
     ackemTask: session.ackemTask ?? null,
     tasks: session.taskStore.listForTool(),
@@ -1556,6 +1732,13 @@ app.get('/api/session/:id', async (req, res) => {
     cronNextFireAt: session.cron.getNextFireTime(),
     cronSchedulerRunning: session.cronScheduler.isRunning(),
     runtimeCwd: session.runtimeCwd || null,
+    hostTask: session.hostTask ?? null,
+    hostTaskStopped: Boolean(session.hostTaskStopped),
+    hostTaskHeld: Boolean(session.hostTaskHeld),
+    turnRunning: session.turnRunning,
+    stopState: session.hostTaskStopUnknown || session.hostTaskHoldUnknown || session.hostProcessUnknown ? 'unknown' : session.hostTaskStopped ? (session.turnRunning || session.hostProcessPending || session.backgroundAgents.list().some(a => a.status === 'running') ? 'acknowledged' : 'settled') : null,
+    cancellationScope: 'owned_process_trees',
+    executionQuiescent: !session.turnRunning && !session.hostProcessPending && !session.hostProcessUnknown && !session.hostTaskStopUnknown && !session.hostTaskHoldUnknown && !session.hostTaskHeld && !session.backgroundAgents.list().some(a => a.status === 'running'),
     hostTurnReceipt: session.hostTurnReceipt ?? null
   })
 })
@@ -1780,16 +1963,23 @@ app.post('/api/session/:id/permission', async (req, res) => {
     res.status(404).json({ error: 'session not found' })
     return
   }
-  const { requestId, decision, toolName, message } = req.body as {
+  const policyGuard=req.body as {expectedPolicyRevision?:number;expectedControlEpoch?:number}
+  if(policyGuard.expectedPolicyRevision!==undefined&&policyGuard.expectedPolicyRevision!==session.policyRevision){res.status(409).json({error:'permission_policy_revision_changed'});return}
+  if(policyGuard.expectedControlEpoch!==undefined&&policyGuard.expectedControlEpoch!==session.hostTask?.controlEpoch){res.status(409).json({error:'host_task_fenced'});return}
+  const { requestId, decision: requestedDecision, message } = req.body as {
     requestId?: string
     decision?: PermissionDecisionKind
     toolName?: string
     message?: string
   }
-  if (!requestId || !decision) {
+  if (!requestId || !requestedDecision) {
     res.status(400).json({ error: 'requestId and decision required' })
     return
   }
+  const toolName = session.permissions.pendingToolName(requestId)
+  if (!toolName) { res.json({ ok: false }); return }
+  const decision = requestedDecision === 'allow' && session.mode === 'sessionType'
+    ? 'allow_session' : requestedDecision
   let persistedRule: string | undefined
   let persistError: string | undefined
   if (decision === 'allow_always') {
@@ -1832,6 +2022,9 @@ app.post('/api/session/:id/ask-answer', async (req, res) => {
     res.status(404).json({ error: 'session not found' })
     return
   }
+  const guard=req.body as {expectedPolicyRevision?:number;expectedControlEpoch?:number}
+  if(guard.expectedPolicyRevision!==undefined&&guard.expectedPolicyRevision!==session.policyRevision){res.status(409).json({error:'permission_policy_revision_changed'});return}
+  if(guard.expectedControlEpoch!==undefined&&guard.expectedControlEpoch!==session.hostTask?.controlEpoch){res.status(409).json({error:'host_task_fenced'});return}
   const { requestId, answers, annotations, cancelled } = req.body as {
     requestId?: string
     answers?: Record<string, string>
@@ -1866,6 +2059,9 @@ app.post('/api/session/:id/plan-decision', async (req, res) => {
     res.status(404).json({ error: 'session not found' })
     return
   }
+  const policyGuard=req.body as {expectedPolicyRevision?:number;expectedControlEpoch?:number}
+  if(policyGuard.expectedPolicyRevision!==undefined&&policyGuard.expectedPolicyRevision!==session.policyRevision){res.status(409).json({error:'permission_policy_revision_changed'});return}
+  if(policyGuard.expectedControlEpoch!==undefined&&policyGuard.expectedControlEpoch!==session.hostTask?.controlEpoch){res.status(409).json({error:'host_task_fenced'});return}
   const { requestId, decision, mode, message, plan, planWasEdited, rejectAction } =
     req.body as {
       requestId?: string
@@ -1977,36 +2173,46 @@ app.post('/api/session/:id/model', async (req, res) => {
 /** Runtime mode cycle (CC Shift+Tab spirit) — does not persist settings. */
 app.post('/api/session/:id/mode', async (req, res) => {
   const session = await getOrCreateSession(req.params.id)
-  const settings = await loadSettings()
-  const prev = session.mode
-  const { mode, cycle } = req.body as { mode?: PermissionMode; cycle?: boolean }
-  let next: PermissionMode = session.mode
-  if (cycle) {
-    const { getNextPermissionMode } = await import('../shared/types.js')
-    next = getNextPermissionMode(session.mode)
-  } else if (
-    mode === 'default' ||
-    mode === 'plan' ||
-    mode === 'acceptEdits' ||
-    mode === 'auto' ||
-    mode === 'bypassPermissions' ||
-    mode === 'dontAsk'
-  ) {
-    next = mode
-  } else {
-    res.status(400).json({ error: 'mode or cycle required' })
-    return
-  }
-  await planBridgeFor(session, settings).transitionModeManual(prev, next)
-  await persist(session)
-  session.sseEmit?.({ type: 'mode_changed', mode: session.mode })
-  res.json({ ok: true, mode: session.mode })
+  await withReceiptLock(session.id,async()=>{
+    const body=req.body as {mode?:PermissionMode;cycle?:boolean;expectedPolicyRevision?:number;mutationId?:string;preservePlan?:boolean;expectedControlEpoch?:number}
+    if(body.expectedPolicyRevision!==undefined&&body.expectedPolicyRevision!==session.policyRevision){res.status(409).json({error:'permission_policy_revision_changed',policyRevision:session.policyRevision});return}
+    if(body.expectedControlEpoch!==undefined&&body.expectedControlEpoch!==session.hostTask?.controlEpoch){res.status(409).json({error:'host_task_fenced'});return}
+    let mode=body.mode
+    if(body.cycle){const {getNextPermissionMode}=await import('../shared/types.js');mode=getNextPermissionMode(session.mode)}
+    if(!mode||!['default','plan','sessionType','acceptEdits','auto','bypassPermissions','dontAsk'].includes(mode)){res.status(400).json({error:'mode or cycle required'});return}
+    const settings=await loadSettings(),prev=session.mode
+    const previous={mode:session.mode,permissionMode:session.permissionMode,policyRevision:session.policyRevision,prePlanMode:session.prePlanMode,hasExitedPlanMode:session.hasExitedPlanMode,needsPlanModeExitAttachment:session.needsPlanModeExitAttachment,planEnterAttachmentFullSent:session.planEnterAttachmentFullSent,planFileExists:session.planFileExists}
+    const effective=body.preservePlan&&session.mode==='plan'?'plan':mode
+    const changed=effective!==session.mode||(mode!=='plan'&&mode!==session.permissionMode)
+    if(changed)session.policyRevision++
+    if(mode!=='plan')session.permissionMode=mode
+    try{
+      await planBridgeFor(session,settings).transitionModeManual(prev,effective)
+      await persistHostTurn(session)
+    }catch(error){Object.assign(session,previous);throw error}
+    // Pending approvals only see the currently committed mode and epoch.
+    if(session.mode==='bypassPermissions'){session.permissions.allowAllPending();session.interactions.approvePendingPlans()}
+    session.sseEmit?.({type:'mode_changed',mode:session.mode,permissionMode:session.permissionMode,policyRevision:session.policyRevision,mutationId:body.mutationId})
+    res.json({ok:true,mode:session.mode,permissionMode:session.permissionMode,policyRevision:session.policyRevision,mutationId:body.mutationId})
+  })
 })
 
 app.post('/api/session/:id/abort', async (req, res) => {
   const session = await getSession(req.params.id)
   if (!session) {
     res.json({ ok: true })
+    return
+  }
+  if (session.hostTask) {
+    session.hostTaskStopped = true
+    releaseHostTaskHold(session)
+    session.abort?.abort('host_task_stopped')
+    session.permissions.cancelAll('aborted')
+    session.interactions.cancelAll('aborted')
+    session.messageQueue.clear()
+    for (const agent of session.backgroundAgents.list()) session.backgroundAgents.stop(agent.agentId)
+    await persist(session)
+    res.json({ ok: true, stopState: session.hostTaskStopUnknown || session.hostTaskHoldUnknown || session.hostProcessUnknown ? 'unknown' : session.turnRunning || session.hostProcessPending || session.backgroundAgents.list().some(a => a.status === 'running') ? 'acknowledged' : 'settled', cancellationScope: 'owned_process_trees' })
     return
   }
   const body = (req.body || {}) as { restoreInput?: boolean; rewind?: boolean }
@@ -2085,6 +2291,7 @@ function emitQueueUpdated(session: Session): void {
 const PERMISSION_MODES: PermissionMode[] = [
   'default',
   'plan',
+  'sessionType',
   'acceptEdits',
   'auto',
   'bypassPermissions',
@@ -2178,6 +2385,9 @@ app.post('/api/session/:id/retry-last-turn', async (req, res) => {
   const session = await getOrCreateSession(req.params.id)
   const body = req.body as {
     text?: string
+    hostRunId?: string
+    hostTask?: unknown
+    effort?: EffortLevel
     attachments?: Array<{
       path: string
       kind: 'file' | 'dir' | 'image'
@@ -2187,6 +2397,13 @@ app.post('/api/session/:id/retry-last-turn', async (req, res) => {
   if (!body.text?.trim()) {
     res.status(400).json({ error: 'text required' })
     return
+  }
+  if (body.effort !== undefined && !isEffortLevel(body.effort)) {
+    res.status(400).json({ error: 'invalid_effort' })
+    return
+  }
+  if (isManagedSession(session) && (typeof body.hostRunId !== 'string' || !body.hostRunId.trim() || (session.hostTask && !parseHostTask(body.hostTask)))) {
+    res.status(409).json({ error: 'host_task_and_run_required' }); return
   }
   if (session.turnRunning) {
     res.status(409).json({ error: 'busy', message: 'Session is running' })
@@ -2221,7 +2438,7 @@ app.post('/api/session/:id/retry-last-turn', async (req, res) => {
       messageId: rewind.messageId,
       filesChanged: rewind.filesChanged
     }
-    req.body = { text: body.text.trim(), attachments: body.attachments }
+    req.body = { text: body.text.trim(), attachments: body.attachments, effort: body.effort, hostRunId: body.hostRunId, hostTask: body.hostTask }
   } catch (e) {
     res.status(500).json({
       error: e instanceof Error ? e.message : String(e)
@@ -2232,7 +2449,8 @@ app.post('/api/session/:id/retry-last-turn', async (req, res) => {
 })
 
 const handleSessionChat = async (req: express.Request, res: express.Response) => {
-  const session = await getOrCreateSession(req.params.id)
+  let session: Session
+  try { session = await getOrCreateSession(req.params.id, parseHostTask(req.body?.hostTask)) } catch (e) { res.status(409).json({ error: e instanceof Error ? e.message : String(e) }); return }
   const retryRewound = (
     req as express.Request & {
       retryRewound?: { messageId: string; filesChanged: string[] }
@@ -2241,6 +2459,8 @@ const handleSessionChat = async (req: express.Request, res: express.Response) =>
   const body = req.body as {
     text?: string
     hostRunId?: string
+    effort?: EffortLevel
+    hostTask?: unknown
     priority?: QueuePriority
     mode?: QueueMode
     follow?: boolean
@@ -2255,8 +2475,24 @@ const handleSessionChat = async (req: express.Request, res: express.Response) =>
     return
   }
 
+  if (body.effort !== undefined && !isEffortLevel(body.effort)) {
+    res.status(400).json({ error: 'invalid_effort' })
+    return
+  }
+  const incomingTask = parseHostTask(body.hostTask)
+  if (body.hostTask !== undefined && !incomingTask) { res.status(400).json({ error: 'invalid_host_task' }); return }
+  if (session.hostTask && !incomingTask) { res.status(409).json({ error: 'host_task_required' }); return }
+  if (incomingTask) {
+    try {
+      if (session.hostTaskStopUnknown || session.hostTaskHoldUnknown || session.hostProcessUnknown) throw new Error('host_task_stop_unconfirmed')
+      if (session.turnRunning) throw new Error('host_task_busy')
+      updateHostTask(session, incomingTask)
+      setHostInspectionSession(session.id, incomingTask.readOnly === true)
+    } catch (e) { res.status(409).json({ error: e instanceof Error ? e.message : String(e) }); return }
+  }
   const trimmed = body.text.trim()
   const hostRunId = typeof body.hostRunId === 'string' ? body.hostRunId.trim().slice(0, 200) : ''
+  if ((isManagedSession(session) || session.hostTurnReceipt) && !hostRunId) { res.status(409).json({ error: 'host_run_id_required' }); return }
   const priority: QueuePriority =
     body.priority === 'now' || body.priority === 'later' ? body.priority : 'next'
   const mode = body.mode
@@ -2312,6 +2548,12 @@ const handleSessionChat = async (req: express.Request, res: express.Response) =>
   }
 
   // Claim turn before any await — prevents concurrent /chat double-start.
+  const turnHostTask = session.hostTask ? { ...session.hostTask, ...(session.hostTask.allowedReadPaths ? { allowedReadPaths: [...session.hostTask.allowedReadPaths] } : {}) } : undefined
+  const hostFenceError = (): string | undefined => {
+    if (session.hostTaskStopped) return 'host_task_stopped'
+    if (Boolean(turnHostTask) !== Boolean(session.hostTask) || (turnHostTask && session.hostTask && !sameHostTask(turnHostTask, session.hostTask))) return 'host_task_stale'
+    return undefined
+  }
   session.turnRunning = true
 
   if (!(await standaloneConfigured())) {
@@ -2325,6 +2567,8 @@ const handleSessionChat = async (req: express.Request, res: express.Response) =>
 
   const settings = await loadSettings()
   session.abort?.abort()
+  // Request-scoped effort: never changes another task or the standalone CLI default.
+  if (body.effort !== undefined) settings.effort = body.effort
   session.abort = new AbortController()
 
   res.setHeader('Content-Type', 'text/event-stream; charset=utf-8')
@@ -2335,11 +2579,20 @@ const handleSessionChat = async (req: express.Request, res: express.Response) =>
   let clientClosed = false
   let emitTail = Promise.resolve()
   const send = (event: AgentEvent) => {
+    if(['mode_changed','permission_request','plan_approval','enter_plan_approval','ask_user'].includes(event.type))event={...event,permissionMode:session.permissionMode??session.mode,policyRevision:session.policyRevision,controlEpoch:session.hostTask?.controlEpoch}
     emitTail = emitTail.then(() =>
       withReceiptLock(session.id, async () => {
+        if (!hostRunId && !isManagedSession(session)) {
+          if (!clientClosed) res.write(`data: ${JSON.stringify(event)}\n\n`)
+          return
+        }
+        const fenceError = hostFenceError()
+        const fencedEvent = event.type === 'done' && event.ok && fenceError
+          ? { ...event, ok: false, error: fenceError }
+          : event
         const published = await publishHostEvent(
           session.hostTurnReceipt,
-          event,
+          fencedEvent,
           new Date().toISOString(),
           (receipt) => writeHostReceipt(session, receipt)
         )
@@ -2405,7 +2658,8 @@ const handleSessionChat = async (req: express.Request, res: express.Response) =>
     if (hostRunId) {
       const begun = await withReceiptLock(session.id, () =>
         beginHostTurn(session.hostTurnReceipt, hostRunId, new Date().toISOString(), (receipt) =>
-          writeHostReceipt(session, receipt)
+          writeHostReceipt(session, receipt),
+          turnHostTask ? { taskId: turnHostTask.taskId, goalRevision: turnHostTask.goalRevision, controlEpoch: turnHostTask.controlEpoch, fencingToken: turnHostTask.fencingToken } : undefined
         )
       )
       session.hostTurnReceipt = begun.receipt
@@ -2418,9 +2672,6 @@ const handleSessionChat = async (req: express.Request, res: express.Response) =>
         await emitTail
         return
       }
-    }
-    if (session.mode === 'default') {
-      session.mode = settings.permissionMode
     }
     if (!session.runtimeCwd) session.runtimeCwd = settings.cwd
 
@@ -2447,6 +2698,9 @@ const handleSessionChat = async (req: express.Request, res: express.Response) =>
     const MAX_CHAIN = 32
     // S07: keep draining interrupt queue even if SSE client disconnects early.
     while (guard < MAX_CHAIN) {
+      if (session.hostTaskStopped) break
+      const fenceError = hostFenceError()
+      if (fenceError) { send({ type: 'done', ok: false, error: fenceError }); break }
       guard += 1
 
       if (!nextUserText) {
@@ -2493,14 +2747,14 @@ const handleSessionChat = async (req: express.Request, res: express.Response) =>
       agentTurnRan = true
       const hostAttachments = pendingHostAttachments
       pendingHostAttachments = undefined
-      const history = await runAgentTurn({
+      const history = await withHostTaskFence(session, () => runAgentTurn({
         settings: {
           ...settings,
           cwd: session.runtimeCwd || settings.cwd,
           model: session.sessionModel || settings.model
         },
         history: session.history,
-        userText: nextUserText,
+        userText: nextUserText!,
         hostAttachments,
         permissions: session.permissions,
         interactions: session.interactions,
@@ -2567,7 +2821,7 @@ const handleSessionChat = async (req: express.Request, res: express.Response) =>
             commits
           )
         }
-      })
+      }))
       session.history = history
       await persist(session)
       nextUserText = null
@@ -2626,6 +2880,7 @@ app.get('/api/meta/permission-modes', (_req, res) => {
   const modes: PermissionMode[] = [
     'default',
     'plan',
+    'sessionType',
     'acceptEdits',
     'auto',
     'bypassPermissions',

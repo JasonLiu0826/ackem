@@ -1,5 +1,6 @@
+import { runSharedWebSearch } from '../../../../../ackemcode/webSearch'
 // [search] — L5 联网搜索实现
-// 默认 Bing HTML 解析（无需 API Key）；可选配置 SearXNG 实例优先
+// 与 AckemCode 共用 web_search 服务商和配置，不再解析搜索引擎 HTML。
 
 import type { SearchCardPayload, WebSearchHit } from '../../../../../../shared/searchCard'
 
@@ -21,96 +22,15 @@ function extractDomain(url: string): string {
   }
 }
 
-/** SearXNG JSON API 搜索（需用户配置实例地址） */
-async function searchSearxng(query: string, instanceUrl: string): Promise<SearchResult[]> {
-  const url = `${instanceUrl.replace(/\/+$/, '')}/search?format=json&q=${encodeURIComponent(query)}`
-  const resp = await fetch(url, {
-    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
-  })
-  if (!resp.ok) throw new Error(`SearXNG HTTP ${resp.status}`)
-  const data = (await resp.json()) as {
-    results?: Array<{ title: string; url: string; content: string; snippet?: string }>
-  }
-  return (data.results || []).slice(0, SEARCH_MAX_RESULTS).map(r => ({
-    title: r.title,
-    url: r.url,
-    snippet: r.snippet || r.content || ''
-  }))
-}
-
-/** Bing 搜索（默认引擎，国内较可达） */
-async function searchBing(query: string): Promise<SearchResult[]> {
-  const url = `https://www.bing.com/search?q=${encodeURIComponent(query)}&setlang=zh-cn`
-  const resp = await fetch(url, {
-    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
-  })
-  if (!resp.ok) throw new Error(`Bing HTTP ${resp.status}`)
-  const html = await resp.text()
-
-  const results: SearchResult[] = []
-  const blockRe = /<li class="b_algo"[^>]*>([\s\S]*?)<\/li>/gi
-  let m: RegExpExecArray | null
-  while ((m = blockRe.exec(html)) !== null) {
-    if (results.length >= SEARCH_MAX_RESULTS) break
-    const block = m[1]
-    const titleM = /<h2[^>]*><a[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a><\/h2>/i.exec(block)
-    const snippetM = /<p[^>]*>([\s\S]*?)<\/p>/i.exec(block)
-    if (titleM) {
-      results.push({
-        title: titleM[2].replace(/<[^>]+>/g, '').trim(),
-        url: titleM[1],
-        snippet: snippetM ? snippetM[1].replace(/<[^>]+>/g, '').trim() : ''
-      })
-    }
-  }
-  return results
-}
-
-export interface SearchConfig {
-  searxngUrl?: string
-}
-
-let _config: SearchConfig = {}
-
-export function setSearchConfig(cfg: SearchConfig): void {
-  _config = cfg
-}
-
-export type SearchEngineId = 'searxng' | 'bing'
-
-export type SearchWebOutcome = {
-  results: SearchResult[]
-  engine: SearchEngineId
-}
-
-/** 默认 Bing；若配置了 SearXNG 则优先 SearXNG */
-export async function searchWeb(query: string): Promise<SearchResult[]> {
-  const out = await searchWebWithMeta(query)
-  return out.results
-}
-
-export async function searchWebWithMeta(query: string): Promise<SearchWebOutcome> {
+export type SearchEngineId = string
+export type SearchWebOutcome = { results: SearchResult[]; engine: SearchEngineId }
+export async function searchWeb(query: string): Promise<SearchResult[]> { return (await searchWebWithMeta(query)).results }
+export async function searchWebWithMeta(query: string, filters?: { allowed_domains?: string[]; blocked_domains?: string[] }): Promise<SearchWebOutcome> {
   const q = query.trim()
-  if (!q) return { results: [], engine: 'bing' }
-
-  if (_config.searxngUrl) {
-    try {
-      const results = await searchSearxng(q, _config.searxngUrl)
-      console.info('[search] engine=searxng', q, results.length)
-      return { results, engine: 'searxng' }
-    } catch (e) {
-      console.warn('[search] searxng failed, fallback bing', e)
-    }
-  }
-
-  try {
-    const results = await searchBing(q)
-    console.info('[search] engine=bing', q, results.length)
-    return { results, engine: 'bing' }
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e)
-    throw new Error(`Bing 搜索不可达：${msg}。可通过 setSearchConfig({ searxngUrl }) 配置 SearXNG。`)
-  }
+  if (!q) return { results: [], engine: 'web-search' }
+  const searched = await runSharedWebSearch({ query: q, ...filters })
+  if (!searched.ok) throw new Error(searched.output)
+  return { results: (searched.hits ?? []).map(hit => ({ title: hit.title, url: hit.url, snippet: hit.snippet ?? '' })), engine: searched.provider ?? 'web-search' }
 }
 
 export function formatSearchResults(results: SearchResult[]): string {

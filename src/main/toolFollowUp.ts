@@ -1,7 +1,9 @@
+import { openAiOutputTokenParams } from '../shared/outputTokens'
 // [toolFollowUp] — 工具执行后的第二轮 LLM 请求体
 // 不用 assistant+tool_calls 协议，避免 DeepSeek 等 thinking 模型要求回传 reasoning_content 导致 400
 
 import type { AppSettings } from './settings'
+import { buildSelectedPersonalityVoice, personalityToolFallbackLead } from './personalityVoice'
 import type { UserTaskFrame } from '../shared/taskFrame'
 import { buildToolFollowUpFormatBlock } from './taskFrame/formatInstructions'
 
@@ -27,13 +29,20 @@ const TOOL_LABEL: Record<string, string> = {
 export function buildToolFollowUpMessages(
   allMsgs: Array<{ role: string; content: unknown }>,
   toolResults: ToolResultForFollowUp[],
-  taskFrame?: UserTaskFrame
+  taskFrame?: UserTaskFrame,
+  settings?: AppSettings
 ): Array<{ role: 'system' | 'user' | 'assistant'; content: string }> {
   const followUp: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = []
 
   const sysMsg = allMsgs.find(m => m.role === 'system')
   if (sysMsg) {
     followUp.push({ role: 'system', content: messageText(sysMsg.content) })
+  }
+
+  if (settings) {
+    const voice = buildSelectedPersonalityVoice(settings)
+    if (followUp[0]?.role === 'system') followUp[0].content += `\n\n${voice}`
+    else followUp.push({ role: 'system', content: voice })
   }
 
   const lastUser = [...allMsgs].reverse().find(m => m.role === 'user')
@@ -67,20 +76,21 @@ export function buildToolFollowUpMessages(
 
 /** 使用用户 settings 中的 model / 端点（与首轮一致），且不附带 tools */
 /** 工具已执行但第二轮 LLM 失败时的兜底文案 */
-export function buildToolResultsFallback(toolResults: ToolResultForFollowUp[]): string {
+export function buildToolResultsFallback(toolResults: ToolResultForFollowUp[], settings?: AppSettings): string {
+  const lead = settings ? personalityToolFallbackLead(settings) : '工具已返回内容，但回复生成中断了。'
   const hasSearch = toolResults.some(tr => tr.name === 'web_search')
   const other = toolResults.filter(tr => tr.name !== 'append_memory' && tr.name !== 'web_search')
   if (hasSearch && other.length === 0) {
-    return '我帮你查好了，详情都在上面的检索摘录里；这边一时组织不好怎么说，你看看纸面卡。'
+    return `${lead}\n\n${toolResults.filter(tr => tr.name === 'web_search').map(tr => tr.content).join('\n\n')}`
   }
   const parts = other.map(tr => {
     const label = TOOL_LABEL[tr.name] ?? tr.name
     return `【${label}】\n${tr.content}`
   })
   if (hasSearch) {
-    parts.unshift('（网页搜索结果见上方检索摘录卡）')
+    parts.unshift(...toolResults.filter(tr => tr.name === 'web_search').map(tr => tr.content))
   }
-  return parts.join('\n\n') || '工具执行完成，但未能生成回复。'
+  return `${lead}${parts.length ? '\n\n' + parts.join('\n\n') : ''}`
 }
 
 export function buildToolFollowUpRequestBody(
@@ -91,7 +101,7 @@ export function buildToolFollowUpRequestBody(
   taskFrame?: UserTaskFrame,
   extraUserSuffix?: string
 ): Record<string, unknown> {
-  const messages = buildToolFollowUpMessages(allMsgs, toolResults, taskFrame)
+  const messages = buildToolFollowUpMessages(allMsgs, toolResults, taskFrame, settings)
   if (extraUserSuffix?.trim()) {
     const last = messages[messages.length - 1]
     if (last?.role === 'user') {
@@ -104,6 +114,6 @@ export function buildToolFollowUpRequestBody(
     model: settings.model,
     messages,
     stream: true,
-    max_tokens: maxTokens
+    ...openAiOutputTokenParams(settings)
   }
 }

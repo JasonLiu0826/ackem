@@ -85,7 +85,8 @@ export class VectorStore {
   async searchAsync(
     query: string,
     topK: number,
-    queryEmbed?: number[]
+    queryEmbed?: number[],
+    allowedFactIds?: ReadonlySet<string>
   ): Promise<Array<{ factId: string; score: number }>> {
     if (this.denseVectors.length > 0) {
       try {
@@ -96,11 +97,11 @@ export class VectorStore {
               ? await this.embedQuery(query)
               : null
         if (qEmbed && qEmbed.length > 0) {
-          return this.searchByDenseVector(qEmbed, topK)
+          return this.searchByDenseVector(qEmbed, topK, allowedFactIds)
         }
       } catch { /* fall back to TF-IDF */ }
     }
-    return this.search(query, topK)
+    return this.search(query, topK, allowedFactIds)
   }
 
   isDenseCacheReady(): boolean {
@@ -158,9 +159,9 @@ export class VectorStore {
   }
 
   /** 用稠密 embedding 向量做余弦相似度搜索 */
-  private searchByDenseVector(qVec: number[], topK: number): Array<{ factId: string; score: number }> {
+  private searchByDenseVector(qVec: number[], topK: number, allowedFactIds?: ReadonlySet<string>): Array<{ factId: string; score: number }> {
     const qNorm = Math.sqrt(qVec.reduce((s, v) => s + v * v, 0)) || 1
-    const scored = this.denseVectors.map(({ factId, vec, norm }) => {
+    const scored = this.denseVectors.filter(v => !allowedFactIds || allowedFactIds.has(v.factId)).map(({ factId, vec, norm }) => {
       let dot = 0
       for (let i = 0; i < qVec.length && i < vec.length; i++) {
         dot += qVec[i] * vec[i]
@@ -173,7 +174,7 @@ export class VectorStore {
   }
 
   /** TF-IDF cosine similarity search (synchronous, default) */
-  search(query: string, topK: number): Array<{ factId: string; score: number }> {
+  search(query: string, topK: number, allowedFactIds?: ReadonlySet<string>): Array<{ factId: string; score: number }> {
     if (this.vectors.length === 0) return []
 
     const queryVec = this.vectorizeQuery(query)
@@ -181,7 +182,7 @@ export class VectorStore {
 
     const qNorm = Math.sqrt([...queryVec.values()].reduce((s, v) => s + v * v, 0)) || 1
 
-    const scored = this.vectors.map(({ factId, vec, norm }) => {
+    const scored = this.vectors.filter(v => !allowedFactIds || allowedFactIds.has(v.factId)).map(({ factId, vec, norm }) => {
       let dot = 0
       for (const [id, qv] of queryVec) {
         dot += qv * (vec.get(id) ?? 0)

@@ -38,6 +38,7 @@ import { EpisodicStore, defaultEpisodesPath } from '../../../../memory/episodicS
 import { createLogger } from '../../../../logger'
 import { broadcastToRenderers } from '../../../../uiWindow'
 import { getRuntimeContext } from '../../../runtime'
+import { captureMemorySourceFence, validateMemorySourceFence, type MemorySourceFence } from '../../../../memory/sourceFence'
 
 const log = createLogger('diary-auto')
 
@@ -72,10 +73,16 @@ export async function gatherDiaryMaterials(
 
   const store = new FactStore(defaultFactsPath(dataRoot))
   store.load()
-  const dayFacts = store
-    .listActive()
+  const dayFacts = readableMemoryFacts(store)
     .filter(f => isWithinLocalDayWindow(f.createdAt, date, upperBoundMs))
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+  const eStore = new EpisodicStore(defaultEpisodesPath(dataRoot))
+  eStore.load()
+  const dayEpisodes = readableMemoryEpisodes(eStore, dataRoot)
+    .filter(ep => isWithinLocalDayWindow(ep.createdAt, date, upperBoundMs))
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 5)
+  const sourceFence = captureMemorySourceFence(dayFacts, dayEpisodes)
 
   // 取当天所有事实，用 Embedding 重要度重排后取 top 30
   let facts: string[]
@@ -102,14 +109,7 @@ export async function gatherDiaryMaterials(
     facts = dayFacts.slice(0, 30).map(f => formatDiaryFactLine(f.subject, f.summary))
   }
 
-  const eStore = new EpisodicStore(defaultEpisodesPath(dataRoot))
-  eStore.load()
-  const episodes = eStore
-    .listAll()
-    .filter(ep => isWithinLocalDayWindow(ep.createdAt, date, upperBoundMs))
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, 5)
-    .map(ep => ep.summary)
+  const episodes = dayEpisodes.map(ep => ep.summary)
 
   const fileTraces = loadTraceFile(dataRoot, date)
   const traces = fileTraces.filter(t => {
@@ -174,7 +174,7 @@ export async function gatherDiaryMaterials(
     chatExcerpts = []
   }
 
-  return { facts, episodes, traces, highlights, chatExcerpts }
+  return { facts, episodes, traces, highlights, chatExcerpts, sourceFence }
 }
 
 function resolveRuntimeForDiary(
@@ -232,7 +232,7 @@ export async function runDailyDiaryGeneration(
 
   const personality = resolveDiaryPersonality(settings)
   const sessionId = settings.activeSessionId || 'default'
-  const { facts, episodes, traces, highlights, chatExcerpts } = await gatherDiaryMaterials(
+  const { facts, episodes, traces, highlights, chatExcerpts, sourceFence } = await gatherDiaryMaterials(
     dataRoot,
     date,
     timeContext.mode,
@@ -246,6 +246,10 @@ export async function runDailyDiaryGeneration(
   // 获取用户名字
   const factStore = new FactStore(defaultFactsPath(dataRoot))
   const userName = resolvePreferredName(factStore)
+  factStore.load()
+  const nameFence = captureMemorySourceFence(personalFacts(factStore).filter(f => f.subcategory === 'BASIC_PROFILE' && (f.subject === '用户昵称' || f.subject === '用户姓名')))
+  const sourcesCurrent = () => validateMemorySourceFence(dataRoot, sourceFence) && validateMemorySourceFence(dataRoot, nameFence)
+  if (!sourcesCurrent()) return { ok: false, reason: '记忆来源已变更', skipped: true }
 
   const content = await generateDiary(
     {
@@ -266,6 +270,7 @@ export async function runDailyDiaryGeneration(
     'zh'
   )
 
+  if (!sourcesCurrent()) return { ok: false, reason: '记忆来源已变更', skipped: true }
   if (!content) {
     return { ok: false, reason: '生成失败', skipped: true }
   }
@@ -292,12 +297,14 @@ export async function runDailyDiaryGeneration(
 
 type DiarySnapshot = {
   date: string
+  capturedAt?: string
   totalTurns: number
   l1: FullState['relationship']
   l2: FullState['emotion']
   personalityPresetId: string
   recentFacts?: string[]
   episodeSummaries?: string[]
+  sourceFence?: MemorySourceFence
 }
 
 function listPendingSnapshotDates(dataRoot: string): string[] {
@@ -336,13 +343,19 @@ export async function processPendingSnapshotDiaries(
     return
   }
 
+  // Legacy snapshots have no provenance. Keep them for user inspection, never replay into a model.
+  if (!validateMemorySourceFence(dataRoot, snap.sourceFence)) return
+
   const preset = PERSONALITY_PRESETS.find(p => p.id === snap.personalityPresetId)
   if (!preset) return
 
-  const gapHours = (Date.now() - new Date(snap.date).getTime()) / 3_600_000
+  const lastActiveAt = snap.capturedAt ?? snap.date
+  const gapHours = Math.max(0, (Date.now() - new Date(lastActiveAt).getTime()) / 3_600_000)
   const shock = computeReunionShock(gapHours)
   const llm = createLlmJsonClient(settings)
   const snapshotAt = new Date()
+  const nameStore = new FactStore(defaultFactsPath(dataRoot)); nameStore.load()
+  const nameFence = captureMemorySourceFence(personalFacts(nameStore).filter(f => f.subcategory === 'BASIC_PROFILE' && (f.subject === '用户昵称' || f.subject === '用户姓名')))
 
   let diaryContent = ''
   let diaryType: 'reunion' | 'daily' = 'daily'
@@ -386,7 +399,7 @@ export async function processPendingSnapshotDiaries(
     const runtime = buildRuntimeContext({
       dataRoot,
       sessionId: settings.activeSessionId || 'default',
-      lastActiveAt: snap.date,
+      lastActiveAt,
       now: snapshotAt
     })
     const snapFactStore = new FactStore(defaultFactsPath(dataRoot))
@@ -412,7 +425,7 @@ export async function processPendingSnapshotDiaries(
     )
   }
 
-  if (!diaryContent) return
+  if (!diaryContent || !validateMemorySourceFence(dataRoot, snap.sourceFence) || !validateMemorySourceFence(dataRoot, nameFence)) return
 
   saveDiary(dataRoot, targetDate, diaryContent)
   writeDiaryMeta(dataRoot, targetDate, {
@@ -473,32 +486,33 @@ export function saveDiarySnapshotOnExit(
 
   const store = new FactStore(defaultFactsPath(dataRoot))
   store.load()
-  const recentFacts = store
-    .listActive()
+  const selectedFacts = readableMemoryFacts(store)
     .filter(f => localDateFromIso(f.createdAt) === today)
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 10)
-    .map(f => f.summary)
+  const recentFacts = selectedFacts.map(f => f.summary)
 
   const eStore = new EpisodicStore(defaultEpisodesPath(dataRoot))
   eStore.load()
-  const episodeSummaries = eStore
-    .listAll()
+  const selectedEpisodes = readableMemoryEpisodes(eStore,dataRoot)
     .filter(ep => localDateFromIso(ep.createdAt) === today)
     .slice(0, 5)
-    .map(ep => ep.summary)
+  const episodeSummaries = selectedEpisodes.map(ep => ep.summary)
 
   const snap: DiarySnapshot = {
     date: today,
+    capturedAt: new Date().toISOString(),
     totalTurns: state.counters.totalTurns,
     l1: state.relationship,
     l2: state.emotion,
     personalityPresetId: state.personality.presetId ?? settings.personalityPresetId,
     recentFacts,
-    episodeSummaries
+    episodeSummaries,
+    sourceFence: captureMemorySourceFence(selectedFacts, selectedEpisodes)
   }
 
   mkdirSync(diaryDir, { recursive: true })
   writeFileSync(join(diaryDir, `.snapshot-${today}.json`), JSON.stringify(snap, null, 2), 'utf-8')
   log.info('diary snapshot saved', { date: today, turns: snap.totalTurns })
 }
+import { readableMemoryFacts, readableMemoryEpisodes, personalFacts } from '../../../../memory/personalFacts'

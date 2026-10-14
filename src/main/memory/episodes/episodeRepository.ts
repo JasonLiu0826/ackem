@@ -1,6 +1,7 @@
 import type { Episode } from './types.js'
 import { getDatabase } from '../../db/database.js'
 import { insertEpisode } from '../../db/repos/episodes.js'
+import { canReadMemorySources } from '../accessScope.js'
 
 export function insertEpisodeWithEvidence(
   dataRoot: string,
@@ -8,16 +9,18 @@ export function insertEpisodeWithEvidence(
   evidenceEventIds: string[],
   createdAt: string
 ): void {
-  insertEpisode(dataRoot, episode)
   const db = getDatabase(dataRoot)
-  if (!db || evidenceEventIds.length === 0) return
-  const stmt = db.prepare(
-    `INSERT OR IGNORE INTO memory_episode_evidence (episode_id, event_id, created_at)
-     VALUES (?, ?, ?)`
-  )
-  for (const eventId of evidenceEventIds) {
-    stmt.run(episode.id, eventId, createdAt)
-  }
+  if (!db || !canReadMemorySources(db, evidenceEventIds)) return
+  db.transaction(() => {
+    insertEpisode(dataRoot, episode)
+    const stmt = db.prepare(
+      `INSERT OR IGNORE INTO memory_episode_evidence (episode_id, event_id, created_at)
+       VALUES (?, ?, ?)`
+    )
+    for (const eventId of evidenceEventIds) {
+      stmt.run(episode.id, eventId, createdAt)
+    }
+  })()
 }
 
 export function episodeExistsForTerminalEvent(dataRoot: string, terminalEventId: string): boolean {

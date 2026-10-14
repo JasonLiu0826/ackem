@@ -3,6 +3,7 @@ const SPLASH_ID = 'ackem-boot-splash'
 export const BOOT_SPLASH_STATUS_EVENT = 'ackem-boot-status'
 export const BOOT_SPLASH_PROGRESS_EVENT = 'ackem-boot-progress'
 export const BOOT_SPLASH_READY_EVENT = 'ackem-boot-ready'
+export const BOOT_SPLASH_STEPS_EVENT = 'ackem-boot-steps'
 
 const BOOT_SPLASH_MIN_MS = 3000
 const BOOT_SPLASH_MAX_MS = 5000
@@ -44,6 +45,11 @@ export function setBootSplashStatus(text: string): void {
 export function setBootSplashProgress(pct: number): void {
   const n = Math.min(100, Math.max(0, pct))
   document.dispatchEvent(new CustomEvent(BOOT_SPLASH_PROGRESS_EVENT, { detail: n }))
+}
+
+/** 主进程启动步骤 → BootSplash（DOM 事件桥接，因 BootSplash 在 App 树外渲染） */
+export function setBootSplashSteps(steps: Array<{ label: string; done: boolean }>, allReady?: boolean): void {
+  document.dispatchEvent(new CustomEvent(BOOT_SPLASH_STEPS_EVENT, { detail: { steps, allReady } }))
 }
 
 export function signalBootSplashReady(): void {

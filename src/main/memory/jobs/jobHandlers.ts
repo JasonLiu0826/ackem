@@ -5,6 +5,7 @@ import { loadSettings } from '../../settings.js'
 import { createActionCoordinator } from '../actions/actionCoordinator.js'
 import { ActionRepository } from '../actions/actionRepository.js'
 import type { MemoryEventMeta, PersistedL0Event, RuntimeSnapshot, TrustedHostReceipt } from '../contracts.js'
+import { canReadMemorySources } from '../accessScope.js'
 import { snapshotStatusForReceipt } from '../adapters/ackemCodeMemoryAdapter.js'
 import {
   JOB_TYPE_ACTION_RECONCILE,
@@ -177,6 +178,7 @@ async function resumeWorkTerminalEpisodeIfApplied(
 export async function dispatchJobHandler(job: MemoryJobRow, deps: JobHandlerDeps): Promise<JobHandlerResult> {
   const db = getDatabase(deps.dataRoot)
   if (!db) return { ok: false, retryable: true, message: 'SQLite unavailable' }
+  if (job.job_type !== JOB_TYPE_ACTION_RECONCILE && !canReadMemorySources(db, [job.source_event_id])) return { ok: false, retryable: false, message: 'source_scope_unavailable' }
   const jobs = new JobRepository(db)
   if (jobs.hasEffect(job.source_event_id, job.job_type, job.derivation_version, JOB_EFFECT_APPLIED)) {
     if (job.job_type === JOB_TYPE_DERIVE_ACTION_TERMINAL) {
@@ -284,9 +286,13 @@ async function handleDeriveChatTurn(
   }
 
   const relatedForValidation = relatedCorrelationEvents(events, sessionId, source.meta.correlationId)
+  const sourceIds = relatedForValidation.map(e => e.meta.eventId)
+  const assertAccess = () => { if (!canReadMemorySources(db, sourceIds)) throw Error('source_scope_unavailable') }
+  const scopedIngestBase = { ...ingestBase, assertAccess, sourceEventIds: sourceIds }
   const userEvidenceEventId = started.meta.eventId
 
   try {
+    assertAccess()
     if (frozenFacts.length > 0) {
       assertPrefetchedFactsAllowed(frozenFacts, relatedForValidation, userEvidenceEventId)
       for (let i = 0; i < frozenFacts.length; i++) {
@@ -296,7 +302,7 @@ async function handleDeriveChatTurn(
           continue
         }
         await executePersistedChatIngestSingleFact({
-          ...ingestBase,
+          ...scopedIngestBase,
           skipLlmExtraction: true,
           fact,
           factIndex: i
@@ -307,12 +313,13 @@ async function handleDeriveChatTurn(
         }
       }
     } else if (!skipIngest && checkpoint) {
-      await executePersistedChatIngest({ ...ingestBase, skipLlmExtraction: true })
+      await executePersistedChatIngest({ ...scopedIngestBase, skipLlmExtraction: true })
     } else if (!skipIngest) {
       await executePersistedChatIngest({
-        ...ingestBase,
+        ...scopedIngestBase,
         skipLlmExtraction,
         onFactsExtracted: (facts) => {
+          assertAccess()
           assertPrefetchedFactsAllowed(facts, relatedForValidation, userEvidenceEventId)
           const content = { turnId, sourceEventId: job.source_event_id,
             derivationVersion: job.derivation_version, facts }
@@ -341,7 +348,7 @@ async function handleDeriveChatTurn(
     }
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e)
-    return { ok: false, retryable: true, message }
+    return { ok: false, retryable: message !== 'source_scope_unavailable', message }
   }
 
   const relatedForNature = relatedCorrelationEvents(events, sessionId, source.meta.correlationId)

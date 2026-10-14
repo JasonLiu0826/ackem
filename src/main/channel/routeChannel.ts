@@ -41,6 +41,66 @@ export type RouteChannelResult = {
 }
 
 export async function routeChannel(input: RouteChannelInput): Promise<RouteChannelResult> {
+  // Semantic interpretation is the main route, not a keyword-gated residual.
+  // Keep one channel authority; normalization still validates capability targets.
+  if (input.llm) {
+    const motive = detectMotive(input.text, input.recent, input.sessionId ?? 'default')
+    input.onResidual?.()
+    input.onMilestone?.('正在结合本轮要求和上下文判断执行方式…')
+    let outcome = 'llm_error'
+    const started = routeTraceClock()
+    const parsed = await classifyIntent({
+      ...input,
+      catalog: input.catalogFailed ? [] : input.catalog,
+      onOutcome: value => {
+        outcome = value
+        if (input.trace) {
+          input.trace.usedClassifier = true
+          input.trace.residualOutcome = value
+        }
+        input.trace?.mark({ layer: 'residual', ruleId: `semantic:${value}` }, started)
+      }
+    })
+    if (!parsed) {
+      return {
+        plan: chatPlan('chat', {
+          grounding: `【本轮通道】chat\n【状态】意图判断未确认（${outcome}），本轮任务尚未下派。\n【要求】简短告知用户此次下派未完成，可重试；不得编造检查结果、查询来源或执行进展，也不能把判断失败解释成用户没有要求执行或 AckemCode 没有能力。`
+        }),
+        motive,
+        match: null,
+        usedClassifier: true
+      }
+    }
+    const catalog = input.catalogFailed ? [] : input.catalog.filter(entry => entry.status === 'active' && !entry.rejectedInSession)
+    let match: CatalogMatch = { level: 'none' }
+    try {
+      match = matchCatalog(input.text, catalog, input.dataRoot)
+    } catch {
+      // Unknown targets remain unbound.
+    }
+    // A semantic capability can bind an installed target without repeating its
+    // name or an invocation keyword. Ambiguous targets still require selection.
+    if (parsed.intent === 'use' && match.level === 'none' && parsed.tag) {
+      const candidates = catalog.filter(entry => entry.capabilityTag === parsed.tag)
+      if (candidates.length === 1) {
+        match = { level: 'high', extensionId: candidates[0].id, reason: 'semantic' }
+      } else if (candidates.length > 1) {
+        match = { level: 'medium', extensionIds: candidates.map(entry => entry.id), reason: 'capability_tag' }
+      }
+    }
+    const plan = normalizeChannel(parsed, catalog, { userText: input.text, match, semantic: true })
+    input.trace?.mark({ layer: 'normalize', ruleId: `semantic:${plan.channel}` })
+    input.onMilestone?.(
+      plan.channel === 'work' ? '这项请求需要工作页执行' :
+      plan.channel === 'plugin' ? '已匹配到可用能力' : '已确认本轮回应方式'
+    )
+    const interpreted: Motive =
+      parsed.intent === 'create' ? { kind: 'create' } :
+      parsed.intent === 'update' ? { kind: 'update' } :
+      plan.channel === 'work' ? { kind: 'work', reason: 'semantic' } :
+      parsed.intent === 'use' ? { kind: 'use' } : { kind: 'none' }
+    return { plan, motive: interpreted, match, usedClassifier: true }
+  }
   const clauses = !input.catalogFailed ? splitUtterance(input.text) : null
   if (clauses) {
     const parts: RouteChannelResult[] = []

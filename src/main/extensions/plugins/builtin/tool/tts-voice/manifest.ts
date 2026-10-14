@@ -10,7 +10,7 @@ export const TTS_VOICE_MANIFEST: PluginManifest = {
   pluginType: 'tool',
   implementationStatus: 'preview',
   description:
-    '语音对话管线：ASR (faster-whisper) + TTS (CosyVoice/edge-tts) + 情绪指令映射。剧院模式下半双工语音对话。',
+    '语音对话管线：ASR (sherpa-onnx) + 可选 TTS。主聊天 / 工作页 / 剧院共用一个识别口。',
   author: 'JasonLiu0826',
   license: 'AGPL-3.0',
   main: 'bootstrap.ts',
