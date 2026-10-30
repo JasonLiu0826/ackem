@@ -85,7 +85,6 @@ Ackem 需要 LLM API 才能正常工作。在应用 **Settings → Model & API**
 | `npm run build` | 编译到 `out/` |
 | `npm run preview` | 预览生产构建 |
 | `npm run typecheck` | TypeScript 类型检查 |
-| `npm test` | 运行测试 |
 | `npm run dist:green` | 打包绿色版到 `dist/release/` |
 | `npm run dist:setup` | 打包 NSIS 安装程序 |
 | `npm run prepare:embedding-models` | 下载/解压 embedding 模型 |

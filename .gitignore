@@ -10,3 +10,43 @@ parts/ackemcode/data/**
 .test-cache
 .env
 .env.*
+
+# Local credentials and runtime state
+*.pem
+*.key
+*.p12
+*.pfx
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+
+# Generated files and local analysis
+__pycache__/
+*.py[cod]
+*.tsbuildinfo
+/launcher/AckemLauncher.exe
+coverage/
+.tmp/
+.scratch/
+.code-review-graph/
+/NUL
+/process.exit(0)
+
+# Tests stay local in this source-only repository
+*.test.*
+*.spec.*
+__tests__/
+__fixtures__/
+/vitest.config.*
+/scripts/test-electron-vitest.mjs
+/src/main/engine/seed-test-data.ts
+/src/main/engine/test-harness.ts
+/src/main/memory/testCleanup.ts
+/src/main/desktop-agent/routing/resolveCapability.testutil.ts
+/src/renderer/UI_TESTING.md
+
+# Local implementation notes and audit snapshots
+/docs/developer/*-20??-??-??.md
+/docs/developer/AckemGUI接入AckemCode内核设计.md

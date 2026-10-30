@@ -161,20 +161,25 @@ Details: [docs/distribution-windows.md](./docs/distribution-windows.md)
 
 > Ackem is an **Electron app**. The renderer depends on `window.ackem` (preload IPC).  
 > Use **`npm run dev`** — do not open the Vite URL in a browser alone.
+> `npm start` also prepares local development dependencies before launching Electron.
 
 ### Prerequisites
 
-- Windows 10/11 · Node.js **20+** · `npm ci`
+- Windows 10/11 · Node.js **20+**
 
 ### Daily development
 
 ```bash
-cd Ackem-v0.0.0
-npm install
+cd ackem
+npm ci
+cd parts/ackemcode
+npm ci
+cd ../..
 npm run dev
 ```
 
 Dev `data/` is in the repo working tree, separate from green release `data/` next to `Ackem.exe`.
+Set the chat API address, key, and model in Ackem settings before using chat or coding tasks. No API key is included in the source repository. The coding page uses `parts/ackemcode`; its local daemon starts on demand.
 
 ### Build & package
 
@@ -184,13 +189,15 @@ npm run dist:green     # Green release → dist/release/
 npm run dist:setup     # Optional NSIS installer
 ```
 
-### Testing
+### Validation
 
 ```bash
 npm run typecheck
-npm test
-npm run test:renderer
+npm run build
+cd parts/ackemcode && npm run typecheck
 ```
+
+This source-only repository excludes local test suites, development notes, credentials, and generated caches.
 
 ---
 

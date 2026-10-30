@@ -3,8 +3,7 @@
 Developers run once after training. End users only unzip the output folder.
 
 Usage:
-  python scripts/package_ackem_voice_pack.py
-  python scripts/package_ackem_voice_pack.py --out D:\\releases\\Ackem-VoicePack-ackem_girl.zip
+  python scripts/package_ackem_voice_pack.py --gpt-sovits-home path/to/GPT-SoVITS --audio-dir path/to/audio
 """
 
 from __future__ import annotations
@@ -15,9 +14,6 @@ import shutil
 import zipfile
 from pathlib import Path
 
-# --- Developer paths (change when packaging other voices) ---
-GPT_ROOT = Path(r"C:\Users\JasonLiu\Desktop\Main\SoftPackage\GPT-SoVITS-v2pro-20250604")
-AUDIO_8S = Path(r"C:\Users\JasonLiu\Desktop\Github-open\video\audio_8s")
 PACK_ID = "ackem_girl"
 PACK_LABEL = "Ackem 女声"
 REF_TEXT = (
@@ -29,26 +25,26 @@ GPT_WEIGHT = "GPT_weights_v2Pro/ackem_girl-e15.ckpt"
 SOVITS_WEIGHT = "SoVITS_weights_v2Pro/ackem_girl_e8_s200.pth"
 
 
-def _find_ref() -> Path:
-    refs = [p for p in AUDIO_8S.glob(REF_GLOB) if "(1)" not in p.name]
+def _find_ref(audio_dir: Path) -> Path:
+    refs = [p for p in audio_dir.glob(REF_GLOB) if "(1)" not in p.name]
     if not refs:
-        refs = list(AUDIO_8S.glob(REF_GLOB))
+        refs = list(audio_dir.glob(REF_GLOB))
     if not refs:
-        raise SystemExit(f"Reference audio not found in {AUDIO_8S}")
+        raise SystemExit(f"Reference audio not found in {audio_dir}")
     return refs[0]
 
 
-def build_staging(staging: Path) -> None:
+def build_staging(staging: Path, gpt_root: Path, audio_dir: Path) -> None:
     if staging.exists():
         shutil.rmtree(staging)
     weights_dir = staging / "weights"
     weights_dir.mkdir(parents=True)
 
-    gpt_src = GPT_ROOT / GPT_WEIGHT
-    sovits_src = GPT_ROOT / SOVITS_WEIGHT
-    ref_src = _find_ref()
+    gpt_src = gpt_root / GPT_WEIGHT
+    sovits_src = gpt_root / SOVITS_WEIGHT
+    ref_src = _find_ref(audio_dir)
 
-    for src in (gpt_src, sovits_src, ref_src, GPT_ROOT / "api_v2.py"):
+    for src in (gpt_src, sovits_src, ref_src, gpt_root / "api_v2.py"):
         if not src.exists():
             raise SystemExit(f"Missing: {src}")
 
@@ -109,6 +105,8 @@ def zip_staging(staging: Path, zip_path: Path) -> None:
 
 def main() -> None:
     p = argparse.ArgumentParser()
+    p.add_argument("--gpt-sovits-home", type=Path, required=True, help="GPT-SoVITS installation directory")
+    p.add_argument("--audio-dir", type=Path, required=True, help="Directory containing reference audio")
     p.add_argument(
         "--out",
         type=Path,
@@ -118,7 +116,7 @@ def main() -> None:
     args = p.parse_args()
 
     staging = args.out.parent / f"_staging_{PACK_ID}"
-    build_staging(staging)
+    build_staging(staging, args.gpt_sovits_home, args.audio_dir)
 
     if args.staging_only:
         print(f"Staging folder: {staging}")

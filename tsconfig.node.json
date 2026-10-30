@@ -12,6 +12,6 @@
     "esModuleInterop": true,
     "types": ["node"]
   },
-  "include": ["electron.vite.config.ts", "src/main/**/*.ts", "src/preload/**/*.ts", "src/shared/**/*.ts", "vitest.config.ts"],
-  "exclude": ["src/main/extensions"]
+  "include": ["electron.vite.config.ts", "src/main/**/*.ts", "src/preload/**/*.ts", "src/shared/**/*.ts"],
+  "exclude": ["src/main/extensions", "**/*.test.*", "**/*.spec.*", "**/__tests__/**", "**/__fixtures__/**", "src/main/engine/seed-test-data.ts", "src/main/engine/test-harness.ts", "src/main/memory/testCleanup.ts", "src/main/desktop-agent/routing/resolveCapability.testutil.ts"]
 }

@@ -1,8 +1,8 @@
 """Install a self-contained GPT-SoVITS voice pack for Ackem (end-user, no training).
 
 Usage:
-  python scripts/install_ackem_gpt_sovits_voice.py
-      -> install from developer machine (builds self-contained pack in AppData)
+  python scripts/install_ackem_gpt_sovits_voice.py --gpt-sovits-home path/to/GPT-SoVITS --audio-dir path/to/audio
+      -> build and install a self-contained pack from local trained weights
 
   python scripts/install_ackem_gpt_sovits_voice.py --from-zip path\\Ackem-VoicePack-ackem_girl.zip
       -> end user: unzip voice pack only
@@ -20,9 +20,6 @@ import shutil
 import zipfile
 from pathlib import Path
 
-# Developer-only defaults when building pack from trained weights on this machine
-GPT_ROOT = Path(r"C:\Users\JasonLiu\Desktop\Main\SoftPackage\GPT-SoVITS-v2pro-20250604")
-AUDIO_8S = Path(r"C:\Users\JasonLiu\Desktop\Github-open\video\audio_8s")
 PACK_ID = "ackem_girl"
 REF_TEXT = (
     "对，我不是人，但这不代表我的感受是假的，"
@@ -117,22 +114,22 @@ def install_from_zip(zip_path: Path) -> Path:
     return dest
 
 
-def build_dev_pack() -> Path:
+def build_dev_pack(gpt_root: Path, audio_dir: Path) -> Path:
     """Developer: copy trained weights into self-contained AppData pack."""
     pack_dir = appdata_pack_root() / PACK_ID
     weights_dir = pack_dir / "weights"
     pack_dir.mkdir(parents=True, exist_ok=True)
     weights_dir.mkdir(exist_ok=True)
 
-    gpt_w = GPT_ROOT / "GPT_weights_v2Pro" / "ackem_girl-e15.ckpt"
-    sovits_w = GPT_ROOT / "SoVITS_weights_v2Pro" / "ackem_girl_e8_s200.pth"
-    refs = [p for p in AUDIO_8S.glob(REF_GLOB) if "(1)" not in p.name] or list(AUDIO_8S.glob(REF_GLOB))
+    gpt_w = gpt_root / "GPT_weights_v2Pro" / "ackem_girl-e15.ckpt"
+    sovits_w = gpt_root / "SoVITS_weights_v2Pro" / "ackem_girl_e8_s200.pth"
+    refs = [p for p in audio_dir.glob(REF_GLOB) if "(1)" not in p.name] or list(audio_dir.glob(REF_GLOB))
 
-    for p in (GPT_ROOT, gpt_w, sovits_w):
+    for p in (gpt_root, gpt_w, sovits_w):
         if not p.exists():
             raise SystemExit(f"Missing: {p}")
     if not refs:
-        raise SystemExit(f"No ref audio in {AUDIO_8S}")
+        raise SystemExit(f"No ref audio in {audio_dir}")
 
     shutil.copy2(gpt_w, weights_dir / gpt_w.name)
     shutil.copy2(sovits_w, weights_dir / sovits_w.name)
@@ -163,19 +160,21 @@ def main() -> None:
     ap.add_argument(
         "--gpt-sovits-home",
         type=Path,
-        default=GPT_ROOT,
         help="GPT-SoVITS install dir (inference engine only, one-time per machine)",
     )
+    ap.add_argument("--audio-dir", type=Path, help="Directory containing reference audio for local pack builds")
     args = ap.parse_args()
+    if not args.from_zip and not args.from_dir and (not args.gpt_sovits_home or not args.audio_dir):
+        ap.error("Local pack builds require --gpt-sovits-home and --audio-dir")
 
     if args.from_zip:
         dest = install_from_zip(args.from_zip)
     elif args.from_dir:
         dest = install_pack_dir(args.from_dir)
     else:
-        dest = build_dev_pack()
+        dest = build_dev_pack(args.gpt_sovits_home, args.audio_dir)
 
-    if args.gpt_sovits_home.is_dir():
+    if args.gpt_sovits_home and args.gpt_sovits_home.is_dir():
         write_gpt_sovits_home(args.gpt_sovits_home)
 
     print(f"Voice pack ready: {dest}")

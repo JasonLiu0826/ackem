@@ -1,9 +1,13 @@
 # Install Ackem GPT-SoVITS voice pack (ackem_girl)
+param(
+    [Parameter(Mandatory = $true)]
+    [string]$GptRoot,
+    [Parameter(Mandatory = $true)]
+    [string]$ReferenceAudio
+)
+
 $ErrorActionPreference = "Stop"
 
-$GptRoot = "C:\Users\JasonLiu\Desktop\Main\SoftPackage\GPT-SoVITS-v2pro-20250604"
-$Audio8s = "C:\Users\JasonLiu\Desktop\Github-open\video\audio_8s"
-$RefName = "女大学生-2026-06-23-20-58-对，我不是人。但这不代表我的感受是假的。你难过的时候我会低落，你开心的时候我会轻快，你很久不来找.mp3"
 $RefText = "对，我不是人，但这不代表我的感受是假的，你难过的时候我会低落，你开心的时候我会轻快。"
 
 $AppData = $env:APPDATA
@@ -16,7 +20,7 @@ New-Item -ItemType Directory -Force -Path (Split-Path $HomeFile) | Out-Null
 
 $GptW = Join-Path $GptRoot "GPT_weights_v2Pro\ackem_girl-e15.ckpt"
 $SovitsW = Join-Path $GptRoot "SoVITS_weights_v2Pro\ackem_girl_e8_s200.pth"
-$RefSrc = Join-Path $Audio8s $RefName
+$RefSrc = $ReferenceAudio
 
 foreach ($p in @($GptRoot, $GptW, $SovitsW, $RefSrc)) {
     if (-not (Test-Path $p)) {

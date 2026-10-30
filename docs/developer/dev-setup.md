@@ -85,7 +85,6 @@ See [docs/local-models-windows.md](../local-models-windows.md) for detailed conf
 | `npm run build` | Compile to `out/` |
 | `npm run preview` | Preview production build |
 | `npm run typecheck` | TypeScript type check |
-| `npm test` | Run tests |
 | `npm run dist:green` | Package portable build to `dist/release/` |
 | `npm run dist:setup` | Package NSIS installer |
 | `npm run prepare:embedding-models` | Download/extract embedding models |

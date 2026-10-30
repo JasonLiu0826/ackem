@@ -2,28 +2,26 @@
 
 - **类型**：Plugin / `tool` / `manual`
 - **ID**：`ackem/voice-pipeline@0.1.0`
-- **状态**：开发中（Python 服务 + Electron 端到端已接线）
+- **状态**：本地 sherpa-onnx 识别已接线（TTS 播报仍灰度）
 
 ## 能力
 
 | 能力 | 状态 |
 |------|------|
-| Python ASR/TTS HTTP 服务 | ✅ |
-| 剧院模式麦克风 + VAD 缓冲 ASR | ✅ |
-| LLM 回复后情绪 TTS | ✅（`postChatTurn` → `voiceManager.speak`） |
-| Settings 语音配置页 | ✅ |
-| 双通道识别结果可编辑 | ✅（dual 模式填入输入框） |
-| PTT 按住说话 | ✅（剧院麦克风按住） |
-| 嵌入式 Python 零配置打包 | ⏳ `package-python.ps1` |
+| sherpa-onnx 流式 ASR（标准档） | ✅ sidecar worker，模型在 userData |
+| 主聊天 / 工作页 / 剧院共用一个识别口 | ✅ 同时只开一个麦 |
+| Settings 语音配置页 | ✅ 下载并安装标准档 |
+| 双通道识别结果可编辑 | ✅ dual 模式填入输入框 |
+| TTS 自动播报回复 | 灰度关闭 |
 
 ## IPC
 
-- `voice:audio-chunk` / `voice:transcript` / `voice:tts-audio`
+- `voice:audio-chunk` / `voice:transcript` / `voice:transcript-partial`
 - `voice:set-mode` / `voice:apply-settings` / `voice:restart-service`
-- `ext:tts:speak` → 语音管线活跃时走 TTS，否则系统通知降级
+- `voice:check-environment` / `voice:install-environment`
 
 ## 启用
 
-1. Settings → 语音 → **启用语音功能**
-2. 确保 `Ackem/voice-service` 依赖已安装（`pip install -r requirements.txt`）
-3. 剧院模式开麦 → 说话 → 等待 ASR → 回复自动 TTS
+1. Settings → 语音 → **下载并安装标准档**（已下过可跳过）
+2. 打开 **启用语音功能**
+3. 主聊天或工作页点麦克风说话

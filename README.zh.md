@@ -169,12 +169,16 @@ Ackem 是 **本地优先** 的 Windows 桌面程序：你配置大模型接口�
 ### 日常开发
 
 ```bash
-cd Ackem-v0.0.0
-npm install
+cd ackem
+npm ci
+cd parts/ackemcode
+npm ci
+cd ../..
 npm run dev
 ```
 
 开发时 `data/` 在工作目录下，与绿色版 exe 旁的 `data/` 相互独立。
+聊天和工作任务使用前，请在设置中配置模型地址、密钥和模型名称。AckemCode 位于 `parts/ackemcode`，本地服务按需启动。
 
 ### 构建与打包
 
@@ -184,13 +188,15 @@ npm run dist:green     # 绿色版 → dist/release/
 npm run dist:setup     # 可选 NSIS 安装包
 ```
 
-### 测试
+### 验证
 
 ```bash
 npm run typecheck
-npm test
-npm run test:renderer
+npm run build
+cd parts/ackemcode && npm run typecheck
 ```
+
+公开源码不包含本地测试套件、开发记录、凭据和生成缓存。
 
 ---
 

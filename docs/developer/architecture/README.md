@@ -6,6 +6,8 @@
 > **Audience**: Developers taking over the codebase, extension authors, architecture reviewers  
 > **Source of truth**: `src/main/` is authoritative; if this document conflicts with the code, **the code wins**
 
+> **Current code:** In addition to the companion systems described below, `src/main/tasks/` manages task contracts, execution, acceptance and delivery. `src/main/ackemcode/` connects the desktop application to the independent runtime in `parts/ackemcode/`. Database schema migrations currently extend through V22; historical details below must be checked against source.
+
 ---
 
 ## Architecture Philosophy
