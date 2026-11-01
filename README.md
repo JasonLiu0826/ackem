@@ -38,15 +38,46 @@ Ackem is **not** a web chat box — it is a Windows desktop app that stays with 
 
 ## 🆕 What's new in the community build (v2.0.0)
 
-On top of upstream v1.0.0, this repository adds:
+On top of upstream v1.0.0, concise but complete:
 
-| | |
-|---|---|
-| 🖥️ **Ackem Code across all three channels** | Tasks that touch code / files / commands in desktop chat, QQ, or WeChat are routed to the local coding agent; results go back only to the channel that asked. `/code` prefix + intent detection, two paths |
-| 🌐 **QQ channel (OneBot)** | Scan-to-connect. Autonomous QZone posts (persona / mood / daily chat based, timed within active hours, replies to comments, probabilistic likes), proactive chatting, 70 built-in memes matched by mood |
-| 💬 **Unified cross-channel conversation** | Desktop / QQ / WeChat share one chat history and memory; new messages stream back to the desktop UI in real time; she only replies to the channel that asked |
-| 👧 **Freya persona** | A corpus-reconstructed personality with a hormone-pool emotion engine (decays in real time); configure what she calls you in Settings |
-| 🍎 **macOS community build** | Same codebase, arm64 green build with a layered ad-hoc signing script |
+**🖥️ Ackem Code across all three channels (desktop / QQ / WeChat)**
+- Code / file / command tasks on any channel are routed to the local coding agent (`parts/ackemcode`: CLI + daemon + file/command/search tools + Web UI)
+- `/code` explicit prefix + intent detection; permission modes configurable (`ACKEMCODE_PERMISSION_MODE`)
+- Results go back only to the asking channel; model config synced from Ackem settings; sessions and data dirs kept separate
+
+**🎤 QQ voice messages**
+- Her replies can be spoken: text → local TTS (IndexTTS, default `127.0.0.1:8770`) → silk v3 voice message; triggered by probability or `[长语音]`, falls back to text on failure
+- Incoming voice messages: OneBot transcode + local ASR → text, then she replies
+- TTS health checks, per-length dynamic timeouts, 60 s voice protection
+
+**🌐 QQ channel (OneBot / NapCat)**
+- NapCat WebUI QR login, connection probing and status hints, reconnect
+- Private chat send/receive, image input, memes, voice; proactive chatting (8:00–22:00, 3 h idle, 3 h cooldown)
+- 70 built-in memes (9 mood folders; user folder overrides by name)
+- Outbound sanitizing: line breaks, nickname density, emoji density, physical-presence guard
+
+**🌏 Autonomous QZone posts**
+- Posts generated from persona / mood / the day's chat; scheduled by active hours, daily cap, minimum interval, visibility (public / friends / private)
+- Meme images, dry-run (generate only), a QQ mention after posting, scheduled visits with comments and probabilistic likes (all via OneBot extension actions)
+
+**💬 Unified conversation + owner safety**
+- Desktop / QQ / WeChat share one chat history and memory (source tags, timeline merge + dedupe, live push to the desktop UI)
+- Owner binding: the first private chat is bound as owner; stranger messages never enter the main flow; replies go only to the asking channel
+
+**👧 Freya persona**
+- Corpus-reconstructed persona (one of 29 presets) + hormone-pool emotion engine (real-time decay, missing-you drift)
+- "What Freya calls you" setting; `{{petname}}` placeholders replaced end-to-end
+
+**🧩 Multimodal & stability**
+- Image input: OpenAI multimodal content → Anthropic image blocks (base64 / remote URL)
+- Tool-turn multimodal content flattened (fixes base64 JSON being echoed back)
+- Desktop agent: per-step task-plan verification (desktopAgentTaskPlan); mis-dispatch fix (requires imperative verb + computer object)
+- Remote desktop agent on channels is now explicit (`/电脑` `/pc` `/agent`)
+- Humanized outbound splitting (humanizeReply); online-channel presence boundary (presence-boundary)
+
+**🍎 macOS community build**
+- electron-builder mac target + dmg; layered ad-hoc signing script (`sign-freya.sh`)
+- macOS desktop-agent adapter (`adapters/darwin`)
 
 > Full details in [CHANGELOG.md](./CHANGELOG.md). Issues and PRs are welcome; upstream updates are merged back as PRs.
 

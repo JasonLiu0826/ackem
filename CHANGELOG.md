@@ -33,6 +33,15 @@
   （奶龙、水豚、撒娇猫、线条小狗、吉伊卡哇等），按 9 个情绪目录归类，来源见 `CREDITS.md`。
   `memes.ts` 改为「内置包 + 用户目录」合并扫描，用户目录同名图优先覆盖；
   `electron-builder.yml` 一并打包 `assets/qq-memes`。
+- **QQ 语音消息**（`channels/qq/qqVoice.ts` + `voiceInput.ts`）：文字 → 本机 TTS（IndexTTS，
+  默认 `http://127.0.0.1:8770`）→ silk v3 语音消息发送，按概率 / `[长语音]` 触发，合成失败
+  自动回退文字；入站语音经 OneBot 转码 + 本机 ASR 转文字再回复。配置存
+  `{dataRoot}/channels/qq-voice.json`（`maxChars` / `maxSeconds` / `probability` / `sendMode` 等）。
+- **多模态图片输入**（`anthropicMessages.ts` + `chat/messageContent.ts`）：OpenAI 多模态
+  `content` 数组转成 Anthropic `image` block（支持 base64 与远程 URL）；工具回合统一压成
+  纯文本 + `[图片]` 占位，避免 base64 JSON 被模型复读。
+- **电脑助手任务计划**（`shared/desktopAgentTaskPlan.ts`）：多步任务带单步验收规则
+  （路径存在 / 不存在 / 是目录 / 文件大小 / 内容包含 / 审计动作），执行后逐步核对。
 
 ### Fixed
 
