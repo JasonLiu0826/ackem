@@ -60,7 +60,7 @@ module.exports = async function afterPack(context) {
   console.log(`[after-pack] copying AckemCode runtime node_modules from ${src} …`)
   cpSync(src, dest, {
     recursive: true,
-    filter: (srcPath) => !srcPath.includes('.git') && !srcPath.includes('.cache'),
+    filter: (srcPath) => !srcPath.includes('.git') && !srcPath.includes('.cache') && !srcPath.includes('/.bin'),
   })
   console.log('[after-pack] ackemcode runtime node_modules copied')
 }

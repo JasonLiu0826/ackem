@@ -32,10 +32,6 @@ files:
   - "!**/src/**"
   - "!**/*.map"
 
-extraFiles:
-  - from: scripts/uninstall.bat
-    to: Uninstall Ackem.bat
-
 extraResources:
   - from: scripts/uninstall.bat
     to: uninstall.bat
@@ -84,6 +80,10 @@ afterPack: scripts/after-pack.cjs
 
 win:
   icon: build/icon.ico
+  # Windows 专用：macOS bundle 里放 .bat 会让 codesign 直接失败
+  extraFiles:
+    - from: scripts/uninstall.bat
+      to: Uninstall Ackem.bat
   # 跳过 winCodeSign/rcedit（无管理员 symlink 权限时会打包失败）；图标由 scripts/patch-exe-icon.mjs 写入
   signAndEditExecutable: false
   target:
