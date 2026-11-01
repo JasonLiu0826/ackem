@@ -18,6 +18,9 @@ export function getPortableDataRoot(): string {
 }
 
 export function getLocalAppDataRoot(): string {
+  if (process.platform === 'darwin') {
+    return join(homedir(), 'Library', 'Application Support', 'Ackem')
+  }
   const la = process.env.LOCALAPPDATA
   const base = la && la.length > 0 ? la : join(homedir(), 'AppData', 'Local')
   return join(base, 'Ackem')

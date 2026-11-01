@@ -2,7 +2,8 @@
 // 路径：{dataRoot}/ackem.db（与 layout / settings 的 dataRoot 一致，非固定 /data）
 
 import Database from 'better-sqlite3'
-import { mkdirSync, rmSync } from 'node:fs'
+import { mkdirSync, rmSync, renameSync } from 'node:fs'
+import { createLogger } from '../logger'
 import { dirname } from 'node:path'
 import { databasePath } from './paths'
 import { SCHEMA_V1_SQL } from './schemaV1'
@@ -25,9 +26,9 @@ import { SCHEMA_V7_SQL } from './schemaV7'
 import { SCHEMA_V8_SQL } from './schemaV8'
 import { SCHEMA_V9_SQL } from './schemaV9'
 import { SCHEMA_V10_SQL } from './schemaV10'
-import { createLogger } from '../logger'
 import { migrateSchemaV11 } from './schemaV11'
 import { migrateSchemaV12 } from './schemaV12'
+import { ensureCompatTables } from './schemaCompat'
 import { importLegacyDataIfNeeded } from './importLegacy'
 import { scheduleTransactionLatencySample } from '../memory/audit/auditMetricsStore.js'
 
@@ -138,6 +139,10 @@ function runMigrations(db: Database.Database): void {
   if (current < 20) { migrateSchemaV20(db); setSchemaVersion(db, 20) }
   if (current < 21) { db.exec('CREATE TABLE IF NOT EXISTS task_archives (task_id TEXT PRIMARY KEY, archived_at INTEGER NOT NULL)'); setSchemaVersion(db, 21) }
   if (current < 22) { migrateSchemaV22(db); setSchemaVersion(db, CURRENT_SCHEMA_VERSION) }
+
+  // 双向迁移兼容：上游 V13+ 的库（版本号 ≥ 13）不会跑社区版扩展表，反之亦然。
+  // 这里无条件补表（全部幂等），保证两种库互切时都不缺表。
+  ensureCompatTables(db)
 }
 
 export { CURRENT_SCHEMA_VERSION }
@@ -153,7 +158,7 @@ export function getDatabase(dataRoot: string): Database.Database | null {
   try {
     const path = databasePath(dataRoot)
     mkdirSync(dirname(path), { recursive: true })
-    const db = new Database(path)
+    const db = openWithIntegrityCheck(path)
     applyPragmas(db)
     runMigrations(db)
     pools.set(dataRoot, db)
@@ -176,6 +181,24 @@ export function getDatabase(dataRoot: string): Database.Database | null {
       }
     }
     return null
+  }
+}
+
+function openWithIntegrityCheck(path: string): Database.Database {
+  const db = new Database(path)
+  try {
+    const check = db.pragma('quick_check', { simple: true }) as unknown
+    const okText = Array.isArray(check) ? (check[0] as { quick_check?: string })?.quick_check : String(check)
+    if (okText === 'ok') return db
+    log.error('sqlite corrupt detected — rebuilding database', { path, check: okText })
+    db.close()
+    try { renameSync(path, `${path}.corrupt-${Date.now()}`) } catch { /* ignore */ }
+    return new Database(path)
+  } catch (e) {
+    log.error('sqlite integrity check failed — rebuilding database', { path, error: e instanceof Error ? e.message : String(e) })
+    try { db.close() } catch { /* ignore */ }
+    try { renameSync(path, `${path}.corrupt-${Date.now()}`) } catch { /* ignore */ }
+    return new Database(path)
   }
 }
 

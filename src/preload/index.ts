@@ -120,6 +120,25 @@ const gamemodeMinecraft = {
   logStatus: () => gamemodeInvoke<{ active: boolean }>('logStatus')
 }
 
+export type QqLoginStatusPayload = {
+  isLogin: boolean
+  isOffline: boolean
+  phase: string
+  qrLoginAccepted: boolean
+  coreReady: boolean
+  qrcode?: string
+  loginError?: string
+}
+
+export type QqLoginQrPayload =
+  | { ok: true; alreadyLoggedIn: true; status: QqLoginStatusPayload }
+  | { ok: true; alreadyLoggedIn: false; restarting?: boolean; qrDataUrl: string; phase: string }
+  | { ok: false; need2FA?: boolean; error: string }
+
+export type QqLoginPollPayload =
+  | { ok: true; status: QqLoginStatusPayload }
+  | { ok: false; need2FA?: boolean; error: string }
+
 contextBridge.exposeInMainWorld('ackem', {
   getAppVersion: (): Promise<string> => ipcRenderer.invoke('update:getAppVersion'),
   checkUpdate: (): Promise<import('../shared/updateTypes').UpdateCheckResult> => ipcRenderer.invoke('update:check'),
@@ -1050,5 +1069,83 @@ contextBridge.exposeInMainWorld('ackem', {
       ipcRenderer.on('voice:install-log', (_e, progress) => fn(progress))
       return () => ipcRenderer.removeAllListeners('voice:install-log')
     }
-  }
+  },
+  qqGetStatus: (): Promise<{
+    connected: boolean
+    enabled: boolean
+    listening: boolean
+    selfId?: string
+    nickname?: string
+    httpBaseUrl?: string
+    wsUrl?: string
+    lastError?: string | null
+    embeddingReady?: boolean
+    memesPath?: string
+    memeCount?: number
+  }> => ipcRenderer.invoke('qq:getStatus'),
+  qqProbe: (args: {
+    httpBaseUrl?: string
+    wsUrl?: string
+    accessToken?: string
+    selfId?: string
+  }): Promise<
+    | { ok: true; selfId: string; nickname: string; online: boolean }
+    | { ok: false; error: string }
+  > => ipcRenderer.invoke('qq:probe', args),
+  qqConnect: (args: {
+    httpBaseUrl?: string
+    wsUrl?: string
+    accessToken?: string
+    selfId?: string
+  }) => ipcRenderer.invoke('qq:connect', args),
+  qqDisconnect: () => ipcRenderer.invoke('qq:disconnect'),
+  qqSetEnabled: (enabled: boolean) => ipcRenderer.invoke('qq:setEnabled', enabled),
+  qqRestart: () => ipcRenderer.invoke('qq:restart'),
+  qqListFriends: () =>
+    ipcRenderer.invoke('qq:listFriends') as Promise<
+      { ok: true; friends: Array<{ userId: string; nickname: string }> } | { ok: false; error: string }
+    >,
+  qqWebuiGet: () =>
+    ipcRenderer.invoke('qq:webui:get') as Promise<{ baseUrl: string; hasToken: boolean }>,
+  qqLoginStart: (args?: { baseUrl?: string; token?: string; totpCode?: string }) =>
+    ipcRenderer.invoke('qq:login:start', args) as Promise<QqLoginQrPayload>,
+  qqLoginPoll: () =>
+    ipcRenderer.invoke('qq:login:poll') as Promise<QqLoginPollPayload>,
+  qqLoginRefresh: () =>
+    ipcRenderer.invoke('qq:login:refresh') as Promise<QqLoginQrPayload>,
+  onQqStatusChanged: (
+    fn: (status: {
+      connected: boolean
+      enabled: boolean
+      listening: boolean
+      selfId?: string
+      nickname?: string
+      httpBaseUrl?: string
+      wsUrl?: string
+      lastError?: string | null
+    }) => void
+  ) => {
+    ipcRenderer.removeAllListeners('qq:status-changed')
+    ipcRenderer.on('qq:status-changed', (_e, payload) => fn(payload))
+    return () => ipcRenderer.removeAllListeners('qq:status-changed')
+  },
+  // ── QQ 空间（说说）──
+  qzoneGetStatus: () => ipcRenderer.invoke('qzone:getStatus'),
+  qzoneProbe: () => ipcRenderer.invoke('qzone:probe'),
+  qzoneGenerateDraft: (style?: string) => ipcRenderer.invoke('qzone:generateDraft', style),
+  qzonePublish: (input: {
+    content: string
+    visibility?: 'public' | 'friends' | 'private'
+    withImage?: boolean
+    dryRun?: boolean
+  }) => ipcRenderer.invoke('qzone:publish', input),
+  qzoneHistory: (limit?: number) => ipcRenderer.invoke('qzone:history', limit),
+  qzoneDelete: (id: number) => ipcRenderer.invoke('qzone:delete', id),
+  qzoneInteractNow: () => ipcRenderer.invoke('qzone:interactNow'),
+  onQzoneStatusChanged: (fn: (status: unknown) => void) => {
+    ipcRenderer.removeAllListeners('qzone:status-changed')
+    ipcRenderer.on('qzone:status-changed', (_e, payload) => fn(payload))
+    return () => ipcRenderer.removeAllListeners('qzone:status-changed')
+  },
+
 })

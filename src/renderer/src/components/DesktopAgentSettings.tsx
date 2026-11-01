@@ -145,6 +145,33 @@ export function DesktopAgentSettings({ form, setForm }: Props): JSX.Element {
               placeholder="例如 D:\Downloads\AckemDownloads"
             />
           </label>
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-ink">
+            <input
+              type="checkbox"
+              checked={form.desktopAgentRemoteChannelsEnabled === true}
+              onChange={(e) => setForm({ desktopAgentRemoteChannelsEnabled: e.target.checked })}
+            />
+            允许从 QQ / 微信 远程使用电脑助手（含远程代码派工）
+          </label>
+          <label className="block text-xs font-medium text-ink-muted">
+            Ackem Code 派工权限（收紧后对已有会话也生效）
+            <select
+              className="field-input mt-1"
+              value={form.ackemcodePermissionMode ?? 'bypassPermissions'}
+              onChange={(e) =>
+                setForm({
+                  ackemcodePermissionMode: e.target.value as AppSettings['ackemcodePermissionMode']
+                })
+              }
+            >
+              <option value="default">每次操作都确认</option>
+              <option value="plan">只读计划模式</option>
+              <option value="acceptEdits">自动接受文件编辑</option>
+              <option value="auto">自动（默认策略）</option>
+              <option value="bypassPermissions">全部自动（不确认）</option>
+              <option value="dontAsk">不询问</option>
+            </select>
+          </label>
         </div>
       )}
 

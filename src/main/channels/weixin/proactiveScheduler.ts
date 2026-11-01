@@ -19,6 +19,7 @@ import {
   normalizePeerSessionId
 } from './store'
 import type { WeixinMonitorHandle } from './monitor'
+import { getChannelOwner } from '../ownerGate'
 
 const log = createLogger('weixin-proactive')
 
@@ -48,7 +49,11 @@ async function tickProactive(dataRoot: string, isPolling: () => boolean): Promis
     const account = loadWeixinAccount(dataRoot)
     if (!account?.token) return
 
-    const peers = listWeixinPeers(dataRoot)
+    // 主动消息只发给人机主（与入站机主校验一致）
+    const owner = getChannelOwner('weixin')
+    const peers = owner
+      ? listWeixinPeers(dataRoot).filter((p) => p.peerId === owner)
+      : listWeixinPeers(dataRoot)
     if (peers.length === 0) return
 
     const peer = peers[0]!

@@ -155,6 +155,11 @@ function startProactiveTimer(): void {
   startDesktopCompanionProactiveTimer(() => mainWindow)
 }
 
+export function getMainWindowWebContentsId(): number | null {
+  if (mainWindow && !mainWindow.isDestroyed()) return mainWindow.webContents.id
+  return null
+}
+
 export function runMainApplication(): void {
   process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true'
   registerBundledNativeDllPaths()
@@ -261,6 +266,13 @@ export function runMainApplication(): void {
       await bootWeixinChannelOnReady()
     } catch (e) {
       log.error('weixin channel boot failed', e)
+    }
+
+    try {
+      const { bootQqChannelOnReady } = await import('./ipc/qq.js')
+      await bootQqChannelOnReady()
+    } catch (e) {
+      log.error('qq channel boot failed', e)
     }
   })()
 

@@ -63,8 +63,8 @@ export function requiresToolTurn(frame: UserTaskFrame): boolean {
 function waveSystemDelta(waveIndex: number, waveCount: number, locale: 'zh' | 'en'): string | undefined {
   const singleBubbleRule =
     locale === 'zh'
-      ? '【单条】本条=微信里的一条消息：只写1句，不换行，不要第二句，不要括号内心独白。'
-      : '【Single bubble】One chat message only: one sentence, no line break, no parenthetical aside.'
+      ? '【单条】本条=微信里的一条消息：只写1句，不换行，不要第二句，不要括号内心独白；句中要有逗号换气，句末要有标点收住。'
+      : '【Single bubble】One chat message only: one sentence with punctuation, no line break, no parenthetical aside.'
 
   if (waveIndex === 0) {
     return locale === 'zh'

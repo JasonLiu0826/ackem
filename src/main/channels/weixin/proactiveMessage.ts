@@ -1,5 +1,5 @@
 import type { AppSettings } from '../../settings'
-import { normalizePeerSessionId } from './store'
+import { resolveConversationSessionId } from '../conversation'
 import {
   composeCompanionProactiveMessage,
   type ProactiveMessageKind
@@ -12,7 +12,8 @@ export async function composeWeixinProactiveMessage(args: {
   settings: AppSettings
   peerId: string
 }): Promise<{ raw: string; kind: ProactiveMessageKind } | null> {
-  const sessionId = normalizePeerSessionId(args.peerId)
+  // 主动搭话也要基于三端统一的那段对话，否则她会对着空历史找话题
+  const sessionId = resolveConversationSessionId(args.settings.activeSessionId)
   return composeCompanionProactiveMessage({
     dataRoot: args.dataRoot,
     settings: args.settings,

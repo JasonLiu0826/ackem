@@ -11,6 +11,12 @@ export type ApiKeyHeaderMode = 'bearer' | 'x-api-key'
 
 export type PersonalityConfigMode = 'manual' | 'inferred'
 
+/** QQ 空间说说可见范围：公开 / 好友 / 仅自己 */
+export type QzoneVisibilitySetting = 'public' | 'friends' | 'private'
+
+/** QQ 空间说说文案风格：自动 / 日记 / 随想 / 玩梗 / 深夜 */
+export type QzoneStyleSetting = 'auto' | 'diary' | 'musing' | 'meme' | 'night'
+
 /** 主人开源六维（0–100） */
 export type UserSixDimensions = {
   E: number
@@ -66,6 +72,8 @@ export type AppSettings = {
   companionSystemHint: string
   companionGender: PresetGender
   personalityPresetId: string
+  /** Freya 人格对用户的称呼（用户自填，默认「亲爱的」） */
+  freyaPetName?: string
   /** 性格配置：手动 preset 或从导入推断 */
   personalityConfigMode: PersonalityConfigMode
   /** 知情同意文案版本（推断 IPC 校验用） */
@@ -126,6 +134,48 @@ export type AppSettings = {
   localChatMaxTokens?: number
   /** 启用微信 iLink 消息通道（需已扫码绑定） */
   weixinChannelEnabled?: boolean
+  /** 启用 QQ（OneBot v11）消息通道（需已连接协议后端） */
+  qqChannelEnabled?: boolean
+  /** QQ 主动触达（复用微信的活跃度门控） */
+  qqProactiveEnabled?: boolean
+  /** QQ 空间：总开关（默认关） */
+  qzoneAutoEnabled?: boolean
+  /** QQ 空间：试运行（只生成不发表） */
+  qzoneDryRun?: boolean
+  /** QQ 空间：每日上限 */
+  qzoneDailyLimit?: number
+  /** QQ 空间：两条之间最小间隔（分钟） */
+  qzoneMinIntervalMinutes?: number
+  /** QQ 空间：活跃时段开始小时 */
+  qzoneActiveStartHour?: number
+  /** QQ 空间：活跃时段结束小时 */
+  qzoneActiveEndHour?: number
+  /** QQ 空间：可见范围 */
+  qzoneVisibility?: QzoneVisibilitySetting
+  /** QQ 空间：文案风格 */
+  qzoneStyle?: QzoneStyleSetting
+  /** QQ 空间：是否配图 */
+  qzoneWithImage?: boolean
+  /** QQ 空间：发完在 QQ 里提一句 */
+  qzoneSyncToChat?: boolean
+  /** QQ 空间：互动开关 */
+  qzoneInteractEnabled?: boolean
+  /** QQ 空间：点赞概率 */
+  qzoneLikeProb?: number
+  /** QQ 空间：评论概率 */
+  qzoneCommentProb?: number
+  /** 允许从 QQ / 微信 远程使用电脑助手（默认关） */
+  desktopAgentRemoteChannelsEnabled?: boolean
+  /** 机主 QQ 号（确认后才生效） */
+  channelOwnerQqId?: string
+  /** 待确认的 QQ 机主候选 */
+  channelOwnerPendingQqId?: string
+  /** 机主微信 id（确认后才生效） */
+  channelOwnerWeixinId?: string
+  /** 待确认的微信机主候选 */
+  channelOwnerPendingWeixinId?: string
+  /** Ackem Code 派工权限模式 */
+  ackemcodePermissionMode?: 'default' | 'plan' | 'acceptEdits' | 'auto' | 'bypassPermissions' | 'dontAsk'
   /** 微信主动触达（3h 双端空闲 + 进程在线 + 非睡觉时段） */
   weixinProactiveEnabled?: boolean
   /** 桌面主动骚扰：随机 1/2/4/10 分钟发消息（与渐进式空闲主动并存，默认关） */

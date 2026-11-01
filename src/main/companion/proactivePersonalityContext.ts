@@ -24,9 +24,9 @@ export function buildProactivePersonalityBlock(args: {
   harass?: boolean
 }): string {
   const preset = getPreset(args.presetId)
-  const template = getPersonalityTemplate(args.presetId)
+  const template = getPersonalityTemplate(args.presetId, args.settings.freyaPetName)
   const adultOn = !!args.settings.adultContentMode && !!args.settings.ageConfirmed18
-  const voiceGuide = preset ? buildPresetVoiceGuide(preset, adultOn) : ''
+  const voiceGuide = preset ? buildPresetVoiceGuide(preset, adultOn, args.settings.freyaPetName) : ''
 
   const lines = [
     buildPersonalitySection(template),

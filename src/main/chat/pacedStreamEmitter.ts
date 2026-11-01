@@ -1,9 +1,21 @@
 import type { WebContents } from 'electron'
 import { notifyChatStreamStart } from '../openAiSseStream'
 import { findSafeSentenceBreak } from './sentenceBubbleStream'
+import {
+  findBreakAfter,
+  findSoftBreak,
+  looksLikeStructuredContent,
+  RUNON_BUDGET_PUNCTUATED,
+  RUNON_LOOKAHEAD,
+  RUNON_SENTENCE_CAP,
+  runOnBudget,
+  stripTrailingSeparators
+} from './humanizeReply'
 import { REPLY_INTER_SENTENCE_GAP_MS } from '../../shared/replyPacing'
 
 const SPLIT_MARKER = '[SPLIT]'
+
+const TRAILING_SEPARATORS_RE = /[，,、；;：:\s]+$/u
 
 /** 展示/持久化前去掉 LLM 节奏分隔符 */
 export function stripSplitMarkers(text: string): string {
@@ -63,6 +75,10 @@ export function createPacedStreamEmitter(
   let bubbleOpen = false
   /** 当前 bubble 在 received 中的起始下标 */
   let bubbleSentStart = 0
+  /** 当前 bubble 实际推下去的文字（补标点 / 去尾逗号以它为准） */
+  let bubbleText = ''
+  /** 任务型内容（代码/表格/列表/链接）不拆条 */
+  let structured = false
 
   const emitStart = (): void => {
     if (streamStarted) return
@@ -79,11 +95,15 @@ export function createPacedStreamEmitter(
     })
     bubbleOpen = true
     bubbleSentStart = sentLen
+    bubbleText = ''
   }
 
   const finishBubble = (): void => {
     if (!bubbleOpen) return
-    const text = stripSplitMarkers(received.slice(bubbleSentStart, sentLen))
+    const raw = bubbleText || received.slice(bubbleSentStart, sentLen)
+    const cleaned = stripTrailingSeparators(stripSplitMarkers(raw))
+    // 极端情况：整条只有标点，别把气泡清空
+    const text = cleaned || stripSplitMarkers(raw)
     if (text) webContents.send('chat:replace', text)
     webContents.send('chat:wave-end', { waveIndex: sentenceIndex, text })
     bubbleOpen = false
@@ -99,6 +119,7 @@ export function createPacedStreamEmitter(
     if (!chunk) return
     emitStart()
     ensureBubbleOpen()
+    bubbleText += chunk
     webContents.send('chat:chunk', chunk)
   }
 
@@ -141,9 +162,30 @@ export function createPacedStreamEmitter(
         }
 
         const unsent = received.slice(sentLen)
+
+        // 结构化内容（代码块/表格/列表/链接/行内代码）一出现就锁死"不自动拆条"。
+        // 必须尽早判断：等收到 80 字再判，小代码块已经被切碎了。
+        if (!structured && looksLikeStructuredContent(received)) {
+          structured = true
+        }
+
         const unitLen = firstDisplayUnitLen(unsent)
 
         if (unitLen > 0) {
+          // 整句特别长（模型又写飞了）：先按预算在逗号/分句尾处切开，别整句塞一条
+          if (unitLen >= RUNON_SENTENCE_CAP) {
+            const soft = findSoftBreak(unsent, RUNON_BUDGET_PUNCTUATED)
+            if (soft && soft.index > 0 && soft.index < unitLen) {
+              const piece = unsent.slice(0, soft.index).replace(TRAILING_SEPARATORS_RE, '')
+              if (piece) {
+                emitChunk(piece)
+                sentLen += soft.index
+                finishBubble()
+                schedulePumpAfterGap()
+                return
+              }
+            }
+          }
           emitChunk(unsent.slice(0, unitLen))
           sentLen += unitLen
           if (sentLen < received.length) {
@@ -152,6 +194,63 @@ export function createPacedStreamEmitter(
             return
           }
           pauseBeforeNext = true
+          return
+        }
+
+        // 句末标点一直没出现（模型整段不喘气）：断开成下一条短消息。
+        if (!structured) {
+          // ① 当前气泡已经到预算（没标点 24 字 / 有逗号 34 字）：先暂缓吐字，
+          //    等后面一小段上下文，好在标点 / 转折词 / 分句尾字上断开，
+          //    而不是硬切在词中间。字不会丢（sentLen 没动）。
+          const budget = runOnBudget(bubbleText)
+          if (bubbleText.length >= budget) {
+            const combined = bubbleText + unsent
+            // 流已结束、只剩几个字：并进当前气泡，别留「霉透了」这种 3 字尾巴
+            if (streamDone && unsent.length <= 6) {
+              emitChunk(unsent)
+              sentLen += unsent.length
+              return
+            }
+            const breakAt = findBreakAfter(combined, bubbleText.length)
+            if (breakAt > 0) {
+              const emitLen = breakAt - bubbleText.length
+              // 切点可能正好落在逗号后面：吐出去之前先剥掉，别让这条以「，」收尾
+              emitChunk(stripTrailingSeparators(unsent.slice(0, emitLen)))
+              sentLen += emitLen
+              finishBubble()
+              schedulePumpAfterGap()
+              return
+            }
+            if (!streamDone && combined.length < budget + RUNON_LOOKAHEAD) {
+              return
+            }
+            // 再也等不到像样的切点：按已显示内容收尾
+            finishBubble()
+            schedulePumpAfterGap()
+            return
+          }
+
+          // ② 未发送部分本身已经很长大段（模型整段吐出）：在软断点处切开
+          const limit = runOnBudget(unsent)
+          if (unsent.length >= limit) {
+            const soft = findSoftBreak(unsent, limit)
+            if (soft) {
+              const piece = unsent.slice(0, soft.index).replace(TRAILING_SEPARATORS_RE, '')
+              if (piece) {
+                emitChunk(piece)
+                sentLen += soft.index
+                finishBubble()
+                schedulePumpAfterGap()
+                return
+              }
+            }
+          }
+        }
+
+        // 流快结束了、只剩几个字：并进当前气泡，别留「霉透了」这种 3 字尾巴
+        if (streamDone && bubbleOpen && unsent.length <= 6) {
+          emitChunk(unsent)
+          sentLen += unsent.length
           return
         }
 

@@ -12,6 +12,7 @@ import { writeSyncLightFacts } from './memory/syncLightWrite'
 import { finalizeNewFacts } from './memory/finalizeNewFacts'
 import { resolveTierBIngestSkip } from './memory/tierBIngestPolicy'
 import { getAssociationIndex } from './engineCache'
+import { getLastActivatedAssociationIds } from './memory/retriever'
 import { createLogger } from './logger'
 import { resolveAdultMemoryPrivacyLevel } from './prompt/adult-mode'
 import { mirrorAssistantToWeixin } from './channels/weixin/mirrorOutbound'
@@ -89,6 +90,7 @@ export async function registerAndFinalizeSkipTurn(args: {
   )
 
   setPendingTurn(turnId, {
+    activatedAssociationIds: getLastActivatedAssociationIds(),
     dataRoot,
     sessionId,
     turnId,

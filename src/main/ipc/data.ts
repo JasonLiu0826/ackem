@@ -50,6 +50,7 @@ import { createLogger } from '../logger'
 import { ACKEM_CANON } from '../canon/ackemCanon'
 import { loadCreatorMemoryStore } from '../canon/creatorMemory'
 import { embeddingSettingsChanged, onlyDesktopAgentSettingsChanged } from '../../shared/settingsChange'
+import { qzoneSettingsChanged, syncQzoneAutomation } from '../channels/qq/qzone'
 import { resolveCodeRoot } from '../ackemcode/ensureDaemon'
 import { syncRuntimeLlm } from '../ackemcode/syncRuntimeLlm'
 
@@ -74,6 +75,9 @@ function runSettingsPostSaveHooks(
   }
   if (prev.companionHarassEnabled !== s.companionHarassEnabled) {
     syncCompanionHarassScheduler()
+  }
+  if (qzoneSettingsChanged(prev, s)) {
+    syncQzoneAutomation()
   }
   const codeRoot = resolveCodeRoot()
   if (codeRoot) syncRuntimeLlm(codeRoot)

@@ -10,6 +10,7 @@ import {
   sanitizeDesktopProactiveMessage
 } from '../extensions/plugins/builtin/desktop-companion/proactiveNotificationMessage'
 import { createLogger } from '../logger'
+import { ONLINE_NO_PHYSICAL_LINE } from '../prompt/presence-boundary'
 import { loadMergedRecentMessages } from '../chat/unifiedChatHistory'
 import {
   buildProactivePersonalityBlock,
@@ -27,6 +28,8 @@ export type ComposeCompanionProactiveInput = {
   sessionId: string
   /** 骚扰模式：更黏人、更撒娇，间隔由调度器控制 */
   harass?: boolean
+  /** 渠道：'qq' | 'weixin' | 'ui'，影响文案里的渠道称呼 */
+  channel?: string
 }
 
 export function pickRecentFactFromRoot(dataRoot: string): string | null {

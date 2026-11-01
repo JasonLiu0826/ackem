@@ -9,17 +9,34 @@ import type { AppSettings } from './settings'
 import { resolveDataRoot } from './paths'
 import type { ChunkRecord, IndexSnapshot } from './indexer'
 import { buildSystemPrompt } from './prompt/main-chat'
+import { buildPresenceBoundaryBlock } from './prompt/presence-boundary'
+import { createLogger } from './logger'
 import { searchChunks } from './indexer'
 import { assertReadableUnderDataRoot } from './whitelist'
 import { type PersonalityPreset } from './personalityPresets'
 import { buildSelectedPersonalityVoice, selectedPersonality } from './personalityVoice'
 import type { DispatchCatalogEntry, DispatchResult } from './extensions/protocols'
 
-export type ChatMessage = { role: 'system' | 'user' | 'assistant' | 'tool'; content: string; name?: string }
+const log = createLogger('context')
+
+/** 多模态内容片段（OpenAI 兼容格式；Anthropic 侧由 anthropicMessages 转换） */
+export type ContentPart =
+  | { type: 'text'; text: string }
+  | { type: 'image_url'; image_url: { url: string } }
+
+export type ChatMessage = {
+  role: 'system' | 'user' | 'assistant' | 'tool'
+  content: string | ContentPart[]
+  name?: string
+}
 
 export type BuildContextArgs = {
   responsePolicy?: ResponsePolicy
   userText: string
+  /** 本轮用户附带的图片（data URI 或 http(s) 链接）。有值时才走多模态消息 */
+  userImages?: string[]
+  /** 渠道：'ui' | 'qq' | 'weixin' | 'qzone'；线上文字渠道会注入在场边界块 */
+  channel?: string
   /** @path optional explicit attachment like memory/foo.md */
   explicitRel?: string
   recentMessages: { role: 'user' | 'assistant'; content: string }[]
@@ -176,6 +193,8 @@ export { buildSystemPrompt } from './prompt/main-chat'
 export function assembleMessages(args: BuildContextArgs): ChatMessage[] {
   const {
     userText,
+    userImages,
+    channel,
     explicitRel,
     recentMessages,
     index,
@@ -231,8 +250,11 @@ export function assembleMessages(args: BuildContextArgs): ChatMessage[] {
     .join('\n')
   const userInfo = userInfoBlock?.trim() ?? ''
   const taskFacts=captureTaskContext(dataRoot)
+  const imgs = (userImages ?? []).filter((u) => typeof u === 'string' && u.length > 0)
+  if (imgs.length > 0) log.info('multimodal turn', { images: imgs.length })
   const sysParts = [
     buildSystemPrompt(settings),
+    buildPresenceBoundaryBlock(channel ?? 'ui'),
     tierA,
     userInfo ? `【关于 ta 的笔记 · 仅供你内心参考】\n${userInfo}` : '',
     psycheWithHint,
@@ -243,14 +265,30 @@ export function assembleMessages(args: BuildContextArgs): ChatMessage[] {
     taskFacts.text,
     systemContext(dataRoot,userText),
     buildSelectedPersonalityVoice(settings),
-    buildResponsePolicyBlock({ ...(args.responsePolicy ?? { origin: 'answer', status: 'not_executed' }), style: settings.companionInteractionMode ?? 'assistant' })
+    buildResponsePolicyBlock({ ...(args.responsePolicy ?? { origin: 'answer', status: 'not_executed' }), style: settings.companionInteractionMode ?? 'assistant' }),
+    imgs.length > 0
+      ? '【本轮带图】他这轮发来了图片，你能看到图里的内容。直接按图里的具体内容回应，不要笼统说"看不清""看不了"。'
+      : ''
   ].filter((p) => p && p.trim().length > 0)
   const system = sysParts.join('\n\n')
-  const msgs: ChatMessage[] = [{ role: 'system', content: system }]
+  // 把「你上一句原话」提到 system 末尾：模型对尾部的注意力最高，
+  // 能显著减少"他回哈哈哈，你却问笑什么"这种把话接歪的情况。
+  const lastAssistant = [...recentMessages].reverse().find((m) => m.role === 'assistant')
+  const tailHint = lastAssistant?.content?.trim()
+    ? `\n\n【你刚才说的最后一句】「${lastAssistant.content.trim().slice(0, 120)}」\n他现在这句话很可能就是在接这一句。先接住，再往下说。`
+    : ''
+  const msgs: ChatMessage[] = [{ role: 'system', content: system + tailHint }]
   for (const m of recentMessages.slice(-20)) {
     msgs.push({ role: m.role, content: m.content })
   }
-  msgs.push({ role: 'user', content: userText })
+  // 带图时走多模态：text + image_url 片段数组，模型才能真正"看"到图
+  if (imgs.length > 0) {
+    const parts: ContentPart[] = [{ type: 'text', text: userText }]
+    for (const url of imgs) parts.push({ type: 'image_url', image_url: { url } })
+    msgs.push({ role: 'user', content: parts })
+  } else {
+    msgs.push({ role: 'user', content: userText })
+  }
   bindContextPublicationFence(msgs,taskFacts.isCurrent)
   return msgs
 }

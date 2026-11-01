@@ -267,7 +267,7 @@ export function mergeProhibitions(
       (p) => !p.includes('道歉') && !p.includes('示弱') && !p.includes('哭'),
     )
   }
-  return merged.slice(0, 8)
+  return merged
 }
 
 /** 按 aff 选择人格专属示例 */

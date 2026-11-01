@@ -50,3 +50,19 @@ __fixtures__/
 # Local implementation notes and audit snapshots
 /docs/developer/*-20??-??-??.md
 /docs/developer/AckemGUI接入AckemCode内核设计.md
+
+# Python 运行时缓存
+__pycache__/
+*.pyc
+
+# 本地 npm 镜像配置（按需自建）
+.npmrc
+
+# 大二进制：用脚本下载/构建，不进版本库
+#   npm run prepare:embedding-models  → resources/models/*.onnx.zip
+#   npm run build:launcher            → launcher/AckemLauncher.exe
+resources/models/*.onnx.zip
+launcher/*.exe
+
+# Ackem Code 子包的运行数据（含本机绝对路径等用户数据）
+parts/ackemcode/data/

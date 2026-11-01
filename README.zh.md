@@ -1,7 +1,7 @@
 # 💫 Ackem
 
-![Version](https://img.shields.io/badge/Version-1.0.0-orange?style=for-the-badge)
-![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)
+![Version](https://img.shields.io/badge/Version-2.0.0-orange?style=for-the-badge)
+![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS-0078D6?style=for-the-badge&logo=windows&logoColor=white)
 ![License](https://img.shields.io/badge/License-AGPL--3.0-blue?style=for-the-badge)
 ![Local First](https://img.shields.io/badge/Data-Local--First-2ea043?style=for-the-badge)
 ![OpenAI Compatible](https://img.shields.io/badge/API-OpenAI--Compatible-412991?style=for-the-badge&logo=openai&logoColor=white)
@@ -10,12 +10,12 @@
 **Ackem** · **A**.C.K.E.M — 保持情感记忆的自主伙伴  
 *Autonomous Companion Keeping Emotional Memory*
 
-**Ackem v1.0.0** — 运行在你 Windows 电脑上的 **本地优先** AI 伴侣。自备大模型（云端或本机），Ackem 负责对话、记忆、情绪与关系、桌宠陪伴 — **数据都在本机硬盘**。
+**Ackem v2.0.0（社区桌面版）** — 运行在你 Windows / macOS 电脑上的 **本地优先** AI 伴侣。自备大模型（云端或本机），Ackem 负责对话、记忆、情绪与关系、桌宠陪伴 — **数据都在本机硬盘**。本仓库基于原作者 [JasonLiu0826/Ackem](https://github.com/JasonLiu0826/ackem) v1.0.0 继续开发。
 
-> **源码**：[GitHub](https://github.com/JasonLiu0826/Ackem) · [Gitee 镜像](https://gitee.com/jason_2005/ackem)  
-> **下载**：[GitHub Releases](https://github.com/JasonLiu0826/Ackem/releases) · [Gitee Releases](https://gitee.com/jason_2005/ackem/releases)  
+> **源码**：[本仓库](https://github.com/deufe/ackem) · 上游原作：[JasonLiu0826/Ackem](https://github.com/JasonLiu0826/ackem)  
+> **下载**：[本仓库 Releases](https://github.com/deufe/ackem/releases)（macOS dmg，开箱即用） · 上游 [GitHub Releases](https://github.com/JasonLiu0826/Ackem/releases) · [Gitee Releases](https://gitee.com/jason_2005/ackem/releases)  
 > **构建**：`npm run dist:green` → `dist/release/Ackem-1.0.0-win-x64/` · [路径说明](./docs/CODEBASE-PATHS.zh.md) · [文档语言](./docs/I18N.zh.md)  
-> **状态：** Ackem 目前仍处于**测试与快速迭代**阶段。个人维护，测试覆盖面有限，使用中可能遇到预期之外的情况或细节瑕疵；一般不会出现频繁闪退或严重卡顿，但完善度仍在持续改进。欢迎 [提交 Issue](https://github.com/JasonLiu0826/Ackem/issues) 反馈。
+> **状态：** Ackem 目前仍处于**测试与快速迭代**阶段。个人维护，测试覆盖面有限，使用中可能遇到预期之外的情况或细节瑕疵；一般不会出现频繁闪退或严重卡顿，但完善度仍在持续改进。欢迎 [提交 Issue](https://github.com/deufe/ackem/issues) 反馈。
 
 English: [README.md](./README.md) · [Privacy & data](./docs/privacy-and-data.md)
 
@@ -32,7 +32,54 @@ Ackem **不是**网页聊天框，而是常驻桌面的 Windows 应用：系统�
 | 💞 **陪伴** | 信任、情绪、关系阶段、人格预设、日记、可选主动消息 |
 | 🔒 **本地优先** | 个人数据在 exe 旁 `./data/` — **官方 zip 不含** `data/` |
 
-**你需要：** Windows 10/11 64 位 · 大模型 API 或本机推理服务 · 首次启动约 10–30 秒（embedding 模型解压一次）。绿色版 **无需 Node.js**。
+**你需要：** Windows 10/11 64 位或 macOS（Apple Silicon） · 大模型 API 或本机推理服务 · 首次启动约 10–30 秒（embedding 模型解压一次）。绿色版 **无需 Node.js**。
+
+---
+
+## 🆕 社区桌面版 v2.0.0 新增功能
+
+相对上游 v1.0.0，本版本新增 / 升级如下（简要但完整）：
+
+**🖥️ Ackem Code 三端接入（桌面 / QQ / 微信）**
+- 任何一端说出「动代码 / 文件 / 命令」的任务，自动交给本机编码智能体（`parts/ackemcode`：CLI + daemon + 文件/命令/搜索工具 + Web UI）
+- `/code` 显式前缀 + 意图判定双通道；权限三档可收紧（`ACKEMCODE_PERMISSION_MODE`）
+- 结果只回提问的那一端；模型配置从 Ackem 现有设置同步；会话映射与数据目录独立
+
+**🎤 语音消息（QQ 渠道）**
+- 她的话可直接合成语音发到 QQ：本机 TTS（IndexTTS，默认 `127.0.0.1:8770`）→ silk v3 语音；按概率 / `[长语音]` 触发，合成失败自动回退文字
+- 对方发来的语音：OneBot 转码 + 本机 ASR 转文字后再回复
+- 语音服务健康检查、按字数动态超时、单条 60 秒保护
+
+**🌐 QQ 渠道（OneBot / NapCat）**
+- NapCat WebUI 扫码登录、连接探测与状态提示、断线重连
+- 私聊收发、图片输入、表情包、语音；主动搭话（8:00–22:00、双向空闲 3h、冷却 3h）
+- 内置 70 张表情包（9 个情绪目录，用户目录可覆盖同名图）
+- 出站清洗：断句、称呼密度、emoji 密度、物理在场表述拦截
+
+**🌏 QQ 空间自主说说**
+- 按人格 / 心情 / 当天聊天流水生成说说；按活跃时段、每日上限、最小间隔、可见范围（公开 / 好友 / 仅自己）发布
+- 表情包配图、试运行（只生成不发表）、发完在 QQ 里提一句、定时逛空间回评论与按概率点赞（全部走 OneBot 扩展动作）
+
+**💬 三端统一会话 + 机主安全**
+- 桌面 / QQ / 微信共用一份聊天历史与记忆（来源标注、时间线合并去重、实时推回桌面）
+- 机主绑定：首个私聊者自动绑定，陌生人消息不进入主流程；回复只回提问端
+
+**👧 Freya 人格**
+- 真人语料还原型人格（29 个预设之一）+ 激素池情绪引擎（按真实时间衰减、思念漂移）
+- 设置页可填「Freya 怎么称呼你」，`{{petname}}` 占位符全链路替换
+
+**🧩 多模态与稳定性**
+- 图片输入打通：OpenAI 多模态 content → Anthropic image blocks（base64 / 远程 URL）
+- 工具回合多模态内容压平（修复 base64 JSON 被模型复读）
+- 电脑助手：任务计划单步验收（desktopAgentTaskPlan）、误派工修复（必须同时命中「祈使动词 + 电脑对象」）
+- 渠道远程电脑助手改为显式指令（`/电脑` `/pc` `/agent`）
+- 出站文本人性化拆分（humanizeReply）、线上渠道在场边界约束（presence-boundary）
+
+**🍎 macOS 社区构建**
+- electron-builder mac target + dmg 产物；`sign-freya.sh` 分层 ad-hoc 签名脚本
+- macOS 电脑助手适配器（`adapters/darwin`）
+
+> 完整变更见 [CHANGELOG.md](./CHANGELOG.md)。欢迎向本仓库提交 Issue / PR，上游更新会以 PR 方式并入。
 
 ---
 
@@ -117,9 +164,43 @@ Ackem 是 **本地优先** 的 Windows 桌面程序：你配置大模型接口�
 
 ---
 
-## 5 分钟上手（终端用户）
+## 🚀 下载与安装
 
-适用：**已下载官方 Release**，本机 **无需 Node.js**。
+### macOS（Apple Silicon · M1~M5）— 本仓库推荐
+
+从 [本仓库 Releases](https://github.com/deufe/ackem/releases) 下载：
+
+| 文件 | 大小 | SHA256 |
+|---|---|---|
+| `Ackem-2.0.0-mac-arm64.dmg` | 702 MB | `5e766f77e1063f0cbeaec13beeb34caea4384cc7b0a453e7d854d7aaf52db0ca` |
+
+> ⚠️ 本构建为社区版，**未经 Apple 公证**。首次打开时 macOS 会提示「已损坏，无法打开」或「无法验证开发者」——**这是正常现象，文件没有损坏**。按下面两步操作即可。
+
+**步骤 1：移除隔离标记**
+
+打开「终端」（Terminal），执行：
+
+```bash
+xattr -cr /Applications/Ackem.app
+```
+
+（若还没有拖进「应用程序」，请把命令里的路径换成 Ackem.app 的实际位置）
+
+**步骤 2：右键打开**
+
+在「应用程序」里 **右键点击 Ackem → 选择「打开」→ 再点「打开」**。之后即可正常双击启动。
+
+首次启动约 10–30 秒（本地 embedding 模型解压一次），见上方加载界面截图。
+
+### Windows
+
+- 官方绿色版（v1.0.0）：见 [上游 Releases](https://github.com/JasonLiu0826/Ackem/releases)
+- 本仓库新版（v2.0.0）暂未提供 Windows 安装包，可在 Windows 机器上自行构建：
+
+```bash
+npm install
+npm run dist:green   # 产物在 dist/release/
+```
 
 ### 隐私说明（必读）
 
@@ -131,16 +212,77 @@ Ackem 是 **本地优先** 的 Windows 桌面程序：你配置大模型接口�
 
 详见 [docs/distribution-windows.zh.md](./docs/distribution-windows.zh.md)。
 
-### 步骤
+---
 
-1. **下载** — [GitHub Releases](https://github.com/JasonLiu0826/Ackem/releases) 或 [Gitee Releases](https://gitee.com/jason_2005/ackem/releases) 获取 `Ackem-v1.0.0-win-x64.zip`
-2. **解压** — 完整解压到 SSD 目录（勿在 zip 内直接运行）
-3. **启动** — 双击 `Ackem.exe` 或 `启动 Ackem.bat`；首次约 10–30 秒（见 [加载界面](#界面与演示)）
-4. **合规确认** — 勾选隐私与数据处理条款（见 [合规截图](#界面与演示)）
-5. **配置模型** — **设置 → 模型与 API**：Base URL、API Key（云端必填）、模型 ID
-6. **首次对话** — 发一条消息确认回复；可选导入 txt/md 记忆
+## ⚙️ 首次启动配置（3 分钟）
 
-> **分享 zip 前：** 切勿把个人 `data/` 文件夹打进压缩包 — 其中含对话、记忆与密钥。
+1. **合规确认** — 首次运行勾选隐私与数据处理条款（成人内容模式需另行确认年龄）。
+2. **配置模型** — 打开 **设置 → 模型与 API**，填写三项：
+   - **Base URL**：模型接口地址（OpenAI 兼容）
+   - **API Key**：云端模型必填；本地模型可留空
+   - **模型 ID**：如 `deepseek-chat`、`gpt-4o-mini`
+
+   | 用什么模型 | Base URL | 模型 ID（示例） |
+   |---|---|---|
+   | DeepSeek | `https://api.deepseek.com/v1` | `deepseek-chat` |
+   | OpenAI | `https://api.openai.com/v1` | `gpt-4o-mini` |
+   | 本机 Ollama | `http://127.0.0.1:11434/v1` | `qwen2.5:7b` |
+   | 本机 LM Studio | `http://127.0.0.1:1234/v1` | 你加载的模型名 |
+
+3. **发一条消息** — 能收到回复即配置成功。
+4. **可选** — 导入 txt / md 记忆、开启语音播报、绑定 QQ / 微信。
+
+> 🔒 API Key 只保存在本机（加密存储），**不会上传到任何服务器，也不在发行包里**。
+
+---
+
+## 🎛️ 功能使用指南（v2.0.0）
+
+### 对话与人格
+**设置 → 伴侣与人格**：设置「称呼」、性别，挑选人格预设（29 种）。人格决定她的语气、癖好与边界。
+
+### Freya 人格与「她怎么称呼你」
+选中 **Freya** 后会出现输入框「**Freya 怎么称呼你**」：填你自己的小名即可，留空默认「亲爱的」。这个值会自动替换提示词里的 `{{petname}}` 占位符。
+
+### QQ 渠道（OneBot / NapCat）
+**设置 → 移动端 → QQ**：
+1. 本机先运行 **NapCat**（QQ 协议端，可用 Docker 部署）
+2. 填 **NapCat WebUI 地址**（默认 `http://127.0.0.1:6099`）和 **WebUI Token**
+3. 点「**扫码登录**」，用手机 QQ 扫码；登录后点「**连接监听**」
+4. 连接成功后，在 QQ 里发消息她就会回；支持语音、图片、表情包
+5. **首次私聊会请求绑定机主**：需在「设置 → 移动端 → QQ → 机主绑定」里确认（或拒绝），确认前消息不会进入对话
+
+完整步骤见 [docs/qq-onebot-setup.md](./docs/qq-onebot-setup.md)。
+
+### QQ 空间自主说说
+**设置 → 移动端 → QQ → 空间说说**（默认**试运行**：只生成不发表）：
+- 可设定每天几条、最小间隔、活跃时段、可见范围（公开 / 好友 / 仅自己）
+- 可配图、发完在 QQ 里提一句、定时逛空间回评论与按概率点赞
+- 详情见 [docs/qq-space.zh.md](./docs/qq-space.zh.md)
+
+### 微信渠道
+**设置 → 移动端 → 微信**：手机微信发消息，大脑、人格与记忆仍运行在本机。
+
+### Ackem Code（电脑助手）
+在对话里写 **`/code 你的任务`**（QQ / 微信里是 `/电脑 …`），或直接说「帮我把这个文件改名」——命中代码 / 文件 / 命令类任务时自动交给本机编码智能体，结果只回提问的那一端。权限可在设置中收紧。详见 [docs/ackem-code-bridge.zh.md](./docs/ackem-code-bridge.zh.md)。
+
+### 语音
+- **TTS 朗读**：设置 → 语音；本机语音服务（需 Python 3.9+）随程序附带，首次使用时启动
+- **ASR 语音输入**：在聊天框点麦克风；QQ / 微信里的语音会先转文字再回复
+
+---
+
+## ❓ 常见问题（FAQ）
+
+| 问题 | 解决 |
+|---|---|
+| 打开提示「已损坏，无法打开」 | 正常现象。终端执行 `xattr -cr /Applications/Ackem.app`，再右键 → 打开 |
+| 首次启动很久没反应 | 在解压 embedding 模型，等 10–30 秒；长时间无响应请重启应用 |
+| 发消息没有回复 | 检查「设置 → 模型与 API」的 Base URL / API Key / 模型 ID 与网络连通性 |
+| QQ 显示未连接 | 确认 NapCat 在运行、端口一致，然后点「重新连接监听」 |
+| 数据存在哪、怎么备份？ | macOS：`~/Library/Application Support/Ackem`；Windows 绿色版：程序目录 `data/`。见 [docs/memory-format.zh.md](./docs/memory-format.zh.md) |
+| 怎么卸载？ | 删除 App 即可；如需连数据一起删除，手动删除上一条中的数据目录 |
+| 怎么更新？ | 到本仓库 Releases 下载新版本覆盖安装，数据会保留 |
 
 ### macOS（社区构建 · 非官方） {#macos-community-build-unofficial}
 

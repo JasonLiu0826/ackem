@@ -7,7 +7,7 @@ copyright: Copyright © 2026 Ackem contributors
 
 # 版本与 package.json 对齐（发行 v1.0.0）
 extraMetadata:
-  version: 1.0.0
+  version: 2.0.0
 
 directories:
   output: dist
@@ -69,6 +69,11 @@ extraResources:
       - "!**/data/sessions/**"
       - "!**/data/settings*.json"
       - "!**/.test-cache/**"
+  # QQ 内置表情包（可爱 / 撒娇热梗，按情绪目录分发；用户目录可覆盖同名图）
+  - from: assets/qq-memes
+    to: assets/qq-memes
+    filter:
+      - "**/*"
   # 开发者扩展接口协议（绿色版 docs/developer/）
   - from: docs/developer
     to: docs/developer

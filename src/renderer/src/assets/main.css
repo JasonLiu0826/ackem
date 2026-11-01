@@ -2792,3 +2792,23 @@ html.theater-open body {
 .web-search-dialog > button { margin-top: 12px; }
 .web-search-settings { padding-block: 8px; }
 .web-search-settings .web-search-form { margin-top: 12px; }
+
+/* QQ 扫码登录：把「一键生成」做成整块高亮 CTA，二维码旁边给一个独立的手动刷新 */
+.qq-login-cta {
+  width: 100%;
+  padding: 0.8rem 1.25rem;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  box-shadow: var(--glow-soft);
+}
+
+.qq-login-cta:hover:not(:disabled) {
+  box-shadow: var(--glow-medium);
+}
+
+.qq-login-refresh {
+  padding: 0.6rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}

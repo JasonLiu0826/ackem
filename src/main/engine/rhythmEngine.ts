@@ -132,8 +132,8 @@ function chatterDecision(stage: string): RhythmDecision {
     mode: 'chatter',
     count,
     separator: '[SPLIT]',
-    maxCharsPerMsg: 30,
-    instruction: `用碎碎念模式回复，分${count}条短句，每条不超过30字，用 [SPLIT] 分隔。像微信连发消息一样。`,
+    maxCharsPerMsg: 25,
+    instruction: `用碎碎念模式回复，分${count}条短句，每条不超过25字；每条句子必须有标点：句中换气用逗号，句末用句号/问号/省略号收住。用 [SPLIT] 分隔，像真人微信连发消息一样。（用户明确要表格/清单/代码/长文时按需要写，不受字数限制）`,
   }
 }
 
@@ -142,8 +142,9 @@ function monologueDecision(): RhythmDecision {
     mode: 'monologue',
     count: 1,
     separator: '',
-    maxCharsPerMsg: 200,
-    instruction: '用认真说的模式回复，1-2条长句，可以稍长。',
+    maxCharsPerMsg: 45,
+    instruction:
+      '用认真说的模式回复：最多2条，每条不超过45字；句子中间必须有逗号或句号断句，不要一口气写一大段。想多说就分成两三条短消息，用 [SPLIT] 分隔。（用户明确要表格/代码/长文时按需要写）',
   }
 }
 

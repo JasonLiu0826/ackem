@@ -3,6 +3,7 @@ import { WAVE_INTER_BUBBLE_GAP_MS } from '../../shared/wavePlan'
 import type { WaveEndpoint } from './waveEndpoint'
 import { openAiMessagesToAnthropic } from './waveStream'
 import type { TurnBubbleQueue } from './turnBubbleQueue'
+import { insertBreathCommas, looksLikeStructuredContent, stripTrailingSeparators } from './humanizeReply'
 import {
   recordDisplayedSentence,
   shouldEmitSentence,
@@ -178,8 +179,14 @@ async function onTextDelta(ctx: SentenceBubbleContext, buffer: { value: string }
 }
 
 async function flushWaveBubble(ctx: SentenceBubbleContext, buffer: { value: string }): Promise<void> {
-  const text = buffer.value.trim()
+  const raw = buffer.value.trim()
   buffer.value = ''
+  // 一条气泡里如果一句没标点、又偏长，补一个逗号换气（结构化内容不插手）
+  const text = raw
+    ? stripTrailingSeparators(
+        looksLikeStructuredContent(raw) ? raw.trim() : insertBreathCommas(raw).trim()
+      )
+    : raw
   if (!text) {
     if (ctx.waveBubbleOpen) enqueueSkipOpenBubble(ctx)
     return
