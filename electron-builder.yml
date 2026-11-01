@@ -7,7 +7,7 @@ copyright: Copyright © 2026 Ackem contributors
 
 # 版本与 package.json 对齐（发行 v1.0.0）
 extraMetadata:
-  version: 1.0.0
+  version: 2.0.0
 
 directories:
   output: dist

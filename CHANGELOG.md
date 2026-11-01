@@ -1,12 +1,12 @@
 # Changelog
 
-本文件记录 **Ackem v1.0.0** 及后续用户可见变更。v1.1.0 起为**社区桌面客户端版本**（本仓库，在原作 v1.0.0 基础上继续开发），上游官方 Release 见 [JasonLiu0826/Ackem Releases](https://github.com/JasonLiu0826/Ackem/releases)。
+本文件记录 **Ackem v1.0.0** 及后续用户可见变更。v2.0.0 起为**社区桌面客户端版本**（本仓库，在原作 v1.0.0 基础上继续开发），上游官方 Release 见 [JasonLiu0826/Ackem Releases](https://github.com/JasonLiu0826/Ackem/releases)。
 
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
 ---
 
-## [1.1.0] - 2026-11-01
+## [2.0.0] - 2026-11-01
 
 ### Added
 

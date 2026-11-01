@@ -1,6 +1,6 @@
 # 💫 Ackem
 
-![Version](https://img.shields.io/badge/Version-1.1.0-orange?style=for-the-badge)
+![Version](https://img.shields.io/badge/Version-2.0.0-orange?style=for-the-badge)
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS-0078D6?style=for-the-badge&logo=windows&logoColor=white)
 ![License](https://img.shields.io/badge/License-AGPL--3.0-blue?style=for-the-badge)
 ![Local First](https://img.shields.io/badge/Data-Local--First-2ea043?style=for-the-badge)
@@ -10,10 +10,10 @@
 **Ackem** · **A**.C.K.E.M — **A**utonomous **C**ompanion **K**eeping **E**motional **M**emory  
 *保持情感记忆的自主伙伴*
 
-**Ackem v1.1.0 (community desktop build)** — A **local-first** AI companion for Windows and macOS. Bring your own LLM (cloud or local); Ackem handles chat, memory, emotion, relationship state, and desktop presence — **all on your hard drive**. This repository continues development on top of the original [JasonLiu0826/Ackem](https://github.com/JasonLiu0826/ackem) v1.0.0.
+**Ackem v2.0.0 (community desktop build)** — A **local-first** AI companion for Windows and macOS. Bring your own LLM (cloud or local); Ackem handles chat, memory, emotion, relationship state, and desktop presence — **all on your hard drive**. This repository continues development on top of the original [JasonLiu0826/Ackem](https://github.com/JasonLiu0826/ackem) v1.0.0.
 
 > **Source**: [this repo](https://github.com/deufe/ackem) · upstream: [JasonLiu0826/Ackem](https://github.com/JasonLiu0826/ackem) · [Gitee mirror](https://gitee.com/jason_2005/ackem)  
-> **Download**: releases of this repo · upstream [GitHub Releases](https://github.com/JasonLiu0826/Ackem/releases) · [Gitee Releases](https://gitee.com/jason_2005/ackem/releases)  
+> **Download**: [releases of this repo](https://github.com/deufe/ackem/releases) (macOS dmg, ready to run) · upstream [GitHub Releases](https://github.com/JasonLiu0826/Ackem/releases) · [Gitee Releases](https://gitee.com/jason_2005/ackem/releases)  
 > **Build**: `npm run dist:green` → `dist/release/Ackem-1.0.0-win-x64/` · [Path map](./docs/CODEBASE-PATHS.md) · [Docs languages](./docs/I18N.md)  
 > **Status:** Ackem is still in **active testing**. As a solo-maintained project, test coverage is limited — you may hit unexpected behavior or rough edges. Frequent crashes and severe lag are uncommon, but imperfections still happen. [Open an Issue](https://github.com/deufe/ackem/issues) if something feels off.
 
@@ -36,7 +36,7 @@ Ackem is **not** a web chat box — it is a Windows desktop app that stays with 
 
 ---
 
-## 🆕 What's new in the community build (v1.1.0)
+## 🆕 What's new in the community build (v2.0.0)
 
 On top of upstream v1.0.0, this repository adds:
 

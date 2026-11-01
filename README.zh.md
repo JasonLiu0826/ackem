@@ -1,6 +1,6 @@
 # 💫 Ackem
 
-![Version](https://img.shields.io/badge/Version-1.1.0-orange?style=for-the-badge)
+![Version](https://img.shields.io/badge/Version-2.0.0-orange?style=for-the-badge)
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS-0078D6?style=for-the-badge&logo=windows&logoColor=white)
 ![License](https://img.shields.io/badge/License-AGPL--3.0-blue?style=for-the-badge)
 ![Local First](https://img.shields.io/badge/Data-Local--First-2ea043?style=for-the-badge)
@@ -10,10 +10,10 @@
 **Ackem** · **A**.C.K.E.M — 保持情感记忆的自主伙伴  
 *Autonomous Companion Keeping Emotional Memory*
 
-**Ackem v1.1.0（社区桌面版）** — 运行在你 Windows / macOS 电脑上的 **本地优先** AI 伴侣。自备大模型（云端或本机），Ackem 负责对话、记忆、情绪与关系、桌宠陪伴 — **数据都在本机硬盘**。本仓库基于原作者 [JasonLiu0826/Ackem](https://github.com/JasonLiu0826/ackem) v1.0.0 继续开发。
+**Ackem v2.0.0（社区桌面版）** — 运行在你 Windows / macOS 电脑上的 **本地优先** AI 伴侣。自备大模型（云端或本机），Ackem 负责对话、记忆、情绪与关系、桌宠陪伴 — **数据都在本机硬盘**。本仓库基于原作者 [JasonLiu0826/Ackem](https://github.com/JasonLiu0826/ackem) v1.0.0 继续开发。
 
 > **源码**：[本仓库](https://github.com/deufe/ackem) · 上游原作：[JasonLiu0826/Ackem](https://github.com/JasonLiu0826/ackem)  
-> **下载**：本仓库 Releases · 上游 [GitHub Releases](https://github.com/JasonLiu0826/Ackem/releases) · [Gitee Releases](https://gitee.com/jason_2005/ackem/releases)  
+> **下载**：[本仓库 Releases](https://github.com/deufe/ackem/releases)（macOS dmg，开箱即用） · 上游 [GitHub Releases](https://github.com/JasonLiu0826/Ackem/releases) · [Gitee Releases](https://gitee.com/jason_2005/ackem/releases)  
 > **构建**：`npm run dist:green` → `dist/release/Ackem-1.0.0-win-x64/` · [路径说明](./docs/CODEBASE-PATHS.zh.md) · [文档语言](./docs/I18N.zh.md)  
 > **状态：** Ackem 目前仍处于**测试与快速迭代**阶段。个人维护，测试覆盖面有限，使用中可能遇到预期之外的情况或细节瑕疵；一般不会出现频繁闪退或严重卡顿，但完善度仍在持续改进。欢迎 [提交 Issue](https://github.com/deufe/ackem/issues) 反馈。
 
@@ -36,7 +36,7 @@ Ackem **不是**网页聊天框，而是常驻桌面的 Windows 应用：系统�
 
 ---
 
-## 🆕 社区桌面版 v1.1.0 新增功能
+## 🆕 社区桌面版 v2.0.0 新增功能
 
 相对上游 v1.0.0，本仓库新增：
 
