@@ -7,6 +7,8 @@ import { ConfirmDialog } from './ConfirmDialog'
 import { CompanionSkinSection } from './CompanionSkinSection'
 import { EmbeddingModelSection } from './EmbeddingModelSection'
 import { MobileComingSoonSection, WeixinConnectSection } from './WeixinConnectSection'
+import { QqConnectSection } from './QqConnectSection'
+import { QzoneSection } from './QzoneSection'
 import { VoiceSettings } from './VoiceSettings'
 import { DesktopAgentSettings, desktopAgentSettingsSaveBlocked } from './DesktopAgentSettings'
 import { useAppStore } from '../store/appStore'
@@ -490,6 +492,20 @@ export function SettingsPage(): JSX.Element {
               )
             })}
           </SettingsPresetGrid>
+          {form.personalityPresetId === 'freya' && (
+            <SettingsField label={t('settings.freyaPetName')}>
+              <input
+                className="field-input w-full"
+                value={form.freyaPetName ?? ''}
+                placeholder={t('settings.freyaPetNamePlaceholder')}
+                onChange={(e) => {
+                  const v = e.target.value
+                  setForm((f: AppSettings | null) => (f ? { ...f, freyaPetName: v } : f))
+                  void persistPatch({ freyaPetName: v })
+                }}
+              />
+            </SettingsField>
+          )}
         </SettingsBlock>
 
         <SettingsBlock

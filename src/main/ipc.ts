@@ -23,6 +23,8 @@ import { registerMemoryIpc } from './ipc/memory'
 import { registerSessionIpc } from './ipc/session'
 import { registerProfileIpc } from './ipc/profile'
 import { registerWeixinIpc } from './ipc/weixin'
+import { registerQqIpc } from './ipc/qq'
+import { registerQzoneIpc } from './ipc/qzone'
 import { registerSocialIpc } from './ipc/social'
 import { registerSocialFeedIpc } from './ipc/socialFeed'
 import { registerCodePartIpc } from './ipc/codePart'
@@ -110,6 +112,8 @@ export function registerIpc(): void {
   registerProfileIpc()
   registerSessionIpc()
   registerWeixinIpc()
+  registerQqIpc()
+  registerQzoneIpc()
   registerSocialIpc()
   registerSocialFeedIpc()
   registerDesktopAgentIpc()

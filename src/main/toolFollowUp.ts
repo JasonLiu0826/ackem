@@ -6,17 +6,12 @@ import type { AppSettings } from './settings'
 import { buildSelectedPersonalityVoice, personalityToolFallbackLead } from './personalityVoice'
 import type { UserTaskFrame } from '../shared/taskFrame'
 import { buildToolFollowUpFormatBlock } from './taskFrame/formatInstructions'
+import { flattenMessageContent } from './chat/messageContent'
 
 export type ToolResultForFollowUp = { name: string; content: string }
 
 function messageText(content: unknown): string {
-  if (typeof content === 'string') return content
-  if (content == null) return ''
-  try {
-    return JSON.stringify(content)
-  } catch {
-    return String(content)
-  }
+  return flattenMessageContent(content)
 }
 
 const TOOL_LABEL: Record<string, string> = {

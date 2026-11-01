@@ -119,6 +119,11 @@ import {
   type ProactiveContext,
 } from '../prompt/adult-mode'
 import { getPersonalityTemplate, type PersonalityTemplate } from '../prompt/personality'
+import { loadSettings } from '../settings'
+import {
+  createInitialChemistry, tickChemistry, applyFreyaEvent, describeChemistry, inferFreyaEvents,
+  type FreyaChemistryState,
+} from './freyaChemistry'
 import { buildPersonalitySection, buildProhibitionSection, buildExampleSection, mergeProhibitions, buildReactionOpenerInstruction, getImperfectionHint, resetReactionOpener } from '../prompt/emotion-fusion'
 import type { AnchorVectors } from '../embedding/types'
 import { type GeneralAnchorWords, GENERAL_ANCHOR_WORDS, type AdultAnchorWords, ADULT_ANCHOR_WORDS } from '../embedding/anchorVectors'
@@ -127,7 +132,7 @@ import {
   type TemporalSemanticSignal,
 } from '../memory/temporalSignalExtractor'
 import type { PreparedTurnContext } from './prepareTurnContext'
-import { loadSettings } from '../settings'
+
 import { getClock } from '../memory/temporal/clock.js'
 import { monthDayWindowRanges } from '../memory/temporal/calendarWindow.js'
 import { deriveTimeOfDay, formatLocalTimeHHMM } from '../memory/temporal/timeOfDay.js'
@@ -914,14 +919,30 @@ export async function runPreLlmTurn(args: {
   }
 
   // 注入 v3 完整人格模板（核心矛盾+语癖+禁止清单+示例）
+  // Freya 生理层：先按真实经过时间结算（衰减 + 思念漂移），再叠本轮事件
+  let freyaChem: FreyaChemistryState | null = null
+  const freyaPetName = loadSettings().freyaPetName
+  if (preset?.id === 'freya') {
+    freyaChem = tickChemistry(prev.freyaChemistry ?? createInitialChemistry(), new Date())
+    for (const kind of inferFreyaEvents(msg, ev.type, freyaPetName)) {
+      freyaChem = applyFreyaEvent(freyaChem, kind)
+    }
+  }
+
   if (preset) {
-    const v3Template = getPersonalityTemplate(preset.id)
+    const v3Template = getPersonalityTemplate(preset.id, freyaPetName)
     const v3Persona = buildPersonalitySection(v3Template)
     const v3Prohibitions = buildProhibitionSection(mergeProhibitions(v3Template.人格专属禁止, [], ev.type === 'apology'))
     const v3Examples = buildExampleSection(
       v3Template.示例[l2Next.aff >= 70 ? '高亲密' : l2Next.aff >= 40 ? '中亲密' : '低亲密'] ?? v3Template.示例['中亲密']
     )
     psycheBlock += `\n\n${v3Persona}\n\n${v3Prohibitions}\n\n${v3Examples}`
+
+    // Freya：把激素状态翻成一句"此刻的你"，只给倾向不给读数
+    if (freyaChem) {
+      const chemLine = describeChemistry(freyaChem)
+      if (chemLine) psycheBlock += `\n\n${chemLine}`
+    }
 
     if (!ultralite) {
       // 开头短反应（追踪已用词，推荐未用词，禁止重复）
@@ -1443,6 +1464,10 @@ export async function runPreLlmTurn(args: {
   // 情绪涌现持久化
   newState.emergencePersistence = emergencePersist
   newState.originExposure = nextOriginExposure
+
+  // Freya 生理层落盘：updatedAt 记下本轮结算时刻，下次按真实时间差继续衰减
+  if (freyaChem) newState.freyaChemistry = freyaChem
+  else if (newState.personality.presetId !== 'freya') delete newState.freyaChemistry
 
   // P2-4: 标记已投递的离线思绪
   if (undeliveredThoughts.length > 0) {

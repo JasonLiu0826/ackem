@@ -33,12 +33,22 @@ function resolveRealNodeModules(root) {
   return null
 }
 
+/** 运行时落点：macOS 在 .app/Contents/Resources，Windows/Linux 在 resources */
+function resolveResourcesDir(context) {
+  const productFilename = context.packager.appInfo.productFilename
+  return context.electronPlatformName === 'darwin'
+    ? join(context.appOutDir, `${productFilename}.app`, 'Contents', 'Resources')
+    : join(context.appOutDir, 'resources')
+}
+module.exports.resolveResourcesDir = resolveResourcesDir
+
 /** Default export is used by electron-builder afterPack. */
 module.exports = async function afterPack(context) {
-  require('./bundle-console-node.cjs')(join(context.appOutDir,'resources'))
+  const resourcesDir = resolveResourcesDir(context)
+  require('./bundle-console-node.cjs')(resourcesDir)
   const root = context.packager.projectDir
   const src = resolveRealNodeModules(root)
-  const dest = join(context.appOutDir, 'resources', 'ackemcode', 'node_modules')
+  const dest = join(resourcesDir, 'ackemcode', 'node_modules')
   if (!src) {
     console.warn('[after-pack] AckemCode node_modules not found (parts/vendor), skip')
     return
@@ -50,7 +60,7 @@ module.exports = async function afterPack(context) {
   console.log(`[after-pack] copying AckemCode runtime node_modules from ${src} …`)
   cpSync(src, dest, {
     recursive: true,
-    filter: (srcPath) => !srcPath.includes('.git') && !srcPath.includes('.cache'),
+    filter: (srcPath) => !srcPath.includes('.git') && !srcPath.includes('.cache') && !srcPath.includes('/.bin'),
   })
   console.log('[after-pack] ackemcode runtime node_modules copied')
 }

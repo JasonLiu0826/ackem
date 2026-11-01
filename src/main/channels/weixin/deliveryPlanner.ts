@@ -1,4 +1,11 @@
 import { formatBubbleForWeixin } from '../markdownForChannel'
+import {
+  insertBreathCommas,
+  looksLikeStructuredContent,
+  RUNON_SOFT_LIMIT,
+  splitRunOnBubbles,
+  stripTrailingSeparators
+} from '../../chat/humanizeReply'
 import { getWeixinDeliveryProfile, type WeixinDeliveryProfile } from './deliveryProfiles'
 import {
   insertInlineEmoji,
@@ -58,18 +65,40 @@ function parseExplicitSegments(raw: string): ParsedSegment[] {
   return segments
 }
 
+const ENDS_WITH_PUNCT_RE = /[，,、；;：:。！？!?…]$/u
+
+/** 合并多条时补断句：前一条已经以标点收尾就不重复补 */
+function joinWithBreath(parts: string[]): string {
+  return parts.reduce((acc, part) => {
+    if (!acc) return part
+    return ENDS_WITH_PUNCT_RE.test(acc) ? acc + part : `${acc}，${part}`
+  }, '')
+}
+
 const SENTENCE_BREAK =
   /(?<=[。！？!?…])\s*|(?<=[；;])\s*|(?<=[，,])\s*(?=你|我|他|她|别|才|哼|哈|诶)/u
 const INTERJECTIONS = new Set(['哼', '哈', '诶', '啊', '哦', '嘛', '呢', '吧'])
 
 /** 仅按句读 / 换行分条，不因字数硬切（超长单句保留完整） */
 function splitTextByStyle(text: string): string[] {
+  // 结构化判定必须看"格式化之前"的原文：formatBubbleForWeixin 会去掉反引号/井号，
+  // 格式化之后再判断就认不出代码块了（会被当普通句子切碎）。
+  const structured = looksLikeStructuredContent(text)
   const cleaned = formatBubbleForWeixin(text)
   if (!cleaned) return []
+  // 代码 / 表格 / 列表 / 链接：原样一条，别拆也别补标点
+  if (structured || looksLikeStructuredContent(cleaned)) return [cleaned]
 
   const parts = cleaned
     .split(/\n+/)
+    // 模型整段不喘气时先按软断点拆成短句，再走下面的句读切分
+    .flatMap((line) => splitRunOnBubbles(line, RUNON_SOFT_LIMIT))
     .flatMap((line) => line.split(SENTENCE_BREAK).map((p) => p.trim()).filter(Boolean))
+    .map(insertBreathCommas)
+    // 句读切点常落在逗号后：剥掉结尾逗号，别让每条以「，」收尾
+    .map(stripTrailingSeparators)
+    .map((p) => p.trim())
+    .filter(Boolean)
 
   return parts.length ? parts : [cleaned]
 }
@@ -79,10 +108,13 @@ function mergeTinyFragments(parts: string[], maxChars: number): string[] {
   for (const p of parts) {
     const t = p.trim()
     if (!t) continue
-    if (out.length > 0 && t.length <= 3 && !INTERJECTIONS.has(t)) {
-      out[out.length - 1] = `${out[out.length - 1]}${t}`
-    } else if (out.length > 0 && out[out.length - 1].length + t.length <= maxChars + 8) {
-      out[out.length - 1] = `${out[out.length - 1]}${t}`
+    const prev = out[out.length - 1]
+    if (prev !== undefined && t.length <= 3 && !INTERJECTIONS.has(t)) {
+      // 合并必须带断句：直接拼接就是"两句连成一串"的根源
+      out[out.length - 1] = joinWithBreath([prev, t])
+    } else if (prev !== undefined && prev.length + t.length <= maxChars) {
+      // 合并上限卡死在 maxChars（以前留 +8 的余量，会把刚拆开的短句又粘回长条）
+      out[out.length - 1] = joinWithBreath([prev, t])
     } else {
       out.push(t)
     }
@@ -96,7 +128,8 @@ function clampBubbleCount(parts: string[], profile: WeixinDeliveryProfile): stri
 
   if (merged.length > maxB) {
     const head = merged.slice(0, maxB - 1)
-    const tail = merged.slice(maxB - 1).join('')
+    // 超出条数上限时必须合并，但一定要带断句，否则几段话又粘成一串
+    const tail = joinWithBreath(merged.slice(maxB - 1))
     merged = [...head, tail]
   }
 
@@ -104,15 +137,26 @@ function clampBubbleCount(parts: string[], profile: WeixinDeliveryProfile): stri
     const s = merged[0]
     const at = s.indexOf('，', Math.floor(s.length / 2))
     if (at <= 0) break
-    merged = [s.slice(0, at + 1).trim(), s.slice(at + 1).trim()]
+    // 切点在逗号上：上一条要把逗号剥掉，否则一条消息以「，」收尾，很突兀
+    const head = stripTrailingSeparators(s.slice(0, at + 1)).trim()
+    const rest = s.slice(at + 1).trim()
+    if (!head || !rest) break
+    merged = [head, rest]
   }
 
   return merged.filter(Boolean)
 }
 
-function randomGap(profile: WeixinDeliveryProfile, rng: () => number): number {
+/**
+ * 两条气泡之间的停顿。
+ * 基础值是"反应时间"，typingMsPerChar 是按字数累加的打字时间——
+ * 短句像秒回，长句像真的在敲键盘，这是最能骗过人的一处细节。
+ */
+function randomGap(profile: WeixinDeliveryProfile, rng: () => number, textLen = 0): number {
   const [a, b] = profile.gapMs
-  return Math.round(a + rng() * (b - a))
+  const base = Math.round(a + rng() * (b - a))
+  const typing = textLen > 0 ? Math.round(textLen * (profile.typingMsPerChar ?? 0)) : 0
+  return base + typing
 }
 
 function pushTextBubbles(
@@ -131,7 +175,9 @@ function pushTextBubbles(
   const clamped = clampBubbleCount(parts, args.profile)
 
   for (let i = 0; i < clamped.length; i++) {
-    let body = clamped[i]
+    const piece = clamped[i]
+    // 补逗号已在 splitTextByStyle 里做过（且那里能看到原文），这里不再二次改写
+    let body = piece
     const inline = pickContextEmoji({
       presetId: args.presetId,
       userText: args.userText,
@@ -146,9 +192,10 @@ function pushTextBubbles(
     bubbles.push({
       kind: 'text',
       body: formatBubbleForWeixin(body),
-      delayBeforeMs: bubbles.length === 0 && i === 0 ? 0 : delayAcc || randomGap(args.profile, args.rng)
+      delayBeforeMs: bubbles.length === 0 && i === 0 ? 0 : delayAcc || randomGap(args.profile, args.rng, body.length)
     })
-    delayAcc = randomGap(args.profile, args.rng)
+    // 下一句的停顿按"下一句要打多少字"来估
+    delayAcc = randomGap(args.profile, args.rng, (clamped[i + 1] ?? '').length)
   }
   return delayAcc
 }

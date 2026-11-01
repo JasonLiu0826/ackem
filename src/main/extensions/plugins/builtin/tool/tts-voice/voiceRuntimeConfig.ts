@@ -18,7 +18,7 @@ function toSimplifiedChinese(text: string): string {
 /** Runtime voice settings synced from renderer Settings / theater. */
 
 /** Set false until TTS broadcast ships in a future release. ASR / mic remain available. */
-export const TTS_BROADCAST_ENABLED = false
+export const TTS_BROADCAST_ENABLED = true
 
 /** Set false until GPT-SoVITS voice pack ships in a future release. Engine code remains wired. */
 export const GPT_SOVITS_VOICE_ENABLED = false

@@ -18,7 +18,18 @@ const BLOCKED_PROCESS_NAMES = new Set([
   'smss.exe',
   'system',
   'registry',
-  'explorer.exe'
+  'explorer.exe',
+  // macOS：系统级进程/界面守护，禁止被「关闭应用」终止
+  'finder',
+  'dock',
+  'systemuiserver',
+  'windowserver',
+  'loginwindow',
+  'launchd',
+  'controlcenter',
+  'notificationcenter',
+  'spotlight',
+  'coreaudiod'
 ])
 
 const SYSTEM_WRITE_PREFIXES = [
@@ -73,8 +84,12 @@ function isHardBlockedWritePath(path: string): boolean {
 export function isBlockedCloseTarget(target: string): boolean {
   const name = target.trim().toLowerCase()
   if (!name) return false
-  const base = name.endsWith('.exe') ? name : `${name}.exe`
-  return BLOCKED_PROCESS_NAMES.has(base) || BLOCKED_PROCESS_NAMES.has(name)
+  const bare = name.replace(/\.(exe|app)$/i, '')
+  return (
+    BLOCKED_PROCESS_NAMES.has(bare) ||
+    BLOCKED_PROCESS_NAMES.has(name) ||
+    BLOCKED_PROCESS_NAMES.has(`${bare}.exe`)
+  )
 }
 
 export function checkActionSettings(

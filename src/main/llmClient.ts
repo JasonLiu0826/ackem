@@ -19,7 +19,7 @@ export type LlmJsonCompletion = {
 export function createLlmJsonClient(settings: AppSettings) {
   return {
     async chatCompletionJson(params: {
-      messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>
+      messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string | unknown[] }>
       temperature: number
       max_tokens?: number
       signal?: AbortSignal
@@ -28,7 +28,7 @@ export function createLlmJsonClient(settings: AppSettings) {
     },
 
     async chatCompletionJsonDetailed(params: {
-      messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>
+      messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string | unknown[] }>
       temperature: number
       max_tokens?: number
       signal?: AbortSignal
@@ -37,13 +37,13 @@ export function createLlmJsonClient(settings: AppSettings) {
         throw new DOMException('操作已取消', 'AbortError')
       }
       if (isLlmMockMode()) {
-        const text = mockJsonCompletion(params.messages)
+        const text = mockJsonCompletion(params.messages as unknown as Parameters<typeof mockJsonCompletion>[0])
         return { text, truncated: false }
       }
       if ((settings.llmProvider ?? 'openai') === 'anthropic') {
         return anthropicMessagesJsonDetailed({
           settings,
-          messages: params.messages,
+          messages: params.messages as Parameters<typeof anthropicMessagesJsonDetailed>[0]['messages'],
           temperature: params.temperature,
           max_tokens: params.max_tokens,
           signal: params.signal

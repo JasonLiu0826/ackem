@@ -1,4 +1,5 @@
 import type { ToolResultForFollowUp } from '../toolFollowUp'
+import { flattenMessageContent } from '../chat/messageContent'
 
 export const DESKTOP_AGENT_MAX_TOOL_ROUNDS = 16
 
@@ -17,7 +18,7 @@ export function appendDesktopAgentRoundMessages(
 ): Array<{ role: string; content: string }> {
   const next: Array<{ role: string; content: string }> = base.map((m) => ({
     role: m.role,
-    content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content ?? '')
+    content: flattenMessageContent(m.content)
   }))
 
   if (assistantPartial.trim()) {

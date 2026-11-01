@@ -34,6 +34,7 @@ Public docs should be **small and accurate**. Internal design drafts stay out of
 | Adult mode & safety | [adult-and-safety-policy.md](./adult-and-safety-policy.md) | [adult-and-safety-policy.zh.md](./adult-and-safety-policy.zh.md) |
 | Indexing & scale | [indexing-and-scale.md](./indexing-and-scale.md) | [indexing-and-scale.zh.md](./indexing-and-scale.zh.md) |
 | Repo & build paths | [CODEBASE-PATHS.md](./CODEBASE-PATHS.md) | [CODEBASE-PATHS.zh.md](./CODEBASE-PATHS.zh.md) |
+| Cross-channel conversation | [cross-channel-conversation.md](./cross-channel-conversation.md) | [cross-channel-conversation.zh.md](./cross-channel-conversation.zh.md) |
 
 ---
 

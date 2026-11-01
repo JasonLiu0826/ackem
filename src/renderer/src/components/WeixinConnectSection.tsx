@@ -7,6 +7,7 @@ import {
   SettingsStatusBadge,
   SettingsToggleRow
 } from './settings/settingsUi'
+import { OwnerBindingBlock } from './OwnerBindingBlock'
 
 type WeixinStatus = {
   connected: boolean
@@ -248,6 +249,8 @@ export function WeixinConnectSection(): JSX.Element {
           </p>
         ) : null}
       </SettingsBlock>
+
+      <OwnerBindingBlock kind="weixin" />
 
       <SettingsBlock title={t('settings.mobile.weixin.guideTitle')} hint={t('settings.mobile.weixin.guideHint')}>
         <ol className="weixin-guide-steps list-decimal space-y-3 pl-5 text-sm text-ink-muted">

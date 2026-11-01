@@ -25,11 +25,17 @@ import { createHeadlessChatSink } from './headlessChatSink'
 import { CompanionTurnError, type CompanionTurnInput, type CompanionTurnResult } from './types'
 import { createLogger } from '../logger'
 import { buildWeixinPsycheHint } from './weixin/deliveryProfiles'
+import { buildQqPsycheHint } from './qq/psyche'
 import {
   resolveWeixinStructuredIntent,
   runWeixinStructuredTurn
 } from './weixin/structuredTurn'
 import { finalizeTurnAfterStream } from '../postChatTurn'
+import { getLastActivatedAssociationIds } from '../memory/retriever'
+import { maybeRunCodeTask } from '../ackemcode/dispatch'
+import { getExtensionsCoordinator } from '../extensions/runtime'
+import { preExecuteWeatherQuery } from '../extensions/skills/builtin/tool/weather-sense/weatherPreExecute'
+import { preExecuteWebSearch } from '../extensions/skills/builtin/tool/web-search/preExecute'
 import { PRIMARY_AGENT_ID, sessionIdForAgent } from '../social/agents/agentPaths'
 import { isPrimaryCompanion, isSocialMember } from '../social/agents/guards'
 import { withAgentContext } from '../social/agents/withAgentContext'
@@ -65,10 +71,35 @@ function resolveTurnIndex(state: FullState, explicit?: number): number {
 
 /** 外部通道与桌面 IPC 共用的「跑一轮陪伴对话」 */
 export async function runCompanionTurn(input: CompanionTurnInput): Promise<CompanionTurnResult> {
-  const userText = input.userText.trim()
+  const userImages = (input.userImages ?? []).filter((u) => typeof u === 'string' && u.length > 0)
+  // 纯图片消息没有文字是合法的：给一句占位文案，由多模态片段承载真正的信息
+  let userText = input.userText.trim() || (userImages.length > 0 ? '[发来了一张图片]' : '')
   if (!userText) {
     throw new CompanionTurnError('empty input', 'EMPTY_INPUT')
   }
+
+  // 三端统一：QQ / 微信里也先判断是不是代码任务，是就交给 Ackem Code
+  if (userImages.length === 0) {
+    const codeDispatch = await maybeRunCodeTask({
+      chatSessionId: input.sessionId,
+      text: userText,
+      channel: input.channel
+    })
+    if (codeDispatch.handled) {
+      const assistantText = codeDispatch.ok
+        ? codeDispatch.text
+        : `这个代码任务没跑完：${codeDispatch.error ?? '未知错误'}`
+      return { assistantText, turnId: randomUUID() }
+    }
+  }
+
+  // 渠道远程电脑助手必须显式点名（/电脑 …），否则普通聊天不该触发本机操作
+  const REMOTE_AGENT_PREFIX = /^\s*[\/／](?:电脑|pc|agent)\s*/i
+  const remoteAgentRequested = REMOTE_AGENT_PREFIX.test(userText)
+  if (remoteAgentRequested) {
+    userText = userText.replace(REMOTE_AGENT_PREFIX, '').trim() || userText
+  }
+
   if (!isEmbeddingReadyForChat()) {
     throw new CompanionTurnError('embedding warming', 'EMBEDDING_WARMING')
   }
@@ -94,13 +125,13 @@ export async function runCompanionTurn(input: CompanionTurnInput): Promise<Compa
 
   return withAgentContext(
     targetAgentId,
-    () => runCompanionTurnInner({ ...input, sessionId, userText }, targetAgentId, root, settings),
+    () => runCompanionTurnInner({ ...input, sessionId, userText, userImages, remoteAgentRequested }, targetAgentId, root, settings),
     { interactionSurface }
   )
 }
 
 async function runCompanionTurnInner(
-  input: CompanionTurnInput & { userText: string },
+  input: CompanionTurnInput & { userText: string; userImages: string[]; remoteAgentRequested: boolean },
   targetAgentId: string,
   root: string,
   settings: AppSettings
@@ -162,6 +193,9 @@ async function runCompanionTurnInner(
 
   const turnId = randomUUID()
   const prevState = structuredClone(state)
+  // 进程刚启动时缓冲区是空的：先用持久化的对话历史把它填回来，
+  // 否则重启后前几轮没有素材可抽情节摘要，她会显得"断片"。
+  workingMemory.hydrate(sessionId, recentMessages, root)
 
   if (pre.skipLlm) {
     const assistantText = pre.redlineReply ?? ''
@@ -215,10 +249,22 @@ async function runCompanionTurnInner(
     event: pre.event,
     surface: input.channel === 'weixin' ? 'weixin' : 'desktop',
     interactionSurface,
-    ownerAgentId: targetAgentId
+    ownerAgentId: targetAgentId,
+    activatedAssociationIds: getLastActivatedAssociationIds()
   })
 
   const agentRow = social ? getRegisteredAgent(root, targetAgentId) : null
+
+  // 结构化意图（搜索/知识卡/计划卡）：微信与 QQ 共用同一套管线；社会成员走普通对话
+  const structuredIntent =
+    (input.channel === 'weixin' || input.channel === 'qq') && !social
+      ? resolveWeixinStructuredIntent({
+          userText,
+          sessionId,
+          recentMessages,
+          workIntent: pre.workIntent
+        })
+      : null
   let messages: unknown[]
   if (social && agentRow) {
     messages = assembleSocialMemberMessages({
@@ -235,9 +281,50 @@ async function runCompanionTurnInner(
     let psycheBlock = pre.psycheBlock
     if (input.channel === 'weixin') {
       psycheBlock += buildWeixinPsycheHint(settings.personalityPresetId)
+    } else if (input.channel === 'qq') {
+      psycheBlock += buildQqPsycheHint(settings.personalityPresetId, userText)
     }
+    // 渠道里没有聊天工具：天气这类需要联网的能力先预执行一次，把结果注入上下文
+    try {
+      const extCoordinator = getExtensionsCoordinator()
+      if (extCoordinator) {
+        const weatherBlock = await preExecuteWeatherQuery(extCoordinator, userText)
+        if (weatherBlock) psycheBlock += `\n\n${weatherBlock}`
+      }
+    } catch (e) {
+      log.warn('weather pre-execute failed', { error: e instanceof Error ? e.message : String(e) })
+    }
+
+    // QQ 没有结构化搜索分支时：明确要联网查的请求在这里预执行并注入结果
+    if (input.channel === 'qq' && !structuredIntent) {
+      try {
+        const extCoordinator = getExtensionsCoordinator()
+        if (extCoordinator) {
+          const webBlock = await preExecuteWebSearch(extCoordinator, userText, recentMessages)
+          if (webBlock) psycheBlock += `\n\n${webBlock}`
+        }
+      } catch (e) {
+        log.warn('web search pre-execute failed', { error: e instanceof Error ? e.message : String(e) })
+      }
+    }
+
+    // 记忆链路可观测性：把"这一轮到底检索到了什么"记下来
+    const traceB = (pre.tierBBlock ?? '').trim()
+    if (traceB.length > 0) {
+      log.info('memory retrieved', {
+        sessionId,
+        turnIndex,
+        chars: traceB.length,
+        preview: traceB.slice(0, 80).replace(/\n/g, ' ')
+      })
+    } else {
+      log.info('memory empty', { sessionId, turnIndex })
+    }
+
     messages = assembleMessages({
       userText,
+      channel: input.channel,
+      userImages: input.userImages,
       recentMessages,
       index: snap,
       settings,
@@ -255,16 +342,8 @@ async function runCompanionTurnInner(
   }
 
   // 结构化知识/Plan 仅 Ackem；社会成员走普通对话
-  if (input.channel === 'weixin' && !social) {
-    const structuredIntent = resolveWeixinStructuredIntent({
-      userText,
-      sessionId,
-      recentMessages,
-      workIntent: pre.workIntent
-    })
-
-    if (structuredIntent) {
-      try {
+  if (structuredIntent) {
+    try {
         const structured = await runWeixinStructuredTurn({
           intent: structuredIntent,
           settings,
@@ -304,35 +383,70 @@ async function runCompanionTurnInner(
             kind: structured.kind
           }
         }
-      } catch (e) {
-        log.error('weixin structured turn failed, fallback chat', e)
-      }
+    } catch (e) {
+      log.error('structured turn failed, fallback chat', e)
     }
   }
 
-  const sink = createHeadlessChatSink()
-  const chatPromise = sink.getAssistantText()
+  const streamTurn = async (desktopAgent: boolean): Promise<string> => {
+    const sink = createHeadlessChatSink()
+    const chatPromise = sink.getAssistantText()
+    await streamChatCompletion(
+      sink.webContents,
+      {
+        messages,
+        settings: {
+          ...settings,
+          disableChatTools: desktopAgent ? false : true,
+          asyncMultiMessageEnabled: false
+        },
+        turnId,
+        intensityMod: pre.intensityMod ?? 1,
+        sessionId,
+        targetAgentId: social ? targetAgentId : undefined,
+        interactionSurface,
+        desktopAgentChatMode: desktopAgent ? true : undefined,
+        deferAgentTaskPlan: desktopAgent ? true : undefined
+      },
+      root
+    )
+    return chatPromise
+  }
 
-  await streamChatCompletion(
-    sink.webContents,
-    {
-      messages,
-      settings: { ...settings, disableChatTools: true, asyncMultiMessageEnabled: false },
-      turnId,
-      intensityMod: pre.intensityMod ?? 1,
-      sessionId,
-      targetAgentId: social ? targetAgentId : undefined,
-      interactionSurface
-    },
-    root
-  )
+  // 渠道远程电脑助手：需在设置里显式开启（默认关），且仍需桌面端逐次确认
+  const remoteDesktopAgent =
+    (input.channel === 'qq' || input.channel === 'weixin') &&
+    input.remoteAgentRequested &&
+    settings.desktopAgentRemoteChannelsEnabled === true &&
+    settings.desktopAgentEnabled === true &&
+    settings.desktopAgentRiskAccepted === true
 
   let assistantText: string
   try {
-    assistantText = guardReplyText((await chatPromise).trim(), { origin: 'answer', style: 'assistant', status: 'not_executed' })
+    assistantText = guardReplyText((await streamTurn(remoteDesktopAgent)).trim(), {
+      origin: 'answer',
+      style: 'assistant',
+      status: 'not_executed'
+    })
   } catch (e) {
     log.error('stream failed', e)
-    assistantText = '抱歉，我这边刚才没处理好，你再发一次好吗？'
+    if (remoteDesktopAgent) {
+      // 电脑助手回路在渠道里不可用时，自动降级为普通聊天，绝不把内部错误甩给用户
+      try {
+        assistantText = guardReplyText((await streamTurn(false)).trim(), {
+          origin: 'answer',
+          style: 'assistant',
+          status: 'not_executed'
+        })
+        log.warn('agent turn failed, degraded to plain chat')
+      } catch (e2) {
+        log.error('degraded stream failed', e2)
+        assistantText = ''
+      }
+    } else {
+      assistantText = ''
+    }
+    if (!assistantText) assistantText = '抱歉，我这边刚才没处理好，你再发一次好吗？'
   }
 
   if (!assistantText) {
@@ -342,6 +456,14 @@ async function runCompanionTurnInner(
   const recent = workingMemory.getRecent(sessionId, root)
   const last = recent[recent.length - 1]
   if (last && !last.assistantText) last.assistantText = assistantText
+
+  // 记忆巩固：抽取事实、生成情节摘要、更新索引（渠道对话也走一遍）
+  void finalizeTurnAfterStream({
+    turnId,
+    dataRoot: root,
+    assistantText,
+    settings
+  }).catch((e) => log.warn('finalize turn failed', { error: String(e) }))
 
   return {
     assistantText,

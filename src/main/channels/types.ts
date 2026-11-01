@@ -4,6 +4,8 @@ export type CompanionTurnInput = {
   channel: CompanionChannelId
   sessionId: string
   userText: string
+  /** 本轮用户附带的图片（data URI / http 链接）；有值时走多模态，userText 可为空 */
+  userImages?: string[]
   recentMessages?: Array<{ role: 'user' | 'assistant'; content: string }>
   turnIndex?: number
   /** 对话归属 Agent；缺省为 Ackem（default） */

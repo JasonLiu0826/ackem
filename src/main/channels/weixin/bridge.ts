@@ -16,6 +16,10 @@ import {
 import { recordWeixinAckemActivity } from './activity'
 import type { WeixinAccount, WeixinMessage } from './types'
 import { createLogger } from '../../logger'
+import { isChannelOwner } from '../ownerGate'
+import { stripTrailingSeparators } from '../../chat/humanizeReply'
+import { appendConversationTurn } from '../conversation'
+import { broadcastToRenderers } from '../../rendererBroadcast'
 import { sessionIdForAgent } from '../../social/agents/agentPaths'
 import { loadMergedRecentMessages } from '../../chat/unifiedChatHistory'
 
@@ -30,6 +34,9 @@ export function enqueueInboundWeixinMessage(
   const peerId = msg.from_user_id
   if (!peerId) return
   if (msg.message_id != null && markMessageSeen(dataRoot, msg.message_id)) return
+
+  // 机主绑定：只响应主人（首个私聊自动绑定）
+  if (!isChannelOwner('weixin', peerId)) return
 
   if (msg.context_token) saveContextToken(dataRoot, peerId, msg.context_token)
   recordWeixinAckemActivity(dataRoot)
@@ -141,4 +148,24 @@ async function handleInboundMessage(
     bubbles,
     dataRoot
   })
+
+  // 与 QQ / 桌面共用同一份历史：微信里说的，桌面与 QQ 的上下文也能接上。
+  try {
+    const visibleReply =
+      stripTrailingSeparators(rawReply.replace(/\[SPLIT\]/gi, ' ').replace(/\s{2,}/g, ' ').trim()) ||
+      rawReply
+    const { appended } = await appendConversationTurn({
+      dataRoot,
+      sessionId,
+      channel: 'weixin',
+      peerId,
+      userText: text,
+      assistantText: visibleReply
+    })
+    if (appended.length > 0) {
+      broadcastToRenderers('chat:history-appended', { sessionId, channel: 'weixin', rows: appended })
+    }
+  } catch (e) {
+    log.warn('weixin chat history persist failed', { error: String(e) })
+  }
 }

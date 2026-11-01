@@ -1,9 +1,9 @@
 /**
  * 电脑助手管线总开关。
- * false = 不路由、不调工具、不启后台任务；设置页与聊天页仅灰度展示入口。
- * 开发完成后改为 true 开放。
+ * true = 路由、调用 use_computer、后台任务与设置页全部开放（实验功能）。
+ * 已实现 macOS / Windows 双平台执行器（adapters/darwin、adapters/win）。
  */
-export const DESKTOP_AGENT_PIPELINE_OPEN = false
+export const DESKTOP_AGENT_PIPELINE_OPEN = true
 
 export function isDesktopAgentPipelineOpen(): boolean {
   return DESKTOP_AGENT_PIPELINE_OPEN

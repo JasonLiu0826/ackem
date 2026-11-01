@@ -1,3 +1,5 @@
+import type { FreyaChemistryState } from './freyaChemistry'
+
 export type RelationshipStage = 'STRANGER' | 'FAMILIAR' | 'INTIMATE'
 
 export type Atmosphere = 'warm' | 'neutral' | 'cool'
@@ -171,6 +173,8 @@ export interface FullState {
   ackemBirthday?: string
   /** OEG：创造者叙事曝光控制 */
   originExposure?: OriginExposure
+  /** Freya 生理层（激素池）。仅 presetId === 'freya' 时读写，旧存档缺省时惰性初始化 */
+  freyaChemistry?: FreyaChemistryState
 }
 
 // ═══════════════════════════════════════════════════════════

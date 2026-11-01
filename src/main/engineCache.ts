@@ -306,7 +306,7 @@ export function scheduleEmbeddingRebuild(dataRoot: string): Promise<void> {
 
     if (db) deleteFactEmbeddingsForModel(db, embeddingIndexSignature(provider.name()))
 
-    invalidateEngineCache(dataRoot)
+    // 先取现有 entry 完成重建，再替换缓存（原来的顺序先 invalidate 再取，永远取到 undefined，重建是死代码）
     const entry = cacheMap.get(dataRoot)
     if (entry) {
       entry.embeddingProvider = provider

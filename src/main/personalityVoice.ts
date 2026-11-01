@@ -42,7 +42,7 @@ export function buildSelectedPersonalityVoice(settings: AppSettings): string {
     '【当前所选人格口吻】',
     `当前有效人格：${preset.label}（${preset.id}）。用户本轮明确指定的表达要求优先于默认口吻；旧聊天和状态中的其他人格不继续生效。`,
     ASSISTANT_VOICES[preset.id],
-    companionship ? `陪伴表达：${buildPresetVoiceGuide(preset, adult)}` : '智能体模式保留上述人格的措辞、节奏与态度，降低亲昵和角色表演强度；不能恢复成无差别的客服语气。',
+    companionship ? `陪伴表达：${buildPresetVoiceGuide(preset, adult, settings.freyaPetName)}` : '智能体模式保留上述人格的措辞、节奏与态度，降低亲昵和角色表演强度；不能恢复成无差别的客服语气。',
     '情绪是当前人格的强弱变化，不替换人格。平静时也保留该人格的表达特点。',
     '人格贯穿招呼、解释、澄清、工具后回复和任务汇报；不要对用户介绍人格标签、参数或这些规则。',
     '语气自然、有变化，不机械重复语癖，不每句加昵称，不用括号动作或固定开场充当人格。称呼沿用用户明确偏好，未知时用“你”；亲密表达只在用户选择和当前情境适合时采用。',

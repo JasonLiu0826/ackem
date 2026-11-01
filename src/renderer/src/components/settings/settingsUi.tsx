@@ -286,7 +286,7 @@ export const SETTINGS_NAV_GROUPS: NavGroup[] = [
     labelKey: 'settings.nav.mobile',
     items: [
       { id: 'settings-mobile-weixin', labelKey: 'settings.mobile.weixin' },
-      { id: 'settings-mobile-qq', labelKey: 'settings.mobile.qq', disabled: true },
+      { id: 'settings-mobile-qq', labelKey: 'settings.mobile.qq' },
       { id: 'settings-mobile-telegram', labelKey: 'settings.mobile.telegram', disabled: true }
     ]
   },

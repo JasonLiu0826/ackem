@@ -20,7 +20,7 @@ export const VOICE_SETTINGS_STORAGE_KEY = 'ackem-voice-settings'
 export const GPT_SOVITS_VOICE_ENABLED = false
 
 /** TTS reply playback grayed out; mic / ASR still work. */
-export const TTS_BROADCAST_ENABLED = false
+export const TTS_BROADCAST_ENABLED = true
 
 export const DEFAULT_VOICE_SETTINGS: VoiceSettingsState = {
   enabled: false,

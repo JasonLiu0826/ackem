@@ -12,16 +12,15 @@ export default defineConfig({
     plugins: [externalizeDepsPlugin()],
     build: {
       rollupOptions: {
-        input: {
-          index: resolve('src/main/index.ts'),
-          upluginSandboxWorker: resolve(
-            'src/main/extensions/openforu/sandbox/workerEntry.ts'
-          )
-        },
+        // 只保留单入口：多入口会让 rollup 拆出共享 chunk，
+        // 而 Electron/Node 20 加载这些 ESM chunk 会崩在 cjsPreparseModuleExports。
+        // sandbox worker 改由 scripts/build-sandbox-worker.mjs 用 esbuild 单独编译。
+        input: { index: resolve('src/main/index.ts') },
         external: mcExternals,
         output: {
-          entryFileNames: (chunk) =>
-            chunk.name === 'upluginSandboxWorker' ? 'upluginSandboxWorker.js' : '[name].js'
+          format: 'es',
+          inlineDynamicImports: true,
+          entryFileNames: '[name].js'
         }
       }
     }
