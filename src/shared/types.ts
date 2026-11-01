@@ -167,10 +167,16 @@ export type AppSettings = {
   desktopAgentDownloadDir?: string
   /** 允许从 QQ / 微信 远程使用电脑助手（默认关；开启后远端消息可驱动本机操作，仍需桌面确认） */
   desktopAgentRemoteChannelsEnabled?: boolean
-  /** 机主 QQ 号（首次私聊自动绑定；只响应此人） */
+  /** 机主 QQ 号（首次私聊进入待确认；桌面端确认后才生效，只响应此人） */
   channelOwnerQqId?: string
-  /** 机主微信 id（首次私聊自动绑定；只响应此人） */
+  /** 待确认的 QQ 机主候选（首个私聊者；桌面确认前不入主流程） */
+  channelOwnerPendingQqId?: string
+  /** 机主微信 id（首次私聊进入待确认；桌面端确认后才生效，只响应此人） */
   channelOwnerWeixinId?: string
+  /** 待确认的微信机主候选（首个私聊者；桌面确认前不入主流程） */
+  channelOwnerPendingWeixinId?: string
+  /** Ackem Code 派工权限模式（远程渠道另受 desktopAgentRemoteChannelsEnabled 约束） */
+  ackemcodePermissionMode?: 'default' | 'plan' | 'acceptEdits' | 'auto' | 'bypassPermissions' | 'dontAsk'
   /** 软件更新下载线路 */
   updateChannel?: 'auto' | 'github' | 'gitee'
   /** 用户跳过的版本号 */

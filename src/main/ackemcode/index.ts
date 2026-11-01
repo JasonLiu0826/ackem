@@ -46,7 +46,10 @@ function appPath(name: 'userData' | 'home', fallback: string): string {
 }
 
 /** 会话映射：Ackem 聊天会话 → Ackem Code 会话（持久化，重启后能接着聊） */
-type SessionMap = Record<string, { codeSessionId: string; cwd: string; updatedAt: string }>
+type SessionMap = Record<
+  string,
+  { codeSessionId: string; cwd: string; permissionMode?: PermissionMode; updatedAt: string }
+>
 
 function mapPath(): string {
   return join(appPath('userData', join(homedir(), '.ackemcode-host')), 'ackemcode-sessions.json')
@@ -79,9 +82,26 @@ async function resolveCodeSession(
 ): Promise<string> {
   const map = readMap()
   const hit = map[chatSessionId]
-  if (hit?.codeSessionId && hit.cwd === cwd) return hit.codeSessionId
+  // 会话复用必须同时满足：cwd 相同 + 权限模式相同。
+  // 权限模式变了（例如从 bypassPermissions 收紧成 default）就重建会话，
+  // 保证「收紧权限」对已有会话也立即生效，而不是沿用旧会话的宽松权限。
+  if (hit?.codeSessionId && hit.cwd === cwd && hit.permissionMode === permissionMode) {
+    return hit.codeSessionId
+  }
+  if (hit?.codeSessionId && hit.permissionMode !== permissionMode) {
+    log.info('权限模式变化，重建代码会话', {
+      chatSessionId,
+      from: hit.permissionMode ?? 'unknown',
+      to: permissionMode
+    })
+  }
   const created = await createCodeSession({ cwd, permissionMode })
-  map[chatSessionId] = { codeSessionId: created.sessionId, cwd, updatedAt: new Date().toISOString() }
+  map[chatSessionId] = {
+    codeSessionId: created.sessionId,
+    cwd,
+    permissionMode,
+    updatedAt: new Date().toISOString()
+  }
   writeMap(map)
   return created.sessionId
 }

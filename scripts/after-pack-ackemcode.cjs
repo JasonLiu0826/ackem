@@ -22,17 +22,28 @@ function copyDir(from, to, filter) {
   }
 }
 
+/**
+ * 计算运行时落点：
+ *   macOS  → <appOutDir>/<Product>.app/Contents/Resources/ackemcode
+ *   Windows→ <appOutDir>/resources/ackemcode
+ * 以前写死 macOS 布局，Windows 打包时会把运行时放进一个不存在的 .app 目录，
+ * 导致安装包里找不到编码运行时。
+ */
+function resolveAckemcodeDest(context) {
+  const productFilename = context.packager.appInfo.productFilename
+  const isMac = context.electronPlatformName === 'darwin'
+  const resourcesDir = isMac
+    ? path.join(context.appOutDir, `${productFilename}.app`, 'Contents', 'Resources')
+    : path.join(context.appOutDir, 'resources')
+  return path.join(resourcesDir, 'ackemcode')
+}
+
+exports.resolveAckemcodeDest = resolveAckemcodeDest
+
 exports.default = async function afterPack(context) {
   const projectDir = context.packager.projectDir
-  const productFilename = context.packager.appInfo.productFilename
   const srcRoot = path.join(projectDir, 'parts', 'ackemcode')
-  const destRoot = path.join(
-    context.appOutDir,
-    `${productFilename}.app`,
-    'Contents',
-    'Resources',
-    'ackemcode'
-  )
+  const destRoot = resolveAckemcodeDest(context)
 
   if (!fs.existsSync(path.join(srcRoot, 'dist', 'server', 'index.js'))) {
     throw new Error('[after-pack] parts/ackemcode 未构建：先执行 cd parts/ackemcode && npm run build')

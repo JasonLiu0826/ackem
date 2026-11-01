@@ -55,6 +55,21 @@
 - **渠道远程电脑助手改为显式指令**（`src/main/channels/companionTurn.ts`）：QQ / 微信只有发
   `/电脑 …`（或 `/pc …`、`/agent …`）才进入电脑助手模式；普通聊天不再触发本机操作。
 
+### Security
+
+- **机主绑定需要桌面确认**（`src/main/channels/ownerGate.ts`）：首个私聊者不再自动成为机主，
+  只进入「待确认」状态；必须在 设置 → 移动端 → QQ / 微信 手动确认后才授予机主权限，
+  确认前该渠道所有入站消息一律忽略。新增 `channelOwnerPendingQqId` / `channelOwnerPendingWeixinId`。
+- **代码派工权限边界收紧**（`src/main/ackemcode/dispatch.ts` + `index.ts`）：
+  远程渠道（QQ / 微信）的代码派工必须显式打开「允许从 QQ / 微信 远程使用电脑助手」开关；
+  派工权限支持设置页配置（`ackemcodePermissionMode`，优先级：环境变量 > 设置 > 默认全自动），
+  且权限模式变化时会重建代码会话，保证收紧权限对已有会话也生效。
+- **数据库双向迁移兼容**（`src/main/db/schemaCompat.ts`）：社区版 V11/V12（QQ 渠道 / QQ 空间）
+  与上游 V11/V12（agents / 社会系统）在同一版本号上各建各的表。打开数据库后无条件补齐两边缺失
+  的表（幂等），解决「上游 V22 库切到社区版缺 QQ 表」「社区版 V12 库切回上游缺 agents / friend_circle」。
+- **Windows 打包路径修复**（`scripts/after-pack-ackemcode.cjs`）：`afterPack` 按平台选择
+  `Contents/Resources`（macOS）或 `resources`（Windows / Linux），不再写死 macOS `.app` 布局。
+
 ### Changed
 
 - QQ 表情包库（`src/main/channels/qq/memes.ts`）不再是单一目录：先扫 `{dataRoot}/qq-memes`，

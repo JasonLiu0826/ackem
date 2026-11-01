@@ -18,6 +18,7 @@ import { SCHEMA_V9_SQL } from './schemaV9'
 import { SCHEMA_V10_SQL } from './schemaV10'
 import { SCHEMA_V11_SQL } from './schemaV11'
 import { SCHEMA_V12_SQL } from './schemaV12'
+import { ensureCompatTables } from './schemaCompat'
 import { importLegacyDataIfNeeded } from './importLegacy'
 
 const pools = new Map<string, Database.Database>()
@@ -96,6 +97,10 @@ function runMigrations(db: Database.Database): void {
     db.exec(SCHEMA_V12_SQL)
     setSchemaVersion(db, 12)
   }
+
+  // 双向迁移兼容：上游 V13+ 的库（版本号 ≥ 13）不会跑社区版 V11/V12，反之亦然。
+  // 这里无条件补表（全部幂等），保证两种库互切时都不缺表。
+  ensureCompatTables(db)
 }
 
 /** 打开或复用 dataRoot 下的 ackem.db；失败时返回 null（调用方回退 JSON） */

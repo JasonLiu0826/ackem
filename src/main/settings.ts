@@ -77,7 +77,10 @@ const defaultSettings: AppSettings = {
   desktopAgentDownloadDir: '',
   desktopAgentRemoteChannelsEnabled: false,
   channelOwnerQqId: '',
+  channelOwnerPendingQqId: '',
   channelOwnerWeixinId: '',
+  channelOwnerPendingWeixinId: '',
+  ackemcodePermissionMode: 'bypassPermissions',
   updateChannel: 'auto',
   updateSkippedVersion: '',
   updateLastCheckAt: ''

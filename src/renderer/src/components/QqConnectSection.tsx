@@ -6,6 +6,7 @@ import {
   SettingsStatusBadge,
   SettingsToggleRow
 } from './settings/settingsUi'
+import { OwnerBindingBlock } from './OwnerBindingBlock'
 
 type QqStatus = {
   connected: boolean
@@ -546,6 +547,8 @@ export function QqConnectSection(): JSX.Element {
           <p className="text-xs text-ink-muted">{status.lastError}</p>
         ) : null}
       </SettingsBlock>
+
+      <OwnerBindingBlock kind="qq" />
 
       <SettingsBlock
         title={t('settings.mobile.qq.loginTitle')}

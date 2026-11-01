@@ -2,6 +2,7 @@
 // 桌面聊天、QQ、微信都调用这里，保证"在哪端提问，结果只回哪端"。
 
 import { createLogger } from '../logger'
+import { loadSettings } from '../settings'
 import { detectCodeIntent } from './intent'
 import { resolveCodeRoot } from './daemon'
 import { runCodeTurn, type CodeEvent, type PermissionMode } from './index'
@@ -34,20 +35,42 @@ function labelForTool(name: string): string {
   return TOOL_LABELS[name] ?? `在做 ${name}`
 }
 
-/** 渠道默认权限：按用户选择，三端全自动 */
-function resolvePermissionMode(): PermissionMode {
+const PERMISSION_MODES: PermissionMode[] = [
+  'default',
+  'plan',
+  'acceptEdits',
+  'auto',
+  'bypassPermissions',
+  'dontAsk'
+]
+
+export function isPermissionMode(v: unknown): v is PermissionMode {
+  return typeof v === 'string' && (PERMISSION_MODES as string[]).includes(v)
+}
+
+/**
+ * 派工权限优先级：环境变量 > 设置页（ackemcodePermissionMode）> 默认全自动。
+ * 设置页里把权限收紧后，新任务会按新模式执行；会话层还会在权限变化时重建会话，
+ * 保证旧会话不会继续沿用宽松权限（见 index.ts resolveCodeSession）。
+ */
+export function resolvePermissionMode(settings: { ackemcodePermissionMode?: string }): PermissionMode {
   const fromEnv = process.env.ACKEMCODE_PERMISSION_MODE
-  if (
-    fromEnv === 'default' ||
-    fromEnv === 'plan' ||
-    fromEnv === 'acceptEdits' ||
-    fromEnv === 'auto' ||
-    fromEnv === 'bypassPermissions' ||
-    fromEnv === 'dontAsk'
-  ) {
-    return fromEnv
-  }
+  if (isPermissionMode(fromEnv)) return fromEnv
+  if (isPermissionMode(settings.ackemcodePermissionMode)) return settings.ackemcodePermissionMode
   return 'bypassPermissions'
+}
+
+/**
+ * 远程渠道（QQ / 微信）的代码派工属于「远端可驱动本机」的敏感能力，
+ * 必须显式打开「允许从 QQ / 微信 远程使用电脑助手」开关才执行；
+ * 桌面端（ui）不受此限。这样派工路径不再绕过电脑助手开关。
+ */
+export function remoteChannelsAllowed(
+  channel: string,
+  settings: { desktopAgentRemoteChannelsEnabled?: boolean }
+): boolean {
+  if (channel === 'ui') return true
+  return settings.desktopAgentRemoteChannelsEnabled === true
 }
 
 export type MaybeRunCodeTaskInput = {
@@ -67,6 +90,13 @@ export type MaybeRunCodeTaskInput = {
 export async function maybeRunCodeTask(input: MaybeRunCodeTaskInput): Promise<CodeDispatchResult> {
   if (process.env.ACKEMCODE_DISABLE === '1') return { handled: false, reason: 'disabled' }
 
+  const channel = input.channel ?? 'ui'
+  const settings = loadSettings()
+  if (!remoteChannelsAllowed(channel, settings)) {
+    log.warn('远程渠道代码派工未开启，回落为普通对话', { channel })
+    return { handled: false, reason: 'remote_channels_disabled' }
+  }
+
   const intent = detectCodeIntent(input.text)
   if (!intent.matched) return { handled: false }
   // 安全降级：只认显式 /code，不做意图推断
@@ -80,7 +110,7 @@ export async function maybeRunCodeTask(input: MaybeRunCodeTaskInput): Promise<Co
   }
 
   log.info('识别到代码任务', {
-    channel: input.channel ?? 'ui',
+    channel,
     mode: intent.mode,
     chars: intent.prompt.length
   })
@@ -89,7 +119,7 @@ export async function maybeRunCodeTask(input: MaybeRunCodeTaskInput): Promise<Co
     chatSessionId: input.chatSessionId,
     text: intent.prompt,
     cwd: input.cwd,
-    permissionMode: resolvePermissionMode(),
+    permissionMode: resolvePermissionMode(settings),
     signal: input.signal,
     onEvent: (ev: CodeEvent) => {
       if (ev.type === 'tool_start' && typeof ev.name === 'string') {
