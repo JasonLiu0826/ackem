@@ -55,8 +55,6 @@ __fixtures__/
 __pycache__/
 *.pyc
 
-# 本地 npm 镜像配置（按需自建）
-.npmrc
 
 # 大二进制：用脚本下载/构建，不进版本库
 #   npm run prepare:embedding-models  → resources/models/*.onnx.zip
