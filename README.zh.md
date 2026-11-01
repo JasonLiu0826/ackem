@@ -1,7 +1,7 @@
 # 💫 Ackem
 
-![Version](https://img.shields.io/badge/Version-1.0.0-orange?style=for-the-badge)
-![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)
+![Version](https://img.shields.io/badge/Version-1.1.0-orange?style=for-the-badge)
+![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS-0078D6?style=for-the-badge&logo=windows&logoColor=white)
 ![License](https://img.shields.io/badge/License-AGPL--3.0-blue?style=for-the-badge)
 ![Local First](https://img.shields.io/badge/Data-Local--First-2ea043?style=for-the-badge)
 ![OpenAI Compatible](https://img.shields.io/badge/API-OpenAI--Compatible-412991?style=for-the-badge&logo=openai&logoColor=white)
@@ -10,12 +10,12 @@
 **Ackem** · **A**.C.K.E.M — 保持情感记忆的自主伙伴  
 *Autonomous Companion Keeping Emotional Memory*
 
-**Ackem v1.0.0** — 运行在你 Windows 电脑上的 **本地优先** AI 伴侣。自备大模型（云端或本机），Ackem 负责对话、记忆、情绪与关系、桌宠陪伴 — **数据都在本机硬盘**。
+**Ackem v1.1.0（社区桌面版）** — 运行在你 Windows / macOS 电脑上的 **本地优先** AI 伴侣。自备大模型（云端或本机），Ackem 负责对话、记忆、情绪与关系、桌宠陪伴 — **数据都在本机硬盘**。本仓库基于原作者 [JasonLiu0826/Ackem](https://github.com/JasonLiu0826/ackem) v1.0.0 继续开发。
 
-> **源码**：[GitHub](https://github.com/JasonLiu0826/Ackem) · [Gitee 镜像](https://gitee.com/jason_2005/ackem)  
-> **下载**：[GitHub Releases](https://github.com/JasonLiu0826/Ackem/releases) · [Gitee Releases](https://gitee.com/jason_2005/ackem/releases)  
+> **源码**：[本仓库](https://github.com/deufe/ackem) · 上游原作：[JasonLiu0826/Ackem](https://github.com/JasonLiu0826/ackem)  
+> **下载**：本仓库 Releases · 上游 [GitHub Releases](https://github.com/JasonLiu0826/Ackem/releases) · [Gitee Releases](https://gitee.com/jason_2005/ackem/releases)  
 > **构建**：`npm run dist:green` → `dist/release/Ackem-1.0.0-win-x64/` · [路径说明](./docs/CODEBASE-PATHS.zh.md) · [文档语言](./docs/I18N.zh.md)  
-> **状态：** Ackem 目前仍处于**测试与快速迭代**阶段。个人维护，测试覆盖面有限，使用中可能遇到预期之外的情况或细节瑕疵；一般不会出现频繁闪退或严重卡顿，但完善度仍在持续改进。欢迎 [提交 Issue](https://github.com/JasonLiu0826/Ackem/issues) 反馈。
+> **状态：** Ackem 目前仍处于**测试与快速迭代**阶段。个人维护，测试覆盖面有限，使用中可能遇到预期之外的情况或细节瑕疵；一般不会出现频繁闪退或严重卡顿，但完善度仍在持续改进。欢迎 [提交 Issue](https://github.com/deufe/ackem/issues) 反馈。
 
 English: [README.md](./README.md) · [Privacy & data](./docs/privacy-and-data.md)
 
@@ -32,7 +32,23 @@ Ackem **不是**网页聊天框，而是常驻桌面的 Windows 应用：系统�
 | 💞 **陪伴** | 信任、情绪、关系阶段、人格预设、日记、可选主动消息 |
 | 🔒 **本地优先** | 个人数据在 exe 旁 `./data/` — **官方 zip 不含** `data/` |
 
-**你需要：** Windows 10/11 64 位 · 大模型 API 或本机推理服务 · 首次启动约 10–30 秒（embedding 模型解压一次）。绿色版 **无需 Node.js**。
+**你需要：** Windows 10/11 64 位或 macOS（Apple Silicon） · 大模型 API 或本机推理服务 · 首次启动约 10–30 秒（embedding 模型解压一次）。绿色版 **无需 Node.js**。
+
+---
+
+## 🆕 社区桌面版 v1.1.0 新增功能
+
+相对上游 v1.0.0，本仓库新增：
+
+| | |
+|---|---|
+| 🖥️ **Ackem Code 三端接入** | 桌面 / QQ / 微信里「动代码、文件、命令」的任务自动交给本机编码智能体，结果只回提问的那一端；`/code` 显式前缀 + 意图判定双通道 |
+| 🌐 **QQ 渠道（OneBot）** | 扫码即连；QQ 空间自主说说（按人格 / 心情 / 当天聊天流水生成，按活跃时段与上限发布、回评论、按概率点赞）、主动搭话、内置 70 张表情包按情绪配图 |
+| 💬 **三端统一会话** | 桌面 / QQ / 微信共用一份聊天历史与记忆，消息实时推回桌面；她只把回复发回本轮提问的那一端 |
+| 👧 **Freya 人格** | 真人语料还原型人格 + 激素池情绪引擎（按真实时间流动）；设置页可自定义「她怎么称呼你」 |
+| 🍎 **macOS 社区构建** | 同一套代码产出 macOS arm64 绿色版，含分层 ad-hoc 签名脚本 |
+
+> 完整变更见 [CHANGELOG.md](./CHANGELOG.md)。欢迎向本仓库提交 Issue / PR，上游更新会以 PR 方式并入。
 
 ---
 

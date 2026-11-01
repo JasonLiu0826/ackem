@@ -382,6 +382,7 @@
 | 21 | `docs/developer/testing.md` | P1 | ✅ |
 | 22 | `docs/developer/release-checklist.md` | P1 | ✅ |
 | 23 | `docs/openforu-PROTOCOL.md` | P0 | ✅ |
+| 24 | `docs/cross-channel-conversation.md` | P0 | ✅ |
 
 **所有文档已全部完成。** 开源前最后检查：同步 `npm run sync:release-doc`，确认 GitHub Release 产物完整性。
 
