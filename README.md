@@ -249,6 +249,7 @@ After selecting **Freya**, a field appears: **What Freya calls you** — enter y
 2. Fill in the **NapCat WebUI URL** (default `http://127.0.0.1:6099`) and **WebUI token**
 3. Click **Scan to log in** with your phone QQ; then click **Connect listener**
 4. Once connected, message her from QQ — voice, images, and memes are supported
+5. **The first private chat requests owner binding** — confirm (or reject) it under **Settings → Mobile → QQ → Owner binding**; messages are ignored until confirmed
 
 Full guide: [docs/qq-onebot-setup.md](./docs/qq-onebot-setup.md).
 

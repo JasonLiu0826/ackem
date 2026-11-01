@@ -250,6 +250,7 @@ npm run dist:green   # 产物在 dist/release/
 2. 填 **NapCat WebUI 地址**（默认 `http://127.0.0.1:6099`）和 **WebUI Token**
 3. 点「**扫码登录**」，用手机 QQ 扫码；登录后点「**连接监听**」
 4. 连接成功后，在 QQ 里发消息她就会回；支持语音、图片、表情包
+5. **首次私聊会请求绑定机主**：需在「设置 → 移动端 → QQ → 机主绑定」里确认（或拒绝），确认前消息不会进入对话
 
 完整步骤见 [docs/qq-onebot-setup.md](./docs/qq-onebot-setup.md)。
 
