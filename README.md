@@ -133,9 +133,43 @@ See **[Developers](#developers)** below, [architecture](#seven-system-architectu
 
 ---
 
-## Quick Start (End Users)
+## 🚀 Download & Install
 
-For: **downloaded the official Release**, no Node.js needed.
+### macOS (Apple Silicon · M1–M5) — recommended for this repo
+
+Download from [this repo's Releases](https://github.com/deufe/ackem/releases):
+
+| File | Size | SHA256 |
+|---|---|---|
+| `Ackem-2.0.0-mac-arm64.dmg` | 702 MB | `5e766f77e1063f0cbeaec13beeb34caea4384cc7b0a453e7d854d7aaf52db0ca` |
+
+> ⚠️ This is a community build, **not notarized by Apple**. On first launch macOS shows "damaged" or "unidentified developer" — **this is normal, the file is not damaged**. Follow the two steps below.
+
+**Step 1 — remove the quarantine flag**
+
+Open Terminal:
+
+```bash
+xattr -cr /Applications/Ackem.app
+```
+
+(If you haven't moved it into Applications yet, use the actual path of `Ackem.app` inside the mounted dmg.)
+
+**Step 2 — right-click open**
+
+In Applications, **right-click Ackem → Open → Open** in the dialog. Subsequent double-clicks work normally.
+
+First launch takes ~10–30 s (local embedding model extracts once).
+
+### Windows
+
+- Official green build (v1.0.0): [upstream Releases](https://github.com/JasonLiu0826/Ackem/releases)
+- No Windows installer for v2.0.0 yet — build it on a Windows machine:
+
+```bash
+npm install
+npm run dist:green   # output in dist/release/
+```
 
 ### Privacy (please read)
 
@@ -147,16 +181,76 @@ For: **downloaded the official Release**, no Node.js needed.
 
 Details: [docs/distribution-windows.md](./docs/distribution-windows.md)
 
-### Steps
+---
 
-1. **Download** — `Ackem-v1.0.0-win-x64.zip` from [GitHub Releases](https://github.com/JasonLiu0826/Ackem/releases) or [Gitee Releases](https://gitee.com/jason_2005/ackem/releases)
-2. **Extract** — fully to an SSD path (do not run inside the zip)
-3. **Launch** — `Ackem.exe` or `启动 Ackem.bat`; first launch ~10–30 s ([loading screen](#screenshots--demo))
-4. **Compliance** — accept privacy terms ([screenshot](#screenshots--demo))
-5. **Configure model** — **Settings → Model & API**: Base URL, API Key (cloud), Model ID
-6. **First chat** — send a message; optionally import `.txt`/`.md` memories
+## ⚙️ First-run setup (3 minutes)
 
-> **Sharing the zip:** never re-pack your personal `data/` folder — it contains chats, memory, and keys.
+1. **Compliance** — accept the privacy / data-processing terms on first launch (adult mode asks for age confirmation separately).
+2. **Configure model** — go to **Settings → Model & API** and fill in:
+   - **Base URL** — OpenAI-compatible endpoint
+   - **API Key** — required for cloud models; optional for local ones
+   - **Model ID** — e.g. `deepseek-chat`, `gpt-4o-mini`
+
+   | Model provider | Base URL | Model ID (example) |
+   |---|---|---|
+   | DeepSeek | `https://api.deepseek.com/v1` | `deepseek-chat` |
+   | OpenAI | `https://api.openai.com/v1` | `gpt-4o-mini` |
+   | Local Ollama | `http://127.0.0.1:11434/v1` | `qwen2.5:7b` |
+   | Local LM Studio | `http://127.0.0.1:1234/v1` | the model you loaded |
+
+3. **Send a message** — a reply means setup is complete.
+4. **Optional** — import `.txt` / `.md` memories, enable voice, connect QQ / WeChat.
+
+> 🔒 API keys stay on your machine (encrypted at rest) — **never uploaded, never bundled**.
+
+---
+
+## 🎛️ How to use (v2.0.0)
+
+### Chat & personality
+**Settings → Companion & Personality**: set the display name, gender, and pick a personality preset (29 available). The preset shapes tone, quirks, and boundaries.
+
+### Freya persona & "what she calls you"
+After selecting **Freya**, a field appears: **What Freya calls you** — enter your own nickname; leave empty for the default "Darling". It replaces the `{{petname}}` placeholders in the prompts.
+
+### QQ channel (OneBot / NapCat)
+**Settings → Mobile → QQ**:
+1. Run **NapCat** locally (QQ protocol side; Docker works)
+2. Fill in the **NapCat WebUI URL** (default `http://127.0.0.1:6099`) and **WebUI token**
+3. Click **Scan to log in** with your phone QQ; then click **Connect listener**
+4. Once connected, message her from QQ — voice, images, and memes are supported
+
+Full guide: [docs/qq-onebot-setup.md](./docs/qq-onebot-setup.md).
+
+### Autonomous QZone posts
+**Settings → Mobile → QQ → QZone** (defaults to **dry run**: generate only, never publish):
+- Choose posts per day, minimum interval, active hours, and visibility (public / friends / private)
+- Optional images, a QQ mention after posting, scheduled visits to like/comment
+- Details: [docs/qq-space.md](./docs/qq-space.md)
+
+### WeChat channel
+**Settings → Mobile → WeChat**: message from your phone; the brain, persona, and memory still run locally.
+
+### Ackem Code (desktop agent)
+Type **`/code your task`** in chat (or `/电脑 …` on QQ / WeChat), or just say "rename this file for me" — code / file / command tasks are routed to the local coding agent, and results go back only to the asking channel. Permissions can be tightened in Settings. See [docs/ackem-code-bridge.zh.md](./docs/ackem-code-bridge.zh.md).
+
+### Voice
+- **TTS playback**: Settings → Voice; the local voice service (Python 3.9+) ships with the app and starts on first use
+- **ASR input**: click the mic in the chat box; voice messages on QQ / WeChat are transcribed first
+
+---
+
+## ❓ FAQ
+
+| Problem | Solution |
+|---|---|
+| "Damaged, cannot open" on launch | Normal for an unsigned build. Run `xattr -cr /Applications/Ackem.app`, then right-click → Open |
+| First launch seems stuck | The embedding model is extracting — wait 10–30 s; restart if it hangs longer |
+| No reply to messages | Check Base URL / API Key / Model ID under **Settings → Model & API**, and network access |
+| QQ shows disconnected | Make sure NapCat is running and the port matches, then click "Reconnect listener" |
+| Where is my data? | macOS: `~/Library/Application Support/Ackem`; Windows green build: `data/` next to the exe. See [docs/memory-format.md](./docs/memory-format.md) |
+| How to uninstall? | Delete the app; delete the data directory above if you want a clean removal |
+| How to update? | Download the new version from this repo's Releases and replace; data is kept |
 
 ---
 
