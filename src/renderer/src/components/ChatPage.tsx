@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { t } from '../lib/i18n'
 import { useAppStore, type ChatRow, normalizeChatRow } from '../store/appStore'
+import { appendIncomingChatRows, mergeLoadedChatRows } from '../lib/chatHistorySync'
 import { emotionLightColor } from '../lib/emotionColors'
 import { useUiStore } from '../store/uiStore'
 import { McEventStack } from './McEventStack'
@@ -74,23 +75,31 @@ function patchAssistantAtIndex(
       if (index < n.length) {
         const row = n[index]
         if (row.kind === 'message' && row.role === 'assistant') {
-          n[index] = { kind: 'message', role: 'assistant', content }
+          // 保留 at / channel：换成新对象会把跨端回写所需的身份信息丢掉
+          n[index] = { ...row, content }
           return n
         }
       } else if (index === n.length) {
-        n.push({ kind: 'message', role: 'assistant', content })
+        n.push({ kind: 'message', role: 'assistant', content, at: new Date().toISOString() })
         return n
       }
     }
     for (let i = n.length - 1; i >= 0; i--) {
       const row = n[i]
       if (row.kind === 'message' && row.role === 'assistant') {
-        n[i] = { kind: 'message', role: 'assistant', content }
+        n[i] = { ...row, content }
         return n
       }
     }
     return n
   })
+}
+
+/** 渠道来源标记：只有 QQ / 微信来的消息才标注，桌面本机的不标 */
+function chatOriginLabel(channel: string | undefined): string | null {
+  if (channel === 'qq') return t('chat.origin.qq')
+  if (channel === 'weixin') return t('chat.origin.weixin')
+  return null
 }
 
 export function ChatPage(): JSX.Element {
@@ -278,7 +287,15 @@ export function ChatPage(): JSX.Element {
       }
       streamBuf.current = ''
       setRows((prev) => {
-        const n = [...prev, { kind: 'message' as const, role: 'assistant' as const, content: '' }]
+        const n = [
+          ...prev,
+          {
+            kind: 'message' as const,
+            role: 'assistant' as const,
+            content: '',
+            at: new Date().toISOString()
+          }
+        ]
         streamingAssistantIndexRef.current = n.length - 1
         return n
       })
@@ -425,9 +442,22 @@ export function ChatPage(): JSX.Element {
     void window.ackem?.loadChatHistory().then((history: unknown[]) => {
       if (!history?.length) return
       const normalized = history.map(normalizeChatRow).filter((r): r is ChatRow => r != null)
-      if (normalized.length > 0) setRows(normalized)
+      // 读历史期间可能已经收到渠道新消息，合并而不是覆盖
+      if (normalized.length > 0) setRows((prev) => mergeLoadedChatRows(normalized, prev))
     }).catch(() => {})
   }, [])
+
+  // 三端统一会话：QQ / 微信那边一有消息，桌面对话框实时接上
+  useEffect(() => {
+    window.ackem?.onChatHistoryAppended?.((payload) => {
+      if (!payload || payload.sessionId !== activeSessionId) return
+      const incoming = (payload.rows ?? [])
+        .map(normalizeChatRow)
+        .filter((row): row is ChatRow => row != null)
+      if (incoming.length === 0) return
+      setRows((prev) => appendIncomingChatRows(prev, incoming))
+    })
+  }, [activeSessionId, setRows])
 
   // Load session list
   useEffect(() => {
@@ -959,12 +989,19 @@ export function ChatPage(): JSX.Element {
                 )
               }
               if (m.role === 'user') {
+                const origin = chatOriginLabel(m.channel)
                 return (
                   <div key={`msg-${i}`} className="message-user">
+                    {origin && (
+                      <div className="mb-1 text-right text-[10px] tracking-wide text-ink-muted/60">
+                        {origin}
+                      </div>
+                    )}
                     <div className="whitespace-pre-wrap">{m.content}</div>
                   </div>
                 )
               }
+              const origin = chatOriginLabel(m.channel)
               const showBridge =
                 i > 0 &&
                 m.kind === 'message' &&
@@ -973,6 +1010,11 @@ export function ChatPage(): JSX.Element {
                 i === lastAssistantIdx
               return (
                 <div key={`msg-${i}`}>
+                  {origin && (
+                    <div className="mb-1 pl-1 text-[10px] tracking-wide text-ink-muted/60">
+                      {origin}
+                    </div>
+                  )}
                   {showBridge && (
                     <div
                       className="message-emotion-bridge"

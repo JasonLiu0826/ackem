@@ -19,6 +19,8 @@ import { registerMemoryIpc } from './ipc/memory'
 import { registerSessionIpc } from './ipc/session'
 import { registerProfileIpc } from './ipc/profile'
 import { registerWeixinIpc } from './ipc/weixin'
+import { registerQqIpc } from './ipc/qq'
+import { registerQzoneIpc } from './ipc/qzone'
 import { registerDesktopAgentIpc } from './desktop-agent/ipc'
 import { registerSurfaceIpc } from './extensionSurfaceHost'
 import { registerUpdateIpc } from './ipc/update'
@@ -96,6 +98,8 @@ export function registerIpc(): void {
   registerProfileIpc()
   registerSessionIpc()
   registerWeixinIpc()
+  registerQqIpc()
+  registerQzoneIpc()
   registerDesktopAgentIpc()
 
   registerMcIpc(

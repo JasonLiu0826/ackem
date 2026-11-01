@@ -25,13 +25,25 @@ export type SettingsDeepLink = {
 
 type Toast = { id: number; text: string }
 
-export type ChatMessageRow = { kind: 'message'; role: 'user' | 'assistant'; content: string }
-export type ChatSearchRow = { kind: 'search' } & SearchCardPayload
-export type ChatMemoryAuditRow = { kind: 'memoryAudit' } & MemoryAuditCardPayload
+/** 消息来源：桌面对话框 / QQ / 微信（三端共用一份会话时用来标注） */
+export type ChatMessageChannel = 'ui' | 'qq' | 'weixin'
+
+export type ChatMessageRow = {
+  kind: 'message'
+  role: 'user' | 'assistant'
+  content: string
+  /** ISO 时间戳：跨端合并排序与去重的事实依据 */
+  at?: string
+  /** 这一句是从哪一端来的 */
+  channel?: ChatMessageChannel
+}
+export type ChatSearchRow = { kind: 'search'; at?: string } & SearchCardPayload
+export type ChatMemoryAuditRow = { kind: 'memoryAudit'; at?: string } & MemoryAuditCardPayload
 export type ChatSystemRow = {
   kind: 'system'
   content: string
   tone?: 'amber' | 'success' | 'danger'
+  at?: string
 }
 export type ChatPlanCreateAskRow = {
   kind: 'planCreateAsk'
@@ -39,6 +51,7 @@ export type ChatPlanCreateAskRow = {
   planTopic?: string
   emotionLabel: string
   status: 'pending' | 'accepted' | 'rejected'
+  at?: string
 }
 export type ChatRow = ChatMessageRow | ChatSearchRow | ChatMemoryAuditRow | ChatSystemRow | ChatPlanCreateAskRow
 
@@ -46,6 +59,8 @@ export type ChatRow = ChatMessageRow | ChatSearchRow | ChatMemoryAuditRow | Chat
 export function normalizeChatRow(raw: unknown): ChatRow | null {
   if (!raw || typeof raw !== 'object') return null
   const o = raw as Record<string, unknown>
+  // at 对所有行都要保留：三端合并时靠它认出「同一条」，卡片也不例外
+  const at = typeof o.at === 'string' ? { at: o.at } : {}
   if (o.kind === 'search' && typeof o.query === 'string') {
     const parseHits = (arr: unknown[]) =>
       arr
@@ -84,6 +99,7 @@ export function normalizeChatRow(raw: unknown): ChatRow | null {
 
     return {
       kind: 'search',
+      ...at,
       query: o.query,
       ...(typeof o.displayTitle === 'string' && o.displayTitle.trim()
         ? { displayTitle: o.displayTitle.trim() }
@@ -98,13 +114,14 @@ export function normalizeChatRow(raw: unknown): ChatRow | null {
   }
   if (o.kind === 'system' && typeof o.content === 'string') {
     const tone = o.tone === 'success' || o.tone === 'danger' ? o.tone : 'amber'
-    return { kind: 'system', content: o.content, tone }
+    return { kind: 'system', content: o.content, tone, ...at }
   }
   if (o.kind === 'planCreateAsk' && typeof o.askMessage === 'string') {
     const status =
       o.status === 'accepted' || o.status === 'rejected' ? o.status : 'pending'
     return {
       kind: 'planCreateAsk',
+      ...at,
       askMessage: o.askMessage,
       planTopic: typeof o.planTopic === 'string' ? o.planTopic : undefined,
       emotionLabel:
@@ -113,7 +130,17 @@ export function normalizeChatRow(raw: unknown): ChatRow | null {
     }
   }
   if ((o.role === 'user' || o.role === 'assistant') && typeof o.content === 'string') {
-    return { kind: 'message', role: o.role, content: o.content }
+    // at / channel 必须保留：再次回写历史时要靠它们认出「同一行」，
+    // 否则跨端合并会把同一条消息当成新消息追加第二遍。
+    return {
+      kind: 'message',
+      role: o.role,
+      content: o.content,
+      ...at,
+      ...(o.channel === 'ui' || o.channel === 'qq' || o.channel === 'weixin'
+        ? { channel: o.channel }
+        : {})
+    }
   }
   return null
 }

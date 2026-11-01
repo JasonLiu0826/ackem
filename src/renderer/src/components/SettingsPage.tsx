@@ -5,6 +5,8 @@ import { ConfirmDialog } from './ConfirmDialog'
 import { CompanionSkinSection } from './CompanionSkinSection'
 import { EmbeddingModelSection } from './EmbeddingModelSection'
 import { MobileComingSoonSection, WeixinConnectSection } from './WeixinConnectSection'
+import { QqConnectSection } from './QqConnectSection'
+import { QzoneSection } from './QzoneSection'
 import { VoiceSettings } from './VoiceSettings'
 import { DesktopAgentSettings, desktopAgentSettingsSaveBlocked } from './DesktopAgentSettings'
 import { UpdateSettingsPanel } from './settings/UpdateSettingsPanel'
@@ -434,6 +436,20 @@ export function SettingsPage(): JSX.Element {
               )
             })}
           </SettingsPresetGrid>
+          {form.personalityPresetId === 'freya' && (
+            <SettingsField label={t('settings.freyaPetName')}>
+              <input
+                className="field-input w-full"
+                value={form.freyaPetName ?? ''}
+                placeholder={t('settings.freyaPetNamePlaceholder')}
+                onChange={(e) => {
+                  const v = e.target.value
+                  setForm((f: AppSettings | null) => (f ? { ...f, freyaPetName: v } : f))
+                  void persistPatch({ freyaPetName: v })
+                }}
+              />
+            </SettingsField>
+          )}
         </SettingsBlock>
 
         <SettingsBlock
@@ -450,7 +466,12 @@ export function SettingsPage(): JSX.Element {
         </SettingsGroup>}
 
         {activeId === 'settings-mobile-weixin' && <WeixinConnectSection />}
-        {activeId === 'settings-mobile-qq' && <MobileComingSoonSection platform="qq" />}
+        {activeId === 'settings-mobile-qq' && (
+          <>
+            <QqConnectSection />
+            <QzoneSection />
+          </>
+        )}
         {activeId === 'settings-mobile-telegram' && <MobileComingSoonSection platform="telegram" />}
 
         {activeId === 'settings-models' && <SettingsGroup

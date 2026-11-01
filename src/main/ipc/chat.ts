@@ -1,12 +1,13 @@
 // [ipc/chat] — 对话上下文构建、流式聊天、引擎状态、欲望栈、Trace
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { randomUUID } from 'node:crypto'
-import { ipcMain } from 'electron'
+import { ipcMain, type WebContents } from 'electron'
 import { assembleMessages, mergeExtensionContextInjections } from '../context'
 import { streamChatCompletion } from '../chat'
 import { markChatStreamEnd, markChatStreamStart } from '../desktop-agent/deliveryCoordinator'
+import { maybeRunCodeTask } from '../ackemcode/dispatch'
+import { streamCodeReply } from '../ackemcode/desktopStream'
 import { recordDesktopAckemActivity } from '../channels/weixin/activity'
 import { createLlmJsonClient } from '../llmClient'
 import { createLogger } from '../logger'
@@ -63,7 +64,7 @@ import type { DesktopAgentCapabilityMatch } from '../../shared/desktopAgentCapab
 import { resolveDesktopAgentCapability, invalidateDesktopAgentCapabilityRouteIndex } from '../desktop-agent/routing/resolveCapability'
 import { executeMemoryAuditTurn } from '../memory/memoryAudit/executeMemoryAuditTurn'
 import { resolveUserTaskFrame, buildTaskFrameSystemHint } from '../taskFrame'
-import { loadChatHistoryFromDb, saveChatHistoryToDb } from '../db/repos/chatHistory'
+import { loadConversationRows, saveConversationRows } from '../channels/conversation'
 import { saveState, defaultFullState } from '../engine/state-persistence'
 import { traceLatest } from '../engine/tracer'
 import { workingMemory } from '../memory/workingMemory'
@@ -146,6 +147,41 @@ function applyDispatchToPre(pre: PreLlmResult, dispatchResult?: DispatchResult):
       },
     },
   }
+}
+
+function lastUserTextFromPayload(payload: Record<string, unknown>): string {
+  const msgs = payload.messages
+  if (!Array.isArray(msgs)) return ''
+  for (let i = msgs.length - 1; i >= 0; i--) {
+    const m = msgs[i] as { role?: string; content?: unknown }
+    if (m?.role === 'user' && typeof m.content === 'string' && m.content.trim()) {
+      return m.content
+    }
+  }
+  return ''
+}
+
+/** 返回 true 表示这一轮已经交给 Ackem Code 处理，不再走普通聊天管线 */
+async function tryRunCodeTurnForDesktop(
+  wc: WebContents,
+  payload: Record<string, unknown>,
+  sessionId: string
+): Promise<boolean> {
+  const userText = lastUserTextFromPayload(payload)
+  if (!userText) return false
+  const turnId = typeof payload.turnId === 'string' ? payload.turnId : randomUUID()
+  const dispatch = await maybeRunCodeTask({
+    chatSessionId: sessionId,
+    text: userText,
+    channel: 'ui',
+    onProgress: (label) => wc.send('chat:status', label)
+  })
+  if (!dispatch.handled) return false
+  const text = dispatch.ok
+    ? dispatch.text
+    : `这个代码任务没跑完：${dispatch.error ?? '未知错误'}`
+  streamCodeReply(wc, { text, turnId })
+  return true
 }
 
 export function registerChatIpc(): void {
@@ -910,6 +946,9 @@ export function registerChatIpc(): void {
     }
     markChatStreamStart(sessionId)
     try {
+      // 三端统一：桌面聊天里识别到代码任务，就先交给 Ackem Code，跑完直接回气泡
+      const codeTurn = await tryRunCodeTurnForDesktop(wc, payload, sessionId)
+      if (codeTurn) return
       await streamChatCompletion(wc, payload, root)
     } finally {
       markChatStreamEnd(sessionId)
@@ -919,29 +958,24 @@ export function registerChatIpc(): void {
   ipcMain.handle('chat:loadHistory', () => {
     const root = currentDataRoot()
     const sid = currentSessionId()
-    const fromDb = loadChatHistoryFromDb(root, sid)
-    if (fromDb.length > 0) return fromDb
-    const file = join(root, 'companion', `chat-history-${sid}.json`)
-    if (!existsSync(file)) return []
-    try {
-      const rows = JSON.parse(readFileSync(file, 'utf-8')) as unknown[]
-      if (Array.isArray(rows) && rows.length > 0) {
-        saveChatHistoryToDb(root, sid, rows)
-      }
-      return Array.isArray(rows) ? rows : []
-    } catch {
-      return []
-    }
+    // 统一会话：桌面读到的就是 QQ / 微信 / 桌面共同的那一份历史。
+    // loadConversationRows 首次调用时会把旧的 qq:/wechat: 历史并进来。
+    return loadConversationRows(root, sid)
   })
 
-  ipcMain.handle('chat:saveHistory', (_e, rows: unknown[]) => {
+  ipcMain.handle('chat:saveHistory', async (_e, rows: unknown[]) => {
     const root = currentDataRoot()
-    const dir = join(root, 'companion')
     const sid = currentSessionId()
-    mkdirSync(dir, { recursive: true })
-    const trimmed = rows.slice(-2000)
-    writeFileSync(join(dir, `chat-history-${sid}.json`), JSON.stringify(trimmed), 'utf-8')
-    saveChatHistoryToDb(root, sid, trimmed)
+    // UI 行以渲染层为准（整组替换，避免搜索卡/流式气泡重复累积），
+    // 但 QQ / 微信写进来的消息永远保留——哪怕渲染层那份数组更旧。
+    // 清空历史由 memory:clearAll 负责整表删除，这里不做删除。
+    await saveConversationRows({
+      dataRoot: root,
+      sessionId: sid,
+      rows,
+      channel: 'ui',
+      mode: 'replace-ui'
+    })
   })
 
   ipcMain.handle('state:get', () => {

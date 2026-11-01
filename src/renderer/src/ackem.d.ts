@@ -718,6 +718,9 @@ export type AckemApi = {
   archiveExport: () => Promise<{ filesWritten: number; factsExported: number; episodesExported: number; coreCount: number }>
   loadChatHistory: () => Promise<unknown[]>
   saveChatHistory: (rows: unknown[]) => Promise<void>
+  onChatHistoryAppended: (
+    fn: (payload: { sessionId: string; channel: string; rows: unknown[] }) => void
+  ) => void
   // 桌面陪伴
   companionTimeContext: () => Promise<{ timeOfDay: string; hour: number; minute: number; weekday: number; isWeekend: boolean; greeting: string; atmosphereHint: string; topicHints: string[] }>
   companionPresence: () => Promise<{ mode: 'active' | 'quiet' | 'sleeping'; lastInteractionMs: number; idleDurationMs: number; timeOfDay: string }>
@@ -850,7 +853,174 @@ export type AckemApi = {
       tokenExpired: boolean
     }) => void
   ) => () => void
+  qqGetStatus: () => Promise<{
+    connected: boolean
+    enabled: boolean
+    listening: boolean
+    selfId?: string
+    nickname?: string
+    httpBaseUrl?: string
+    wsUrl?: string
+    lastError?: string | null
+    embeddingReady?: boolean
+    memesPath?: string
+    memeCount?: number
+  }>
+  qqProbe: (args: {
+    httpBaseUrl?: string
+    wsUrl?: string
+    accessToken?: string
+    selfId?: string
+  }) => Promise<
+    | { ok: true; selfId: string; nickname: string; online: boolean }
+    | { ok: false; error: string }
+  >
+  qqConnect: (args: {
+    httpBaseUrl?: string
+    wsUrl?: string
+    accessToken?: string
+    selfId?: string
+  }) => Promise<
+    | { ok: true; status: unknown; settings?: unknown }
+    | { ok: false; error: string }
+  >
+  qqDisconnect: () => Promise<{ ok: boolean; status: unknown }>
+  qqSetEnabled: (enabled: boolean) => Promise<QqChannelStatusPayload>
+  qqRestart: () => Promise<QqChannelStatusPayload>
+  qqListFriends: () => Promise<
+    { ok: true; friends: Array<{ userId: string; nickname: string }> } | { ok: false; error: string }
+  >
+  qqWebuiGet: () => Promise<{ baseUrl: string; hasToken: boolean }>
+  qqLoginStart: (args?: {
+    baseUrl?: string
+    token?: string
+    totpCode?: string
+  }) => Promise<QqLoginQrPayload>
+  qqLoginPoll: () => Promise<QqLoginPollPayload>
+  qqLoginRefresh: () => Promise<QqLoginQrPayload>
+  onQqStatusChanged?: (fn: (status: QqChannelStatusPayload) => void) => () => void
+
+  // ── QQ 空间（说说）──
+  qzoneGetStatus: () => Promise<QzoneStatusPayload>
+  qzoneProbe: () => Promise<QzoneCapsPayload>
+  qzoneGenerateDraft: (style?: QzoneStylePayload) => Promise<
+    { ok: true; draft: QzoneDraftPayload } | { ok: false; error: string }
+  >
+  qzonePublish: (input: {
+    content: string
+    visibility?: QzoneVisibilityPayload
+    withImage?: boolean
+    dryRun?: boolean
+  }) => Promise<{
+    ok: boolean
+    dryRun?: boolean
+    tid?: string
+    error?: string
+    post?: QzonePostPayload
+  }>
+  qzoneHistory: (limit?: number) => Promise<QzonePostPayload[]>
+  qzoneDelete: (id: number) => Promise<{ ok: boolean; error?: string }>
+  qzoneInteractNow: () => Promise<{
+    liked: number
+    commented: number
+    replied: number
+    skipped: number
+    error?: string
+  }>
+  onQzoneStatusChanged?: (fn: (status: QzoneStatusPayload) => void) => () => void
 }
+
+export type QzoneVisibilityPayload = 'public' | 'friends' | 'private'
+export type QzoneStylePayload = 'auto' | 'diary' | 'musing' | 'meme' | 'night'
+
+export type QzoneCapsPayload = {
+  publish: boolean
+  list: boolean
+  feeds: boolean
+  like: boolean
+  comment: boolean
+  delete: boolean
+  probedAt?: string
+  error?: string
+}
+
+export type QzonePostPayload = {
+  id: number
+  selfId: string
+  tid?: string | null
+  content: string
+  imageCount: number
+  ugcRight: number
+  source: 'auto' | 'manual'
+  status: 'published' | 'failed' | 'dry_run'
+  error?: string | null
+  createdAt: string
+  publishedAt?: string | null
+}
+
+export type QzoneStatusPayload = {
+  connected: boolean
+  selfId?: string
+  nickname?: string
+  enabled: boolean
+  dryRun: boolean
+  dailyLimit: number
+  dailyCount: number
+  minIntervalMinutes: number
+  activeHours: { start: number; end: number }
+  visibility: QzoneVisibilityPayload
+  style: QzoneStylePayload
+  withImage: boolean
+  syncToChat: boolean
+  interactEnabled: boolean
+  likeProb: number
+  commentProb: number
+  nextPublishAt?: string | null
+  lastPublishedAt?: string | null
+  caps: QzoneCapsPayload
+  memeCount: number
+  lastError?: string | null
+}
+
+export type QzoneDraftPayload = {
+  text: string
+  mood: string
+  style: QzoneStylePayload
+  imagePath?: string | null
+}
+
+export type QqChannelStatusPayload = {
+  connected: boolean
+  enabled: boolean
+  listening: boolean
+  selfId?: string
+  nickname?: string
+  httpBaseUrl?: string
+  wsUrl?: string
+  lastError?: string | null
+  memesPath?: string
+  memeCount?: number
+  embeddingReady?: boolean
+}
+
+export type QqLoginStatusPayload = {
+  isLogin: boolean
+  isOffline: boolean
+  phase: string
+  qrLoginAccepted: boolean
+  coreReady: boolean
+  qrcode?: string
+  loginError?: string
+}
+
+export type QqLoginQrPayload =
+  | { ok: true; alreadyLoggedIn: true; status: QqLoginStatusPayload }
+  | { ok: true; alreadyLoggedIn: false; restarting?: boolean; qrDataUrl: string; phase: string }
+  | { ok: false; need2FA?: boolean; error: string }
+
+export type QqLoginPollPayload =
+  | { ok: true; status: QqLoginStatusPayload }
+  | { ok: false; need2FA?: boolean; error: string }
 
 export type VoiceEnvReport = {
   ready: boolean

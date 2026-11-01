@@ -285,7 +285,7 @@ export function scheduleEmbeddingRebuild(dataRoot: string): Promise<void> {
 
     if (db) deleteFactEmbeddingsForModel(db, provider.name())
 
-    invalidateEngineCache(dataRoot)
+    // 先取现有 entry 完成重建，再替换缓存（原来的顺序先 invalidate 再取，永远取到 undefined，重建是死代码）
     const entry = cacheMap.get(dataRoot)
     if (entry) {
       entry.embeddingProvider = provider
@@ -298,6 +298,19 @@ export function scheduleEmbeddingRebuild(dataRoot: string): Promise<void> {
         factEmbeddingsReady: true,
         preLlmWarmReady: true,
       })
+    } else {
+      invalidateEngineCache(dataRoot)
+      const { getOrRebuildIndex } = await import('./ipc/shared.js')
+      const rebuilt = await getOrCreateEngineCache(dataRoot, getOrRebuildIndex())
+      if (rebuilt) {
+        await ensureFactEmbeddingsReady(rebuilt)
+        await warmupPreLlmEmbeddings(provider, dataRoot)
+        setEmbeddingPhase('ready', {
+          providerReady: true,
+          factEmbeddingsReady: true,
+          preLlmWarmReady: true,
+        })
+      }
     }
   })().finally(() => {
     embeddingRebuildPromises.delete(dataRoot)

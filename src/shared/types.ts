@@ -11,6 +11,12 @@ export type ApiKeyHeaderMode = 'bearer' | 'x-api-key'
 
 export type PersonalityConfigMode = 'manual' | 'inferred'
 
+/** QQ 空间说说可见范围：公开 / 好友 / 仅自己 */
+export type QzoneVisibilitySetting = 'public' | 'friends' | 'private'
+
+/** QQ 空间说说文案风格：自动 / 日记 / 随想 / 玩梗 / 深夜 */
+export type QzoneStyleSetting = 'auto' | 'diary' | 'musing' | 'meme' | 'night'
+
 /** 主人开源六维（0–100） */
 export type UserSixDimensions = {
   E: number
@@ -60,6 +66,8 @@ export type AppSettings = {
   companionSystemHint: string
   companionGender: PresetGender
   personalityPresetId: string
+  /** Freya 人格对用户的称呼（用户自填，默认「亲爱的」） */
+  freyaPetName?: string
   /** 性格配置：手动 preset 或从导入推断 */
   personalityConfigMode: PersonalityConfigMode
   /** 知情同意文案版本（推断 IPC 校验用） */
@@ -112,6 +120,38 @@ export type AppSettings = {
   weixinChannelEnabled?: boolean
   /** 微信主动触达（3h 双端空闲 + 进程在线 + 非睡觉时段） */
   weixinProactiveEnabled?: boolean
+  /** 启用 QQ（OneBot v11）消息通道（需已连接协议后端） */
+  qqChannelEnabled?: boolean
+  /** QQ 主动触达（复用微信的活跃度门控） */
+  qqProactiveEnabled?: boolean
+
+  /** ── QQ 空间（说说）── */
+  /** 自主发说说总开关 */
+  qzoneAutoEnabled?: boolean
+  /** 试运行：只生成与记录，不真正发表 */
+  qzoneDryRun?: boolean
+  /** 每天最多发几条（0 = 不限） */
+  qzoneDailyLimit?: number
+  /** 两条之间至少间隔多少分钟 */
+  qzoneMinIntervalMinutes?: number
+  /** 活跃时段起点（0-23，含） */
+  qzoneActiveStartHour?: number
+  /** 活跃时段终点（0-23，不含；小于起点表示跨夜） */
+  qzoneActiveEndHour?: number
+  /** 可见范围 */
+  qzoneVisibility?: QzoneVisibilitySetting
+  /** 文案风格 */
+  qzoneStyle?: QzoneStyleSetting
+  /** 配一张表情包（来自 qq-memes/） */
+  qzoneWithImage?: boolean
+  /** 发完在最近的 QQ 私聊里提一句 */
+  qzoneSyncToChat?: boolean
+  /** 逛空间互动（点赞 / 评论 / 回评论） */
+  qzoneInteractEnabled?: boolean
+  /** 给好友动态点赞的概率 0-1 */
+  qzoneLikeProb?: number
+  /** 给好友动态评论的概率 0-1 */
+  qzoneCommentProb?: number
   /** 桌面主动骚扰：随机 1/2/4/10 分钟发消息（与渐进式空闲主动并存，默认关） */
   companionHarassEnabled?: boolean
   /** ── 电脑助手（实验）── */
@@ -125,6 +165,12 @@ export type AppSettings = {
   desktopAgentAllowDelete?: boolean
   /** 默认下载目录；空则 ~/Downloads/AckemDownloads */
   desktopAgentDownloadDir?: string
+  /** 允许从 QQ / 微信 远程使用电脑助手（默认关；开启后远端消息可驱动本机操作，仍需桌面确认） */
+  desktopAgentRemoteChannelsEnabled?: boolean
+  /** 机主 QQ 号（首次私聊自动绑定；只响应此人） */
+  channelOwnerQqId?: string
+  /** 机主微信 id（首次私聊自动绑定；只响应此人） */
+  channelOwnerWeixinId?: string
   /** 软件更新下载线路 */
   updateChannel?: 'auto' | 'github' | 'gitee'
   /** 用户跳过的版本号 */

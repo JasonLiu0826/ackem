@@ -14,6 +14,7 @@ import { stopDispatchScheduler } from './extensions/dispatch/scheduler'
 import { stopMediaSessionPolling } from './mediaSession'
 import { destroyPetWindow } from './petWindow'
 import { getMinecraftProvider } from './ipc/shared'
+import { stopAckemCodeDaemon } from './ackemcode/daemon'
 
 const log = createLogger('shutdown')
 
@@ -78,6 +79,13 @@ export async function shutdownBackgroundServices(opts?: { closeDatabases?: boole
   }
 
   try {
+    const { shutdownQqChannel } = await import('./ipc/qq.js')
+    await shutdownQqChannel()
+  } catch (e) {
+    log.warn('qq shutdown failed', { error: String(e) })
+  }
+
+  try {
     await getMinecraftProvider()?.disconnect()
   } catch (e) {
     log.warn('minecraft disconnect failed', { error: String(e) })
@@ -104,6 +112,7 @@ export async function performAppShutdown(): Promise<void> {
   shutdownStarted = true
   ;(app as AppWithQuitFlags).isQuitting = true
 
+  await stopAckemCodeDaemon()
   await runExitPersistenceHooks()
   await shutdownBackgroundServices()
 

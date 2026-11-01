@@ -13,7 +13,9 @@ const REDLINE_KEYWORDS_ZH = [
   '去死', '自杀', '自残', '杀了', '弄死你', 'nmsl', '畜生不如',
   '你怎么不去死', '跳楼', '跳海', '割腕', '上吊'
 ]
-const PRAISE_WORDS_ZH = ['棒', '厉害', '好棒', '爱你', '喜欢', '可爱', '聪明', '温柔', '谢谢', '感激', '真好', '好懂', '理解我', '懂我', '最', '最好', '庆幸', '重要', '放松', '开心', '美好', '特别', '在乎', '在意', '珍惜', '可靠', '安心', '幸运', '幸福', '奇迹', '挺不错', '很不错', '真不错', '太棒', '很棒', '挺好', '好好', '好多了', '好温柔', '好可爱']
+/** 红线误伤白名单：包含这些短语时不再按红线短路（"跳楼价""自杀小队"是正常聊天） */
+const REDLINE_SAFE_PHRASES = ['跳楼价', '跳楼机', '自杀小队', '自杀式', '不是跳楼', '不是自杀', '不跳楼', '不自杀']
+const PRAISE_WORDS_ZH = ['棒', '厉害', '好棒', '爱你', '喜欢', '可爱', '聪明', '温柔', '谢谢', '感激', '真好', '好懂', '理解我', '懂我', '最好', '庆幸', '重要', '放松', '开心', '美好', '特别', '在乎', '在意', '珍惜', '可靠', '安心', '幸运', '幸福', '奇迹', '挺不错', '很不错', '真不错', '太棒', '很棒', '挺好', '好好', '好多了', '好温柔', '好可爱']
 const TEASE_MARKERS_ZH = ['哼', '笨蛋', '傻瓜', '才怪', '就不', '偏不']
 const HURTFUL_WORDS_ZH = ['滚', '烦死了', '讨厌', '恶心', '废物', '垃圾', '闭嘴', '别烦', '有病', '不关你事', '关你什么事', '你只是一个程序', '只是个程序', '代码计算', '虚假', '虚伪', '假装有感情', '根本不理解', '你什么都不是', '你不配', '恨你', '惩罚你', '不听话就', '别碰我', '走开', '别跟我说话', '别来烦我']
 const COLD_WORDS_ZH = ['哦', '嗯', '随便', '都行', '无所谓', '不熟', '别问了']
@@ -355,14 +357,17 @@ export function interpretInput(msg: string, effectiveTrust: number, adultMode: b
 
   const kw = getKeywords()
 
-  for (const k of kw.redline) {
-    if (t.toLowerCase().includes(k.toLowerCase())) {
-      return {
-        type: 'extreme_redline',
-        intensity: 1,
-        sincerity: 1,
-        isExtremeRedline: true,
-        isAdultContent: false
+  const redlineSafe = REDLINE_SAFE_PHRASES.some((p) => t.includes(p))
+  if (!redlineSafe) {
+    for (const k of kw.redline) {
+      if (t.toLowerCase().includes(k.toLowerCase())) {
+        return {
+          type: 'extreme_redline',
+          intensity: 1,
+          sincerity: 1,
+          isExtremeRedline: true,
+          isAdultContent: false
+        }
       }
     }
   }
@@ -501,7 +506,9 @@ function classifyAdultContent(msg: string, effectiveTrust: number): Event | null
 
   const hasDomination = hasAny(t, dominantWords)
   const hasSexContext = hasAny(t, sexualMarkers)
-  if (hasDomination && (hasSexContext || effectiveTrust >= 55)) {
+  const HARD_DOM_MARKERS = ['跪下', '叫主人', '惩罚你', '你是我的', '今晚你是我的', '别想逃', '不许反抗', '乖乖的']
+  const hasHardDom = hasAny(t, HARD_DOM_MARKERS)
+  if (hasDomination && (hasSexContext || hasHardDom)) {
     return adultEvent(t, 'adult_dominant', 'dominant')
   }
   if (hasDomination && !hasSexContext) {
@@ -706,6 +713,11 @@ const REMEMBER_NEGATIONS = [
   '不要记',
   '无需记',
   '不必记',
+  '记不住',
+  '记性差',
+  '记性不好',
+  '总是记不住',
+  '老是记不住',
   'dont remember',
   "don't remember",
   'no need to remember',

@@ -1,0 +1,48 @@
+{
+  "name": "ackem-code",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AckemCode — coding agent runtime + Ink CLI (ackem)",
+  "type": "module",
+  "bin": {
+    "ackem": "bin/ackem.mjs"
+  },
+  "scripts": {
+    "dev": "npm run dev:server",
+    "dev:server": "tsx watch src/server/index.ts",
+    "dev:ui": "vite",
+    "dev:cli": "tsx watch src/cli/main.tsx",
+    "cli": "tsx src/cli/main.tsx",
+    "daemon": "tsx src/server/index.ts",
+    "build:cli": "tsc -p tsconfig.cli.json",
+    "build": "tsc -p tsconfig.server.json && tsc -p tsconfig.cli.json && vite build",
+    "start": "node dist/server/index.js",
+    "typecheck": "tsc -p tsconfig.server.json --noEmit && tsc -p tsconfig.cli.json --noEmit && tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/sandbox-runtime": "^0.0.66",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "glob": "^11.0.1",
+    "ink": "^6.8.0",
+    "nanoid": "^5.1.5",
+    "react": "^19.0.0",
+    "string-width": "^8.1.1",
+    "wrap-ansi": "^9.0.2",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.13.10",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.1.2",
+    "react-dom": "^19.0.0",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2",
+    "vite": "^6.2.2"
+  }
+}

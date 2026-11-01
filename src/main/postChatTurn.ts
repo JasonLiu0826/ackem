@@ -1,4 +1,4 @@
-import { saveState } from './engine/state-persistence'
+import { saveState, loadState } from './engine/state-persistence'
 import { FactStore, defaultFactsPath } from './memory/factStore'
 import { KnowledgeGraph, defaultKgPath } from './memory/knowledgeGraph'
 import { workingMemory } from './memory/workingMemory'
@@ -11,6 +11,7 @@ import { writeCompanionReplyLog } from './memory/companionReplyLog'
 import { finalizeNewFacts } from './memory/finalizeNewFacts'
 import { resolveTierBIngestSkip } from './memory/tierBIngestPolicy'
 import { getAssociationIndex } from './engineCache'
+import { getLastActivatedAssociationIds } from './memory/retriever'
 import { createLogger } from './logger'
 import { resolveAdultMemoryPrivacyLevel } from './prompt/adult-mode'
 
@@ -59,6 +60,7 @@ export async function registerAndFinalizeSkipTurn(args: {
     skipIngest,
     trace,
     event,
+    activatedAssociationIds: getLastActivatedAssociationIds()
   })
 
   void finalizeTurnAfterStream({ turnId, dataRoot, assistantText, settings })
@@ -83,6 +85,24 @@ export async function finalizeTurnAfterStream(args: {
   try {
     const syncFactIds = await finalizeTurnSyncPhase({ p, dataRoot, assistantText, settings })
     enqueueMemoryWrite({ pending: p, dataRoot, assistantText, settings, syncFactIds })
+  } catch (e) {
+    // 落盘/记忆写入失败不再静默丢失：5 秒后重试一次，仍失败才放弃并告警
+    log.error('finalize failed, will retry once', {
+      turnId,
+      error: e instanceof Error ? e.message : String(e)
+    })
+    setTimeout(() => {
+      void finalizeTurnSyncPhase({ p, dataRoot, assistantText, settings })
+        .then((syncFactIds) => {
+          enqueueMemoryWrite({ pending: p, dataRoot, assistantText, settings, syncFactIds })
+        })
+        .catch((e2) => {
+          log.error('finalize retry failed — turn state/memory write lost', {
+            turnId,
+            error: e2 instanceof Error ? e2.message : String(e2)
+          })
+        })
+    }, 5000)
   } finally {
     void triggerVoiceTtsAfterTurn({
       assistantText,
@@ -107,25 +127,32 @@ async function finalizeTurnSyncPhase(args: {
     lastExchange.assistantText = assistantText
   }
 
-  saveState(dataRoot, p.newState, sid)
+  // 流式期间可能有其它更新（桌面并发消息 / desire 操作）已落盘：以最新状态为准，
+  // 避免用 turn 开始前的旧快照整包覆写造成回滚。
+  const fresh = loadState(dataRoot, sid)
+  if (fresh && fresh.lastActive > p.newState.lastActive) {
+    saveState(dataRoot, fresh, sid)
+  } else {
+    saveState(dataRoot, p.newState, sid)
+  }
 
-  const { lastActivatedAssociationIds } = await import('./memory/retriever')
+  const activatedIds = p.activatedAssociationIds ?? []
   const assocIndex = getAssociationIndex(dataRoot)
 
   const eventType = p.trace?.l0?.type
-  if ((eventType === 'cold' || eventType === 'hurtful') && lastActivatedAssociationIds.length > 0) {
-    for (const assocId of lastActivatedAssociationIds) {
+  if ((eventType === 'cold' || eventType === 'hurtful') && activatedIds.length > 0) {
+    for (const assocId of activatedIds) {
       assocIndex.weaken(assocId, 0.7)
     }
-    log.info('implicit correction', { eventType, weakened: lastActivatedAssociationIds.length })
+    log.info('implicit correction', { eventType, weakened: activatedIds.length })
   }
 
   const isExplicitCorrection = CORRECTION_TRIGGERS.some(t => p.userMsg.includes(t))
-  if (isExplicitCorrection && lastActivatedAssociationIds.length > 0) {
-    for (const assocId of lastActivatedAssociationIds) {
+  if (isExplicitCorrection && activatedIds.length > 0) {
+    for (const assocId of activatedIds) {
       assocIndex.weaken(assocId, 0.3)
     }
-    log.info('explicit correction', { userMsg: p.userMsg.slice(0, 50), weakened: lastActivatedAssociationIds.length })
+    log.info('explicit correction', { userMsg: p.userMsg.slice(0, 50), weakened: activatedIds.length })
   }
 
   const tierBSkip = resolveTierBIngestSkip({

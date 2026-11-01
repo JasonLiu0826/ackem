@@ -3,9 +3,10 @@
 // 对标 LangGraph knowledge graph memory
 // 引用：../engine/types, ../engine/ackemParams
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { randomUUID } from 'node:crypto'
+import { atomicWriteJson, readJsonWithRecovery } from '../utils/atomicJson'
 import { KG_CHAR_BUDGET, KG_CJK_CHAR_MATCH_WEIGHT, KG_ENTITY_MATCH_WEIGHT, KG_KEYWORD_MATCH_WEIGHT, KG_MIN_SCORE, KG_QUERY_MAX_TRIPLES } from '../engine/ackemParams'
 import {
   countTriplesInDb,
@@ -50,16 +51,12 @@ export class KnowledgeGraph {
       this.triples = []
       return
     }
-    try {
-      const j = JSON.parse(readFileSync(this.path, 'utf-8')) as KgFile
-      this.triples = Array.isArray(j.triples) ? j.triples : []
-      this.rebuildIndex()
-      if (this.triples.length > 0) {
-        replaceTriplesInDb(dataRoot, this.triples)
-        this.useDb = true
-      }
-    } catch {
-      this.triples = []
+    const read = readJsonWithRecovery<KgFile>(this.path)
+    this.triples = Array.isArray(read.data?.triples) ? read.data!.triples : []
+    this.rebuildIndex()
+    if (this.triples.length > 0) {
+      replaceTriplesInDb(dataRoot, this.triples)
+      this.useDb = true
     }
   }
 
@@ -67,7 +64,7 @@ export class KnowledgeGraph {
   private persist(): void {
     if (this.useDb) return
     mkdirSync(dirname(this.path), { recursive: true })
-    writeFileSync(this.path, JSON.stringify({ version: '1.0', triples: this.triples }, null, 2), 'utf-8')
+    atomicWriteJson(this.path, { version: '1.0', triples: this.triples })
     replaceTriplesInDb(this.dataRoot, this.triples)
   }
 

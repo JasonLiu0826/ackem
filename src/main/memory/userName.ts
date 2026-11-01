@@ -93,6 +93,7 @@ export function getAskNamePrompt(personalityId: string): string {
     deredere: '对了，我还不知道你的名字呢。你希望我怎么称呼你？',
     yandere: '你……叫什么？我需要知道。',
     genki: '诶~我们聊了这么久，我还不知道你叫什么呢！告诉我嘛~',
+    freya: '你叫什么呀\n我总不能一直叫你「你」吧',
   }
   return (
     map[personalityId] ?? '对了，我还不知道你的名字呢。你希望我怎么称呼你？'

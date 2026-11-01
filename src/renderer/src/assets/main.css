@@ -304,6 +304,26 @@ select.field-input option {
   opacity: 0.5;
 }
 
+/* QQ 扫码登录：把「一键生成」做成整块高亮 CTA，二维码旁边给一个独立的手动刷新 */
+.qq-login-cta {
+  width: 100%;
+  padding: 0.8rem 1.25rem;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  box-shadow: var(--glow-soft);
+}
+
+.qq-login-cta:hover:not(:disabled) {
+  box-shadow: var(--glow-medium);
+}
+
+.qq-login-refresh {
+  padding: 0.6rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
 /* 记忆页子 Tab（档案 / 搜索 / 数据 / 导入） */
 .page-subtab {
   padding: 0.625rem 1rem;

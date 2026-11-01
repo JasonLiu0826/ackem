@@ -4,9 +4,13 @@
 // 输出：MemoryFact 集合操作
 // 引用：./taxonomy, ../engine/types, ../engine/ackemParams
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { randomUUID } from 'node:crypto'
+import { atomicWriteJson, readJsonWithRecovery } from '../utils/atomicJson'
+import { createLogger } from '../logger'
+
+const log = createLogger('factStore')
 import {
   MEMORY_ECHO_AFF_WEIGHT,
   MEMORY_ECHO_CAP,
@@ -114,32 +118,37 @@ export class FactStore {
       this.byId.clear()
       return
     }
-    try {
-      const j = JSON.parse(readFileSync(this.path, 'utf-8')) as FactsFile
-      this.facts = Array.isArray(j.facts) ? j.facts : []
-      let migrated = false
-      for (const f of this.facts) {
-        const n = normalizeConfidence(f.confidence)
-        if (n !== f.confidence) {
-          f.confidence = n
-          migrated = true
-        }
-      }
-      if (this.facts.length > 0) {
-        replaceFactsInDb(dataRoot, this.facts)
-        // 只在 DB 真正可用时才设 useDb（replaceFactsInDb 可能因 DB 不可用而静默跳过）
-        if (countFactsInDb(dataRoot) > 0) {
-          this.useDb = true
-        }
-      }
-      if (migrated) {
-        this.dirty = true
-        this.flushLegacy()
-      }
-    } catch {
-      this.facts = []
+    const read = readJsonWithRecovery<FactsFile>(this.path)
+    if (read.recoveredFromBackup) {
+      log.warn('facts json corrupt, recovered from backup', { path: this.path })
     }
-    this.rebuildIdIndex()
+    if (!read.data) {
+      log.error('facts json unreadable and no backup — refusing to wipe memory', { path: this.path })
+      this.facts = []
+      this.rebuildIdIndex()
+      return
+    }
+    const j = read.data
+    this.facts = Array.isArray(j.facts) ? j.facts : []
+    let migrated = false
+    for (const f of this.facts) {
+      const n = normalizeConfidence(f.confidence)
+      if (n !== f.confidence) {
+        f.confidence = n
+        migrated = true
+      }
+    }
+    if (this.facts.length > 0) {
+      replaceFactsInDb(dataRoot, this.facts)
+      // 只在 DB 真正可用时才设 useDb（replaceFactsInDb 可能因 DB 不可用而静默跳过）
+      if (countFactsInDb(dataRoot) > 0) {
+        this.useDb = true
+      }
+    }
+    if (migrated) {
+      this.dirty = true
+      this.flushLegacy()
+    }
   }
 
   /** Phase 3: DB 模式下不再需要 persist/flush（增量操作已实时写 DB） */
@@ -164,7 +173,7 @@ export class FactStore {
     this.dirty = false
     mkdirSync(dirname(this.path), { recursive: true })
     const body: FactsFile = { version: '2.0', facts: this.facts }
-    writeFileSync(this.path, JSON.stringify(body, null, 2), 'utf-8')
+    atomicWriteJson(this.path, body)
     replaceFactsInDb(this.dataRoot, this.facts)
   }
 

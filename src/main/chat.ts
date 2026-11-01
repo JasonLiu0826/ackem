@@ -1,6 +1,8 @@
 import type { WebContents } from 'electron'
 import type { AppSettings } from './settings'
 import { finalizeTurnAfterStream } from './postChatTurn'
+import { stripSplitMarkers } from './chat/pacedStreamEmitter'
+import { stripTrailingSeparators } from './chat/humanizeReply'
 import { buildLlmHeaders, resolveChatCompletionsUrl, shouldSendTools } from './llmEndpoint'
 import { buildToolFollowUpRequestBody, buildToolResultsFallback } from './toolFollowUp'
 import { streamAnthropicMessages } from './anthropicMessages'
@@ -436,7 +438,8 @@ export async function streamChatCompletion(
       return
     }
 
-    let runAgentLoop = agentActive
+    // 渠道（QQ/微信）走单轮工具模式：不启动任务规划循环，避免它的 LLM/工具回路把普通聊天带崩
+    let runAgentLoop = agentActive && body.deferAgentTaskPlan !== true
     if (
       agentActive &&
       userMsgEarly &&
@@ -836,16 +839,20 @@ export async function streamChatCompletion(
       webContents.send('chat:replace', assistantAcc)
     }
 
+    // 存进历史 / 记忆的是"用户实际看到的话"，不带 [SPLIT] 这类节奏标记，
+    // 否则回填上下文时会把分隔符一起喂给模型。
+    const persistedText = stripTrailingSeparators(stripSplitMarkers(assistantAcc)) || assistantAcc
+
     webContents.send('chat:done', {
       memoryWrites: writes,
-      assistantText: assistantAcc,
+      assistantText: persistedText,
       turnId: turnIdLoop
     })
-    notifyUiChatBubble({ text: assistantAcc, role: 'assistant' })
+    notifyUiChatBubble({ text: persistedText, role: 'assistant' })
     void finalizeTurnAfterStream({
       turnId: turnIdLoop,
       dataRoot,
-      assistantText: assistantAcc,
+      assistantText: persistedText,
       settings
     })
   } catch (e) {

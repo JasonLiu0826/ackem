@@ -16,6 +16,8 @@ export type WeixinDeliveryProfile = {
   /** 合并碎屑时的参考长度，不用于硬截断 */
   maxCharsPerBubble: number
   gapMs: [number, number]
+  /** 每字额外的"打字"耗时（毫秒）。0/未设 = 纯随机间隔；真人打字时长与字数正相关 */
+  typingMsPerChar?: number
   /** 0~1：句内/独发 emoji 的整体倾向 */
   emojiDensity: number
   /** 单独发 1 个 emoji 气泡的概率 */
@@ -79,6 +81,25 @@ const PROFILES: WeixinDeliveryProfile[] = [
     tripleEmojiChance: 0,
     maxCharsPerBubble: 40,
     gapMs: [700, 1200]
+  }),
+  // Freya：真人语料型。说话极短、爱连发。
+  // 频次刻意压低：emoji 只偶尔点缀，表情包约十条一次——发太密立刻不像人。
+  // gapMs 是"读完上一条 + 开始打下一句"的停顿，typingMsPerChar 补上真正的打字时间。
+  profile('freya', 'short_burst', {
+    // 上限放到 3 条：长句拆短后需要放得下，否则会被 clamp 又粘成长条；
+    // 下限仍是 1，短回复不会被硬拆。
+    bubbleRange: [2, 3],
+    // 停顿下限抬到 1.6 秒：1.1 秒在 QQ 里看起来还是"秒回连发"
+    gapMs: [1600, 2800],
+    // 每个字 70ms，接近真人手机打字；短句也要有个抬手的时间
+    typingMsPerChar: 70,
+    // 原生 emoji 只做极少量点缀（约五十句一次），表情包才是主要表达
+    emojiDensity: 0,
+    standaloneEmojiChance: 0,
+    tripleEmojiChance: 0,
+    maxCharsPerBubble: 24,
+    // 表情包是主要表达，但别太密：约三轮半一张（被明确要图时不受这个概率限制）
+    stickerAffinity: 0.30
   }),
   profile('deredere', 'warm_flow', {
     emojiDensity: 0.45,
@@ -241,6 +262,8 @@ export function buildWeixinPsycheHint(presetId: string): string {
     `\n\n【微信连发】你在手机微信里说话，像真人连发 ${minB}–${maxB} 条短消息，不要小作文。\n` +
     `- 用 [SPLIT] 分隔每条（至少 ${minB} 条，最多 ${maxB} 条）\n` +
     `- 第一条先接话（≤15字），不要一次说完\n` +
+    `- 每条必须有标点：句中用逗号，句末用句号/问号/省略号，别把两句粘成一串\n` +
+    `- 每条结尾不要用逗号收尾（读起来像话没说完）\n` +
     `- 禁止 markdown、列表、编号\n` +
     `- emoji 可写在句中；需要单独发表情时可写 [emoji:😂] 或 [emoji:😂×3]\n` +
     `- 可选贴纸占位：[sticker:${presetId}_示例]（有资源时会发图）\n` +

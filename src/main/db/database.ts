@@ -2,7 +2,8 @@
 // 路径：{dataRoot}/ackem.db（与 layout / settings 的 dataRoot 一致，非固定 /data）
 
 import Database from 'better-sqlite3'
-import { mkdirSync, rmSync } from 'node:fs'
+import { mkdirSync, rmSync, renameSync } from 'node:fs'
+import { createLogger } from '../logger'
 import { dirname } from 'node:path'
 import { databasePath } from './paths'
 import { SCHEMA_V1_SQL, SCHEMA_VERSION } from './schemaV1'
@@ -15,9 +16,12 @@ import { SCHEMA_V7_SQL } from './schemaV7'
 import { SCHEMA_V8_SQL } from './schemaV8'
 import { SCHEMA_V9_SQL } from './schemaV9'
 import { SCHEMA_V10_SQL } from './schemaV10'
+import { SCHEMA_V11_SQL } from './schemaV11'
+import { SCHEMA_V12_SQL } from './schemaV12'
 import { importLegacyDataIfNeeded } from './importLegacy'
 
 const pools = new Map<string, Database.Database>()
+const log = createLogger('db')
 const legacyImported = new Set<string>()
 
 /** Vitest 批量测试时仅走 JSON，避免 Windows 上 WAL 锁文件；database.test.ts 会设 ACKEM_SQLITE_IN_TEST=1 */
@@ -84,6 +88,14 @@ function runMigrations(db: Database.Database): void {
     db.exec(SCHEMA_V10_SQL)
     setSchemaVersion(db, 10)
   }
+  if (current < 11) {
+    db.exec(SCHEMA_V11_SQL)
+    setSchemaVersion(db, 11)
+  }
+  if (current < 12) {
+    db.exec(SCHEMA_V12_SQL)
+    setSchemaVersion(db, 12)
+  }
 }
 
 /** 打开或复用 dataRoot 下的 ackem.db；失败时返回 null（调用方回退 JSON） */
@@ -95,7 +107,7 @@ export function getDatabase(dataRoot: string): Database.Database | null {
   try {
     const path = databasePath(dataRoot)
     mkdirSync(dirname(path), { recursive: true })
-    const db = new Database(path)
+    const db = openWithIntegrityCheck(path)
     applyPragmas(db)
     runMigrations(db)
     pools.set(dataRoot, db)
@@ -104,8 +116,27 @@ export function getDatabase(dataRoot: string): Database.Database | null {
       importLegacyDataIfNeeded(dataRoot)
     }
     return db
-  } catch {
+  } catch (e) {
+    log.error('sqlite open failed — falling back to JSON storage', { error: e instanceof Error ? e.message : String(e) })
     return null
+  }
+}
+
+function openWithIntegrityCheck(path: string): Database.Database {
+  const db = new Database(path)
+  try {
+    const check = db.pragma('quick_check', { simple: true }) as unknown
+    const okText = Array.isArray(check) ? (check[0] as { quick_check?: string })?.quick_check : String(check)
+    if (okText === 'ok') return db
+    log.error('sqlite corrupt detected — rebuilding database', { path, check: okText })
+    db.close()
+    try { renameSync(path, `${path}.corrupt-${Date.now()}`) } catch { /* ignore */ }
+    return new Database(path)
+  } catch (e) {
+    log.error('sqlite integrity check failed — rebuilding database', { path, error: e instanceof Error ? e.message : String(e) })
+    try { db.close() } catch { /* ignore */ }
+    try { renameSync(path, `${path}.corrupt-${Date.now()}`) } catch { /* ignore */ }
+    return new Database(path)
   }
 }
 

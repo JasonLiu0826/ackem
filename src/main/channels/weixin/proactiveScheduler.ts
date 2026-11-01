@@ -11,12 +11,10 @@ import { composeWeixinProactiveMessage } from './proactiveMessage'
 import { planWeixinDelivery } from './deliveryPlanner'
 import { sendWeixinOutboundSequence } from './outboundSequence'
 import { enqueuePeerTurn } from './queue'
-import {
-  listWeixinPeers,
-  loadContextToken,
-  loadWeixinAccount,
-  normalizePeerSessionId
-} from './store'
+import { listWeixinPeers, loadContextToken, loadWeixinAccount } from './store'
+import { appendConversationAssistant, resolveConversationSessionId } from '../conversation'
+import { getChannelOwner } from '../ownerGate'
+import { broadcastToRenderers } from '../../rendererBroadcast'
 import type { WeixinMonitorHandle } from './monitor'
 
 const log = createLogger('weixin-proactive')
@@ -46,7 +44,10 @@ async function tickProactive(dataRoot: string, isPolling: () => boolean): Promis
     const account = loadWeixinAccount(dataRoot)
     if (!account?.token) return
 
-    const peers = listWeixinPeers(dataRoot)
+    const owner = getChannelOwner('weixin')
+    const peers = owner
+      ? listWeixinPeers(dataRoot).filter((p) => p.peerId === owner)
+      : listWeixinPeers(dataRoot)
     if (peers.length === 0) return
 
     const peer = peers[0]!
@@ -57,7 +58,7 @@ async function tickProactive(dataRoot: string, isPolling: () => boolean): Promis
     })
     if (!composed) return
 
-    const sessionId = normalizePeerSessionId(peer.peerId)
+    const sessionId = resolveConversationSessionId(settings.activeSessionId)
     const state = loadState(dataRoot, sessionId)
     const hints = {
       presetId: settings.personalityPresetId,
@@ -88,6 +89,35 @@ async function tickProactive(dataRoot: string, isPolling: () => boolean): Promis
       })
       recordWeixinAckemActivity(dataRoot)
       recordProactiveSent(dataRoot)
+
+      // 主动消息同样并入统一会话，桌面端能立刻看到她在微信里先开口
+      try {
+        const visibleText = bubbles
+          .filter((b) => b.kind === 'text')
+          .map((b) => String(b.body))
+          .join(' ')
+          .replace(/\[SPLIT\]/gi, ' ')
+          .replace(/\s{2,}/g, ' ')
+          .trim()
+        if (visibleText) {
+          const { appended } = await appendConversationAssistant({
+            dataRoot,
+            sessionId,
+            channel: 'weixin',
+            peerId: peer.peerId,
+            content: visibleText
+          })
+          if (appended.length > 0) {
+            broadcastToRenderers('chat:history-appended', {
+              sessionId,
+              channel: 'weixin',
+              rows: appended
+            })
+          }
+        }
+      } catch (e) {
+        log.warn('proactive history persist failed', { error: String(e) })
+      }
 
       if (state) {
         state.counters.totalTurns = (state.counters?.totalTurns ?? 0) + 1

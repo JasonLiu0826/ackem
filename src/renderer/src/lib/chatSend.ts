@@ -95,11 +95,16 @@ export function buildChatSendOptimisticRows(
   userLine: string,
   recentLimit = 24
 ): ChatSendOptimisticRows {
-  const nextCore: ChatRow[] = [...rows, { kind: 'message', role: 'user', content: userLine }]
+  // 桌面这一轮也要带上稳定时间戳：三端合并历史时靠 at 认出「同一条消息」
+  const sentAt = Date.now()
+  const nextCore: ChatRow[] = [
+    ...rows,
+    { kind: 'message', role: 'user', content: userLine, at: new Date(sentAt).toISOString() }
+  ]
   const assistantIndex = nextCore.length
   const rowsWithPlaceholder: ChatRow[] = [
     ...nextCore,
-    { kind: 'message', role: 'assistant', content: '' }
+    { kind: 'message', role: 'assistant', content: '', at: new Date(sentAt + 1).toISOString() }
   ]
   const recentMessages = nextCore
     .filter((m): m is Extract<ChatRow, { kind: 'message' }> => m.kind === 'message')

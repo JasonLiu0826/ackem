@@ -66,7 +66,8 @@ export function useChatSend() {
           const n = [...prev]
           const idx = streamingIdx.current
           if (idx != null && idx < n.length && n[idx].kind === 'message' && n[idx].role === 'assistant') {
-            n[idx] = { kind: 'message', role: 'assistant', content }
+            // 保留 at：同一行在跨端合并时要能被认出来，不能当成新消息再追加
+            n[idx] = { ...n[idx], content }
           }
           return n
         })

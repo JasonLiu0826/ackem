@@ -1,5 +1,7 @@
 """TTS engine: CosyVoice (GPU) / edge-tts (online) / Windows SAPI (offline fallback)."""
 
+from __future__ import annotations
+
 import asyncio
 import io
 import logging

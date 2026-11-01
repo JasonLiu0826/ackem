@@ -43,7 +43,12 @@ async function showSplashWindow(): Promise<void> {
   })
 
   try {
-    await win.loadFile(resolveRendererHtml('startup.html'))
+    const devUrl = process.env['ELECTRON_RENDERER_URL']
+    if (devUrl && !app.isPackaged) {
+      await win.loadURL(`${devUrl}startup.html`)
+    } else {
+      await win.loadFile(resolveRendererHtml('startup.html'))
+    }
     win.show()
     win.focus()
   } catch (e) {

@@ -1,4 +1,4 @@
-# Ackem Windows 发行配置（W3）
+# Ackem 发行配置（Windows + macOS）
 # 隐私：绝不打包 data/ · .env · 用户 settings（见 docs/distribution-windows.md）
 
 appId: com.ackem.desktop
@@ -29,9 +29,7 @@ files:
   - "!**/src/**"
   - "!**/*.map"
 
-extraFiles:
-  - from: scripts/uninstall.bat
-    to: Uninstall Ackem.bat
+afterPack: scripts/after-pack-ackemcode.cjs
 
 extraResources:
   - from: scripts/uninstall.bat
@@ -60,6 +58,11 @@ extraResources:
     to: assets/weixin-stickers
     filter:
       - "**/*"
+  # QQ 内置表情包（可爱 / 撒娇热梗，按情绪目录分发；用户目录可覆盖同名图）
+  - from: assets/qq-memes
+    to: assets/qq-memes
+    filter:
+      - "**/*"
   # 开发者扩展接口协议（绿色版 docs/developer/）
   - from: docs/developer
     to: docs/developer
@@ -68,13 +71,18 @@ extraResources:
 
 win:
   icon: build/icon.ico
+  # Windows 专用：macOS bundle 里放 .bat 会让 codesign 直接失败
+  # （code object is not signed at all / subcomponent 不是代码）
+  extraFiles:
+    - from: scripts/uninstall.bat
+      to: Uninstall Ackem.bat
   # 跳过 winCodeSign/rcedit（无管理员 symlink 权限时会打包失败）；图标由 scripts/patch-exe-icon.mjs 写入
   signAndEditExecutable: false
   target:
     - target: dir
       arch:
         - x64
-  artifactName: ${productName}-${version}-${arch}.${ext}
+  artifactName: ${productName}-${version}-win-${arch}.${ext}
 
 nsis:
   oneClick: false
@@ -83,3 +91,33 @@ nsis:
   shortcutName: Ackem
   artifactName: ${productName}-${version}-Setup-${arch}.exe
   deleteAppDataOnUninstall: false
+
+mac:
+  icon: build/icon.icns
+  category: public.app-category.productivity
+  hardenedRuntime: false
+  identity: null
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  target:
+    - target: dmg
+      arch:
+        - arm64
+        - x64
+  artifactName: ${productName}-${version}-mac-${arch}.${ext}
+  extraFiles: []
+
+dmg:
+  title: "${productName} ${version}"
+  iconSize: 100
+  contents:
+    - x: 180
+      y: 170
+    - x: 480
+      y: 170
+      type: link
+      path: /Applications
+  window:
+    width: 660
+    height: 400
+  artifactName: ${productName}-${version}-mac-${arch}.${ext}

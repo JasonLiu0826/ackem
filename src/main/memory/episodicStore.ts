@@ -3,9 +3,10 @@
 // 对标 MemGPT episodic memory / Character.AI conversation memory
 // 引用：../engine/types, ../engine/ackemParams
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { randomUUID } from 'node:crypto'
+import { atomicWriteJson, readJsonWithRecovery } from '../utils/atomicJson'
 import { EPISODE_MAX_KEYWORDS, EPISODE_INTENSITY_WEIGHT, EPISODE_MIN_SCORE, EPISODE_RECENCY_DECAY, EPISODE_RETRIEVAL_MAX, EPISODE_SUMMARY_MAX_CHARS } from '../engine/ackemParams'
 import {
   countEpisodesInDb,
@@ -44,15 +45,11 @@ export class EpisodicStore {
       this.episodes = []
       return
     }
-    try {
-      const j = JSON.parse(readFileSync(this.path, 'utf-8')) as EpisodesFile
-      this.episodes = Array.isArray(j.episodes) ? j.episodes : []
-      if (this.episodes.length > 0) {
-        replaceEpisodesInDb(dataRoot, this.episodes)
-        this.useDb = true
-      }
-    } catch {
-      this.episodes = []
+    const read = readJsonWithRecovery<EpisodesFile>(this.path)
+    this.episodes = Array.isArray(read.data?.episodes) ? read.data!.episodes : []
+    if (this.episodes.length > 0) {
+      replaceEpisodesInDb(dataRoot, this.episodes)
+      this.useDb = true
     }
   }
 
@@ -60,7 +57,7 @@ export class EpisodicStore {
   private persist(): void {
     if (this.useDb) return
     mkdirSync(dirname(this.path), { recursive: true })
-    writeFileSync(this.path, JSON.stringify({ version: '1.0', episodes: this.episodes }, null, 2), 'utf-8')
+    atomicWriteJson(this.path, { version: '1.0', episodes: this.episodes })
     replaceEpisodesInDb(this.dataRoot, this.episodes)
   }
 

@@ -44,7 +44,11 @@ export async function craftPlanCreateAsk(
   const emotionLabel = input.state.emotion.primaryLabel
   const preset = getPreset(input.state.personality.presetId)
   const voiceGuide = preset
-    ? buildPresetVoiceGuide(preset, input.settings.adultContentMode && input.settings.ageConfirmed18)
+    ? buildPresetVoiceGuide(
+        preset,
+        input.settings.adultContentMode && input.settings.ageConfirmed18,
+        input.settings.freyaPetName
+      )
     : '你是用户的 AI 伴侣，语气自然、有温度，不要像客服。'
   const p = input.state.personality
 

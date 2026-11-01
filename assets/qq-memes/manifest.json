@@ -1,0 +1,1248 @@
+{
+  "schema_version": 1,
+  "id": "cute-2026",
+  "name": "可爱撒娇热梗包 2026",
+  "version": "1.0.0",
+  "description": "近期热门的可爱 / 撒娇 / 卖萌表情包，含奶龙、水豚等抽象梗图；按情绪目录归类，供 QQ 渠道直接取用。",
+  "license": "素材版权归各原作者，仅限个人非商业使用",
+  "categories": {
+    "love": {
+      "description": "亲密、撒娇、亲亲抱抱"
+    },
+    "shy": {
+      "description": "害羞、娇羞、小声撒娇"
+    },
+    "warm": {
+      "description": "温柔、安慰、贴贴陪伴"
+    },
+    "playful": {
+      "description": "开心、玩闹、沙雕"
+    },
+    "tease": {
+      "description": "逗、傲娇、挑衅"
+    },
+    "hype": {
+      "description": "兴奋、冲、起飞"
+    },
+    "sad": {
+      "description": "委屈、哭、丧"
+    },
+    "annoyed": {
+      "description": "生气、凶、不满"
+    },
+    "cold": {
+      "description": "无语、冷漠、白眼"
+    },
+    "neutral": {
+      "description": "无明确情绪"
+    }
+  },
+  "entries": [
+    {
+      "file": "playful/奶龙吐舌头.jpg",
+      "mood": "playful",
+      "label": "奶龙吐舌头",
+      "tags": [
+        "搞笑",
+        "玩闹",
+        "开心"
+      ],
+      "size": 53471,
+      "width": 720,
+      "height": 720,
+      "source": "https://q9.itc.cn/q_70/images03/20250614/8ae1717e699f49e78417623cb2650fbe.jpeg",
+      "origin_page": "http://news.sohu.com/a/904290763_121124705",
+      "title": "奶龙表情包，肚子没吃饱",
+      "sha1": "fc0f418a7d5626bdc97b9fbaef78809bceba521a"
+    },
+    {
+      "file": "playful/奶龙趴着吐舌.jpg",
+      "mood": "playful",
+      "label": "奶龙趴着吐舌",
+      "tags": [
+        "搞笑",
+        "玩闹",
+        "开心"
+      ],
+      "size": 19417,
+      "width": 397,
+      "height": 378,
+      "source": "https://k.sinaimg.cn/n/sinakd20240807ac/775/w397h378/20240807/77f4-c35b3db917df74bca18784f28f95229a.jpg/w700d1q75cms.jpg?by=cms_fixed_width",
+      "origin_page": "http://k.sina.com.cn/article_3058542253_b64da6ad04001d5s2.html",
+      "title": "奶龙表情包合集",
+      "sha1": "6274b1dde510815f63dea9765325916ea14339d0"
+    },
+    {
+      "file": "playful/奶龙捧腹大笑.jpg",
+      "mood": "playful",
+      "label": "奶龙捧腹大笑",
+      "tags": [
+        "搞笑",
+        "玩闹",
+        "开心"
+      ],
+      "size": 28055,
+      "width": 647,
+      "height": 638,
+      "source": "https://pinoss.com/pdan123/i/pdan1/2026/1/O11.jpg",
+      "origin_page": "https://pdan.com.cn/12761.html",
+      "title": "捧腹大笑奶龙表情包系列_猎奇抽象奶龙二创表情包",
+      "sha1": "a8bfd85e38c36e652ba3325c9bdeed9883893ae6"
+    },
+    {
+      "file": "love/奶龙求求你了.jpg",
+      "mood": "love",
+      "label": "奶龙求求你了",
+      "tags": [
+        "爱",
+        "撒娇",
+        "贴贴",
+        "亲亲"
+      ],
+      "size": 46587,
+      "width": 720,
+      "height": 717,
+      "source": "https://q8.itc.cn/q_70/images03/20250605/b9681c2792bc45c5904808d22638f563.jpeg",
+      "origin_page": "http://www.sohu.com/a/901562114_121124705",
+      "title": "奶龙表情包,还好还好",
+      "sha1": "17d060e5f64d6fc2e18ac8b9605454193c05d8de"
+    },
+    {
+      "file": "shy/奶龙我错了.jpg",
+      "mood": "shy",
+      "label": "奶龙我错了",
+      "tags": [
+        "害羞",
+        "卖萌",
+        "小声"
+      ],
+      "size": 50088,
+      "width": 720,
+      "height": 720,
+      "source": "https://q1.itc.cn/q_70/images03/20250412/eede077824df45c09517d11c7326d572.jpeg",
+      "origin_page": "https://www.sohu.com/a/883116684_121124705",
+      "title": "奶龙表情包，来吃饺子啦",
+      "sha1": "8cfeb7fe82260cb4379a15e9720fe481bf108de3"
+    },
+    {
+      "file": "tease/奶龙拽.jpg",
+      "mood": "tease",
+      "label": "奶龙拽",
+      "tags": [
+        "傲娇",
+        "逗",
+        "挑衅"
+      ],
+      "size": 42574,
+      "width": 720,
+      "height": 720,
+      "source": "https://q0.itc.cn/q_70/images03/20240414/8e73aaaa860c4ca297068ab754b6dca2.jpeg",
+      "origin_page": "http://mt.sohu.com/a/771516439_121124731",
+      "title": "18张可爱奶龙表情包合集",
+      "sha1": "e1a43f6de205e2f6cc88bcfa12faa438c977f958"
+    },
+    {
+      "file": "sad/奶龙惨了.jpg",
+      "mood": "sad",
+      "label": "奶龙惨了",
+      "tags": [
+        "委屈",
+        "低落",
+        "哭"
+      ],
+      "size": 22623,
+      "width": 500,
+      "height": 501,
+      "source": "https://img1.baidu.com/it/u=1901240456,4121885781&fm=253&fmt=auto&app=120&f=JPEG?w=500&h=501",
+      "origin_page": "http://mbd.baidu.com/newspage/data/dtlandingsuper?nid=dt_4449517189374948823",
+      "title": "奶龙表情包,还好还好",
+      "sha1": "945cc7eeccb9c6980d7a87920a074f343f2d2ecf"
+    },
+    {
+      "file": "warm/奶龙一家人.jpg",
+      "mood": "warm",
+      "label": "奶龙一家人",
+      "tags": [
+        "温柔",
+        "陪伴",
+        "安慰"
+      ],
+      "size": 27172,
+      "width": 418,
+      "height": 418,
+      "source": "https://pic4.zhimg.com/v2-ac1a5c04e51f1a9f66cd62ec67873bcf_b.jpg",
+      "origin_page": "http://zhuanlan.zhihu.com/p/460642591",
+      "title": "153张奶龙的表情包 - 知乎",
+      "sha1": "054e7e34d0804e12a31d4429b88cef95b9237ffc"
+    },
+    {
+      "file": "sad/奶龙累鸟.jpg",
+      "mood": "sad",
+      "label": "奶龙累鸟",
+      "tags": [
+        "委屈",
+        "低落",
+        "哭"
+      ],
+      "size": 24864,
+      "width": 366,
+      "height": 366,
+      "source": "https://pic4.zhimg.com/v2-349832ff3d6a72c46849d13ef43c9e83_b.jpg",
+      "origin_page": "http://zhuanlan.zhihu.com/p/562355951",
+      "title": "99张超可爱奶龙动态表情包 - 知乎",
+      "sha1": "a669a982c0ce428f5887e5c305775f33e3842fbb"
+    },
+    {
+      "file": "cold/奶龙无所谓.jpg",
+      "mood": "cold",
+      "label": "奶龙无所谓",
+      "tags": [
+        "无语",
+        "冷漠"
+      ],
+      "size": 27197,
+      "width": 450,
+      "height": 451,
+      "source": "https://pic1.zhimg.com/v2-b2e8564662c075a6ed633b64933ae69c_b.jpg",
+      "origin_page": "http://zhuanlan.zhihu.com/p/396792534?utm_id=0",
+      "title": "黄色奶龙表情包第三期合集 - 知乎",
+      "sha1": "b52f09f97ba17085fcf22caf33c516586cf45ec2"
+    },
+    {
+      "file": "tease/奶龙可不怕你.jpg",
+      "mood": "tease",
+      "label": "奶龙可不怕你",
+      "tags": [
+        "傲娇",
+        "逗",
+        "挑衅"
+      ],
+      "size": 32501,
+      "width": 494,
+      "height": 494,
+      "source": "https://pic4.zhimg.com/v2-6e54d0bdd6d21f663f4c4823e53beabf_b.jpg",
+      "origin_page": "http://zhuanlan.zhihu.com/p/563723818?utm_id=0",
+      "title": "180张黄色奶龙表情包合集",
+      "sha1": "e5eacc742f613ad4fe66dc406d02757189ba758a"
+    },
+    {
+      "file": "hype/奶龙小爷来咯.jpg",
+      "mood": "hype",
+      "label": "奶龙小爷来咯",
+      "tags": [
+        "兴奋",
+        "冲"
+      ],
+      "size": 19489,
+      "width": 500,
+      "height": 500,
+      "source": "https://img0.baidu.com/it/u=1225679909,1504562188&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500",
+      "origin_page": "http://www.douyin.com/note/7363517855968611618",
+      "title": "18张可爱奶龙表情包合集",
+      "sha1": "c60644b988e325bdaa678753078a59efb15a12cc"
+    },
+    {
+      "file": "cold/奶龙暗中观察.jpg",
+      "mood": "cold",
+      "label": "奶龙暗中观察",
+      "tags": [
+        "无语",
+        "冷漠"
+      ],
+      "size": 22210,
+      "width": 412,
+      "height": 412,
+      "source": "https://pic4.zhimg.com/v2-aa759902c80f59bf4ed6f644b878f973_b.jpg",
+      "origin_page": "http://zhuanlan.zhihu.com/p/460642591?utm_id",
+      "title": "153张奶龙的表情包 - 知乎",
+      "sha1": "451bf2d182ca1e6b4f7f0e224a7ddcb709be792f"
+    },
+    {
+      "file": "hype/奶龙牛的嘞.jpg",
+      "mood": "hype",
+      "label": "奶龙牛的嘞",
+      "tags": [
+        "兴奋",
+        "冲"
+      ],
+      "size": 41345,
+      "width": 720,
+      "height": 720,
+      "source": "https://img0.baidu.com/it/u=267994976,2772809590&fm=253&app=138&f=JPEG?w=800&h=800",
+      "origin_page": "http://www.sohu.com/a/902439797_121124705",
+      "title": "奶龙表情包#很新的一种表情包 #调皮的表情包图片大全 #奶龙",
+      "sha1": "83982a093097a1d747d150336508c5fc4e0e1a52"
+    },
+    {
+      "file": "playful/奶龙满意.jpg",
+      "mood": "playful",
+      "label": "奶龙满意",
+      "tags": [
+        "搞笑",
+        "玩闹",
+        "开心"
+      ],
+      "size": 39911,
+      "width": 720,
+      "height": 719,
+      "source": "https://img2.baidu.com/it/u=37789284,4164413478&fm=253&app=138&f=JPEG?w=801&h=800",
+      "origin_page": "http://www.douyin.com/note/7273343678087728439",
+      "title": "#奶龙#表情包",
+      "sha1": "d21c8fa8d02976716334f1e390f50cd91d7297b2"
+    },
+    {
+      "file": "hype/水豚嗨起来.jpg",
+      "mood": "hype",
+      "label": "水豚嗨起来",
+      "tags": [
+        "兴奋",
+        "冲"
+      ],
+      "size": 30263,
+      "width": 503,
+      "height": 500,
+      "source": "https://img2.baidu.com/it/u=2629224824,659387513&fm=253&fmt=auto&app=138&f=JPEG?w=503&h=500",
+      "origin_page": "http://m.zcool.com.cn/work/ZNjg2MTcwNDQ",
+      "title": "卡皮巴拉举牌表情包插画卡通可爱",
+      "sha1": "5a09c2a04e02bb23f00e6978cb3eca2e444b54cc"
+    },
+    {
+      "file": "warm/水豚竖大拇指.jpg",
+      "mood": "warm",
+      "label": "水豚竖大拇指",
+      "tags": [
+        "温柔",
+        "陪伴",
+        "安慰"
+      ],
+      "size": 39895,
+      "width": 720,
+      "height": 680,
+      "source": "https://b0.bdstatic.com/5178106a768494de829f4dd79e21e642.jpg",
+      "origin_page": "http://mbd.baidu.com/newspage/data/dtlandingsuper?nid=dt_4126309398413232037",
+      "title": "卡皮巴拉表情包",
+      "sha1": "25c000d022fa5cbae308cf7cc94bdee543db231c"
+    },
+    {
+      "file": "warm/水豚抱橙子.jpg",
+      "mood": "warm",
+      "label": "水豚抱橙子",
+      "tags": [
+        "温柔",
+        "陪伴",
+        "安慰"
+      ],
+      "size": 27300,
+      "width": 720,
+      "height": 720,
+      "source": "https://b0.bdstatic.com/4324f7d8b52b8fe14a60e2e8318b3a34.jpg@h_1280",
+      "origin_page": "http://www.zhihu.com/question/634013430/answer/3358073914",
+      "title": "有没有卡皮巴拉的表情包? - 知乎",
+      "sha1": "8b4ce89c1367627ded8bedb3c416dcaeece79f55"
+    },
+    {
+      "file": "sad/水豚委屈哭.jpg",
+      "mood": "sad",
+      "label": "水豚委屈哭",
+      "tags": [
+        "委屈",
+        "低落",
+        "哭"
+      ],
+      "size": 44878,
+      "width": 720,
+      "height": 689,
+      "source": "https://b0.bdstatic.com/ugc/m2v8kBlyRR5tCQiYAIrOzga1059267b62ccb35dcba861400f1783d.jpg",
+      "origin_page": "http://mbd.baidu.com/newspage/data/dtlandingsuper?nid=dt_4008232711841485654",
+      "title": "卡皮巴拉表情包",
+      "sha1": "2bff9243646d4ec45c34477a0a775a7a72856a53"
+    },
+    {
+      "file": "playful/新的可爱.jpg",
+      "mood": "playful",
+      "label": "新的可爱",
+      "tags": [
+        "搞笑",
+        "玩闹",
+        "开心"
+      ],
+      "size": 38569,
+      "width": 700,
+      "height": 700,
+      "source": "https://c-ssl.dtstatic.com/uploads/item/202003/18/20200318182923_mwqsr.thumb.1000_0.jpg",
+      "origin_page": "http://www.duitang.com/blog/?id=1210653993",
+      "title": "可爱猫猫撒娇表情包",
+      "sha1": "d7cd8b821da2ddacbb720c55634fa5e5de9e1120"
+    },
+    {
+      "file": "love/试图撒娇.jpg",
+      "mood": "love",
+      "label": "试图撒娇",
+      "tags": [
+        "爱",
+        "撒娇",
+        "贴贴",
+        "亲亲"
+      ],
+      "size": 30338,
+      "width": 560,
+      "height": 560,
+      "source": "https://b-ssl.duitang.com/uploads/item/201802/20/20180220173116_tAFNQ.thumb.700_0.jpeg",
+      "origin_page": "https://www.duitang.com/blog/?id=889837319",
+      "title": "表情包撒娇猫",
+      "sha1": "5bf4f84c8ed8a902b8e23ce9bf20e093a0892c4b"
+    },
+    {
+      "file": "shy/睡觉嘛.jpg",
+      "mood": "shy",
+      "label": "睡觉嘛",
+      "tags": [
+        "害羞",
+        "卖萌",
+        "小声"
+      ],
+      "size": 34411,
+      "width": 700,
+      "height": 700,
+      "source": "http://dingyue.ws.126.net/2020/0825/85e358fej00qfm3ki000tc000jg00jgc.jpg",
+      "origin_page": "https://dy.163.com/article/FKT1PD7S0514NH22.html",
+      "title": "【<em>表情包</em>】情侣互撩<em>撒娇表情包</em>",
+      "sha1": "d129422ae27ed1e54aca36c7a8a376d14e4c6940"
+    },
+    {
+      "file": "shy/我超乖的.jpg",
+      "mood": "shy",
+      "label": "我超乖的",
+      "tags": [
+        "害羞",
+        "卖萌",
+        "小声"
+      ],
+      "size": 33762,
+      "width": 531,
+      "height": 518,
+      "source": "https://pic3.zhimg.com/v2-03fdbd0e69354f49fef2800dc08bc52e_r.jpg",
+      "origin_page": "https://www.zhihu.com/question/270535124/answer/356686873",
+      "title": "有没有可以给对象发的<em>撒娇</em>的<em>表情包</em>?",
+      "sha1": "e4a20ff240d67ecb666e316ac412633809413686"
+    },
+    {
+      "file": "warm/你说得都对.jpg",
+      "mood": "warm",
+      "label": "你说得都对",
+      "tags": [
+        "温柔",
+        "陪伴",
+        "安慰"
+      ],
+      "size": 15808,
+      "width": 300,
+      "height": 288,
+      "source": "http://5b0988e595225.cdn.sohucs.com/images/20190527/250909cad3b94de689685061c055ae60.jpeg",
+      "origin_page": "https://www.sohu.com/a/316656380_663348",
+      "title": "<em>撒娇</em>小猫咪<em>表情包</em>",
+      "sha1": "fb1f6dbd74f29a572026f582a7fb2590bca05cc0"
+    },
+    {
+      "file": "playful/开心猫猫.jpg",
+      "mood": "playful",
+      "label": "开心猫猫",
+      "tags": [
+        "搞笑",
+        "玩闹",
+        "开心"
+      ],
+      "size": 68295,
+      "width": 720,
+      "height": 720,
+      "source": "https://pic4.zhimg.com/v2-7914cdbc6235674e27a490affb2e6fcc_r.jpg?source=1940ef5c",
+      "origin_page": "http://www.zhihu.com/question/270535124/answer/402798429",
+      "title": "有没有可以给对象发的撒娇的表情包?",
+      "sha1": "241d33982feee30d32d4a5c89d5341bb52c50651"
+    },
+    {
+      "file": "love/疯狂撒娇.jpg",
+      "mood": "love",
+      "label": "疯狂撒娇",
+      "tags": [
+        "爱",
+        "撒娇",
+        "贴贴",
+        "亲亲"
+      ],
+      "size": 55677,
+      "width": 720,
+      "height": 720,
+      "source": "http://b-ssl.duitang.com/uploads/item/201902/17/20190217173124_iwiue.jpeg",
+      "origin_page": "http://www.duitang.com/blog/?id=1061619785",
+      "title": "可爱猫咪表情包-堆糖,美好生活研究所",
+      "sha1": "cbf5cec4113324ffab5d3b7b792f91aa9b7aa82f"
+    },
+    {
+      "file": "love/撒娇娇.jpg",
+      "mood": "love",
+      "label": "撒娇娇",
+      "tags": [
+        "爱",
+        "撒娇",
+        "贴贴",
+        "亲亲"
+      ],
+      "size": 76102,
+      "width": 720,
+      "height": 720,
+      "source": "http://c-ssl.duitang.com/uploads/item/202005/11/20200511172936_dnijk.thumb.1000_0.jpg",
+      "origin_page": "http://www.duitang.com/blog/?id=1240390930",
+      "title": "表情包‖撒娇卖萌?出镜猫: sally",
+      "sha1": "006bb84e67c4136be006de47b4100297c8edf50e"
+    },
+    {
+      "file": "love/我好想你.jpg",
+      "mood": "love",
+      "label": "我好想你",
+      "tags": [
+        "爱",
+        "撒娇",
+        "贴贴",
+        "亲亲"
+      ],
+      "size": 53978,
+      "width": 684,
+      "height": 684,
+      "source": "https://pic1.zhimg.com/v2-842b792e1ed0c8b43cd061f37385c554_r.jpg",
+      "origin_page": "http://zhuanlan.zhihu.com/p/492079585?utm_id",
+      "title": "114张适用于和老公/男票撒娇的可爱表情包 - 知乎",
+      "sha1": "7f1bf7cc62cd04b2869c805991cb82aa184c1aa3"
+    },
+    {
+      "file": "love/求求你了猫.jpg",
+      "mood": "love",
+      "label": "求求你了猫",
+      "tags": [
+        "爱",
+        "撒娇",
+        "贴贴",
+        "亲亲"
+      ],
+      "size": 79144,
+      "width": 720,
+      "height": 720,
+      "source": "https://pic2.zhimg.com/v2-13235a189abbd59a65c8a150b7da7ea1_r.jpg",
+      "origin_page": "http://zhuanlan.zhihu.com/p/571902322",
+      "title": "女生撒娇专用表情包~ - 知乎",
+      "sha1": "cc46b7e122ac758a706281a770f974251ce6abc7"
+    },
+    {
+      "file": "love/拜托拜托.jpg",
+      "mood": "love",
+      "label": "拜托拜托",
+      "tags": [
+        "爱",
+        "撒娇",
+        "贴贴",
+        "亲亲"
+      ],
+      "size": 23352,
+      "width": 400,
+      "height": 388,
+      "source": "http://c-ssl.duitang.com/uploads/item/201711/12/20171112164448_S3RUy.thumb.400_0.jpeg",
+      "origin_page": "http://kan.china.com/article/843544.html",
+      "title": "和男友撒娇的表情包合集",
+      "sha1": "0384dd94d258d92ecf9751e42af398a27497a440"
+    },
+    {
+      "file": "shy/我好乖的.jpg",
+      "mood": "shy",
+      "label": "我好乖的",
+      "tags": [
+        "害羞",
+        "卖萌",
+        "小声"
+      ],
+      "size": 22194,
+      "width": 350,
+      "height": 350,
+      "source": "https://pic4.zhimg.com/50/v2-499d06928b6dc86406150f37faaef7e3_hd.jpg?source=1940ef5c",
+      "origin_page": "http://www.zhihu.com/question/284237208/answer/439121949",
+      "title": "有什么适用于和老公/男票撒娇的可爱表情包?",
+      "sha1": "585e340f6076ee39ab66d6085ea1b2c215c3a6c7"
+    },
+    {
+      "file": "annoyed/不要你管.jpg",
+      "mood": "annoyed",
+      "label": "不要你管",
+      "tags": [
+        "生气",
+        "不满"
+      ],
+      "size": 39917,
+      "width": 664,
+      "height": 664,
+      "source": "http://5b0988e595225.cdn.sohucs.com/images/20190320/26911f5a896c4c5d8080609f7f06c069.jpeg",
+      "origin_page": "http://www.sohu.com/a/302679184_120066069",
+      "title": "跟人<em>撒娇</em>专用<em>表情包</em>大全,收藏吧~终有一天",
+      "sha1": "b1ceb549b439ed504eb88d4239d1b43abc6f81af"
+    },
+    {
+      "file": "cold/愣住.jpg",
+      "mood": "cold",
+      "label": "愣住",
+      "tags": [
+        "无语",
+        "冷漠"
+      ],
+      "size": 47062,
+      "width": 570,
+      "height": 570,
+      "source": "http://5b0988e595225.cdn.sohucs.com/images/20190903/160a48aa5d4744d6a6c67efab75116f0.jpeg",
+      "origin_page": "http://www.sohu.com/a/338285484_120067672",
+      "title": "撒娇专用表情包:喜欢一个人是藏不住的",
+      "sha1": "eecc3f8063f176189bda0c2ffd3dda7f5f0d68e5"
+    },
+    {
+      "file": "warm/贴贴臭宝.jpg",
+      "mood": "warm",
+      "label": "贴贴臭宝",
+      "tags": [
+        "温柔",
+        "陪伴",
+        "安慰"
+      ],
+      "size": 45067,
+      "width": 700,
+      "height": 606,
+      "source": "https://k.sinaimg.cn/n/sinakd20117/310/w1024h886/20221027/db63-4faa6e1814dab8406a9dc180e3750fdd.jpg/w700d1q75cms.jpg",
+      "origin_page": "https://k.sina.com.cn/article_2801138254_pa6f5fa4e0270111gj.html#p=1",
+      "title": "表情包 | 一不小心吃出了你的样子 拿图点赞、吱声",
+      "sha1": "d3189ae4b029b867bb6c0dba7d5c39e0b2238213"
+    },
+    {
+      "file": "warm/宝宝贴贴.jpg",
+      "mood": "warm",
+      "label": "宝宝贴贴",
+      "tags": [
+        "温柔",
+        "陪伴",
+        "安慰"
+      ],
+      "size": 12807,
+      "width": 540,
+      "height": 540,
+      "source": "https://p3-pc-sign.douyinpic.com/obj/tos-cn-p-0015/o4cVQEowUnAX5Kcrue8TB7LAfBfATCJyQCbMlD?x-expires=2052921600&x-signature=McfjkosNXBnKZX3F60iImLOs%2Bao%3D&from=1516005123",
+      "origin_page": "http://www.douyin.com/zhuanti/7234663378680318010",
+      "title": "两狗贴贴表情包 - 抖音",
+      "sha1": "1fabbde756ffa20d707696bfd45ca9644447c7fc"
+    },
+    {
+      "file": "love/抱抱猫.jpg",
+      "mood": "love",
+      "label": "抱抱猫",
+      "tags": [
+        "爱",
+        "撒娇",
+        "贴贴",
+        "亲亲"
+      ],
+      "size": 41618,
+      "width": 718,
+      "height": 720,
+      "source": "https://img0.baidu.com/it/u=922968391,1719621299&fm=253&app=138&f=JPEG?w=800&h=802",
+      "origin_page": "http://www.douyin.com/note/7163546507172531493",
+      "title": "超可爱要贴贴抱抱表情包.凭咱俩的关系,冬天睡一个被窝不过分吧",
+      "sha1": "a557cfe12dbc04f42d47e49982d3a799664d50b5"
+    },
+    {
+      "file": "warm/天冷贴贴.jpg",
+      "mood": "warm",
+      "label": "天冷贴贴",
+      "tags": [
+        "温柔",
+        "陪伴",
+        "安慰"
+      ],
+      "size": 23003,
+      "width": 500,
+      "height": 500,
+      "source": "https://img1.baidu.com/it/u=2858883792,1817244319&fm=253&app=138&f=JPEG?w=500&h=500",
+      "origin_page": "http://www.xiaohongshu.com/discovery/item/63959ac900000000220379fd",
+      "title": "天冷了和宝贝贴贴",
+      "sha1": "bf9fa41b0a85351a65c2edb82d7634b888f72750"
+    },
+    {
+      "file": "love/想贴贴.jpg",
+      "mood": "love",
+      "label": "想贴贴",
+      "tags": [
+        "爱",
+        "撒娇",
+        "贴贴",
+        "亲亲"
+      ],
+      "size": 34837,
+      "width": 500,
+      "height": 500,
+      "source": "https://img1.baidu.com/it/u=755545111,435829086&fm=253&app=138&f=JPEG?w=500&h=500",
+      "origin_page": "http://baijiahao.baidu.com/s?id=1762120274520359635&wfr=spider&for=pc",
+      "title": "想贴贴了可以贴贴吗",
+      "sha1": "220245db610f3ba59b6554e580c41fe767d2a42e"
+    },
+    {
+      "file": "shy/睡觉贴贴.jpg",
+      "mood": "shy",
+      "label": "睡觉贴贴",
+      "tags": [
+        "害羞",
+        "卖萌",
+        "小声"
+      ],
+      "size": 25919,
+      "width": 500,
+      "height": 500,
+      "source": "https://img0.baidu.com/it/u=1969189226,3073356014&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500",
+      "origin_page": "http://www.douyin.com/note/7159904767773363489",
+      "title": "花式贴贴|蜜桃猫和灰灰表情包",
+      "sha1": "6605248ce7063c57edaa679042253e572162407c"
+    },
+    {
+      "file": "love/申请贴贴.jpg",
+      "mood": "love",
+      "label": "申请贴贴",
+      "tags": [
+        "爱",
+        "撒娇",
+        "贴贴",
+        "亲亲"
+      ],
+      "size": 50792,
+      "width": 720,
+      "height": 713,
+      "source": "https://img2.baidu.com/it/u=2878315020,2553976434&fm=253&fmt=auto&app=138&f=JPEG?w=808&h=800",
+      "origin_page": "http://www.douyin.com/note/7380284447553375526",
+      "title": "可以贴贴嘛#毫无训练痕迹 #无处安放的jio #top #白",
+      "sha1": "819b3cabfd9119f9a7deac2564f0248d78458082"
+    },
+    {
+      "file": "love/小狗贴贴.jpg",
+      "mood": "love",
+      "label": "小狗贴贴",
+      "tags": [
+        "爱",
+        "撒娇",
+        "贴贴",
+        "亲亲"
+      ],
+      "size": 21381,
+      "width": 400,
+      "height": 400,
+      "source": "https://c-ssl.dtstatic.com/uploads/blog/202302/01/20230201191755_a34cf.thumb.400_0.jpg",
+      "origin_page": "https://www.duitang.com/album/?id=119093176",
+      "title": "表情包",
+      "sha1": "7f7755824fd4bcbfdeb1c345a9722cbb79f7e48f"
+    },
+    {
+      "file": "tease/别贴.jpg",
+      "mood": "tease",
+      "label": "别贴",
+      "tags": [
+        "傲娇",
+        "逗",
+        "挑衅"
+      ],
+      "size": 60693,
+      "width": 720,
+      "height": 720,
+      "source": "https://picx.zhimg.com/v2-62e3865fbb784d9e19a1b03997e88014_r.jpg?source=1940ef5c",
+      "origin_page": "http://www.douyin.com/note/7243272309878820128",
+      "title": "过来挨贴贴#创作灵感 #表情包",
+      "sha1": "95573b4cab8ccdd88f632b2a56804cd94e0ff8a7"
+    },
+    {
+      "file": "love/爱的么么哒.jpg",
+      "mood": "love",
+      "label": "爱的么么哒",
+      "tags": [
+        "爱",
+        "撒娇",
+        "贴贴",
+        "亲亲"
+      ],
+      "size": 12937,
+      "width": 320,
+      "height": 320,
+      "source": "http://www.5577.com/up/2019-2/15501065757968870.jpg",
+      "origin_page": "http://www.5577.com/s/390602.html",
+      "title": "亲亲的好处表情包",
+      "sha1": "a8bc30305a7a41169d7a405774a37bd4a957865d"
+    },
+    {
+      "file": "shy/要亲亲.jpg",
+      "mood": "shy",
+      "label": "要亲亲",
+      "tags": [
+        "害羞",
+        "卖萌",
+        "小声"
+      ],
+      "size": 22104,
+      "width": 640,
+      "height": 604,
+      "source": "http://5b0988e595225.cdn.sohucs.com/q_70,c_zoom,w_640/images/20180810/92b740ce9a464ca39bd6b6fc905d93c1.jpeg",
+      "origin_page": "http://m.sohu.com/a/246331763_99925148",
+      "title": "要亲亲、要两个亲亲、要马上亲亲「要亲亲表情包」",
+      "sha1": "156d09f47d1e740d85d6e0f51c2c1b12eaf620d7"
+    },
+    {
+      "file": "love/亲一小口.jpg",
+      "mood": "love",
+      "label": "亲一小口",
+      "tags": [
+        "爱",
+        "撒娇",
+        "贴贴",
+        "亲亲"
+      ],
+      "size": 36110,
+      "width": 720,
+      "height": 711,
+      "source": "https://b0.bdstatic.com/498eac0d630271c9308c494331738940.jpg",
+      "origin_page": "http://mbd.baidu.com/newspage/data/dtlandingsuper?nid",
+      "title": "情侣亲亲表情包,就一小口",
+      "sha1": "263102e892fb6c7b7ce45cec3618f2a33bfc3d5a"
+    },
+    {
+      "file": "love/要宝宝亲亲.jpg",
+      "mood": "love",
+      "label": "要宝宝亲亲",
+      "tags": [
+        "爱",
+        "撒娇",
+        "贴贴",
+        "亲亲"
+      ],
+      "size": 9435,
+      "width": 392,
+      "height": 392,
+      "source": "https://pica.zhimg.com/50/v2-227b5b6a3aa3fe052b1229f695514f9e_720w.jpg?source=1940ef5c",
+      "origin_page": "https://www.zhihu.com/question/267763580",
+      "title": "交往半年男朋友很少亲我是为什么?",
+      "sha1": "45bdd03a4b0d43540d0f1fcdd264f5242d6c40cf"
+    },
+    {
+      "file": "love/猫猫比心.jpg",
+      "mood": "love",
+      "label": "猫猫比心",
+      "tags": [
+        "爱",
+        "撒娇",
+        "贴贴",
+        "亲亲"
+      ],
+      "size": 39427,
+      "width": 700,
+      "height": 700,
+      "source": "https://b-ssl.duitang.com/uploads/item/201610/29/20161029001110_zsuN3.thumb.700_0.jpeg",
+      "origin_page": "https://www.duitang.com/blog/?id=724151126",
+      "title": "表情包包包包包~比心-堆糖，美好生活研究所",
+      "sha1": "0321dfe742077ba6b5f9311d5415b209a1b89700"
+    },
+    {
+      "file": "warm/手指比心.jpg",
+      "mood": "warm",
+      "label": "手指比心",
+      "tags": [
+        "温柔",
+        "陪伴",
+        "安慰"
+      ],
+      "size": 21666,
+      "width": 720,
+      "height": 720,
+      "source": "https://pic.rmb.bdstatic.com/bjh/down/a405b2275110e56ae6c5475be2fa01f8.png@h_1280",
+      "origin_page": "https://mbd.baidu.com/newspage/data/dtlandingwise?nid",
+      "title": "积极乐观才是生活最高级的乐感[比心]",
+      "sha1": "3827fc40410b6ca9e0945877ba208e6c545421ac"
+    },
+    {
+      "file": "playful/比个心心.jpg",
+      "mood": "playful",
+      "label": "比个心心",
+      "tags": [
+        "搞笑",
+        "玩闹",
+        "开心"
+      ],
+      "size": 11331,
+      "width": 340,
+      "height": 340,
+      "source": "https://pic.ibaotu.com/01/84/46/34p888piCms9.jpg-0.jpg%21w340",
+      "origin_page": "http://ibaotu.com/tupian/xingif.html",
+      "title": "比心表情包动图gif图片下载",
+      "sha1": "5906cc53c7012262befb27f10c355f64384f7cfa"
+    },
+    {
+      "file": "love/呐抱心.jpg",
+      "mood": "love",
+      "label": "呐抱心",
+      "tags": [
+        "爱",
+        "撒娇",
+        "贴贴",
+        "亲亲"
+      ],
+      "size": 39733,
+      "width": 720,
+      "height": 720,
+      "source": "https://b0.bdstatic.com/418424612ad85e00ea522b7fbffa99f0.jpg",
+      "origin_page": "http://mbd.baidu.com/newspage/data/dtlandingsuper?nid",
+      "title": "比心表情包",
+      "sha1": "4564d4633de509dc846d006ef05027e9b9678cdc"
+    },
+    {
+      "file": "shy/害羞羞呀.jpg",
+      "mood": "shy",
+      "label": "害羞羞呀",
+      "tags": [
+        "害羞",
+        "卖萌",
+        "小声"
+      ],
+      "size": 48703,
+      "width": 640,
+      "height": 640,
+      "source": "https://f12.baidu.com/it/u=3900591581,1405942494&fm=173&app=49&f=JPEG?w=640&h=640&s=768ADF0DCA1356D68C3479A80300E0A0&access=215967316",
+      "origin_page": "https://baijiahao.baidu.com/s?id=1619739358962519022",
+      "title": "表情包:好害羞啊",
+      "sha1": "26b93b31cd31f274fff157e12151f710e2c82f37"
+    },
+    {
+      "file": "shy/害羞线稿.jpg",
+      "mood": "shy",
+      "label": "害羞线稿",
+      "tags": [
+        "害羞",
+        "卖萌",
+        "小声"
+      ],
+      "size": 11214,
+      "width": 274,
+      "height": 274,
+      "source": "http://5b0988e595225.cdn.sohucs.com/images/20170821/4c2e36f5247d42b096b277b81e04d7d6.jpeg",
+      "origin_page": "http://www.sohu.com/a/166292648_675025",
+      "title": "联大新生,表情包get√",
+      "sha1": "0f9568d5cb7ee408e3677fc4f1951f9fe02f696f"
+    },
+    {
+      "file": "warm/温柔微笑.jpg",
+      "mood": "warm",
+      "label": "温柔微笑",
+      "tags": [
+        "温柔",
+        "陪伴",
+        "安慰"
+      ],
+      "size": 26487,
+      "width": 400,
+      "height": 400,
+      "source": "http://pic.rmb.bdstatic.com/bjh/3f1441f3bb5/240721/80bb8c2f2369cfc0d39728a0b2d2510c.gif@f_jpg",
+      "origin_page": "http://mbd.baidu.com/newspage/data/dtlandingsuper?nid=dt_4574299106530765826",
+      "title": "chiikawa吉伊卡哇小八表情包#表情包",
+      "sha1": "765a185d483c3e2e7f870d508a179ac7f6bb3f24"
+    },
+    {
+      "file": "love/一小口.jpg",
+      "mood": "love",
+      "label": "一小口",
+      "tags": [
+        "爱",
+        "撒娇",
+        "贴贴",
+        "亲亲"
+      ],
+      "size": 17218,
+      "width": 500,
+      "height": 500,
+      "source": "http://img0.baidu.com/it/u=2055344107,814422415&fm=253&app=138&f=JPEG?w=500&h=500",
+      "origin_page": "http://www.xiaohongshu.com/discovery/item/63d22159000000001b024e2b",
+      "title": "亲亲表情包",
+      "sha1": "acb969f379be3cfb1f4b812578886a648d5d1f59"
+    },
+    {
+      "file": "love/你看看我.jpg",
+      "mood": "love",
+      "label": "你看看我",
+      "tags": [
+        "爱",
+        "撒娇",
+        "贴贴",
+        "亲亲"
+      ],
+      "size": 63308,
+      "width": 720,
+      "height": 716,
+      "source": "https://c-ssl.duitang.com/uploads/blog/202009/13/20200913103412_37b77.thumb.1000_0.jpg",
+      "origin_page": "https://www.duitang.com/blog/?id=1287528735",
+      "title": "猫咪表情包 可爱",
+      "sha1": "f8aea09f9a12f698545872e6e1b7eb2f455d91f1"
+    },
+    {
+      "file": "shy/不抱就哭.jpg",
+      "mood": "shy",
+      "label": "不抱就哭",
+      "tags": [
+        "害羞",
+        "卖萌",
+        "小声"
+      ],
+      "size": 81020,
+      "width": 700,
+      "height": 686,
+      "source": "https://k.sinaimg.cn/n/sinakd20122/39/w828h811/20250117/b08a-af216eea8600300b028ec6906c853a57.jpg/w700d1q75cms.jpg",
+      "origin_page": "http://k.sina.cn/article_2393857144_p8eaf5c78027012e7y.html",
+      "title": "撒娇卖萌的猫咪表情包",
+      "sha1": "983f8feb47c3ad949bea1699ba5f01ea7038f9cf"
+    },
+    {
+      "file": "shy/羞射.jpg",
+      "mood": "shy",
+      "label": "羞射",
+      "tags": [
+        "害羞",
+        "卖萌",
+        "小声"
+      ],
+      "size": 19677,
+      "width": 500,
+      "height": 500,
+      "source": "https://hbimg.huaban.com/f3a468f91effaf1e236964822883a338143586885fe0-4IILv4_fw658",
+      "origin_page": "https://huaban.com/pins/3604775621/",
+      "title": "卡通女孩害羞表情免抠素材_图宝宝",
+      "sha1": "828cfd1dec6e72613850b900819c96c1b4a3badc"
+    },
+    {
+      "file": "sad/宝宝好委屈.jpg",
+      "mood": "sad",
+      "label": "宝宝好委屈",
+      "tags": [
+        "委屈",
+        "低落",
+        "哭"
+      ],
+      "size": 13637,
+      "width": 240,
+      "height": 237,
+      "source": "https://pic.fxxz.com/up/2018-5/201852171122217.jpg!400_720",
+      "origin_page": "https://m.fxxz.com/f/344189",
+      "title": "宝宝好委屈表情包安卓版_飞翔下载",
+      "sha1": "bf860f0cc244dda73225bfda065f0023abedfa0c"
+    },
+    {
+      "file": "sad/委屈巴巴被凶了.jpg",
+      "mood": "sad",
+      "label": "委屈巴巴被凶了",
+      "tags": [
+        "委屈",
+        "低落",
+        "哭"
+      ],
+      "size": 70811,
+      "width": 720,
+      "height": 720,
+      "source": "https://b0.bdstatic.com/ugc/sNrSYcuNX4DNR1HItwrMKwba39a2f484731a08c6330b488a31a3c1.jpg",
+      "origin_page": "http://mbd.baidu.com/newspage/data/dtlandingsuper?nid",
+      "title": "&quot;,你笑得宛如一朵盛委屈表情包委屈图片委屈的表情包委屈的图片委屈",
+      "sha1": "d76019497b4c9638a5bd7a1f6db97c4317515ac7"
+    },
+    {
+      "file": "sad/这种委屈谁受得了.jpg",
+      "mood": "sad",
+      "label": "这种委屈谁受得了",
+      "tags": [
+        "委屈",
+        "低落",
+        "哭"
+      ],
+      "size": 19390,
+      "width": 400,
+      "height": 351,
+      "source": "https://c-ssl.duitang.com/uploads/item/202004/11/20200411184923_t8HLB.thumb.400_0.jpeg",
+      "origin_page": "https://www.duitang.com/album/?id=99134585",
+      "title": "小鹿攒的表情包",
+      "sha1": "1cb30bf6d5e4530fa00e7d823de7b0479d0f0db2"
+    },
+    {
+      "file": "sad/委屈到眼眶红.jpg",
+      "mood": "sad",
+      "label": "委屈到眼眶红",
+      "tags": [
+        "委屈",
+        "低落",
+        "哭"
+      ],
+      "size": 38333,
+      "width": 559,
+      "height": 537,
+      "source": "https://img.soogif.com/AmzOoe7SiiKxVZeV6Hw0FONJyUz7Cusf.jpg",
+      "origin_page": "http://www.soogif.com/materialPage/443ioVzrudk",
+      "title": "猫咪脸红流泪委屈巴巴gif动图",
+      "sha1": "074614b1faff95f5ee7d6eb615ae46ae7b179983"
+    },
+    {
+      "file": "sad/仓鼠委屈.jpg",
+      "mood": "sad",
+      "label": "仓鼠委屈",
+      "tags": [
+        "委屈",
+        "低落",
+        "哭"
+      ],
+      "size": 51949,
+      "width": 720,
+      "height": 720,
+      "source": "https://pic.rmb.bdstatic.com/bjh/240514/events/248b57296e0bd58e68974c44f50c10471651.jpeg@h_1280",
+      "origin_page": "https://mbd.baidu.com/newspage/data/dtlandingwise?nid",
+      "title": "实用沙雕表情包丨委屈屈#表情包#",
+      "sha1": "9e76018f47d0c094d51bc506c2d995a07c1fbeb3"
+    },
+    {
+      "file": "love/小狗抱心.jpg",
+      "mood": "love",
+      "label": "小狗抱心",
+      "tags": [
+        "爱",
+        "撒娇",
+        "贴贴",
+        "亲亲"
+      ],
+      "size": 18934,
+      "width": 720,
+      "height": 720,
+      "source": "https://b0.bdstatic.com/9ce53fbe3db0aab95b750b3c63e01511.jpg",
+      "origin_page": "http://mbd.baidu.com/newspage/data/dtlandingsuper?nid",
+      "title": "评论区交换enfp最爱用的线条小狗表情包",
+      "sha1": "ceda7cc3f05dcf4a4b418e38bfba4304a1a91b18"
+    },
+    {
+      "file": "warm/小狗贴贴.jpg",
+      "mood": "warm",
+      "label": "小狗贴贴",
+      "tags": [
+        "温柔",
+        "陪伴",
+        "安慰"
+      ],
+      "size": 14966,
+      "width": 600,
+      "height": 600,
+      "source": "https://pic1.zhimg.com/50/v2-d479dca6bd018711b6a8acc0c8027620_720w.jpg?source=1def8aca",
+      "origin_page": "http://www.zhihu.com/question/593483734",
+      "title": "线条小狗是怎么火起来的?有没有更多线条小狗表情包?线条猫?",
+      "sha1": "79a32480c9ee8b12dd2fe2187249d1606a30b6c9"
+    },
+    {
+      "file": "love/比心小狗.jpg",
+      "mood": "love",
+      "label": "比心小狗",
+      "tags": [
+        "爱",
+        "撒娇",
+        "贴贴",
+        "亲亲"
+      ],
+      "size": 24771,
+      "width": 720,
+      "height": 720,
+      "source": "https://i0.hdslb.com/bfs/archive/dc01db4b333d196e48a87757b8793aa3bba4ba0b.jpg",
+      "origin_page": "http://www.bilibili.com/video/BV1n44y1A7iS",
+      "title": "线条小狗表情包",
+      "sha1": "dc1946245da073b436d9cd451f7b581b6a1ee9c1"
+    },
+    {
+      "file": "love/最喜欢乖宝啦.jpg",
+      "mood": "love",
+      "label": "最喜欢乖宝啦",
+      "tags": [
+        "爱",
+        "撒娇",
+        "贴贴",
+        "亲亲"
+      ],
+      "size": 30322,
+      "width": 720,
+      "height": 720,
+      "source": "https://img0.baidu.com/it/u=3636118706,3242751141&fm=253&fmt=auto&app=138&f=JPEG?w=800&h=800",
+      "origin_page": "http://www.douyin.com/note/7164031627201350951",
+      "title": "小狗贴贴#线条小狗 #表情包 #小狗文学",
+      "sha1": "43f1c197cebc9f8179a5bf50d8f65d385eab7807"
+    },
+    {
+      "file": "shy/拿着礼物害羞.jpg",
+      "mood": "shy",
+      "label": "拿着礼物害羞",
+      "tags": [
+        "害羞",
+        "卖萌",
+        "小声"
+      ],
+      "size": 53023,
+      "width": 720,
+      "height": 720,
+      "source": "https://pic.rmb.bdstatic.com/bjh/240121/events/13c6d245290b48cc558b2132ca6c92e48809.gif@h_1280",
+      "origin_page": "https://mbd.baidu.com/newspage/data/dtlandingsuper?nid",
+      "title": "chiikawa吉伊卡哇表情包(可爱版)",
+      "sha1": "1e61dd963952ef6c1826f26d16c81a3282c973e4"
+    },
+    {
+      "file": "love/脸红喜欢.jpg",
+      "mood": "love",
+      "label": "脸红喜欢",
+      "tags": [
+        "爱",
+        "撒娇",
+        "贴贴",
+        "亲亲"
+      ],
+      "size": 30806,
+      "width": 720,
+      "height": 624,
+      "source": "https://pic.rmb.bdstatic.com/bjh/events/62d00bb301eac0233db70a483e5d8a5e6963.gif@h_1280",
+      "origin_page": "https://mbd.baidu.com/newspage/data/dtlandingsuper?nid=dt_3771510877615687956",
+      "title": "chiikawa吉伊卡哇表情包",
+      "sha1": "74b5a8383da346906246e9a6e5737750434a7519"
+    },
+    {
+      "file": "love/爱心.jpg",
+      "mood": "love",
+      "label": "爱心",
+      "tags": [
+        "爱",
+        "撒娇",
+        "贴贴",
+        "亲亲"
+      ],
+      "size": 36886,
+      "width": 720,
+      "height": 612,
+      "source": "https://worldgz.photo.store.qq.com/psc?/world/O0cFsaTfOlqjIAnYAvw8WoqqCBfPPsIoMIukrrBX3S.caI8NtinCK6SqFg4a*1ZIXq2ONiiaBID95lshcWEOP94gGjTSNgMCOKKzaHqR4s8!/b=&bo=AAVABAAFQAQRHyg!&ek=1&tl=1",
+      "origin_page": "https://pd.qq.com/g/a8zde1y8nu/post/B_d106ec65112f04001441152197618667810X60",
+      "title": "转载chiikawa表情包|chiikawa吉伊卡哇|腾讯频道",
+      "sha1": "8360c3bc9f5fa6b7b5f8b28aa69396b1e0293374"
+    },
+    {
+      "file": "shy/鞠躬害羞.jpg",
+      "mood": "shy",
+      "label": "鞠躬害羞",
+      "tags": [
+        "害羞",
+        "卖萌",
+        "小声"
+      ],
+      "size": 33933,
+      "width": 720,
+      "height": 720,
+      "source": "https://pic.rmb.bdstatic.com/bjh/events/f45a35dd3550f5c68a7926551a461c911447.jpeg@h_1280",
+      "origin_page": "https://mbd.baidu.com/newspage/data/dtlandingwise?nid=dt_5327821178394653772&amp;sourceFrom=homepage",
+      "title": "chiikawa吉伊卡哇表情包(可爱版)",
+      "sha1": "67c722e6fe7c4eba4958e2b0c7660d1428b3454e"
+    }
+  ]
+}

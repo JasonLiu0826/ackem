@@ -172,12 +172,45 @@ export function anthropicAllTools(opts?: ToolsPayloadOptions): Array<{
 
 type OaiMsg = { role: string; content?: unknown }
 
+/**
+ * OpenAI 多模态片段 → Anthropic content block。
+ * OpenAI: { type:'image_url', image_url:{ url:'data:image/png;base64,...' } }
+ * Anthropic: { type:'image', source:{ type:'base64', media_type, data } }
+ * 远程 http(s) 链接 Anthropic 也接受 url source，直接透传。
+ */
+function toAnthropicContent(content: unknown): string | unknown[] {
+  if (typeof content === 'string') return content
+  if (!Array.isArray(content)) return JSON.stringify(content ?? '')
+  const blocks: unknown[] = []
+  for (const part of content as Array<Record<string, unknown>>) {
+    if (!part || typeof part !== 'object') continue
+    if (part.type === 'text') {
+      blocks.push({ type: 'text', text: String(part.text ?? '') })
+      continue
+    }
+    if (part.type === 'image_url') {
+      const url = String((part.image_url as { url?: unknown } | undefined)?.url ?? '')
+      const data = url.match(/^data:(image\/(?:png|jpeg|gif|webp));base64,([A-Za-z0-9+/=]+)$/)
+      if (data) {
+        blocks.push({ type: 'image', source: { type: 'base64', media_type: data[1], data: data[2] } })
+      } else if (/^https?:\/\//i.test(url)) {
+        blocks.push({ type: 'image', source: { type: 'url', url } })
+      } else if (url) {
+        blocks.push({ type: 'text', text: `[图片无法解析: ${url.slice(0, 120)}]` })
+      }
+      continue
+    }
+    blocks.push({ type: 'text', text: JSON.stringify(part) })
+  }
+  return blocks
+}
+
 export function openAiMessagesToAnthropic(messages: unknown[]): {
   system?: string
-  messages: Array<{ role: 'user' | 'assistant'; content: string }>
+  messages: Array<{ role: 'user' | 'assistant'; content: string | unknown[] }>
 } {
   const systemParts: string[] = []
-  const out: Array<{ role: 'user' | 'assistant'; content: string }> = []
+  const out: Array<{ role: 'user' | 'assistant'; content: string | unknown[] }> = []
   for (const m of messages as OaiMsg[]) {
     if (!m || typeof m !== 'object') continue
     if (m.role === 'system') {
@@ -186,8 +219,7 @@ export function openAiMessagesToAnthropic(messages: unknown[]): {
       continue
     }
     if (m.role === 'user' || m.role === 'assistant') {
-      const c = typeof m.content === 'string' ? m.content : JSON.stringify(m.content ?? '')
-      out.push({ role: m.role, content: c })
+      out.push({ role: m.role, content: toAnthropicContent(m.content) })
       continue
     }
     /* tool 等：当前对话拼装不包含 tool 消息；若将来有则跳过 */
@@ -229,7 +261,9 @@ export async function streamAnthropicMessages(
   const rawMessages = body.messages as unknown[]
   const url = resolveAnthropicMessagesUrl(settings)
   const controller = new AbortController()
-  const desktopAgentChatMode = body.desktopAgentChatMode === true
+  // 渠道（QQ/微信）单轮工具模式：Anthropic 路径暂不支持单轮，直接按普通聊天处理，避免重回路把聊天带崩
+  const desktopAgentChatMode =
+    body.desktopAgentChatMode === true && body.deferAgentTaskPlan !== true
   const agentActive = isDesktopAgentToolingActive(settings, desktopAgentChatMode)
   const agentTimeoutMs = agentActive ? 900_000 : settings.timeoutMs || 120_000
   const abortTimer = setTimeout(() => controller.abort(), agentTimeoutMs)
@@ -809,7 +843,7 @@ export async function anthropicMessagesJson(params: {
 
 export async function anthropicMessagesJsonDetailed(params: {
   settings: AppSettings
-  messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>
+  messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string | unknown[] }>
   temperature: number
   max_tokens?: number
 }): Promise<{ text: string; truncated: boolean }> {

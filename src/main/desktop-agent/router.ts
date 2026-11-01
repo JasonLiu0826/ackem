@@ -14,8 +14,9 @@ import {
 } from './policy'
 import { requestDesktopAgentConfirm } from './confirm/confirmService'
 import { shouldSkipDesktopAgentConfirm } from './confirmBypass'
-import { executeDesktopAgentAction } from './adapters/win/executor'
+import { executeDesktopAgentAction } from './adapters'
 import { homedir } from 'node:os'
+import { getMainWindowWebContentsId } from '../mainApp'
 
 function decisionMessage(decision: string): string {
   if (decision === 'timeout') return '用户未在时限内确认，操作已取消'
@@ -125,26 +126,30 @@ export async function executeUseComputer(
     ctx.dataRoot,
     sessionId,
     action,
-    ctx.taskPlanId
+    ctx.taskPlanId,
+    policy.normalizedPath ?? args.path
   )
   const showTaskDeleteBatch =
     action === 'delete_path' && Boolean(ctx.taskPlanId) && !skipConfirm
   const decision = skipConfirm
     ? ('allowed' as const)
-    : await requestDesktopAgentConfirm({
-        action,
-        actionLabel: label,
-        kind,
-        path: policy.normalizedPath ?? args.path,
-        pathTo: policy.normalizedPathTo ?? args.path_to,
-        target: args.target,
-        url: args.url,
-        sensitiveWarning: policy.sensitiveWarning,
-        pathMissing: policy.pathMissing,
-        hardBlockReason: policy.hardBlockReason,
-        taskPlanId: ctx.taskPlanId,
-        showTaskDeleteBatch
-      })
+    : await requestDesktopAgentConfirm(
+        {
+          action,
+          actionLabel: label,
+          kind,
+          path: policy.normalizedPath ?? args.path,
+          pathTo: policy.normalizedPathTo ?? args.path_to,
+          target: args.target,
+          url: args.url,
+          sensitiveWarning: policy.sensitiveWarning,
+          pathMissing: policy.pathMissing,
+          hardBlockReason: policy.hardBlockReason,
+          taskPlanId: ctx.taskPlanId,
+          showTaskDeleteBatch
+        },
+        { mainWindowId: getMainWindowWebContentsId() }
+      )
 
   if (ctx.background && ctx.webContents) {
     ctx.webContents.send('desktop-agent:job-state', {

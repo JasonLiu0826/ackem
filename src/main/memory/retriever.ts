@@ -42,6 +42,11 @@ export type RetrievalResult = {
 
 /** 上一轮激活的关联 ID 列表（供 postChatTurn 纠错使用） */
 export let lastActivatedAssociationIds: string[] = []
+
+/** 读取当前快照：setPendingTurn 时随 turn 固化，避免并发轮次互相覆盖 */
+export function getLastActivatedAssociationIds(): string[] {
+  return [...lastActivatedAssociationIds]
+}
 /** 共现激活频率门控计数器 */
 let cooccurrenceTicks = 0
 

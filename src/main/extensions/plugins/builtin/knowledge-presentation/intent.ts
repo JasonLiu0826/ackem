@@ -169,6 +169,14 @@ export function wantsNewWebSearch(msg: string): boolean {
   ) {
     return true
   }
+  // 时效性问题："最近有什么新电影""今年有什么旗舰机""现在金价怎么样" → 需要联网
+  if (
+    /(?:最近|最新|今年|这几天|这段时间|现在|当前)[^。！？]{0,12}(?:有什么|有哪些|怎么样|如何|新闻|价格|多少钱|推荐|排行|发布|上市)/u.test(t) &&
+    !/(?:最近|最新)(?:我|有点|一直|在忙|很累)/u.test(t)
+  ) {
+    return true
+  }
+  if (/(?:latest|recent|current)\b[^.!?]{0,40}\b(?:news|price|release|recommend)/i.test(t)) return true
   // "什么是X"、"介绍一下X"、"X是什么" → 知识检索
   if (/(?:什么是|是什么|是啥|介绍一下|解释一下|科普一下|讲解一下)\s*\S+/u.test(t)) return true
   if (/\S+(?:是什么|是啥)\s*[？?。.！!]?\s*$/u.test(t)) return true
@@ -222,9 +230,15 @@ export function resolveOrganizeTopic(
   return stripped.length >= 2 ? stripped.slice(0, 120) : '上文内容'
 }
 
+/** 带明确事实主题时，"怎么样"是真查询而不是闲聊（如"现在金价怎么样"） */
+const FACTUAL_TOPIC_PATTERN =
+  /股市|股票|金价|黄金|房价|油价|汇率|利率|比特币|显卡|手机|汽车|机票|航班|新闻|电影|电视剧|排名|比分|赛程|发布会|行情|价格|多少钱|政策|新规|税率|社保/u
+
 export function isCasualOpinionChat(msg: string): boolean {
   const t = msg.trim()
   if (CASUAL_OPINION_PATTERNS.some(p => p.test(t))) return true
+  // 有具体事实主题 → 不是闲聊，交给检索判断
+  if (FACTUAL_TOPIC_PATTERN.test(t)) return false
   if (/怎么样/u.test(t) && !/有哪些|都有什么|都有啥/u.test(t)) {
     return true
   }

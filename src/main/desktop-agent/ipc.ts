@@ -35,26 +35,26 @@ export function registerDesktopAgentIpc(): void {
     broadcastToRenderers(channel, payload)
   })
 
-  ipcMain.handle('desktop-agent:confirm:allow', (_e, args: { requestId: string }) => {
-    return resolveDesktopAgentConfirm(args.requestId, 'allowed')
+  ipcMain.handle('desktop-agent:confirm:allow', (event, args: { requestId: string }) => {
+    return resolveDesktopAgentConfirm(args.requestId, 'allowed', { senderId: event.sender.id })
   })
 
-  ipcMain.handle('desktop-agent:confirm:allowSession', (_e, args: { requestId: string; sessionId?: string }) => {
+  ipcMain.handle('desktop-agent:confirm:allowSession', (event, args: { requestId: string; sessionId?: string }) => {
     const root = currentDataRoot()
     const sid = args.sessionId || currentSessionId()
     setDesktopAgentSessionAutoApprove(root, sid)
-    return resolveDesktopAgentConfirm(args.requestId, 'allowed')
+    return resolveDesktopAgentConfirm(args.requestId, 'allowed', { senderId: event.sender.id })
   })
 
-  ipcMain.handle('desktop-agent:confirm:deny', (_e, args: { requestId: string }) => {
-    return resolveDesktopAgentConfirm(args.requestId, 'denied')
+  ipcMain.handle('desktop-agent:confirm:deny', (event, args: { requestId: string }) => {
+    return resolveDesktopAgentConfirm(args.requestId, 'denied', { senderId: event.sender.id })
   })
 
   ipcMain.handle(
     'desktop-agent:confirm:allowTaskDeletes',
-    (_e, args: { requestId: string; taskPlanId: string }) => {
-      if (args.taskPlanId) setTaskPlanDeleteAutoApprove(args.taskPlanId)
-      return resolveDesktopAgentConfirm(args.requestId, 'allowed')
+    (event, args: { requestId: string; taskPlanId: string; path?: string }) => {
+      if (args.taskPlanId) setTaskPlanDeleteAutoApprove(args.taskPlanId, args.path ? [args.path] : [])
+      return resolveDesktopAgentConfirm(args.requestId, 'allowed', { senderId: event.sender.id })
     }
   )
 

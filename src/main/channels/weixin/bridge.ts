@@ -1,43 +1,26 @@
-import { loadChatHistoryFromDb } from '../../db/repos/chatHistory'
 import { loadSettings } from '../../settings'
+import { broadcastToRenderers } from '../../rendererBroadcast'
 import { formatBubbleForWeixin } from '../markdownForChannel'
+import { stripTrailingSeparators } from '../../chat/humanizeReply'
 import { runCompanionTurn } from '../companionTurn'
+import {
+  appendConversationTurn,
+  loadRecentConversationMessages,
+  resolveConversationSessionId
+} from '../conversation'
 import { CompanionTurnError } from '../types'
 import { extractTextFromMessage } from './api'
 import { planWeixinDelivery } from './deliveryPlanner'
 import { planWeixinDocumentDelivery } from './documentDelivery'
 import { sendWeixinOutboundSequence } from './outboundSequence'
 import { enqueuePeerTurn } from './queue'
-import {
-  loadContextToken,
-  markMessageSeen,
-  normalizePeerSessionId,
-  saveContextToken
-} from './store'
+import { loadContextToken, markMessageSeen, saveContextToken } from './store'
 import { recordWeixinAckemActivity } from './activity'
 import type { WeixinAccount, WeixinMessage } from './types'
 import { createLogger } from '../../logger'
+import { isChannelOwner } from '../ownerGate'
 
 const log = createLogger('weixin-bridge')
-
-function loadRecentMessages(
-  dataRoot: string,
-  sessionId: string,
-  limit = 24
-): Array<{ role: 'user' | 'assistant'; content: string }> {
-  const raw = loadChatHistoryFromDb(dataRoot, sessionId)
-  const rows = Array.isArray(raw) ? raw : []
-  const msgs: Array<{ role: 'user' | 'assistant'; content: string }> = []
-  for (const row of rows) {
-    if (!row || typeof row !== 'object') continue
-    const r = row as { kind?: string; role?: string; content?: string }
-    if (r.kind !== 'message') continue
-    if (r.role !== 'user' && r.role !== 'assistant') continue
-    if (!r.content?.trim()) continue
-    msgs.push({ role: r.role, content: r.content })
-  }
-  return msgs.slice(-limit)
-}
 
 export function enqueueInboundWeixinMessage(
   msg: WeixinMessage,
@@ -48,6 +31,9 @@ export function enqueueInboundWeixinMessage(
   const peerId = msg.from_user_id
   if (!peerId) return
   if (msg.message_id != null && markMessageSeen(dataRoot, msg.message_id)) return
+
+  // 机主绑定：只响应主人（首个私聊自动绑定）
+  if (!isChannelOwner('weixin', peerId)) return
 
   if (msg.context_token) saveContextToken(dataRoot, peerId, msg.context_token)
   recordWeixinAckemActivity(dataRoot)
@@ -76,9 +62,10 @@ async function handleInboundMessage(
     return
   }
 
-  const sessionId = normalizePeerSessionId(peerId)
-  const recentMessages = loadRecentMessages(dataRoot, sessionId)
   const settings = loadSettings()
+  // 与 QQ / 桌面共用同一份历史；peerId 只用于把回复发回这个人
+  const sessionId = resolveConversationSessionId(settings.activeSessionId)
+  const recentMessages = loadRecentConversationMessages(dataRoot, sessionId)
 
   let rawReply: string
   let documentDelivery: {
@@ -153,4 +140,24 @@ async function handleInboundMessage(
     bubbles,
     dataRoot
   })
+
+  // 与 QQ / 桌面共用同一份历史：微信里说的，桌面与 QQ 的上下文也能接上。
+  try {
+    const visibleReply =
+      stripTrailingSeparators(rawReply.replace(/\[SPLIT\]/gi, ' ').replace(/\s{2,}/g, ' ').trim()) ||
+      rawReply
+    const { appended } = await appendConversationTurn({
+      dataRoot,
+      sessionId,
+      channel: 'weixin',
+      peerId,
+      userText: text,
+      assistantText: visibleReply
+    })
+    if (appended.length > 0) {
+      broadcastToRenderers('chat:history-appended', { sessionId, channel: 'weixin', rows: appended })
+    }
+  } catch (e) {
+    log.warn('weixin chat history persist failed', { error: String(e) })
+  }
 }

@@ -1,9 +1,9 @@
 /** 设置页「能力」导航与分组 — 渲染进程兜底 + 主进程 IPC 合并 */
 export const settingsAbilityNavZh = {
   'settings.modelAndApiDesc': '聊天对话所用的大模型与 API 配置。',
-  'settings.desktopAgent': '暂未开放 · 电脑助手',
+  'settings.desktopAgent': '电脑助手（实验）',
   'settings.desktopAgentDesc':
-    '开发中，当前仅展示设置入口；正式开放前不会在聊天中执行本机操作。',
+    '在聊天里让 Ackem 操作本机文件与应用：需先在此启用并确认风险，再到聊天栏开启「电脑助手」模式。',
   'settings.openforuPlan': 'Plan · OpenForU',
   'settings.openforuPlanDesc': '扩展创作与 Plan 工作区专用模型，与聊天模型隔离配置。',
   'settings.openforuExperimentalTitle': '实验性功能 · Plan 工作区',
@@ -15,9 +15,9 @@ export const settingsAbilityNavZh = {
 
 export const settingsAbilityNavEn = {
   'settings.modelAndApiDesc': 'LLM and API settings for everyday chat.',
-  'settings.desktopAgent': 'Not yet available · Desktop agent',
+  'settings.desktopAgent': 'Desktop agent (experimental)',
   'settings.desktopAgentDesc':
-    'In development — settings are visible only; desktop actions stay disabled until release.',
+    'Let Ackem open files and apps on this machine. Enable it here, accept the risk, then turn on 「Desktop agent」 mode in chat.',
   'settings.openforuPlan': 'Plan · OpenForU',
   'settings.openforuPlanDesc':
     'Dedicated model for extension authoring and Plan workspaces, separate from chat.',

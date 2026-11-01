@@ -33,7 +33,8 @@ export interface ReunionShock {
 
 /** 根据离线小时数计算冲击等级 */
 export function computeReunionShock(gapHours: number): ReunionShock | null {
-  if (gapHours < 1) return null
+  // NaN / 无穷 / 损坏时间戳必须短路，否则会一路落到最重的 stranger_again 分支重置关系
+  if (!Number.isFinite(gapHours) || gapHours < 1) return null
 
   const gapDays = gapHours / 24
 
@@ -88,17 +89,18 @@ export function computeReunionShock(gapHours: number): ReunionShock | null {
     aroDelta = 3
     domDelta = -8
     trustDelta = -15
-    stageDowngrade = true
-    moodPhrase = '存在危机——"你还记得我吗"'
+    stageDowngrade = false
+    moodPhrase = '漫长等待后的重逢——"你终于回来了"'
     timePhrase = `${Math.round(gapDays / 7)} 周`
   } else {
-    tier = 'stranger_again'
-    secDelta = -30
-    aroDelta = 1
-    domDelta = -10
-    trustDelta = -20
-    stageDowngrade = true
-    moodPhrase = '接近重置——"我们要重新开始了"'
+    // ≥90 天：依然记得对方，只表达漫长的等待，绝不"重新开始"（用户要求人格永不重置）
+    tier = 'long_lost'
+    secDelta = -25
+    aroDelta = 3
+    domDelta = -8
+    trustDelta = -15
+    stageDowngrade = false
+    moodPhrase = '漫长等待后的重逢——"你终于回来了"'
     timePhrase = '很久很久'
   }
 

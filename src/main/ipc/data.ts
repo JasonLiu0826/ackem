@@ -42,6 +42,7 @@ import { createLogger } from '../logger'
 import { ACKEM_CANON } from '../canon/ackemCanon'
 import { loadCreatorMemoryStore } from '../canon/creatorMemory'
 import { embeddingSettingsChanged, onlyDesktopAgentSettingsChanged } from '../../shared/settingsChange'
+import { qzoneSettingsChanged, syncQzoneAutomation } from '../channels/qq/qzone'
 
 const log = createLogger('ipc-data')
 
@@ -64,6 +65,9 @@ function runSettingsPostSaveHooks(
   }
   if (prev.companionHarassEnabled !== s.companionHarassEnabled) {
     syncCompanionHarassScheduler()
+  }
+  if (qzoneSettingsChanged(prev, s)) {
+    syncQzoneAutomation()
   }
 }
 

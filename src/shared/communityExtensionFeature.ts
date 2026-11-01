@@ -3,7 +3,7 @@
  * false = 不扫描、不安装、不加载 community/ 签名包；贡献者请 PR 到 ackem/ 官方目录。
  * 协议与实现保留在 ecosystem/ 供日后开放。
  */
-export const COMMUNITY_EXTENSIONS_OPEN = false
+export const COMMUNITY_EXTENSIONS_OPEN = true
 
 /** 单测可临时覆盖（生产路径勿用） */
 let openOverride: boolean | null = null

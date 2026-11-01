@@ -8,6 +8,7 @@ import {
   templateDesktopProactiveMessage
 } from '../extensions/plugins/builtin/desktop-companion/proactiveNotificationMessage'
 import { createLogger } from '../logger'
+import { ONLINE_NO_PHYSICAL_LINE } from '../prompt/presence-boundary'
 import {
   buildProactivePersonalityBlock,
   pickCompanionProactiveKind,
@@ -25,6 +26,8 @@ export type ComposeCompanionProactiveInput = {
   sessionId: string
   /** 骚扰模式：更黏人、更撒娇，间隔由调度器控制 */
   harass?: boolean
+  /** 渠道：'qq' | 'weixin' | 'ui'，影响文案里的渠道称呼 */
+  channel?: string
 }
 
 export function pickRecentFactFromRoot(dataRoot: string): string | null {
@@ -61,6 +64,7 @@ async function tryLlmCompanionProactive(args: {
   presetId: string
   kind: ProactiveMessageKind
   harass?: boolean
+  channel?: string
 }): Promise<string | null> {
   try {
     const tc = getTimeContext()
@@ -74,20 +78,21 @@ async function tryLlmCompanionProactive(args: {
     const factLine = args.fact ? `\n可轻点提到：${args.fact}` : ''
     const topics =
       tc.topicHints.length > 0 ? `\n时段可自然聊到：${tc.topicHints.join('、')}` : ''
+    const medium = args.channel === 'qq' ? 'QQ' : '微信'
     const channelLine = args.harass
       ? '你要在桌面 Ackem 聊天里主动发消息。'
-      : '用户暂时没回，你主动发一条微信。'
+      : `用户暂时没回，你主动发一条${medium}。`
 
     const formatLine = args.harass
-      ? '只输出对用户直接说的 1～2 句正文，总共 ≤40 字，可用 [SPLIT] 分两条。'
-      : '只输出 1 句对用户直接说的话，≤40 字；不要用 [SPLIT] 或任何方括号标记（系统会按句自动分条发送）。'
+      ? '只输出对用户直接说的 1～2 句正文，总共 ≤40 字，可用 [SPLIT] 分两条；每句必须有标点，不要把两句连成一串。'
+      : '只输出 1 句对用户直接说的话，≤40 字；句中要有逗号，句末要有标点；不要用 [SPLIT] 或任何方括号标记（系统会按句自动分条发送）。'
 
     const request = {
       messages: [
         {
           role: 'system' as const,
           content:
-            `你是 Ackem，用户的 AI 伴侣。${channelLine}\n\n${personalityBlock}\n\n` +
+            `你是 Ackem，用户的 AI 伴侣。${channelLine}${ONLINE_NO_PHYSICAL_LINE}\n\n${personalityBlock}\n\n` +
             '禁止输出：设定说明、状态分析、任务复述、写作计划、数字指标、括号及括号内旁白、第三人称内心独白。' +
             `${formatLine} ` +
             '不要客服腔，不要提 DeepSeek/GPT。'
@@ -151,7 +156,8 @@ export async function composeCompanionProactiveMessage(
     fact,
     presetId,
     kind,
-    harass: input.harass
+    harass: input.harass,
+    channel: input.channel
   })
 
   if (!raw?.trim()) {
