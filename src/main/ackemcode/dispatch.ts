@@ -62,15 +62,14 @@ export function resolvePermissionMode(settings: { ackemcodePermissionMode?: stri
 
 /**
  * 远程渠道（QQ / 微信）的代码派工属于「远端可驱动本机」的敏感能力，
- * 必须显式打开「允许从 QQ / 微信 远程使用电脑助手」开关才执行；
- * 桌面端（ui）不受此限。这样派工路径不再绕过电脑助手开关。
+ * 必须显式打开「允许 QQ / 微信远程派工」开关才执行；桌面端（ui）不受此限。
  */
 export function remoteChannelsAllowed(
   channel: string,
-  settings: { desktopAgentRemoteChannelsEnabled?: boolean }
+  settings: { workRemoteChannelsEnabled?: boolean }
 ): boolean {
   if (channel === 'ui') return true
-  return settings.desktopAgentRemoteChannelsEnabled === true
+  return settings.workRemoteChannelsEnabled === true
 }
 
 export type MaybeRunCodeTaskInput = {

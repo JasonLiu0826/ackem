@@ -164,8 +164,8 @@ export type AppSettings = {
   qzoneLikeProb?: number
   /** QQ 空间：评论概率 */
   qzoneCommentProb?: number
-  /** 允许从 QQ / 微信 远程使用电脑助手（默认关） */
-  desktopAgentRemoteChannelsEnabled?: boolean
+  /** 允许已绑定机主通过 QQ / 微信向 AckemCode 派工（默认关） */
+  workRemoteChannelsEnabled?: boolean
   /** 机主 QQ 号（确认后才生效） */
   channelOwnerQqId?: string
   /** 待确认的 QQ 机主候选 */
@@ -180,17 +180,6 @@ export type AppSettings = {
   weixinProactiveEnabled?: boolean
   /** 桌面主动骚扰：随机 1/2/4/10 分钟发消息（与渐进式空闲主动并存，默认关） */
   companionHarassEnabled?: boolean
-  /** ── 电脑助手（实验）── */
-  desktopAgentEnabled?: boolean
-  desktopAgentRiskAccepted?: boolean
-  desktopAgentAllowAppControl?: boolean
-  desktopAgentAllowFileWrite?: boolean
-  desktopAgentAllowDownload?: boolean
-  desktopAgentAllowInstall?: boolean
-  desktopAgentAllowDocumentRead?: boolean
-  desktopAgentAllowDelete?: boolean
-  /** 默认下载目录；空则 ~/Downloads/AckemDownloads */
-  desktopAgentDownloadDir?: string
   /** v1.1.0 主动问候频率 */
   proactiveFrequency?: 'low' | 'medium' | 'high'
   /** v1.1.0 主动问候展示：纯弹窗 / 纯聊天 / 两者 */

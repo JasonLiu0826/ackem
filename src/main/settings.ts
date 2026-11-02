@@ -73,22 +73,13 @@ const defaultSettings: AppSettings = {
   qzoneInteractEnabled: false,
   qzoneLikeProb: 0.25,
   qzoneCommentProb: 0.05,
-  desktopAgentRemoteChannelsEnabled: false,
+  workRemoteChannelsEnabled: false,
   channelOwnerQqId: '',
   channelOwnerPendingQqId: '',
   channelOwnerWeixinId: '',
   channelOwnerPendingWeixinId: '',
   ackemcodePermissionMode: 'bypassPermissions',
   companionHarassEnabled: false,
-  desktopAgentEnabled: false,
-  desktopAgentRiskAccepted: false,
-  desktopAgentAllowAppControl: false,
-  desktopAgentAllowFileWrite: false,
-  desktopAgentAllowDownload: false,
-  desktopAgentAllowInstall: false,
-  desktopAgentAllowDocumentRead: false,
-  desktopAgentAllowDelete: false,
-  desktopAgentDownloadDir: '',
   proactiveFrequency: 'medium',
   proactiveDisplayMode: 'both',
   proactiveContextRatio: 0.7,
@@ -182,10 +173,22 @@ function hasStoredApiKey(parsed: SettingsFile): boolean {
   return Boolean(plain && plain !== ENCRYPTED_PLACEHOLDER)
 }
 
+/** Keep the existing remote-work grant while retiring the old assistant configuration. */
+function migrateWorkSettings<T extends Partial<AppSettings>>(input: T): T {
+  const result = { ...input } as T & Record<string, unknown>
+  if (typeof result.workRemoteChannelsEnabled !== 'boolean' && typeof result.desktopAgentRemoteChannelsEnabled === 'boolean') {
+    result.workRemoteChannelsEnabled = result.desktopAgentRemoteChannelsEnabled
+  }
+  for (const key of Object.keys(result)) {
+    if (key.startsWith('desktopAgent')) delete result[key]
+  }
+  return result
+}
+
 function normalizeSettingsFile(parsed: SettingsFile): AppSettings {
   const openaiApiKey = resolveStoredKey(parsed, '_encryptedApiKey', 'openaiApiKey')
   const ackemcodeApiKey = resolveStoredKey(parsed, '_encryptedAckemcodeApiKey', 'ackemcodeApiKey')
-  const { _encryptedApiKey: _drop, _encryptedAckemcodeApiKey: _dropCode, ...rest } = parsed
+  const { _encryptedApiKey: _drop, _encryptedAckemcodeApiKey: _dropCode, ...rest } = migrateWorkSettings(parsed)
   void _drop
   void _dropCode
   return {
@@ -293,7 +296,7 @@ function trimSettingsFields(input: Partial<AppSettings>): Partial<AppSettings> {
   if (typeof out.ackemcodeModel === 'string') out.ackemcodeModel = out.ackemcodeModel.trim()
   if (typeof out.ackemcodeApiKey === 'string') out.ackemcodeApiKey = out.ackemcodeApiKey.trim()
   if (typeof out.llmExtraHeadersJson === 'string') out.llmExtraHeadersJson = out.llmExtraHeadersJson.trim()
-  return out
+  return migrateWorkSettings(out)
 }
 
 export function saveSettings(next: Partial<AppSettings>): AppSettings {

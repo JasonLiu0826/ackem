@@ -14,7 +14,7 @@ import { assembleMessages, mergeExtensionContextInjections } from '../context'
 import {registerPreparedContextFence} from '../chat/contextPublicationFence'
 import { assembleSocialMemberMessages } from '../context/promptAssembly'
 import { streamChatCompletion } from '../chat'
-import { markChatStreamEnd, markChatStreamStart } from '../desktop-agent/deliveryCoordinator'
+import { markChatStreamEnd, markChatStreamStart } from '../chat/streamState'
 import { recordDesktopAckemActivity } from '../channels/weixin/activity'
 import { createLlmJsonClient } from '../llmClient'
 import { createLogger } from '../logger'
@@ -72,7 +72,7 @@ import { setPendingTurn } from '../turnPending'
 import { beginChatTurn } from '../chat/turnCoordinator'
 import { orchestrateChannelTurn, WORK_DISPATCH_ACK } from '../chat/orchestrateChannelTurn'
 import { completeMemoryAuditShortcut } from '../chat/memoryAuditShortcut'
-import { isDesktopAgentToolingActive } from '../../shared/desktopAgent'
+
 import { registerAndFinalizeSkipTurn } from '../postChatTurn'
 import { probeLocalChat } from '../chat/waveEndpoint'
 import { startDeferredEnrich } from '../chat/deferredContext'
@@ -457,10 +457,6 @@ export function registerChatIpc(): void {
       index: snap,
       adultMode: settings.adultContentMode && settings.ageConfirmed18,
     })
-    const desktopAgentSessionActive = isDesktopAgentToolingActive(
-      settings,
-      args.desktopAgentChatMode === true
-    )
 
     const auditIntent = !detectPlanDocumentIntent(args.userText, args.recentMessages)
       ? detectMemoryAuditIntent(args.userText, args.recentMessages)
@@ -815,14 +811,12 @@ export function registerChatIpc(): void {
       }
     }
 
-    const knowledgeResolved = desktopAgentSessionActive
-      ? { userTextForLlm: args.userText.trim() }
-      : extCoordinator!.resolveKnowledgeContextBuild({
-          sessionId: args.sessionId ?? 'default',
-          userText: resolvedMessageForKnowledge ?? args.userText,
-          recentMessages: args.recentMessages,
-          workIntent: pre.workIntent
-        })
+    const knowledgeResolved = extCoordinator!.resolveKnowledgeContextBuild({
+      sessionId: args.sessionId ?? 'default',
+      userText: resolvedMessageForKnowledge ?? args.userText,
+      recentMessages: args.recentMessages,
+      workIntent: pre.workIntent
+    })
 
     let finalState = pre.newState
     if (knowledgeResolved.knowledgeTopic) {
@@ -867,7 +861,7 @@ export function registerChatIpc(): void {
     })
     const knowledgeTopic = knowledgeResolved.knowledgeTopic
     let planDocumentTopic: string | undefined
-    if (!knowledgeTopic && !desktopAgentSessionActive) {
+    if (!knowledgeTopic) {
       const planHit = detectPlanDocumentIntent(args.userText, args.recentMessages)
       if (planHit) planDocumentTopic = planHit.topic
     }

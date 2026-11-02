@@ -73,7 +73,7 @@ function resolveTurnIndex(state: FullState, explicit?: number): number {
 export async function runCompanionTurn(input: CompanionTurnInput): Promise<CompanionTurnResult> {
   const userImages = (input.userImages ?? []).filter((u) => typeof u === 'string' && u.length > 0)
   // 纯图片消息没有文字是合法的：给一句占位文案，由多模态片段承载真正的信息
-  let userText = input.userText.trim() || (userImages.length > 0 ? '[发来了一张图片]' : '')
+  const userText = input.userText.trim() || (userImages.length > 0 ? '[发来了一张图片]' : '')
   if (!userText) {
     throw new CompanionTurnError('empty input', 'EMPTY_INPUT')
   }
@@ -91,13 +91,6 @@ export async function runCompanionTurn(input: CompanionTurnInput): Promise<Compa
         : `这个代码任务没跑完：${codeDispatch.error ?? '未知错误'}`
       return { assistantText, turnId: randomUUID() }
     }
-  }
-
-  // 渠道远程电脑助手必须显式点名（/电脑 …），否则普通聊天不该触发本机操作
-  const REMOTE_AGENT_PREFIX = /^\s*[\/／](?:电脑|pc|agent)\s*/i
-  const remoteAgentRequested = REMOTE_AGENT_PREFIX.test(userText)
-  if (remoteAgentRequested) {
-    userText = userText.replace(REMOTE_AGENT_PREFIX, '').trim() || userText
   }
 
   if (!isEmbeddingReadyForChat()) {
@@ -125,13 +118,13 @@ export async function runCompanionTurn(input: CompanionTurnInput): Promise<Compa
 
   return withAgentContext(
     targetAgentId,
-    () => runCompanionTurnInner({ ...input, sessionId, userText, userImages, remoteAgentRequested }, targetAgentId, root, settings),
+    () => runCompanionTurnInner({ ...input, sessionId, userText, userImages }, targetAgentId, root, settings),
     { interactionSurface }
   )
 }
 
 async function runCompanionTurnInner(
-  input: CompanionTurnInput & { userText: string; userImages: string[]; remoteAgentRequested: boolean },
+  input: CompanionTurnInput & { userText: string; userImages: string[] },
   targetAgentId: string,
   root: string,
   settings: AppSettings
@@ -388,7 +381,7 @@ async function runCompanionTurnInner(
     }
   }
 
-  const streamTurn = async (desktopAgent: boolean): Promise<string> => {
+  const streamTurn = async (): Promise<string> => {
     const sink = createHeadlessChatSink()
     const chatPromise = sink.getAssistantText()
     await streamChatCompletion(
@@ -397,56 +390,30 @@ async function runCompanionTurnInner(
         messages,
         settings: {
           ...settings,
-          disableChatTools: desktopAgent ? false : true,
+          disableChatTools: true,
           asyncMultiMessageEnabled: false
         },
         turnId,
         intensityMod: pre.intensityMod ?? 1,
         sessionId,
         targetAgentId: social ? targetAgentId : undefined,
-        interactionSurface,
-        desktopAgentChatMode: desktopAgent ? true : undefined,
-        deferAgentTaskPlan: desktopAgent ? true : undefined
+        interactionSurface
       },
       root
     )
     return chatPromise
   }
 
-  // 渠道远程电脑助手：需在设置里显式开启（默认关），且仍需桌面端逐次确认
-  const remoteDesktopAgent =
-    (input.channel === 'qq' || input.channel === 'weixin') &&
-    input.remoteAgentRequested &&
-    settings.desktopAgentRemoteChannelsEnabled === true &&
-    settings.desktopAgentEnabled === true &&
-    settings.desktopAgentRiskAccepted === true
-
   let assistantText: string
   try {
-    assistantText = guardReplyText((await streamTurn(remoteDesktopAgent)).trim(), {
+    assistantText = guardReplyText((await streamTurn()).trim(), {
       origin: 'answer',
       style: 'assistant',
       status: 'not_executed'
     })
   } catch (e) {
     log.error('stream failed', e)
-    if (remoteDesktopAgent) {
-      // 电脑助手回路在渠道里不可用时，自动降级为普通聊天，绝不把内部错误甩给用户
-      try {
-        assistantText = guardReplyText((await streamTurn(false)).trim(), {
-          origin: 'answer',
-          style: 'assistant',
-          status: 'not_executed'
-        })
-        log.warn('agent turn failed, degraded to plain chat')
-      } catch (e2) {
-        log.error('degraded stream failed', e2)
-        assistantText = ''
-      }
-    } else {
-      assistantText = ''
-    }
-    if (!assistantText) assistantText = '抱歉，我这边刚才没处理好，你再发一次好吗？'
+    assistantText = '抱歉，我这边刚才没处理好，你再发一次好吗？'
   }
 
   if (!assistantText) {

@@ -10,11 +10,12 @@ import { MobileComingSoonSection, WeixinConnectSection } from './WeixinConnectSe
 import { QqConnectSection } from './QqConnectSection'
 import { QzoneSection } from './QzoneSection'
 import { VoiceSettings } from './VoiceSettings'
-import { DesktopAgentSettings, desktopAgentSettingsSaveBlocked } from './DesktopAgentSettings'
+import { WorkExecutionSettings } from './WorkExecutionSettings'
+
 import { useAppStore } from '../store/appStore'
 import { resolveInitialTheme, toggleTheme, type ThemeMode } from '../lib/theme'
 import { isSettingsDirty, mergeSettingsDraft, prepareSettingsForSave } from '../lib/settingsForm'
-import { onlyDesktopAgentSettingsChanged } from '../../../shared/settingsChange'
+
 import {
   clampOpenForUTemperature,
   isOpenForUConfigured
@@ -245,18 +246,11 @@ export function SettingsPage(): JSX.Element {
   const dirty = settings ? isSettingsDirty(form, settings) : false
 
   const save = async () => {
-    const block = desktopAgentSettingsSaveBlocked(form)
-    if (block) {
-      pushToast(block)
-      return
-    }
-    const prev = settings ?? form
+
     const next = await window.ackem.setSettings(prepareSettingsForSave(form))
     applyPersisted(next)
     await window.ackem.ensureLayout()
-    if (!onlyDesktopAgentSettingsChanged(prev, next)) {
-      await window.ackem.rebuildIndex()
-    }
+    await window.ackem.rebuildIndex()
     setRootInfo(await window.ackem.getDataRoot())
     pushToast(t('settings.saved'))
   }
@@ -532,7 +526,7 @@ export function SettingsPage(): JSX.Element {
               <summary>{t("settings.protocolNote")}（{t("settings.openaiCompatible")} / Anthropic）</summary>
               <p className="text-[11px] leading-relaxed text-ink-muted">
                 {t("settings.protocolDesc")}
-                
+
               </p>
             </details>
             <SettingsField label={t("settings.llmProvider")}>
@@ -690,14 +684,10 @@ export function SettingsPage(): JSX.Element {
           </SettingsBlock>
         </SettingsGroup>}
 
-        {activeId === 'settings-desktop-agent' && (
-          <SettingsGroup
-            id="settings-desktop-agent"
-            title={t('settings.desktopAgent')}
-            description={t('settings.desktopAgentDesc')}
-          >
-            <SettingsBlock title={t('settings.desktopAgent')} hint={t('settings.desktopAgentDesc')}>
-              <DesktopAgentSettings form={form} setForm={(patch) => setForm({ ...form, ...patch })} />
+        {activeId === 'settings-work' && (
+          <SettingsGroup id="settings-work" title={t('settings.workExecution')} description={t('settings.workExecutionDesc')}>
+            <SettingsBlock title={t('settings.workExecution')}>
+              <WorkExecutionSettings form={form} onChange={patch => setForm({ ...form, ...patch })} />
             </SettingsBlock>
           </SettingsGroup>
         )}

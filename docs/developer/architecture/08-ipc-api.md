@@ -2,8 +2,8 @@
 
 > **Language:** English · [中文](./08-ipc-api.zh.md)
 
-> **Layer:** Process boundary bridge  
-> **Codename:** Preload Bridge  
+> **Layer:** Process boundary bridge
+> **Codename:** Preload Bridge
 > **Core question:** How does the renderer process communicate with the main process?
 
 ---
@@ -70,7 +70,6 @@ All IPC channels use colon-separated namespace prefixes:
 | `companion:*` | Companion state |
 | `ext:*` | Extension management |
 | `openforu:*` | OpenForU workspaces |
-| `desktop-agent:*` | Desktop agent |
 | `voice:*` | Voice interface |
 | `weixin:*` | WeChat bridge |
 | `ui:*` | UI state (window / tray) |
@@ -215,17 +214,6 @@ window.ackem.openforu = {
 }
 ```
 
-### 3.7 Desktop Agent (desktop-agent)
-
-```typescript
-window.ackem['desktop-agent'] = {
-  getStatus(): Promise<AgentStatus>,
-  start(): Promise<void>,
-  stop(): Promise<void>,
-  onEvent(cb: (event: AgentEvent) => void): () => void,
-}
-```
-
 ### 3.8 Voice (voice)
 
 ```typescript
@@ -353,12 +341,6 @@ The main process pushes events to the renderer via `webContents.send`. The rende
 | `ext:gamemode:event` | `GamemodeEvent` | Game mode event |
 | `ext:surface:open` | `string` | Surface opened |
 | `ext:surface:close` | `string` | Surface closed |
-
-### 4.4 Desktop Agent Events
-
-| Event | Payload | Description |
-|------|------|------|
-| `desktop-agent:event` | `AgentEvent` | Agent status / event |
 
 ### 4.5 Voice Events
 

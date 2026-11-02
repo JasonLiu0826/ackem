@@ -73,11 +73,6 @@
   --exp-title-text: #78350f;
   --exp-body-text: #92400e;
   --exp-muted-text: #b45309;
-  --chat-da-active-border: rgba(180, 83, 9, 0.38);
-  --chat-da-active-bg: rgba(180, 120, 40, 0.12);
-  --chat-da-active-text: #92400e;
-  --chat-da-active-badge: #78350f;
-  --chat-da-active-dot: #b45309;
 }
 
 .theme-dark {
@@ -127,11 +122,6 @@
   --exp-title-text: #fde68a;
   --exp-body-text: rgba(254, 243, 199, 0.92);
   --exp-muted-text: #fcd34d;
-  --chat-da-active-border: color-mix(in srgb, #f59e0b 50%, transparent);
-  --chat-da-active-bg: color-mix(in srgb, #f59e0b 14%, transparent);
-  --chat-da-active-text: #fde68a;
-  --chat-da-active-badge: #fcd34d;
-  --chat-da-active-dot: #fbbf24;
   --paper-bg: rgba(32, 35, 39, 0.72);
   --paper-border: rgba(140, 197, 188, 0.22);
   --paper-border-soft: rgba(140, 197, 188, 0.12);
@@ -1221,93 +1211,6 @@ html.theater-open body {
   border: 1px solid var(--settings-callout-warn-border);
   background: var(--settings-badge-warn-bg);
   color: var(--settings-badge-warn-text);
-}
-
-/* 聊天页 · 电脑助手切换（避免 Tailwind /opacity 在 CSS 变量上失效导致暗色看不清） */
-.chat-desktop-agent-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  border-radius: 0.5rem;
-  border: 1px solid color-mix(in srgb, var(--color-accent) 38%, transparent);
-  background: color-mix(in srgb, var(--color-surface-inset) 65%, transparent);
-  padding: 0.25rem 0.625rem;
-  font-size: 0.75rem;
-  line-height: 1rem;
-  color: var(--color-ink-muted);
-  transition:
-    color 200ms var(--ease-out),
-    border-color 200ms var(--ease-out),
-    background 200ms var(--ease-out);
-}
-
-.chat-desktop-agent-toggle:hover {
-  color: var(--color-ink);
-  border-color: color-mix(in srgb, var(--color-accent) 52%, transparent);
-  background: color-mix(in srgb, var(--color-surface-inset) 88%, transparent);
-}
-
-.chat-desktop-agent-toggle.is-active {
-  border-color: var(--chat-da-active-border);
-  background: var(--chat-da-active-bg);
-  color: var(--chat-da-active-text);
-}
-
-.chat-desktop-agent-toggle.is-active:hover {
-  color: var(--chat-da-active-text);
-  border-color: var(--chat-da-active-border);
-  background: var(--chat-da-active-bg);
-  filter: brightness(1.06);
-}
-
-.chat-desktop-agent-toggle.is-preview {
-  cursor: not-allowed;
-  opacity: 0.72;
-  border-color: color-mix(in srgb, var(--color-ink-muted) 35%, transparent);
-  background: color-mix(in srgb, var(--color-surface-inset) 45%, transparent);
-  color: var(--color-ink-muted);
-}
-
-.chat-desktop-agent-toggle.is-preview:hover {
-  color: var(--color-ink-muted);
-  border-color: color-mix(in srgb, var(--color-ink-muted) 35%, transparent);
-  background: color-mix(in srgb, var(--color-surface-inset) 45%, transparent);
-}
-
-.chat-desktop-agent-toggle.is-preview .chat-desktop-agent-toggle__dot {
-  background: var(--color-ink-muted);
-  opacity: 0.55;
-}
-
-.chat-desktop-agent-toggle.is-disabled {
-  cursor: not-allowed;
-  border-color: color-mix(in srgb, var(--color-ink-muted) 42%, transparent);
-  background: color-mix(in srgb, var(--color-surface-inset) 55%, transparent);
-  color: var(--color-ink-muted);
-}
-
-.chat-desktop-agent-toggle.is-disabled:hover {
-  color: var(--color-ink);
-}
-
-.chat-desktop-agent-toggle__dot {
-  width: 0.375rem;
-  height: 0.375rem;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--color-accent) 72%, transparent);
-}
-
-.chat-desktop-agent-toggle.is-active .chat-desktop-agent-toggle__dot {
-  background: var(--chat-da-active-dot);
-}
-
-.chat-desktop-agent-toggle.is-disabled .chat-desktop-agent-toggle__dot {
-  background: color-mix(in srgb, var(--color-ink-muted) 75%, transparent);
-}
-
-.chat-desktop-agent-toggle__badge {
-  font-size: 0.625rem;
-  color: var(--chat-da-active-badge);
 }
 
 /* 琥珀信任光条 */

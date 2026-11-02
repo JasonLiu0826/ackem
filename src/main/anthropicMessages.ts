@@ -41,31 +41,8 @@ import {
 import { notifyChatStreamStart } from './openAiSseStream'
 import { streamChatWaves } from './chat/waveChat'
 import { finalizePaperCardCompanionReply } from './paperCard/finalizeCompanionReply'
-import { isDesktopAgentToolingActive } from '../shared/desktopAgent'
-import { INVESTIGATION_SYNTHESIZE_MIN_TOKENS } from '../shared/investigation'
-import {
-  useComputerAnthropicTool,
-  parseUseComputerArgs,
-  USE_COMPUTER_TOOL_NAME
-} from './desktop-agent/toolDef'
-import { executeUseComputer } from './desktop-agent/router'
-import { desktopAgentActivityLabel } from './chatStatusLabels'
+
 import type { ToolsPayloadOptions } from './chat'
-import { tryHandleInvestigationChatTurn } from './desktop-agent/investigation/investigationChatTurn'
-import {
-  shouldOfferSkillToolsInDesktopAgentSession,
-  shouldForceWebSearchInDesktopAgentSession
-} from './desktop-agent/modePolicy'
-import { runAnthropicDesktopAgentLoop } from './desktop-agent/anthropicAgentLoop'
-import {
-  isBackgroundAgentJobRunning,
-  startBackgroundAgentJob
-} from './desktop-agent/agentJobManager'
-import {
-  shouldRouteDesktopAgentToBackgroundJob,
-  DESKTOP_AGENT_TASK_START_ACK
-} from './desktop-agent/agentJobRouting'
-import { isContinueTaskPlanIntent } from './desktop-agent/task-plan/taskPlanStore'
 
 const log = createLogger('anthropic-chat')
 const DEFAULT_ANTHROPIC_BASE = 'https://api.anthropic.com/v1'
@@ -161,17 +138,8 @@ export function anthropicAllTools(opts?: ToolsPayloadOptions): Array<{
   description: string
   input_schema: Record<string, unknown>
 }> {
-  const agentActive =
-    opts &&
-    isDesktopAgentToolingActive(opts.settings, opts.desktopAgentChatMode === true)
-  const skillTools = shouldOfferSkillToolsInDesktopAgentSession(agentActive === true)
-    ? skillDefsToAnthropicTools(getActiveSkillToolDefs())
-    : []
-  const tools = [anthropicAppendMemoryTool(), anthropicReadFileTool(), ...skillTools]
-  if (opts && isDesktopAgentToolingActive(opts.settings, opts.desktopAgentChatMode === true)) {
-    tools.push(useComputerAnthropicTool())
-  }
-  return tools
+  void opts
+  return [anthropicAppendMemoryTool(), anthropicReadFileTool(), ...skillDefsToAnthropicTools(getActiveSkillToolDefs())]
 }
 
 type OaiMsg = { role: string; content?: unknown }
@@ -236,11 +204,8 @@ export async function streamAnthropicMessages(
   const onExternalAbort = () => controller.abort()
   if (externalSignal?.aborted) controller.abort()
   externalSignal?.addEventListener('abort', onExternalAbort, { once: true })
-  const desktopAgentChatMode = body.desktopAgentChatMode === true
-  // 桌面助手已退役：本机活走通道 work，不再把电脑工具交给伴侣循环。
-  const agentActive = false
-  const agentTimeoutMs = agentActive ? 900_000 : settings.timeoutMs || 120_000
-  const abortTimer = setTimeout(() => controller.abort(), agentTimeoutMs)
+  const timeoutMs = settings.timeoutMs || 120_000
+  const abortTimer = setTimeout(() => controller.abort(), timeoutMs)
   let assistantAcc = ''
   let round1Text = ''
   const knowledgeTopic = (
@@ -272,35 +237,14 @@ export async function streamAnthropicMessages(
   if (system) req.system = system
 
   const sendTools = !settings.disableChatTools
-  const toolsOpts: ToolsPayloadOptions = { settings, desktopAgentChatMode }
-  const streamRound1ToUi = !useKnowledgeCard && !usePlanDocumentCard && !agentActive
+  const toolsOpts: ToolsPayloadOptions = { settings }
+  const streamRound1ToUi = !useKnowledgeCard && !usePlanDocumentCard
   const forcedWebSearchQueryRaw = (
     typeof body.forcedWebSearchQuery === 'string' ? body.forcedWebSearchQuery : ''
   ).trim()
-  const forcedWebSearchQuery = shouldForceWebSearchInDesktopAgentSession(
-    agentActive,
-    forcedWebSearchQueryRaw || undefined
-  )
+  const forcedWebSearchQuery = forcedWebSearchQueryRaw || undefined
   const turnIdEarly = typeof body.turnId === 'string' ? body.turnId : undefined
   const userTaskFrame = parseUserTaskFrameFromBody(body)
-  const userMsgEarly = lastUserMessageFromContext(ctxMsgsEarly)
-
-  if (
-    agentActive &&
-    (await tryHandleInvestigationChatTurn({
-      webContents,
-      settings,
-      dataRoot,
-      body,
-      userMsg: userMsgEarly,
-      turnId: turnIdEarly,
-      signal: controller.signal
-    }))
-  ) {
-    externalSignal?.removeEventListener('abort', onExternalAbort)
-    clearTimeout(abortTimer)
-    return
-  }
 
   if (forcedWebSearchQuery) {
     try {
@@ -314,60 +258,6 @@ export async function streamAnthropicMessages(
         userTaskFrame
       )
     } catch (e) {
-      if (!externalSignal?.aborted) webContents.send('chat:error', e instanceof Error ? e.message : String(e))
-    } finally {
-      externalSignal?.removeEventListener('abort', onExternalAbort)
-      clearTimeout(abortTimer)
-    }
-    return
-  }
-
-  if (agentActive && !useKnowledgeCard && !usePlanDocumentCard) {
-    const chatSessionId = typeof body.sessionId === 'string' ? body.sessionId : 'default'
-    if (
-      userMsgEarly &&
-      shouldRouteDesktopAgentToBackgroundJob(userMsgEarly, dataRoot, chatSessionId)
-    ) {
-      notifyChatStreamStart(webContents)
-      webContents.send('chat:replace', DESKTOP_AGENT_TASK_START_ACK)
-      webContents.send('chat:done', {
-        memoryWrites: [],
-        assistantText: DESKTOP_AGENT_TASK_START_ACK,
-        turnId: turnIdEarly
-      })
-      notifyUiChatBubble({ text: DESKTOP_AGENT_TASK_START_ACK, role: 'assistant' })
-      void finalizeTurnAfterStream({
-        turnId: turnIdEarly,
-        dataRoot,
-        assistantText: DESKTOP_AGENT_TASK_START_ACK,
-        settings
-      })
-      startBackgroundAgentJob({
-        provider: 'anthropic',
-        webContents,
-        body,
-        dataRoot,
-        sessionId: chatSessionId,
-        userText: userMsgEarly
-      })
-      externalSignal?.removeEventListener('abort', onExternalAbort)
-      clearTimeout(abortTimer)
-      return
-    }
-    if (
-      userMsgEarly &&
-      isBackgroundAgentJobRunning(dataRoot, chatSessionId) &&
-      !isContinueTaskPlanIntent(userMsgEarly)
-    ) {
-      const convBody = { ...body, desktopAgentChatMode: false }
-      externalSignal?.removeEventListener('abort', onExternalAbort)
-      clearTimeout(abortTimer)
-      return streamAnthropicMessages(webContents, convBody, dataRoot, externalSignal)
-    }
-    try {
-      await runAnthropicDesktopAgentLoop(webContents, body, dataRoot)
-    } catch (e) {
-      if (turnIdEarly) clearPendingTurn(turnIdEarly)
       if (!externalSignal?.aborted) webContents.send('chat:error', e instanceof Error ? e.message : String(e))
     } finally {
       externalSignal?.removeEventListener('abort', onExternalAbort)
@@ -640,30 +530,6 @@ export async function streamAnthropicMessages(
           toolResults.push({ name: 'read_file', id: String(idx), content: `读取失败：${msg}` })
           writes.push(`SKIP read_file: ${msg}`)
         }
-      } else if (st.name === USE_COMPUTER_TOOL_NAME) {
-        try {
-          const args = JSON.parse(st.inputJson) as Record<string, unknown>
-          const parsed = parseUseComputerArgs(args)
-          if (!parsed) {
-            toolResults.push({ name: USE_COMPUTER_TOOL_NAME, id: String(idx), content: '参数无效' })
-            writes.push('SKIP use_computer: invalid args')
-            continue
-          }
-          webContents.send('chat:status', desktopAgentActivityLabel(parsed.action))
-          const result = await executeUseComputer(parsed, {
-            settings,
-            dataRoot,
-            webContents,
-            sessionId: typeof body.sessionId === 'string' ? body.sessionId : 'default'
-          })
-          toolResults.push({ name: USE_COMPUTER_TOOL_NAME, id: String(idx), content: result.content })
-          writes.push(result.success ? `OK use_computer: ${result.summary}` : `SKIP use_computer: ${result.summary}`)
-          if (result.memoryHint) writes.push(`HINT ${result.memoryHint}`)
-        } catch (e) {
-          const msg = e instanceof Error ? e.message : String(e)
-          toolResults.push({ name: USE_COMPUTER_TOOL_NAME, id: String(idx), content: `执行失败：${msg}` })
-          writes.push(`SKIP use_computer: ${msg}`)
-        }
       } else if (isSkillToolName(st.name)) {
         try {
           const args = JSON.parse(st.inputJson) as Record<string, unknown>
@@ -767,9 +633,7 @@ export async function streamAnthropicMessages(
       webContents.send('chat:replace', assistantAcc)
     } else if (otherToolResults.length === 0 && round1Text) {
       assistantAcc = round1Text
-      if (!streamRound1ToUi || agentActive) {
-        webContents.send('chat:replace', round1Text)
-      }
+
     }
 
     if (!assistantAcc.trim()) {

@@ -32,14 +32,7 @@ import { useAsrDraft } from '../hooks/useAsrDraft'
 import { useVoicePipeline } from '../hooks/useVoicePipeline'
 import { loadVoiceSettings } from '../lib/voiceSettings'
 import { IconMic } from './workbench/icons'
-import {
-  desktopAgentInputPlaceholder,
-  isDesktopAgentSettingsReady
-} from './ChatDesktopAgentToggle'
-import {
-  desktopAgentApiMissingMessage,
-  isDesktopAgentApiAvailable
-} from '../lib/desktopAgentClient'
+
 import { ChatTypingIndicator } from './ChatTypingIndicator'
 import { MarkdownContent } from './MarkdownContent'
 import { StreamingMessage } from './StreamingMessage'
@@ -64,17 +57,6 @@ import {
 } from '../lib/chatSend'
 import type { MemoryAuditCardPayload } from '../../../shared/memoryAudit'
 import { insertSearchCardIntoRows, insertMemoryAuditCardIntoRows } from '../lib/chatStreamRows'
-import { InvestigationProgressBar } from './InvestigationProgressBar'
-import { DesktopAgentDock } from './DesktopAgentDock'
-import type { InvestigationProgressPayload } from '../../../shared/investigation'
-import type { TaskPlanProgressPayload } from '../../../shared/desktopAgentTaskPlan'
-import {
-  DESKTOP_AGENT_TASK_START_ACK,
-  type DesktopAgentJobStatePayload,
-  type DesktopAgentTaskDeliveryPayload
-} from '../../../shared/desktopAgentDock'
-import type { DesktopAgentConfirmRequest } from '../../../shared/desktopAgent'
-import { isDesktopAgentGrayscalePreview } from '../../../shared/desktopAgentFeature'
 
 function syncDispatchTriggerFromBuilt(
   built: Awaited<ReturnType<typeof window.ackem.buildContext>>
@@ -121,22 +103,12 @@ export function ChatPage({ companionPanelOpen = false, onToggleCompanionPanel }:
   const [stopping, setStopping] = useState(false)
   const stoppedRef = useRef(false)
   const setChatBusy = useAppStore((s) => s.setChatBusy)
-  const setAgentBusy = useAppStore((s) => s.setAgentBusy)
-  const agentBusy = useAppStore((s) => s.agentBusy)
   useEffect(() => {
     setChatBusy(busy)
   }, [busy, setChatBusy])
-  const [desktopAgentConfirm, setDesktopAgentConfirm] = useState<DesktopAgentConfirmRequest | null>(
-    null
-  )
-  const [agentJobState, setAgentJobState] = useState<DesktopAgentJobStatePayload | null>(null)
-  const [agentJobStatus, setAgentJobStatus] = useState<string | null>(null)
-  const [pendingTaskDelivery, setPendingTaskDelivery] =
-    useState<DesktopAgentTaskDeliveryPayload | null>(null)
+
   const [activityLabel, setActivityLabel] = useState<string | null>(null)
-  const [investigationProgress, setInvestigationProgress] =
-    useState<InvestigationProgressPayload | null>(null)
-  const [taskPlanProgress, setTaskPlanProgress] = useState<TaskPlanProgressPayload | null>(null)
+
   const [channelPending, setChannelPending] = useState<{
     planId: string
     kind: 'create' | 'update' | 'work_job' | 'use_missing' | 'plugin_ask' | 'plugin_use'
@@ -187,8 +159,7 @@ export function ChatPage({ companionPanelOpen = false, onToggleCompanionPanel }:
     }
   })
   const [stateBubbles, setStateBubbles] = useState<StateBubble[]>([])
-  const [desktopAgentChatMode, setDesktopAgentChatMode] = useState(false)
-  const [desktopAgentSettingsReady, setDesktopAgentSettingsReady] = useState(false)
+
   const { embeddingReadiness, embeddingChatReady, showEmbeddingBanner } = useEmbeddingReadiness()
 
   const enterPlanWithWorkspace = useCallback(
@@ -233,58 +204,6 @@ export function ChatPage({ companionPanelOpen = false, onToggleCompanionPanel }:
       )
     },
     [agentHistoryOpts]
-  )
-
-  useEffect(() => {
-    if (!settings || !chattingPrimary) {
-      setDesktopAgentChatMode(false)
-      return
-    }
-    setDesktopAgentSettingsReady(isDesktopAgentSettingsReady(settings))
-    if (!isDesktopAgentApiAvailable()) return
-    void window.ackem.desktopAgent.sessionMode.get(activeSessionId).then((r) => {
-      setDesktopAgentChatMode(r.enabled && r.settingsReady)
-      setDesktopAgentSettingsReady(r.settingsReady)
-    })
-  }, [settings, activeSessionId, chattingPrimary])
-
-  const handleDesktopAgentToggle = useCallback(
-    async (next: boolean) => {
-      if (isDesktopAgentGrayscalePreview()) return
-      if (!isDesktopAgentApiAvailable()) {
-        pushToast(desktopAgentApiMissingMessage())
-        return
-      }
-      const res = await window.ackem.desktopAgent.sessionMode.set(activeSessionId, next)
-      if (!res.ok) {
-        pushToast(res.error ?? '无法切换电脑助手模式')
-        return
-      }
-      setDesktopAgentChatMode(res.enabled === true)
-      if (next) {
-        const hasUserMsg = useAppStore.getState().chatRows.some(
-          (r) => r.kind === 'message' && r.role === 'user'
-        )
-        if (!hasUserMsg) {
-          setBusy(true)
-          try {
-            const opening = await window.ackem.desktopAgent.opening()
-            if (opening.ok && opening.text.trim()) {
-              setRows((prev) => [
-                ...prev,
-                { kind: 'message', role: 'assistant', createdAt: Date.now(), content: opening.text.trim() }
-              ])
-              persistHistory()
-            }
-          } catch (e) {
-            pushToast(e instanceof Error ? e.message : String(e))
-          } finally {
-            setBusy(false)
-          }
-        }
-      }
-    },
-    [activeSessionId, pushToast, setRows, persistHistory]
   )
 
   const streamingAssistantLen = useMemo(() => {
@@ -388,10 +307,7 @@ export function ChatPage({ companionPanelOpen = false, onToggleCompanionPanel }:
       setThinkingText('')
       setThinkingState('idle')
       setActivityLabel(null)
-      setInvestigationProgress(null)
-      if (!useAppStore.getState().agentBusy) {
-        setTaskPlanProgress(null)
-      }
+
     })
     window.ackem.onChatWaveStart(({ newBubble }) => {
       if (window.ackem.onReplyEvent) return
@@ -431,10 +347,7 @@ export function ChatPage({ companionPanelOpen = false, onToggleCompanionPanel }:
       if (window.ackem.onReplyEvent) return
       finishThinking()
       setActivityLabel(null)
-      setInvestigationProgress(null)
-      if (!useAppStore.getState().agentBusy) {
-        setTaskPlanProgress(null)
-      }
+
       streamBuf.current = text
       patchStreamingAssistant(text)
     })
@@ -442,12 +355,7 @@ export function ChatPage({ companionPanelOpen = false, onToggleCompanionPanel }:
       const label = normalizeChatActivityLabel(text)
       setActivityLabel(label || null)
     })
-    window.ackem.onInvestigationProgress((payload) => {
-      setInvestigationProgress(payload)
-    })
-    window.ackem.onTaskPlanProgress((payload) => {
-      setTaskPlanProgress(payload)
-    })
+
     window.ackem.onChatSearchCard((payload) => {
       insertSearchCard(payload)
     })
@@ -455,68 +363,6 @@ export function ChatPage({ companionPanelOpen = false, onToggleCompanionPanel }:
       insertMemoryAuditCard(payload)
     })
   }, [insertMemoryAuditCard, insertSearchCard, patchStreamingAssistant, setRows, finishThinking])
-
-  const appendTaskDeliveryToChat = useCallback(
-    (payload: DesktopAgentTaskDeliveryPayload) => {
-      const prefix = payload.allPassed ? '✅ 电脑助手任务完成' : '⚠️ 电脑助手任务未完成'
-      const content = `${prefix}：${payload.goalSummary}\n\n${payload.text}`
-      setRows((prev) => {
-        const next = [...prev]
-        const last = next[next.length - 1]
-        if (
-          last?.kind === 'message' &&
-          last.role === 'assistant' &&
-          last.content === DESKTOP_AGENT_TASK_START_ACK
-        ) {
-          next[next.length - 1] = { kind: 'message', role: 'assistant', createdAt: Date.now(), content }
-        } else {
-          next.push({ kind: 'message', role: 'assistant', createdAt: Date.now(), content })
-        }
-        persistHistory(next)
-        return next
-      })
-    },
-    [setRows, persistHistory]
-  )
-
-  useEffect(() => {
-    if (!isDesktopAgentApiAvailable()) return
-    const offConfirm = window.ackem.desktopAgent.confirm.onRequest((payload) => {
-      setDesktopAgentConfirm(payload)
-    })
-    window.ackem.onDesktopAgentAgentBusy?.(({ sessionId: sid, busy: ab }) => {
-      if (sid !== activeSessionId) return
-      setAgentBusy(ab)
-    })
-    window.ackem.onDesktopAgentJobState?.((payload) => {
-      if (payload.sessionId !== activeSessionId) return
-      setAgentJobState(payload)
-      if (!payload.active) {
-        setAgentJobStatus(null)
-      }
-    })
-    window.ackem.onDesktopAgentJobStatus?.(({ sessionId: sid, label }) => {
-      if (sid !== activeSessionId) return
-      setAgentJobStatus(label.trim() ? label : null)
-    })
-    const handleDelivery = (payload: DesktopAgentTaskDeliveryPayload) => {
-      if (payload.sessionId !== activeSessionId) return
-      setTaskPlanProgress(null)
-      setAgentJobStatus(null)
-      setAgentJobState({ sessionId: payload.sessionId, phase: 'completed', active: false })
-      setAgentBusy(false)
-      if (payload.queued) {
-        setPendingTaskDelivery(payload)
-      } else {
-        appendTaskDeliveryToChat(payload)
-      }
-    }
-    window.ackem.onDesktopAgentTaskDelivery?.(handleDelivery)
-    window.ackem.onDesktopAgentTaskDeliveryQueued?.(handleDelivery)
-    return () => {
-      offConfirm()
-    }
-  }, [activeSessionId, setAgentBusy, appendTaskDeliveryToChat])
 
   useEffect(() => {
     void window.ackem
@@ -540,7 +386,6 @@ export function ChatPage({ companionPanelOpen = false, onToggleCompanionPanel }:
       })
       .catch(() => {})
   }, [chatTurnCount, setAmbientAff])
-
 
   useEffect(() => {
     const field = inputRef.current
@@ -609,9 +454,6 @@ export function ChatPage({ companionPanelOpen = false, onToggleCompanionPanel }:
     })
   }, [])
 
-  const desktopAgentPreviewOnly = isDesktopAgentGrayscalePreview()
-  const desktopAgentModeActive = false
-
   const runChatFromBuilt = useCallback(
     async (
       built: Awaited<ReturnType<typeof window.ackem.buildContext>>,
@@ -634,7 +476,7 @@ export function ChatPage({ companionPanelOpen = false, onToggleCompanionPanel }:
         if (meta?.sessionId && meta.sessionId !== activeSessionId) return
         if (meta?.assistantText && !stoppedRef.current) patchStreamingAssistant(meta.assistantText)
         setActivityLabel(null)
-        setInvestigationProgress(null)
+
         clearStreamingAssistantIndex()
         if (meta?.stateDelta?.bubbles?.length) {
           setStateBubbles(meta.stateDelta.bubbles)
@@ -647,7 +489,7 @@ export function ChatPage({ companionPanelOpen = false, onToggleCompanionPanel }:
       })
       window.ackem.onChatError((err) => {
         setActivityLabel(null)
-        setInvestigationProgress(null)
+
         if (stoppedRef.current) return
         if (String(err) === 'EMBEDDING_WARMING') {
           pushToast(t('chat.embedding.warming'))
@@ -723,8 +565,7 @@ export function ChatPage({ companionPanelOpen = false, onToggleCompanionPanel }:
         sessionId: activeSessionId,
         targetAgentId: agentChatTarget,
         interactionSurface: 'desktop_main',
-        desktopAgentChatMode: chattingPrimary ? desktopAgentModeActive : false,
-        desktopAgentCapability: chattingPrimary ? built.desktopAgentCapability : undefined
+
       })
     },
     [
@@ -736,7 +577,6 @@ export function ChatPage({ companionPanelOpen = false, onToggleCompanionPanel }:
       patchStreamingAssistant,
       pushToast,
       enterPlanWithWorkspace,
-      desktopAgentModeActive,
       chattingPrimary,
       activeSessionId,
       agentChatTarget,
@@ -955,7 +795,6 @@ export function ChatPage({ companionPanelOpen = false, onToggleCompanionPanel }:
           sessionId: activeSessionId,
           turnIndex,
           systemHint: awakeningHint,
-          desktopAgentChatMode: chattingPrimary ? desktopAgentModeActive : false,
           targetAgentId: agentChatTarget,
           interactionSurface: 'desktop_main'
         })
@@ -1021,7 +860,6 @@ export function ChatPage({ companionPanelOpen = false, onToggleCompanionPanel }:
     runChatFromBuilt,
     emotionLabel,
     respondPlanCreate,
-    desktopAgentModeActive,
     chattingPrimary,
     agentChatTarget
   ])
@@ -1116,7 +954,7 @@ export function ChatPage({ companionPanelOpen = false, onToggleCompanionPanel }:
       </header>
       <div className="flex min-h-0 flex-1">
         <div className="chat-main-column relative flex min-w-0 flex-1 flex-col">
-          <InvestigationProgressBar progress={investigationProgress} />
+
           <div className="chat-transcript-shell">
           <ChatPositionRail scrollRef={scrollRef} rows={taskFeedback.rows} onNavigate={pauseScroll} />
           <div ref={scrollRef} className="chat-transcript min-h-0 flex-1 overflow-y-auto" role="log" aria-label="对话记录" aria-busy={busy} tabIndex={0}>
@@ -1246,59 +1084,7 @@ export function ChatPage({ companionPanelOpen = false, onToggleCompanionPanel }:
                 {t('chat.embedding.degraded')}
               </div>
             )}
-            {desktopAgentModeActive && agentBusy ? (
-              <div className="mx-auto mb-2 max-w-[920px] px-1 text-[10px] text-ink-muted">
-                电脑助手在下方面板执行中，你可以继续聊天。
-              </div>
-            ) : null}
-            {chattingPrimary && !desktopAgentPreviewOnly ? (
-            <DesktopAgentDock
-              sessionId={activeSessionId}
-              progress={taskPlanProgress}
-              confirm={desktopAgentConfirm}
-              jobState={agentJobState}
-              jobStatusLabel={agentJobStatus}
-              pendingDelivery={pendingTaskDelivery}
-              onAllowOnce={() => {
-                if (!desktopAgentConfirm || !isDesktopAgentApiAvailable()) return
-                void window.ackem.desktopAgent.confirm
-                  .allow(desktopAgentConfirm.requestId)
-                  .then(() => setDesktopAgentConfirm(null))
-              }}
-              onAllowSession={() => {
-                if (!desktopAgentConfirm || !isDesktopAgentApiAvailable()) return
-                void window.ackem.desktopAgent.confirm
-                  .allowSession(desktopAgentConfirm.requestId)
-                  .then(() => setDesktopAgentConfirm(null))
-              }}
-              onAllowTaskDeletes={() => {
-                if (
-                  !desktopAgentConfirm ||
-                  !desktopAgentConfirm.taskPlanId ||
-                  !isDesktopAgentApiAvailable()
-                )
-                  return
-                void window.ackem.desktopAgent.confirm
-                  .allowTaskDeletes(
-                    desktopAgentConfirm.requestId,
-                    desktopAgentConfirm.taskPlanId
-                  )
-                  .then(() => setDesktopAgentConfirm(null))
-              }}
-              onDeny={() => {
-                if (!desktopAgentConfirm || !isDesktopAgentApiAvailable()) return
-                void window.ackem.desktopAgent.confirm
-                  .deny(desktopAgentConfirm.requestId)
-                  .then(() => setDesktopAgentConfirm(null))
-              }}
-              onViewDelivery={() => {
-                if (!pendingTaskDelivery) return
-                appendTaskDeliveryToChat(pendingTaskDelivery)
-                setPendingTaskDelivery(null)
-              }}
-              onDismissDelivery={() => setPendingTaskDelivery(null)}
-            />
-            ) : null}
+
             <AttachmentTray images={images} files={files} onRemove={path=>{setFiles(prev=>prev.filter(f=>f.path!==path));setImages(prev=>prev.filter(i=>i.path!==path))}}/>
             <div className="chat-input-wrap mx-auto flex max-w-[920px] gap-2 p-1.5">
               <AttachmentMenu disabled={attachmentsInput.pending} onSelect={kind=>void attachmentsInput.select(kind)}/>
@@ -1323,7 +1109,7 @@ export function ChatPage({ companionPanelOpen = false, onToggleCompanionPanel }:
                       ? '识别中…'
                       : '正在听… 说完会写进输入框'
                     : chattingPrimary
-                      ? desktopAgentInputPlaceholder(desktopAgentModeActive, desktopAgentPreviewOnly)
+                      ? t('chat.placeholder')
                       : `和 ${activeAgentName} 说点什么... (Shift+Enter 换行)`
                 }
                 className="min-h-[44px] flex-1 resize-none border-0 bg-transparent px-3 py-2 text-sm text-ink outline-none placeholder:text-ink-muted/70 disabled:opacity-50"

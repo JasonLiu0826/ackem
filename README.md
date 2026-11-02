@@ -11,9 +11,9 @@
 
 **Ackem v2.0.0 (community desktop build)** — A **local-first** AI companion for Windows and macOS. Bring your own LLM (cloud or local); Ackem handles chat, memory, emotion, relationship state, and desktop presence — **all on your hard drive**. This repository continues development on top of the original [JasonLiu0826/Ackem](https://github.com/JasonLiu0826/ackem) v1.0.0.
 
-> **Source**: [this repo](https://github.com/deufe/ackem) · upstream: [JasonLiu0826/Ackem](https://github.com/JasonLiu0826/ackem) · [Gitee mirror](https://gitee.com/jason_2005/ackem)  
-> **Download**: [releases of this repo](https://github.com/deufe/ackem/releases) (macOS dmg, ready to run) · upstream [GitHub Releases](https://github.com/JasonLiu0826/Ackem/releases) · [Gitee Releases](https://gitee.com/jason_2005/ackem/releases)  
-> **Build**: `npm run dist:green` → `dist/release/Ackem-1.0.0-win-x64/` · [Path map](./docs/CODEBASE-PATHS.md) · [Docs languages](./docs/I18N.md)  
+> **Source**: [this repo](https://github.com/deufe/ackem) · upstream: [JasonLiu0826/Ackem](https://github.com/JasonLiu0826/ackem) · [Gitee mirror](https://gitee.com/jason_2005/ackem)
+> **Download**: [releases of this repo](https://github.com/deufe/ackem/releases) (macOS dmg, ready to run) · upstream [GitHub Releases](https://github.com/JasonLiu0826/Ackem/releases) · [Gitee Releases](https://gitee.com/jason_2005/ackem/releases)
+> **Build**: `npm run dist:green` → `dist/release/Ackem-1.0.0-win-x64/` · [Path map](./docs/CODEBASE-PATHS.md) · [Docs languages](./docs/I18N.md)
 > **Status:** Ackem is still in **active testing**. As a solo-maintained project, test coverage is limited — you may hit unexpected behavior or rough edges. Frequent crashes and severe lag are uncommon, but imperfections still happen. [Open an Issue](https://github.com/deufe/ackem/issues) if something feels off.
 
 [中文文档](./README.zh.md) · [Privacy & data (EN)](./docs/privacy-and-data.md)
@@ -61,7 +61,7 @@ On top of upstream v1.0.0, concise but complete:
 
 **💬 Unified conversation + owner safety**
 - Desktop / QQ / WeChat share one chat history and memory (source tags, timeline merge + dedupe, live push to the desktop UI)
-- Owner binding: the first private chat is bound as owner; stranger messages never enter the main flow; replies go only to the asking channel
+- Owner binding: a private sender must be confirmed on the desktop before authorization; stranger messages never enter the main flow; replies go only to the asking channel
 
 **👧 Freya persona**
 - Corpus-reconstructed persona (one of 29 presets) + hormone-pool emotion engine (real-time decay, missing-you drift)
@@ -70,13 +70,12 @@ On top of upstream v1.0.0, concise but complete:
 **🧩 Multimodal & stability**
 - Image input: OpenAI multimodal content → Anthropic image blocks (base64 / remote URL)
 - Tool-turn multimodal content flattened (fixes base64 JSON being echoed back)
-- Desktop agent: per-step task-plan verification (desktopAgentTaskPlan); mis-dispatch fix (requires imperative verb + computer object)
-- Remote desktop agent on channels is now explicit (`/电脑` `/pc` `/agent`)
+- Local file, code and command tasks use work / AckemCode; the legacy desktop assistant execution channel has been removed
+- Remote dispatch for the confirmed QQ / WeChat owner is controlled in Settings → Work and supports `/code`
 - Humanized outbound splitting (humanizeReply); online-channel presence boundary (presence-boundary)
 
 **🍎 macOS community build**
 - electron-builder mac target + dmg; layered ad-hoc signing script (`sign-freya.sh`)
-- macOS desktop-agent adapter (`adapters/darwin`)
 
 > Full details in [CHANGELOG.md](./CHANGELOG.md). Issues and PRs are welcome; upstream updates are merged back as PRs.
 
@@ -300,7 +299,7 @@ Type **`/code your task`** in chat (or `/电脑 …` on QQ / WeChat), or just sa
 
 ## Developers
 
-> Ackem is an **Electron app**. The renderer depends on `window.ackem` (preload IPC).  
+> Ackem is an **Electron app**. The renderer depends on `window.ackem` (preload IPC).
 > Use **`npm run dev`** — do not open the Vite URL in a browser alone.
 > `npm start` also prepares local development dependencies before launching Electron.
 

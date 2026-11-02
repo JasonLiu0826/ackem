@@ -251,7 +251,7 @@ export type SettingsSectionId =
   | 'settings-mobile-qq'
   | 'settings-mobile-telegram'
   | 'settings-models'
-  | 'settings-desktop-agent'
+  | 'settings-work'
   | 'settings-openforu'
   | 'settings-voice'
   | 'settings-data'
@@ -294,7 +294,7 @@ export const SETTINGS_NAV_GROUPS: NavGroup[] = [
     labelKey: 'settings.nav.ability',
     items: [
       { id: 'settings-models', labelKey: 'settings.modelAndApi' },
-      { id: 'settings-desktop-agent', labelKey: 'settings.desktopAgent' },
+      { id: 'settings-work', labelKey: 'settings.workExecution' },
       { id: 'settings-openforu', labelKey: 'settings.openforuPlan', experimental: true },
       { id: 'settings-voice', labelKey: 'settings.voice' },
       { id: 'settings-data', labelKey: 'settings.dataAndMemory' }

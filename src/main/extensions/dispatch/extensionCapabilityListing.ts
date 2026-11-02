@@ -41,8 +41,6 @@ const STATUS_LABEL: Record<DispatchCatalogEntry['status'], string> = {
 
 export type ExtensionCatalogListingOptions = {
   maxChars?: number
-  /** 兼容旧调用者；现行能力清单不注入已退役模式。 */
-  desktopAgentSection?: string
   settings?: Partial<AppSettings>
 }
 
@@ -138,7 +136,6 @@ export function buildExtensionCatalogListingBlock(
   ]
 
   lines.push(buildPlatformFeaturesSection(options?.settings), '')
-
 
   if (usable.length > 0) {
     lines.push(`扩展库 · 当前可用（${usable.length}）：`)

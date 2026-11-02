@@ -2,6 +2,7 @@
 // 中文是默认语言，t() 回退目标
 
 export const zhResources: Record<string, string> = {
+  'chat.placeholder': '说点什么，或交给我一个任务…（Shift+Enter 换行）',
   // ═══ 节假日 ═══
   'holiday.元旦': '元旦',
   'holiday.春节': '春节',
@@ -527,8 +528,6 @@ export const zhResources: Record<string, string> = {
   'settings.switchedPersonality': '已切换人格：{label}',
   'settings.modelAndApi': '模型与 API',
   'settings.modelAndApiDesc': '聊天和内置编程各自用哪套模型。',
-  'settings.desktopAgent': '暂未开放 · 电脑助手',
-  'settings.desktopAgentDesc': '开发中，当前仅展示设置入口；正式开放前不会在聊天中执行本机操作。',
   'settings.openforuPlan': 'Plan · OpenForU',
   'settings.openforuPlanDesc': '扩展创作与 Plan 工作区专用模型，与聊天模型隔离配置。',
   'settings.openforuExperimentalTitle': '实验性功能 · Plan 工作区',
@@ -805,5 +804,4 @@ export const zhResources: Record<string, string> = {
   'chat.status.list': '正在整理列表',
   'chat.status.using': '正在使用 {tool}',
   'chat.status.doing': '正在进行 {kind}',
-  'chat.status.desktopAgent': '正在准备电脑操作：{action}',
 }

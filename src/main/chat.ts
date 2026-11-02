@@ -1,3 +1,4 @@
+import { executeOpenAiToolBatch } from './chat/executeOpenAiTools'
 import { openAiOutputTokenParams } from '../shared/outputTokens'
 import {contextPublicationFence} from './chat/contextPublicationFence'
 import { readOpenAiReplyWithContinuation } from './openAiReplyContinuation'
@@ -22,74 +23,20 @@ import { patchLatestTurnL5 } from './engine/tracer'
 import type { PrefetchedFact } from './memory/ingest'
 import { peekPendingTurn, updatePendingTurn, clearPendingTurn } from './turnPending'
 import { createLogger } from './logger'
-import { setOpenAiToolChoice } from './llmToolChoice'
 import { t } from './i18n'
-import { isDesktopAgentToolingActive } from '../shared/desktopAgent'
-import { useComputerOpenAiTool, USE_COMPUTER_TOOL_NAME } from './desktop-agent/toolDef'
-import {
-  appendDesktopAgentRoundMessages,
-  DESKTOP_AGENT_MAX_TOOL_ROUNDS
-} from './desktop-agent/agentLoopMessages'
-import {
-  executeOpenAiToolBatch,
-  shouldContinueDesktopAgentLoop
-} from './desktop-agent/openAiToolRound'
+
 import { notifyUiChatBubble } from './uiWindow'
 import { runForcedWebSearchTurn } from './extensions/plugins/builtin/knowledge-presentation/presentation/webSearchPresentation'
 import { isLlmMockMode } from './llmMockMode'
 import { mockChatStreamText } from './llmMockResponses'
-import { taskFrameFollowUpActivityLabel, taskFrameWorkingActivityLabel, skillToolActivityLabel } from './chatStatusLabels'
+import { taskFrameFollowUpActivityLabel, taskFrameWorkingActivityLabel } from './chatStatusLabels'
 import {
   parseUserTaskFrameFromBody,
   runWebSearchWithTaskFrame
 } from './taskFrame'
 import { streamChatWaves } from './chat/waveChat'
-import { readOpenAiChatCompletionStream, notifyChatStreamStart, type ToolCallAcc } from './openAiSseStream'
-import { tryHandleInvestigationChatTurn } from './desktop-agent/investigation/investigationChatTurn'
-import { INVESTIGATION_SYNTHESIZE_MIN_TOKENS } from '../shared/investigation'
-import {
-  shouldOfferSkillToolsInDesktopAgentSession,
-  shouldForceWebSearchInDesktopAgentSession
-} from './desktop-agent/modePolicy'
-import { evaluateTaskPlanProgress } from './desktop-agent/task-plan/verifyTaskPlan'
-import {
-  gateAgentLoopExit,
-  shouldForceTaskPlanContinuation,
-  buildPostToolTaskPlanNudge
-} from './desktop-agent/task-plan/taskPlanLoop'
-import { injectTaskPlanSystemHint } from './desktop-agent/task-plan/injectTaskPlan'
-import {
-  buildTaskPlanIncompleteDelivery,
-  buildTaskPlanFollowUpHonestyBlock
-} from './desktop-agent/task-plan/taskPlanPrompt'
-import {
-  resolveDesktopAgentTaskPlan,
-  clearTaskPlanProgress,
-  savePersistedTaskPlan,
-  clearPersistedTaskPlan,
-  readTaskPlanAudit,
-  buildTaskPlanResumeUserHint
-} from './desktop-agent/task-plan/resolveTaskPlan'
-import {
-  emitTaskPlanFromAudit,
-  emitTaskPlanProgress
-} from './desktop-agent/task-plan/taskPlanProgress'
-import type { TaskPlanProgress } from '../shared/desktopAgentTaskPlan'
-import { isDesktopAgentPipelineOpen } from '../shared/desktopAgentFeature'
-import {
-  isBackgroundAgentJobRunning,
-  startBackgroundAgentJob
-} from './desktop-agent/agentJobManager'
-import {
-  buildDesktopAgentFollowUpSuffix,
-  mergeDesktopAgentDelivery,
-  mergeToolResultsForDelivery
-} from './desktop-agent/desktopAgentDelivery'
-import {
-  shouldRouteDesktopAgentToBackgroundJob,
-  DESKTOP_AGENT_TASK_START_ACK
-} from './desktop-agent/agentJobRouting'
-import { isContinueTaskPlanIntent } from './desktop-agent/task-plan/taskPlanStore'
+import { notifyChatStreamStart, type ToolCallAcc } from './openAiSseStream'
+
 import { outputGuard } from './channel/outputGuard'
 import { peekChannelPlan } from './channel/lastPlan'
 
@@ -165,41 +112,16 @@ const extractFactsTool = {
 
 export type ToolsPayloadOptions = {
   settings: AppSettings
-  desktopAgentChatMode?: boolean
 }
 
 export function toolsPayload(opts?: ToolsPayloadOptions): unknown[] {
-  const agentActive =
-    opts &&
-    isDesktopAgentToolingActive(opts.settings, opts.desktopAgentChatMode === true)
-  const skillTools = shouldOfferSkillToolsInDesktopAgentSession(agentActive === true)
-    ? skillDefsToOpenAiTools(getActiveSkillToolDefs())
-    : []
-  const tools: unknown[] = [appendMemoryTool, readFileTool, extractFactsTool, ...skillTools]
-  if (
-    opts &&
-    isDesktopAgentToolingActive(opts.settings, opts.desktopAgentChatMode === true)
-  ) {
-    tools.push(useComputerOpenAiTool())
-  }
-  return tools
+  void opts
+  return [appendMemoryTool, readFileTool, extractFactsTool, ...skillDefsToOpenAiTools(getActiveSkillToolDefs())]
 }
 
 export function toolNames(opts?: ToolsPayloadOptions): string[] {
-  const agentActive =
-    opts &&
-    isDesktopAgentToolingActive(opts.settings, opts.desktopAgentChatMode === true)
-  const skillNames = shouldOfferSkillToolsInDesktopAgentSession(agentActive === true)
-    ? getActiveSkillToolDefs().map((d) => d.name)
-    : []
-  const names = ['append_memory', 'read_file', ...skillNames]
-  if (
-    opts &&
-    isDesktopAgentToolingActive(opts.settings, opts.desktopAgentChatMode === true)
-  ) {
-    names.push(USE_COMPUTER_TOOL_NAME)
-  }
-  return names
+  void opts
+  return ['append_memory', 'read_file', 'extract_facts', ...getActiveSkillToolDefs().map(d => d.name)]
 }
 
 export async function streamChatCompletion(webContents:WebContents,body:Record<string,unknown>,dataRoot:string,externalSignal?:AbortSignal):Promise<void>{
@@ -246,12 +168,9 @@ async function streamChatCompletionCore(
   const onExternalAbort = () => controller.abort()
   if (externalSignal?.aborted) controller.abort()
   externalSignal?.addEventListener('abort', onExternalAbort, { once: true })
-  const desktopAgentChatMode = body.desktopAgentChatMode === true
-  // 桌面助手已退役：本机活走通道 work，不再把电脑工具交给伴侣循环。
-  const agentActive = false
   const chatSessionId = typeof body.sessionId === 'string' ? body.sessionId : 'default'
-  const agentTimeoutMs = agentActive ? 900_000 : settings.timeoutMs || 120_000
-  const abortTimer = setTimeout(() => controller.abort(), agentTimeoutMs)
+  const timeoutMs = settings.timeoutMs || 120_000
+  const abortTimer = setTimeout(() => controller.abort(), timeoutMs)
   const toolAcc = new Map<number, ToolCallAcc>()
   let assistantAcc = ''
   let round1Text = ''
@@ -266,7 +185,7 @@ async function streamChatCompletionCore(
   ).trim()
   const usePlanDocumentCard = !useKnowledgeCard && planDocumentTopic.length > 0
   const sendTools = shouldSendTools(settings)
-  const toolsOpts: ToolsPayloadOptions = { settings, desktopAgentChatMode }
+  const toolsOpts: ToolsPayloadOptions = { settings }
   const streamRound1ToUi = !useKnowledgeCard && !usePlanDocumentCard
   const reqBody: Record<string, unknown> = {
     model: settings.model,
@@ -282,31 +201,9 @@ async function streamChatCompletionCore(
   const forcedWebSearchQueryRaw = (
     typeof body.forcedWebSearchQuery === 'string' ? body.forcedWebSearchQuery : ''
   ).trim()
-  const forcedWebSearchQuery = shouldForceWebSearchInDesktopAgentSession(
-    agentActive,
-    forcedWebSearchQueryRaw || undefined
-  )
+  const forcedWebSearchQuery = forcedWebSearchQueryRaw || undefined
   const turnIdEarly = typeof body.turnId === 'string' ? body.turnId : undefined
   const userTaskFrame = parseUserTaskFrameFromBody(body)
-  const userMsgEarly = lastUserMessageFromContext(allMsgsEarly)
-
-  /** 电脑助手 + 调查类问题：优先本机地图，不走联网 */
-  if (
-    agentActive &&
-    (await tryHandleInvestigationChatTurn({
-      webContents,
-      settings,
-      dataRoot,
-      body,
-      userMsg: userMsgEarly,
-      turnId: turnIdEarly,
-      signal: controller.signal
-    }))
-  ) {
-    externalSignal?.removeEventListener('abort', onExternalAbort)
-    clearTimeout(abortTimer)
-    return
-  }
 
   if (forcedWebSearchQuery) {
     try {
@@ -450,50 +347,6 @@ async function streamChatCompletionCore(
     const userMsgEarly = lastUserMessageFromContext(allMsgsEarly)
     const turnId = typeof body.turnId === 'string' ? body.turnId : undefined
 
-    if (
-      agentActive &&
-      userMsgEarly &&
-      shouldRouteDesktopAgentToBackgroundJob(userMsgEarly, dataRoot, chatSessionId)
-    ) {
-      notifyChatStreamStart(webContents)
-      webContents.send('chat:replace', DESKTOP_AGENT_TASK_START_ACK)
-      if (externalSignal?.aborted) return
-    sendChatDone(webContents, {
-        memoryWrites: [],
-        assistantText: DESKTOP_AGENT_TASK_START_ACK,
-        turnId
-      })
-      notifyUiChatBubble({ text: DESKTOP_AGENT_TASK_START_ACK, role: 'assistant' })
-      void finalizeTurnAfterStream({
-        turnId,
-        dataRoot,
-        assistantText: DESKTOP_AGENT_TASK_START_ACK,
-        settings
-      })
-      startBackgroundAgentJob({
-        provider: 'openai',
-        webContents,
-        body,
-        dataRoot,
-        sessionId: chatSessionId,
-        userText: userMsgEarly
-      })
-      return
-    }
-
-    let runAgentLoop = agentActive
-    if (
-      agentActive &&
-      userMsgEarly &&
-      isBackgroundAgentJobRunning(dataRoot, chatSessionId) &&
-      !isContinueTaskPlanIntent(userMsgEarly)
-    ) {
-      runAgentLoop = false
-      if (sendTools) {
-        reqBody.tools = toolsPayload({ settings, desktopAgentChatMode: false })
-      }
-    }
-
     const workingLabel = taskFrameWorkingActivityLabel(userTaskFrame)
     if (workingLabel) {
       webContents.send('chat:status', workingLabel)
@@ -512,7 +365,6 @@ async function streamChatCompletionCore(
     const writes: string[] = []
 
     let webSearchCompanionReply: string | null = null
-    let toolResults: Array<{ name: string; content: string }> = []
     const allToolResults: Array<{ name: string; content: string }> = []
 
     const pending = turnIdLoop ? peekPendingTurn(turnIdLoop) : undefined
@@ -522,231 +374,29 @@ async function streamChatCompletionCore(
     const prefetchedFacts: PrefetchedFact[] = []
     let skipLlmExtraction = false
 
-    const maxAgentRounds = runAgentLoop ? DESKTOP_AGENT_MAX_TOOL_ROUNDS : 1
-    let loopMessages = allMsgsEarly as Array<{ role: string; content: unknown }>
-    let sorted: Array<[number, ToolCallAcc]> = []
-    let zeroToolRetried = false
-
-    const planResult =
-      runAgentLoop && userMsg
-        ? await resolveDesktopAgentTaskPlan({
-            settings,
-            userText: userMsg,
-            webContents,
-            signal: controller.signal,
-            dataRoot,
-            sessionId: chatSessionId
-          })
-        : { plan: null, resumed: false }
-    const taskPlan = planResult.plan
-    let taskPlanProgress: TaskPlanProgress | null = null
-    let taskPlanDeliveredEarly = false
-
-    if (taskPlan) {
-      loopMessages = injectTaskPlanSystemHint(loopMessages, taskPlan)
-      if (planResult.resumed) {
-        const hint = buildTaskPlanResumeUserHint(
-          {
-            settings,
-            userText: userMsg,
-            webContents,
-            signal: controller.signal,
-            dataRoot,
-            sessionId: chatSessionId
-          },
-          taskPlan
-        )
-        if (hint) {
-          loopMessages = [...loopMessages, { role: 'user', content: hint }]
-        }
-      }
-      log.info('desktop-agent.task-plan', {
-        id: taskPlan.id,
-        planner: taskPlan.planner,
-        goal: taskPlan.goalSummary,
-        resumed: planResult.resumed,
-        steps: taskPlan.steps.map((s) => s.id)
-      })
+    for (let attempt = 0; attempt < 2; attempt++) {
+      toolAcc.clear()
+      round1Text = await streamLlmRound(streamRound1ToUi)
+      if (externalSignal?.aborted) return
+      if (round1Text.trim() || toolAcc.size > 0) break
+      if (attempt === 0 && streamRound1ToUi) {
+        log.warn('llm.empty_reply_retry')
+        await new Promise(resolve => setTimeout(resolve, 300))
+      } else break
     }
-
-    const readPlanAudit = () =>
-      taskPlan ? readTaskPlanAudit(dataRoot, taskPlan) : []
-
-    for (let agentRound = 0; agentRound < maxAgentRounds; agentRound++) {
-      reqBody.messages = loopMessages
-      if (agentRound > 0) {
-        webContents.send('chat:status', `电脑助手工作中…（第 ${agentRound + 1}/${maxAgentRounds} 步）`)
-      }
-
-      const streamUi = streamRound1ToUi && agentRound === 0 && !runAgentLoop
-      for (let attempt = 0; attempt < 2; attempt++) {
-        toolAcc.clear()
-        round1Text = await streamLlmRound(streamUi)
-        if (externalSignal?.aborted) return
-        if (round1Text.trim() || toolAcc.size > 0) break
-        if (attempt === 0 && streamUi) {
-          log.warn('llm.empty_reply_retry')
-          await new Promise((r) => setTimeout(r, 300))
-        } else {
-          break
-        }
-      }
-
-      sorted = [...toolAcc.entries()].sort((a, b) => a[0] - b[0])
-      if (sorted.length === 0) {
-        if (taskPlan) {
-          const audit = readPlanAudit()
-          const gate = gateAgentLoopExit({
-            plan: taskPlan,
-            audit,
-            agentRound,
-            maxRounds: maxAgentRounds,
-            sortedToolCount: 0,
-            round1Text
-          })
-          taskPlanProgress = gate.progress
-          savePersistedTaskPlan(dataRoot, chatSessionId, taskPlan, gate.progress)
-          if (gate.action === 'continue') {
-            emitTaskPlanProgress(webContents, taskPlan, 'executing', undefined, audit)
-            setOpenAiToolChoice(reqBody, 'required', settings)
-            loopMessages = [
-              ...loopMessages,
-              ...(round1Text.trim() ? [{ role: 'assistant', content: round1Text }] : []),
-              { role: 'user', content: gate.continuationUserMessage }
-            ]
-            continue
-          }
-          if (gate.action === 'incomplete') {
-            assistantAcc = buildTaskPlanIncompleteDelivery(gate.progress)
-            taskPlanDeliveredEarly = true
-            emitTaskPlanProgress(webContents, taskPlan, 'incomplete', undefined, audit)
-            break
-          }
-          if (gate.action === 'deliver' && gate.progress.allPassed) {
-            clearPersistedTaskPlan(dataRoot, chatSessionId)
-            emitTaskPlanProgress(webContents, taskPlan, 'delivering', undefined, audit)
-            break
-          }
-          if (gate.action === 'deliver' && !gate.progress.allPassed) {
-            setOpenAiToolChoice(reqBody, 'required', settings)
-            loopMessages = [
-              ...loopMessages,
-              ...(round1Text.trim() ? [{ role: 'assistant', content: round1Text }] : []),
-              {
-                role: 'user',
-                content: buildPostToolTaskPlanNudge(taskPlan, audit) ?? '请继续完成未通过的步骤。'
-              }
-            ]
-            continue
-          }
-          assistantAcc = round1Text
-          break
-        }
-        if (runAgentLoop && agentRound === 0 && !zeroToolRetried && sendTools) {
-          zeroToolRetried = true
-          webContents.send('chat:status', '调查未启动，正在重试…')
-          setOpenAiToolChoice(reqBody, 'required', settings)
-          loopMessages = [
-            ...loopMessages,
-            {
-              role: 'user',
-              content:
-                '【系统】你必须先调用 use_computer 获取本机证据，禁止未调查就回答。若用户要求列出/查找/扫描，务必使用 list_folder 或 search_files。'
-            }
-          ]
-          continue
-        }
-        assistantAcc = round1Text
-        break
-      }
-
+    const sorted = [...toolAcc.entries()].sort((a, b) => a[0] - b[0])
+    if (sorted.length === 0) assistantAcc = round1Text
+    else {
       const batch = await executeOpenAiToolBatch({
-        sorted,
-        settings,
-        dataRoot,
-        webContents,
-        sessionId: chatSessionId,
-        allMsgs: allMsgsEarly,
-        userMsg,
-        userTaskFrame,
-        actionCtx,
-        taskPlanId: taskPlan?.id
+        sorted, settings, dataRoot, webContents, sessionId: chatSessionId,
+        allMsgs: allMsgsEarly, userMsg, userTaskFrame, actionCtx
       })
-      toolResults = batch.toolResults
       allToolResults.push(...batch.toolResults)
       writes.push(...batch.writes)
       prefetchedFacts.push(...batch.prefetchedFacts)
-      if (batch.skipLlmExtraction) skipLlmExtraction = true
-      if (batch.webSearchCompanionReply) webSearchCompanionReply = batch.webSearchCompanionReply
-
-      if (pending?.trace?.turn != null && batch.invoked.length > 0) {
-        patchLatestTurnL5(pending.trace.turn, batch.invoked)
-      }
-
-      const turnAudit = readPlanAudit()
-      if (taskPlan) {
-        taskPlanProgress = emitTaskPlanFromAudit(webContents, taskPlan, turnAudit, 'executing')
-        savePersistedTaskPlan(dataRoot, chatSessionId, taskPlan, taskPlanProgress)
-      }
-
-      const willContinueToolLoop = shouldContinueDesktopAgentLoop(
-        runAgentLoop,
-        agentRound,
-        maxAgentRounds,
-        sorted
-      )
-
-      if (
-        taskPlan &&
-        shouldForceTaskPlanContinuation(
-          taskPlan,
-          readPlanAudit(),
-          agentRound,
-          maxAgentRounds,
-          willContinueToolLoop
-        )
-      ) {
-        const nudge = buildPostToolTaskPlanNudge(taskPlan, readPlanAudit())
-        loopMessages = appendDesktopAgentRoundMessages(loopMessages, round1Text, toolResults, {
-          taskPlanActive: true,
-          taskPlanNudge: nudge
-        })
-        setOpenAiToolChoice(reqBody, 'required', settings)
-        continue
-      }
-
-      if (willContinueToolLoop) {
-        loopMessages = appendDesktopAgentRoundMessages(loopMessages, round1Text, toolResults, {
-          taskPlanActive: !!taskPlan
-        })
-        continue
-      }
-
-      if (taskPlan && taskPlanProgress && !taskPlanProgress.allPassed) {
-        if (agentRound < maxAgentRounds - 1) {
-          const gate = gateAgentLoopExit({
-            plan: taskPlan,
-            audit: turnAudit,
-            agentRound,
-            maxRounds: maxAgentRounds,
-            sortedToolCount: sorted.length,
-            round1Text
-          })
-          if (gate.action === 'continue' && gate.continuationUserMessage) {
-            loopMessages = appendDesktopAgentRoundMessages(loopMessages, round1Text, toolResults, {
-              taskPlanActive: true,
-              taskPlanNudge: gate.continuationUserMessage
-            })
-            setOpenAiToolChoice(reqBody, 'required', settings)
-            continue
-          }
-        }
-        assistantAcc = buildTaskPlanIncompleteDelivery(taskPlanProgress)
-        taskPlanDeliveredEarly = true
-        emitTaskPlanProgress(webContents, taskPlan, 'incomplete', undefined, turnAudit)
-        break
-      }
-      break
+      skipLlmExtraction = batch.skipLlmExtraction
+      webSearchCompanionReply = batch.webSearchCompanionReply
+      if (pending?.trace?.turn != null && batch.invoked.length > 0) patchLatestTurnL5(pending.trace.turn, batch.invoked)
     }
 
     if (turnIdLoop && (prefetchedFacts.length > 0 || skipLlmExtraction)) {
@@ -761,59 +411,27 @@ async function streamChatCompletionCore(
       log.info('web_search 本轮是否被调用', {
         offered: toolNames(toolsOpts).includes('web_search'),
         called: invoked.includes('web_search'),
-        toolCalls: invoked,
-        agentRounds: runAgentLoop ? 'multi' : 'single'
+        toolCalls: invoked
       })
     }
 
     const allMsgs = allMsgsEarly
 
-    const otherToolResults = mergeToolResultsForDelivery(allToolResults)
-    const followUpMaxTokens = runAgentLoop
-      ? Math.max(INVESTIGATION_SYNTHESIZE_MIN_TOKENS, 1800)
-      : 600
-
-    const finalTaskProgress =
-      taskPlan && !taskPlanDeliveredEarly
-        ? evaluateTaskPlanProgress(taskPlan, readPlanAudit())
-        : taskPlanProgress
-
-    const taskPlanAudit = readPlanAudit()
-    const canDeliverTaskPlan =
-      !taskPlan || (finalTaskProgress?.allPassed === true && !taskPlanDeliveredEarly)
-
-    if (taskPlan && finalTaskProgress && !finalTaskProgress.allPassed && !taskPlanDeliveredEarly) {
-      assistantAcc = buildTaskPlanIncompleteDelivery(finalTaskProgress)
-      savePersistedTaskPlan(dataRoot, chatSessionId, taskPlan, finalTaskProgress)
-      emitTaskPlanProgress(webContents, taskPlan, 'incomplete', undefined, taskPlanAudit)
-      webContents.send('chat:replace', assistantAcc)
-    } else if (taskPlan && finalTaskProgress?.allPassed) {
-      clearPersistedTaskPlan(dataRoot, chatSessionId)
-      emitTaskPlanProgress(webContents, taskPlan, 'delivering', undefined, taskPlanAudit)
-    } else if (taskPlan && finalTaskProgress) {
-      savePersistedTaskPlan(dataRoot, chatSessionId, taskPlan, finalTaskProgress)
-    }
+    const otherToolResults = allToolResults.filter(result => result.name !== 'append_memory')
 
     if (webSearchCompanionReply) {
       assistantAcc = webSearchCompanionReply.trim()
       webContents.send('chat:replace', assistantAcc)
-    } else if (canDeliverTaskPlan && otherToolResults.length > 0) {
+    } else if (otherToolResults.length > 0) {
       webContents.send('chat:status', taskFrameFollowUpActivityLabel(userTaskFrame))
       let followUpPartial = ''
-      const taskPlanHonesty =
-        finalTaskProgress?.allPassed === true
-          ? buildTaskPlanFollowUpHonestyBlock(finalTaskProgress)
-          : undefined
-      const desktopSuffix = buildDesktopAgentFollowUpSuffix(otherToolResults)
-      const extraSuffix = [taskPlanHonesty, desktopSuffix].filter(Boolean).join('\n\n')
       try {
         const followReq = buildToolFollowUpRequestBody(
           settings,
           allMsgs,
           otherToolResults,
-          followUpMaxTokens,
-          userTaskFrame,
-          extraSuffix || undefined
+          600,
+          userTaskFrame
         )
         const result = await readOpenAiReplyWithContinuation(webContents, url, followReq, {
           headers: buildLlmHeaders(settings), signal: controller.signal, streamToUi: true,
@@ -837,24 +455,9 @@ async function streamChatCompletionCore(
     if (otherToolResults.length > 0 && !assistantAcc) {
       assistantAcc = buildToolResultsFallback(otherToolResults, settings)
       webContents.send('chat:replace', assistantAcc)
-    } else if (!assistantAcc.trim() && round1Text && canDeliverTaskPlan) {
+    } else if (!assistantAcc.trim() && round1Text) {
       assistantAcc = round1Text
-      if (!streamRound1ToUi || runAgentLoop) {
-        webContents.send('chat:replace', round1Text)
-      }
-    } else if (assistantAcc.trim() && runAgentLoop && !streamRound1ToUi && canDeliverTaskPlan) {
-      webContents.send('chat:replace', assistantAcc)
-    }
-
-    if (otherToolResults.some((tr) => tr.name === 'use_computer')) {
-      assistantAcc = mergeDesktopAgentDelivery(assistantAcc, otherToolResults)
-      if (runAgentLoop && !streamRound1ToUi) {
-        webContents.send('chat:replace', assistantAcc)
-      }
-    }
-
-    if (taskPlan) {
-      clearTaskPlanProgress(webContents)
+      if (!streamRound1ToUi) webContents.send('chat:replace', round1Text)
     }
 
     if (!assistantAcc.trim()) {

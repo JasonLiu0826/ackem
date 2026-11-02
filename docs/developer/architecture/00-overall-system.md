@@ -2,7 +2,7 @@
 
 > **Language:** English · [中文](./00-overall-system.zh.md)
 
-> **Scope:** Application shell + orchestration + data layer + process boundaries  
+> **Scope:** Application shell + orchestration + data layer + process boundaries
 > **Core question:** How is Ackem’s code organized? What does a message go through from input to reply?
 
 ---
@@ -311,7 +311,6 @@ src/main/
 ├── channels/                 # External channels
 │   └── weixin/               #   WeChat bridge
 │
-├── desktop-agent/            # Experimental: desktop agent
 │
 ├── paperCard/                # Cards/visualization
 ├── planDocument/             # OpenForU documents

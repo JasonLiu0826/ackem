@@ -2,8 +2,8 @@
 
 > **语言：** 中文 · [English](./08-ipc-api.md)
 
-> **层级**：进程边界桥  
-> **代号**：Preload Bridge  
+> **层级**：进程边界桥
+> **代号**：Preload Bridge
 > **核心问题**：渲染进程如何与主进程通信？
 
 ---
@@ -70,7 +70,6 @@ Main Process
 | `companion:*` | 伴侣状态 |
 | `ext:*` | 扩展管理 |
 | `openforu:*` | OpenForU 工作区 |
-| `desktop-agent:*` | 桌面代理 |
 | `voice:*` | 语音接口 |
 | `weixin:*` | 微信桥接 |
 | `ui:*` | UI 状态（窗口/托盘） |
@@ -215,17 +214,6 @@ window.ackem.openforu = {
 }
 ```
 
-### 3.7 桌面代理 (desktop-agent)
-
-```typescript
-window.ackem['desktop-agent'] = {
-  getStatus(): Promise<AgentStatus>,
-  start(): Promise<void>,
-  stop(): Promise<void>,
-  onEvent(cb: (event: AgentEvent) => void): () => void,
-}
-```
-
 ### 3.8 语音 (voice)
 
 ```typescript
@@ -353,12 +341,6 @@ window.ackem = {
 | `ext:gamemode:event` | `GamemodeEvent` | 游戏模式事件 |
 | `ext:surface:open` | `string` | Surface 打开 |
 | `ext:surface:close` | `string` | Surface 关闭 |
-
-### 4.4 桌面代理事件
-
-| 事件 | 载荷 | 说明 |
-|------|------|------|
-| `desktop-agent:event` | `AgentEvent` | 代理状态/事件 |
 
 ### 4.5 语音事件
 

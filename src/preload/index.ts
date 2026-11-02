@@ -4,7 +4,6 @@ import type { UserTaskFrame } from '../shared/taskFrame'
 import type { WavePlan } from '../shared/wavePlan'
 import type { AgentEvent } from '../shared/openforuAgentTypes'
 import type { PermissionRequestPayload } from '../shared/openforuPermissions'
-import type { DesktopAgentConfirmRequest } from '../shared/desktopAgent'
 
 export type BuildContextResult = {
   messages: unknown[]
@@ -40,7 +39,7 @@ export type BuildContextResult = {
   wavePlan?: WavePlan
   waveContext?: Record<string, unknown>
   sessionId?: string
-  desktopAgentCapability?: import('../shared/desktopAgentCapabilities').DesktopAgentCapabilityMatch
+
   /** 阶段 1「判决可见」: 本轮路由判决的人话解释（账本读回，缺判决为 null）。 */
   routeExplain?: {
     found: boolean
@@ -61,17 +60,6 @@ let openforuAgentEventBridgeReady = false
 
 const openforuPermissionListeners = new Set<(payload: PermissionRequestPayload) => void>()
 let openforuPermissionBridgeReady = false
-
-const desktopAgentConfirmListeners = new Set<(payload: DesktopAgentConfirmRequest) => void>()
-let desktopAgentConfirmBridgeReady = false
-
-function ensureDesktopAgentConfirmBridge(): void {
-  if (desktopAgentConfirmBridgeReady) return
-  desktopAgentConfirmBridgeReady = true
-  ipcRenderer.on('desktop-agent:confirm:request', (_e, payload: DesktopAgentConfirmRequest) => {
-    for (const fn of desktopAgentConfirmListeners) fn(payload)
-  })
-}
 
 function ensureOpenforuPermissionBridge(): void {
   if (openforuPermissionBridgeReady) return
@@ -213,7 +201,7 @@ contextBridge.exposeInMainWorld('ackem', {
     systemHint?: string
     targetAgentId?: string
     interactionSurface?: string
-    desktopAgentChatMode?: boolean
+
     turnConfirm?: { planId: string; accepted: boolean; cwd?: string; extensionId?: string }
   }): Promise<BuildContextResult> => ipcRenderer.invoke('context:build', args),
   workbenchFollow: (args: { chatSessionId?: string; text: string }) =>
@@ -342,58 +330,8 @@ contextBridge.exposeInMainWorld('ackem', {
     sessionId?: string
     targetAgentId?: string
     interactionSurface?: string
-    desktopAgentChatMode?: boolean
+
   }) => ipcRenderer.invoke('chat:start', payload),
-  desktopAgent: {
-    sessionMode: {
-      get: (sessionId?: string) =>
-        ipcRenderer.invoke('desktop-agent:sessionMode:get', sessionId) as Promise<{
-          enabled: boolean
-          settingsReady: boolean
-        }>,
-      set: (sessionId: string, enabled: boolean) =>
-        ipcRenderer.invoke('desktop-agent:sessionMode:set', { sessionId, enabled }) as Promise<{
-          ok: boolean
-          enabled?: boolean
-          error?: string
-        }>
-    },
-    opening: () =>
-      ipcRenderer.invoke('desktop-agent:opening') as Promise<
-        { ok: true; text: string } | { ok: false; error: string }
-      >,
-    confirm: {
-      onRequest: (fn: (payload: DesktopAgentConfirmRequest) => void) => {
-        ensureDesktopAgentConfirmBridge()
-        desktopAgentConfirmListeners.add(fn)
-        return () => {
-          desktopAgentConfirmListeners.delete(fn)
-        }
-      },
-      allow: (requestId: string) =>
-        ipcRenderer.invoke('desktop-agent:confirm:allow', { requestId }),
-      allowSession: (requestId: string) =>
-        ipcRenderer.invoke('desktop-agent:confirm:allowSession', { requestId }),
-      allowTaskDeletes: (requestId: string, taskPlanId: string) =>
-        ipcRenderer.invoke('desktop-agent:confirm:allowTaskDeletes', { requestId, taskPlanId }),
-      deny: (requestId: string) =>
-        ipcRenderer.invoke('desktop-agent:confirm:deny', { requestId })
-    },
-    auditRecent: (limit?: number) => ipcRenderer.invoke('desktop-agent:audit:recent', limit)
-  },
-  machineMap: {
-    status: () =>
-      ipcRenderer.invoke('machine-map:status') as Promise<
-        import('../shared/machineMap').MachineMapStatus
-      >,
-    reindex: () => ipcRenderer.invoke('machine-map:reindex') as Promise<{ ok: boolean }>,
-    onProgress: (
-      fn: (payload: import('../shared/machineMap').MachineMapProgressPayload | null) => void
-    ) => {
-      ipcRenderer.removeAllListeners('machine-map:progress')
-      ipcRenderer.on('machine-map:progress', (_e, payload) => fn(payload))
-    }
-  },
   getState: (opts?: { targetAgentId?: string }) => ipcRenderer.invoke('state:get', opts),
   resetState: () => ipcRenderer.invoke('state:reset'),
   traceLatest: (n?: number) => ipcRenderer.invoke('trace:latest', n),
@@ -736,44 +674,6 @@ contextBridge.exposeInMainWorld('ackem', {
   onChatStatus: (fn: (text: string) => void) => {
     ipcRenderer.removeAllListeners('chat:status')
     ipcRenderer.on('chat:status', (_e, text: string) => fn(text))
-  },
-  onInvestigationProgress: (
-    fn: (payload: import('../shared/investigation').InvestigationProgressPayload | null) => void
-  ) => {
-    ipcRenderer.removeAllListeners('investigation:progress')
-    ipcRenderer.on('investigation:progress', (_e, payload) => fn(payload))
-  },
-  onTaskPlanProgress: (
-    fn: (payload: import('../shared/desktopAgentTaskPlan').TaskPlanProgressPayload | null) => void
-  ) => {
-    ipcRenderer.removeAllListeners('taskplan:progress')
-    ipcRenderer.on('taskplan:progress', (_e, payload) => fn(payload))
-  },
-  onDesktopAgentAgentBusy: (fn: (payload: { sessionId: string; busy: boolean }) => void) => {
-    ipcRenderer.removeAllListeners('desktop-agent:agent-busy')
-    ipcRenderer.on('desktop-agent:agent-busy', (_e, payload) => fn(payload))
-  },
-  onDesktopAgentJobState: (
-    fn: (payload: import('../shared/desktopAgentDock').DesktopAgentJobStatePayload) => void
-  ) => {
-    ipcRenderer.removeAllListeners('desktop-agent:job-state')
-    ipcRenderer.on('desktop-agent:job-state', (_e, payload) => fn(payload))
-  },
-  onDesktopAgentJobStatus: (fn: (payload: { sessionId: string; label: string }) => void) => {
-    ipcRenderer.removeAllListeners('desktop-agent:job-status')
-    ipcRenderer.on('desktop-agent:job-status', (_e, payload) => fn(payload))
-  },
-  onDesktopAgentTaskDelivery: (
-    fn: (payload: import('../shared/desktopAgentDock').DesktopAgentTaskDeliveryPayload) => void
-  ) => {
-    ipcRenderer.removeAllListeners('desktop-agent:task-delivery')
-    ipcRenderer.on('desktop-agent:task-delivery', (_e, payload) => fn(payload))
-  },
-  onDesktopAgentTaskDeliveryQueued: (
-    fn: (payload: import('../shared/desktopAgentDock').DesktopAgentTaskDeliveryPayload) => void
-  ) => {
-    ipcRenderer.removeAllListeners('desktop-agent:task-delivery-queued')
-    ipcRenderer.on('desktop-agent:task-delivery-queued', (_e, payload) => fn(payload))
   },
   onExtensionTrigger: (
     fn: (payload: {

@@ -49,10 +49,6 @@ export function taskFrameWorkingActivityLabel(taskFrame?: UserTaskFrame): string
   return taskFrameFollowUpActivityLabel(taskFrame)
 }
 
-export function desktopAgentActivityLabel(action: string): string {
-  return t('chat.status.desktopAgent', { action })
-}
-
 export function normalizeActivityPayload(text: string): string {
   return text.trim().replace(/[…\.。]+$/u, '')
 }

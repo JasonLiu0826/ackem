@@ -4,7 +4,7 @@ import { companionGate, type CompanionGateState } from './proactivePolicy'
 import { resolveDataRoot } from '../paths'
 import { loadSettings } from '../settings'
 import { engineSessionId } from '../session/canonical'
-import { isChatStreaming } from '../desktop-agent/deliveryCoordinator'
+import { isChatStreaming } from '../chat/streamState'
 import { resolveUserTimezone } from '../memory/temporal/timezonePolicy'
 import { zonedDateParts, zonedLocalDate } from '../memory/temporal/zonedDate'
 const activeTasks = new Set<string>()

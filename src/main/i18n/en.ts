@@ -1,6 +1,7 @@
 // [i18n/en] — 英文资源文件
 
 export const enResources: Record<string, string> = {
+  'chat.placeholder': 'Say something, or give me a task… (Shift+Enter for a new line)',
   // ═══ Holidays ═══
   'holiday.元旦': "New Year's Day",
   'holiday.春节': 'Chinese New Year',
@@ -534,9 +535,6 @@ export const enResources: Record<string, string> = {
   'settings.switchedPersonality': 'Switched personality: {label}',
   'settings.modelAndApi': 'Model & API',
   'settings.modelAndApiDesc': 'Which model chat uses, and which model the built-in coder uses.',
-  'settings.desktopAgent': 'Not yet available · Desktop agent',
-  'settings.desktopAgentDesc':
-    'In development — settings are visible only; desktop actions stay disabled until release.',
   'settings.openforuPlan': 'Plan · OpenForU',
   'settings.openforuPlanDesc': 'Dedicated model for extension authoring and Plan workspaces, separate from chat.',
   'settings.openforuExperimentalTitle': 'Experimental · Plan workspace',
@@ -813,5 +811,4 @@ export const enResources: Record<string, string> = {
   'chat.status.list': 'Organizing list',
   'chat.status.using': 'Using {tool}',
   'chat.status.doing': 'Running {kind}',
-  'chat.status.desktopAgent': 'Preparing desktop action: {action}',
 }

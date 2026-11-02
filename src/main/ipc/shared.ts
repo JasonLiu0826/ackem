@@ -39,8 +39,7 @@ export type ContextBuildInvoke = Omit<BuildContextArgs, 'index' | 'settings'> & 
   targetAgentId?: string
   /** 记忆场景面：主聊 desktop_main / 微信 weixin / … */
   interactionSurface?: string
-  /** 聊天页电脑助手模式（本会话） */
-  desktopAgentChatMode?: boolean
+
   /** 通道路由确认卡：只认 planId，不重跑 routeChannel */
   turnConfirm?: {
     planId: string

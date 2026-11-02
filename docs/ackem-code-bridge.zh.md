@@ -68,21 +68,19 @@ QQ 渠道          ─┼─→ maybeRunCodeTask() ─→ intent 判定 ─→ A
 
 ---
 
-## 三·五、和"电脑助手"的关系
+## 三·五、工作执行入口
 
-两者是**独立的**：`/code` 走 Ackem Code（编码智能体），电脑助手（`use_computer`）走 A 套原有的后台任务。
+旧电脑助手已删除，聊天不再提供 `use_computer`，也不再注册对应 IPC、调查、本机地图和旧任务计划。
 
-- 桌面聊天：电脑助手会话里，只有「祈使动词 + 电脑对象（文件 / 桌面 / 路径 / 扩展名）」才派工；
-  占位、表情、寒暄、疑问句都不会触发。
-- QQ / 微信：远程电脑助手必须显式发 `/电脑 …`（或 `/pc …`、`/agent …`）才进入，
-  普通聊天不会再突然"开始执行"。
+- 桌面聊天：本机任务由 work 路由交给任务协调器，再交由 AckemCode 执行、验收和交付；也可以直接在工作页操作。
+- QQ / 微信：已确认的机主可用 `/code …` 或代码任务自然语言请求派工。必须先打开「设置 → 工作执行 → 允许已绑定机主通过 QQ / 微信远程派工」。
+- 旧版远程派工授权迁移到 `workRemoteChannelsEnabled`；旧助手开关和执行权限不再生效。
 
 ## 四、权限与安全
 
 - daemon 只监听 `127.0.0.1`，不对局域网公开。
-- 当前默认「三端全自动」：`bypassPermissions`，QQ/微信里发来的代码任务不弹确认直接执行。
-  **这是高风险配置**：能接触你 QQ/微信的人，等于能让你电脑上的智能体改文件、跑命令。
-  想收紧就把 `ACKEMCODE_REQUIRE_EXPLICIT=1`（只认 `/code`）或 `ACKEMCODE_PERMISSION_MODE=default`。
+- 远程派工默认关闭，并要求桌面确认渠道机主。开启后，移动端代码任务使用设置中的权限模式，缺省为 `bypassPermissions`。
+  可在「设置 → 工作执行」收紧权限，或使用 `ACKEMCODE_REQUIRE_EXPLICIT=1`（只认 `/code`）和 `ACKEMCODE_PERMISSION_MODE=default`。桌面任务权限在工作页选择。
 - 密钥只写进本机 `settings.standalone.json`（权限 600），日志与文档不记录密钥值。
 
 ---

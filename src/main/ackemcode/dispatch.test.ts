@@ -25,11 +25,12 @@ describe('ackemcode dispatch 权限', () => {
     expect(resolvePermissionMode({})).toBe('bypassPermissions')
   })
 
-  it('远程渠道必须显式开启电脑助手远程开关', () => {
+  it('远程渠道必须显式开启 work 远程派工开关', () => {
     expect(remoteChannelsAllowed('ui', {})).toBe(true)
     expect(remoteChannelsAllowed('qq', {})).toBe(false)
     expect(remoteChannelsAllowed('weixin', {})).toBe(false)
-    expect(remoteChannelsAllowed('qq', { desktopAgentRemoteChannelsEnabled: true })).toBe(true)
+    expect(remoteChannelsAllowed('qq', { workRemoteChannelsEnabled: true })).toBe(true)
+    expect(remoteChannelsAllowed('weixin', { workRemoteChannelsEnabled: true })).toBe(true)
   })
 
   it('isPermissionMode 只接受已知模式', () => {

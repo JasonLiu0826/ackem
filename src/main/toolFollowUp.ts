@@ -17,7 +17,6 @@ function messageText(content: unknown): string {
 const TOOL_LABEL: Record<string, string> = {
   web_search: '网页搜索',
   read_file: '文件读取',
-  use_computer: '电脑助手'
 }
 
 /** 构建 follow-up 消息：系统 + 原用户问题 + 工具结果（user 角色），兼容 thinking / 非标准 tool API */

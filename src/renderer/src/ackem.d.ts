@@ -248,7 +248,7 @@ export type BuildContextResult = {
   wavePlan?: import('../../shared/wavePlan').WavePlan
   waveContext?: Record<string, unknown>
   sessionId?: string
-  desktopAgentCapability?: import('../../shared/desktopAgentCapabilities').DesktopAgentCapabilityMatch
+
   /** 阶段 1「判决可见」: 本轮路由判决的人话解释（账本读回，缺判决为 null）。 */
   routeExplain?: {
     found: boolean
@@ -417,7 +417,7 @@ export type AckemApi = {
     systemHint?: string
     targetAgentId?: string
     interactionSurface?: string
-    desktopAgentChatMode?: boolean
+
     turnConfirm?: { planId: string; accepted: boolean; cwd?: string; extensionId?: string }
   }) => Promise<BuildContextResult>
   workbenchFollow: (args: {
@@ -521,8 +521,7 @@ export type AckemApi = {
     sessionId?: string
     targetAgentId?: string
     interactionSurface?: string
-    desktopAgentChatMode?: boolean
-    desktopAgentCapability?: import('../../shared/desktopAgentCapabilities').DesktopAgentCapabilityMatch
+
   }) => Promise<void>
   onChatWaveStart: (fn: (payload: { waveIndex: number; waveCount: number; newBubble: boolean }) => void) => void
   onChatWaveEnd: (fn: (payload: { waveIndex: number; text: string; partial?: boolean }) => void) => void
@@ -534,23 +533,7 @@ export type AckemApi = {
   }>
   onChatReplace: (fn: (text: string) => void) => void
   onChatStatus: (fn: (text: string) => void) => void
-  onInvestigationProgress: (
-    fn: (payload: import('../shared/investigation').InvestigationProgressPayload | null) => void
-  ) => void
-  onTaskPlanProgress: (
-    fn: (payload: import('../../shared/desktopAgentTaskPlan').TaskPlanProgressPayload | null) => void
-  ) => void
-  onDesktopAgentAgentBusy: (fn: (payload: { sessionId: string; busy: boolean }) => void) => void
-  onDesktopAgentJobState: (
-    fn: (payload: import('../../shared/desktopAgentDock').DesktopAgentJobStatePayload) => void
-  ) => void
-  onDesktopAgentJobStatus: (fn: (payload: { sessionId: string; label: string }) => void) => void
-  onDesktopAgentTaskDelivery: (
-    fn: (payload: import('../../shared/desktopAgentDock').DesktopAgentTaskDeliveryPayload) => void
-  ) => void
-  onDesktopAgentTaskDeliveryQueued: (
-    fn: (payload: import('../../shared/desktopAgentDock').DesktopAgentTaskDeliveryPayload) => void
-  ) => void
+
   onExtensionTrigger: (fn: (payload: {
     extensionId: string
     extensionName: string
@@ -1010,31 +993,7 @@ export type AckemApi = {
       ) => Promise<{ ok: boolean; error?: string }>
     }
   }
-  desktopAgent: {
-    sessionMode: {
-      get: (sessionId?: string) => Promise<{ enabled: boolean; settingsReady: boolean }>
-      set: (
-        sessionId: string,
-        enabled: boolean
-      ) => Promise<{ ok: boolean; enabled?: boolean; error?: string }>
-    }
-    opening: () => Promise<{ ok: true; text: string } | { ok: false; error: string }>
-    confirm: {
-      onRequest: (fn: (payload: import('../../shared/desktopAgent').DesktopAgentConfirmRequest) => void) => () => void
-      allow: (requestId: string) => Promise<boolean>
-      allowSession: (requestId: string) => Promise<boolean>
-      allowTaskDeletes: (requestId: string, taskPlanId: string) => Promise<boolean>
-      deny: (requestId: string) => Promise<boolean>
-    }
-    auditRecent: (limit?: number) => Promise<unknown[]>
-  }
-  machineMap: {
-    status: () => Promise<import('../../shared/machineMap').MachineMapStatus>
-    reindex: () => Promise<{ ok: boolean }>
-    onProgress: (
-      fn: (payload: import('../../shared/machineMap').MachineMapProgressPayload | null) => void
-    ) => void
-  }
+
   /** 当前应使用的伴侣交互形象绑定（skin 插件可覆盖内置 Canvas） */
   companionSkinActive: () => Promise<CompanionSkinBinding>
   companionSkinList: () => Promise<CompanionSkinBinding[]>

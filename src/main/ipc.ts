@@ -31,7 +31,7 @@ import { registerCodePartIpc } from './ipc/codePart'
 import { registerWebSearchIpc } from './ipc/webSearch'
 import { registerWorkbenchIpc } from './ipc/workbench'
 import { registerTaskIpc } from './ipc/tasks'
-import { registerDesktopAgentIpc } from './desktop-agent/ipc'
+
 import { registerSurfaceIpc } from './extensionSurfaceHost'
 import { ensureVoiceIpc } from './extensions/plugins/builtin/tool/tts-voice/bootstrap'
 import { initLocale } from './i18n'
@@ -116,7 +116,7 @@ export function registerIpc(): void {
   registerQzoneIpc()
   registerSocialIpc()
   registerSocialFeedIpc()
-  registerDesktopAgentIpc()
+
   registerCodePartIpc()
   registerWorkbenchIpc()
   registerTaskIpc()

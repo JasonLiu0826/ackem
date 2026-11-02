@@ -164,7 +164,7 @@ type State = {
   dispatchTriggerStatus: DispatchTriggerStatus | null
   /** 主聊天 / 剧院 / 桌宠共用的流式进行中状态 */
   chatBusy: boolean
-  /** 电脑助手后台任务进行中（不阻塞输入） */
+  /** 扩展计划后台执行状态（不阻塞聊天输入） */
   agentBusy: boolean
   /** 打开设置页时定位到指定分区（消费后清空） */
   settingsDeepLink: SettingsDeepLink | null

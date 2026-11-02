@@ -7,14 +7,14 @@
 ![OpenAI Compatible](https://img.shields.io/badge/API-OpenAI--Compatible-412991?style=for-the-badge&logo=openai&logoColor=white)
 ![Electron](https://img.shields.io/badge/Built_with-Electron-47848F?style=for-the-badge&logo=electron&logoColor=white)
 
-**Ackem** · **A**.C.K.E.M — 保持情感记忆的自主伙伴  
+**Ackem** · **A**.C.K.E.M — 保持情感记忆的自主伙伴
 *Autonomous Companion Keeping Emotional Memory*
 
 **Ackem v2.0.0（社区桌面版）** — 运行在你 Windows / macOS 电脑上的 **本地优先** AI 伴侣。自备大模型（云端或本机），Ackem 负责对话、记忆、情绪与关系、桌宠陪伴 — **数据都在本机硬盘**。本仓库基于原作者 [JasonLiu0826/Ackem](https://github.com/JasonLiu0826/ackem) v1.0.0 继续开发。
 
-> **源码**：[本仓库](https://github.com/deufe/ackem) · 上游原作：[JasonLiu0826/Ackem](https://github.com/JasonLiu0826/ackem)  
-> **下载**：[本仓库 Releases](https://github.com/deufe/ackem/releases)（macOS dmg，开箱即用） · 上游 [GitHub Releases](https://github.com/JasonLiu0826/Ackem/releases) · [Gitee Releases](https://gitee.com/jason_2005/ackem/releases)  
-> **构建**：`npm run dist:green` → `dist/release/Ackem-1.0.0-win-x64/` · [路径说明](./docs/CODEBASE-PATHS.zh.md) · [文档语言](./docs/I18N.zh.md)  
+> **源码**：[本仓库](https://github.com/deufe/ackem) · 上游原作：[JasonLiu0826/Ackem](https://github.com/JasonLiu0826/ackem)
+> **下载**：[本仓库 Releases](https://github.com/deufe/ackem/releases)（macOS dmg，开箱即用） · 上游 [GitHub Releases](https://github.com/JasonLiu0826/Ackem/releases) · [Gitee Releases](https://gitee.com/jason_2005/ackem/releases)
+> **构建**：`npm run dist:green` → `dist/release/Ackem-1.0.0-win-x64/` · [路径说明](./docs/CODEBASE-PATHS.zh.md) · [文档语言](./docs/I18N.zh.md)
 > **状态：** Ackem 目前仍处于**测试与快速迭代**阶段。个人维护，测试覆盖面有限，使用中可能遇到预期之外的情况或细节瑕疵；一般不会出现频繁闪退或严重卡顿，但完善度仍在持续改进。欢迎 [提交 Issue](https://github.com/deufe/ackem/issues) 反馈。
 
 English: [README.md](./README.md) · [Privacy & data](./docs/privacy-and-data.md)
@@ -62,7 +62,7 @@ Ackem **不是**网页聊天框，而是常驻桌面的 Windows 应用：系统�
 
 **💬 三端统一会话 + 机主安全**
 - 桌面 / QQ / 微信共用一份聊天历史与记忆（来源标注、时间线合并去重、实时推回桌面）
-- 机主绑定：首个私聊者自动绑定，陌生人消息不进入主流程；回复只回提问端
+- 机主绑定：私聊者先进入待确认状态，桌面确认后才授权；陌生人消息不进入主流程，回复只回提问端
 
 **👧 Freya 人格**
 - 真人语料还原型人格（29 个预设之一）+ 激素池情绪引擎（按真实时间衰减、思念漂移）
@@ -71,13 +71,12 @@ Ackem **不是**网页聊天框，而是常驻桌面的 Windows 应用：系统�
 **🧩 多模态与稳定性**
 - 图片输入打通：OpenAI 多模态 content → Anthropic image blocks（base64 / 远程 URL）
 - 工具回合多模态内容压平（修复 base64 JSON 被模型复读）
-- 电脑助手：任务计划单步验收（desktopAgentTaskPlan）、误派工修复（必须同时命中「祈使动词 + 电脑对象」）
-- 渠道远程电脑助手改为显式指令（`/电脑` `/pc` `/agent`）
+- 本机文件、代码和命令任务统一交给 work / AckemCode；旧电脑助手执行通道已删除
+- QQ / 微信机主的远程派工在「设置 → 工作执行」开启，支持 `/code` 指令
 - 出站文本人性化拆分（humanizeReply）、线上渠道在场边界约束（presence-boundary）
 
 **🍎 macOS 社区构建**
 - electron-builder mac target + dmg 产物；`sign-freya.sh` 分层 ad-hoc 签名脚本
-- macOS 电脑助手适配器（`adapters/darwin`）
 
 > 完整变更见 [CHANGELOG.md](./CHANGELOG.md)。欢迎向本仓库提交 Issue / PR，上游更新会以 PR 方式并入。
 
@@ -263,8 +262,8 @@ npm run dist:green   # 产物在 dist/release/
 ### 微信渠道
 **设置 → 移动端 → 微信**：手机微信发消息，大脑、人格与记忆仍运行在本机。
 
-### Ackem Code（电脑助手）
-在对话里写 **`/code 你的任务`**（QQ / 微信里是 `/电脑 …`），或直接说「帮我把这个文件改名」——命中代码 / 文件 / 命令类任务时自动交给本机编码智能体，结果只回提问的那一端。权限可在设置中收紧。详见 [docs/ackem-code-bridge.zh.md](./docs/ackem-code-bridge.zh.md)。
+### 工作执行（AckemCode）
+桌面聊天中的本机任务交给工作页执行。QQ / 微信中可以使用 **`/code 你的任务`** 或代码、文件、命令类自然语言请求；需先在「设置 → 工作执行」开启远程派工，并确认渠道机主。移动端代码任务的权限可在此收紧，结果回到提问端；桌面任务在工作页选择权限。详见 [docs/ackem-code-bridge.zh.md](./docs/ackem-code-bridge.zh.md)。
 
 ### 语音
 - **TTS 朗读**：设置 → 语音；本机语音服务（需 Python 3.9+）随程序附带，首次使用时启动
@@ -301,7 +300,7 @@ npm run dist:green   # 产物在 dist/release/
 
 ## 开发者
 
-> Ackem 是 **Electron 应用**，渲染进程依赖 `window.ackem`（preload IPC）。  
+> Ackem 是 **Electron 应用**，渲染进程依赖 `window.ackem`（preload IPC）。
 > 请用 **`npm run dev`** 启动，不要在浏览器单独打开 Vite 地址。
 
 ### 环境

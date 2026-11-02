@@ -12,7 +12,6 @@ import { appendOrOverwriteAllowed, importExternalFiles, promoteImportToMemory, r
 import { searchChunks } from '../indexer'
 import { invalidateEngineCache, invalidateEmbeddingProvider, getCachedEmbeddingProvider } from '../engineCache'
 import { reseedAssociationGraphForDataRoot } from '../memory/associationColdStart'
-import { onDesktopAgentSettingsSaved } from '../desktop-agent/ipc'
 import { syncCompanionHarassScheduler } from '../extensions/plugins/builtin/desktop-companion/bootstrap'
 import { databasePath } from '../paths'
 import { previewChatFile } from '../chat/filePreview'
@@ -49,7 +48,7 @@ import {
 import { createLogger } from '../logger'
 import { ACKEM_CANON } from '../canon/ackemCanon'
 import { loadCreatorMemoryStore } from '../canon/creatorMemory'
-import { embeddingSettingsChanged, onlyDesktopAgentSettingsChanged } from '../../shared/settingsChange'
+import { embeddingSettingsChanged } from '../../shared/settingsChange'
 import { qzoneSettingsChanged, syncQzoneAutomation } from '../channels/qq/qzone'
 import { resolveCodeRoot } from '../ackemcode/ensureDaemon'
 import { syncRuntimeLlm } from '../ackemcode/syncRuntimeLlm'
@@ -62,11 +61,7 @@ function runSettingsPostSaveHooks(
   patch: Parameters<typeof saveSettings>[0]
 ): void {
   const root = resolveDataRoot(s)
-  onDesktopAgentSettingsSaved(root, prev, s)
-  const desktopAgentOnly = onlyDesktopAgentSettingsChanged(prev, s)
-  if (!desktopAgentOnly) {
-    invalidateEngineCache(root)
-  }
+  invalidateEngineCache(root)
   if (embeddingSettingsChanged(prev, s)) {
     invalidateEmbeddingProvider(root)
   }

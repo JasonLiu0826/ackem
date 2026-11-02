@@ -2,7 +2,7 @@
 
 > **语言：** 中文 · [English](./00-overall-system.md)
 
-> **对应**：应用壳 + 编排 + 数据层 + 进程边界  
+> **对应**：应用壳 + 编排 + 数据层 + 进程边界
 > **核心问题**：Ackem 的代码是如何组织在一起的？一条消息从输入到回复经历了什么？
 
 ---
@@ -311,7 +311,6 @@ src/main/
 ├── channels/                 # 外部通道
 │   └── weixin/               #   微信桥接
 │
-├── desktop-agent/            # 实验性：桌面代理
 │
 ├── paperCard/                # 卡片/可视化
 ├── planDocument/             # OpenForU 文档
