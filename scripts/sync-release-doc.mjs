@@ -136,7 +136,7 @@ function adaptReadmeForGreen(srcPath, header, dropUntilSection = '## 项目介�
       /English README: \[README\.md\]\(\.\/README\.md\)[^\n]*\n/,
       ''
     )
-    .replace(/^# [^\n]*\r?\n+/, '')
+    .replace(/^# [^\n]*\r?\n+/m, '')
   return header + body
 }
 
@@ -170,7 +170,7 @@ function fixMarkdownLinksInTree(baseDir) {
     text = text.split(/(^```[^\n]*\r?\n[\s\S]*?^```[^\n]*(?:\r?\n|$))/gm)
       .map((part, index) => index % 2 ? part : part
         .replace(/(!?\[[^\]\n]*\]\()([^)]*)(\))/g, (_, before, href, after) => before + rewrite(href) + after)
-        .replace(/(<img\b[^>]*\bsrc=")([^"]+)(")/g, (_, before, href, after) => before + rewrite(href) + after))
+        .replace(/(<(?:a|img)\b[^>]*?\b(?:href|src)=)(["'])(.*?)\2/gi, (_, before, quote, href) => before + quote + rewrite(href) + quote))
       .join('')
     writeFileSync(abs, text, 'utf-8')
   }

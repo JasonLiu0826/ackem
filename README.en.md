@@ -1,39 +1,95 @@
+<div align="center">
+
 # 💫 Ackem
 
-[![Version](https://img.shields.io/badge/Version-2.0.0-orange?style=for-the-badge)](package.json) [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS-0078D6?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/JasonLiu0826/ackem/releases) [![License](https://img.shields.io/badge/License-AGPL--3.0-blue?style=for-the-badge)](LICENSE)
-[![Local First](https://img.shields.io/badge/Data-Local--First-2ea043?style=for-the-badge)](docs/usage.md#data-and-privacy) [![OpenAI Compatible](https://img.shields.io/badge/API-OpenAI--Compatible-412991?style=for-the-badge&logo=openai&logoColor=white)](docs/usage.md#settings-and-models) [![Electron](https://img.shields.io/badge/Built_with-Electron-47848F?style=for-the-badge&logo=electron&logoColor=white)](package.json)
+### A companion for your days. An agent for your work.
 
-[中文](README.md) · [Documentation](docs/README.en.md)
+<p><strong>A</strong>utonomous <strong>C</strong>ompanion <strong>K</strong>eeping <strong>E</strong>motional <strong>M</strong>emory<br>
+<sub>Conversation · Memory · Personality &amp; emotion · Real task execution</sub></p>
 
-**Ackem is a local-first AI companion and task coordinator. AckemCode is its general-purpose agent execution kernel.**
+<p>
+<a href="package.json"><img alt="Version" src="https://img.shields.io/badge/Version-2.0.0-orange?style=for-the-badge" height="28"></a>
+<a href="https://github.com/JasonLiu0826/ackem/releases"><img alt="Platform" src="https://img.shields.io/badge/Platform-Windows%20%7C%20macOS-0078D6?style=for-the-badge&amp;logo=windows&amp;logoColor=white" height="28"></a>
+<a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/License-AGPL--3.0-blue?style=for-the-badge" height="28"></a>
+<br>
+<a href="docs/usage.md#data-and-privacy"><img alt="Local First" src="https://img.shields.io/badge/Data-Local--First-2ea043?style=for-the-badge" height="28"></a>
+<a href="docs/usage.md#settings-and-models"><img alt="OpenAI Compatible" src="https://img.shields.io/badge/API-OpenAI--Compatible-412991?style=for-the-badge&amp;logo=openai&amp;logoColor=white" height="28"></a>
+<a href="package.json"><img alt="Electron" src="https://img.shields.io/badge/Built_with-Electron-47848F?style=for-the-badge&amp;logo=electron&amp;logoColor=white" height="28"></a>
+</p>
 
-Ackem maintains conversations, memory, personality and emotion, interprets requests and follows up on tasks. AckemCode operates files, commands, search, documents and other tool-supported resources, with independent CLI and Web interfaces.
+<p>
+<a href="https://github.com/JasonLiu0826/ackem/releases"><strong>🚀 Download Ackem</strong></a> ·
+<a href="docs/usage.md"><strong>📖 Get started</strong></a> ·
+<a href="docs/architecture.md"><strong>🧭 Explore the architecture</strong></a>
+</p>
 
-**A.C.K.E.M — Autonomous Companion Keeping Emotional Memory**
+[简体中文](README.md) · **English** · [Documentation](docs/README.en.md)
 
-> **Source**: [JasonLiu0826/ackem](https://github.com/JasonLiu0826/ackem)
->
-> **Download**: [GitHub Releases](https://github.com/JasonLiu0826/ackem/releases) · **Docs**: [English index](docs/README.en.md)
->
-> **Status**: Source is evolving; package features and platform validation follow the corresponding release notes.
+**Ackem is a local-first AI companion and task coordinator.
+AckemCode is its general-purpose agent execution kernel.**
 
-## ✨ At a glance
+<sub>Source is evolving. Package features and platform validation follow the corresponding release notes.</sub>
 
-| Capability | What you can do |
-|---|---|
-| 💬 **Conversation and memory** | Continue conversations, recall facts, retain and correct long-term memory |
-| 💞 **Personality, emotion and time** | Maintain companion continuity through personality, relationships and time awareness |
-| 🛠️ **General-purpose agent kernel** | Use actual file, command, search and document tools through AckemCode |
-| 🧩 **chat / plugin / work** | Select content replies, enabled extensions or real task execution by intent |
-| 🔒 **Local-first** | Manage data locally; see the user guide for cloud, channel and network-tool data flow |
+</div>
 
 ---
 
+<div align="center">
+
+## ✨ At a glance
+
+</div>
+
+<table>
+<tr>
+<td width="50%" valign="top" align="center">
+<h3>💬 Ackem · Your companion</h3>
+<p>Continue conversations, recall facts, and retain or correct long-term memory.</p>
+</td>
+<td width="50%" valign="top" align="center">
+<h3>🛠️ AckemCode · Your agent</h3>
+<p>Operate files, commands, search and documents; also available through independent CLI and Web interfaces.</p>
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top" align="center">
+<h3>🧠 Memory that connects</h3>
+<p>Organize related experiences and retrieve relevant context for an ongoing conversation.</p>
+</td>
+<td width="50%" valign="top" align="center">
+<h3>💞 Personality, emotion &amp; time</h3>
+<p>Maintain continuity through personality, relationships and awareness of time.</p>
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top" align="center">
+<h3>🧩 Three routes, one conversation</h3>
+<p>Route requests to chat, enabled plugins or work according to intent.</p>
+</td>
+<td width="50%" valign="top" align="center">
+<h3>🔒 Local-first data</h3>
+<p>Manage data on your machine; cloud models, channels and network tools send content as configured.</p>
+</td>
+</tr>
+</table>
+
+---
+
+<div align="center">
+
 ## 🧭 chat / plugin / work routing
 
-![Ackem request routing](docs/diagrams/request-routing-en.light.svg)
+</div>
+
+<p align="center">
+<a href="docs/diagrams/request-routing-en.light.svg"><img src="docs/diagrams/request-routing-en.light.svg" alt="Ackem request routing" width="900"></a>
+</p>
+
+<div align="center">
 
 [Full size](docs/diagrams/request-routing-en.light.svg) · [Dark](docs/diagrams/request-routing-en.dark.svg)
+
+</div>
 
 Ackem interprets requests as **chat (conversation and content), plugin (an enabled extension), or work (AckemCode acting on real resources)**. These are handling modes rather than three sequential steps. Read-only inspection of actual machine state also belongs to work.
 
@@ -41,7 +97,11 @@ You do not need to select a route first. See [request examples](docs/usage.md#re
 
 ---
 
+<div align="center">
+
 ## 🚀 Download and installation
+
+</div>
 
 Choose a matching platform package from the [main repository Releases](https://github.com/JasonLiu0826/ackem/releases) and follow that release's instructions. Fully extract a Windows portable package before starting `Ackem.exe` or its launcher. Features and validation depend on the release; the current source application version is `2.0.0`.
 
@@ -49,46 +109,94 @@ Configure the model endpoint, key and model name in settings, then send an ordin
 
 ---
 
+<div align="center">
+
 ## 🎬 Download and usage demos
+
+</div>
 
 These GIFs are retained from the original README to illustrate basic operation. Versions, layouts and legacy computer-assistant controls are historical references; see the [user guide](docs/usage.md) for current entry points and permissions.
 
+<div align="center">
+
 ### Download, extract and launch
 
-![Download, extract and open Ackem](docs/images/01-download-open.gif)
+</div>
+
+<p align="center">
+<a href="docs/images/01-download-open.gif"><img src="docs/images/01-download-open.gif" alt="Download, extract and open Ackem" width="800"></a>
+</p>
 
 Download the matching release → extract the complete package → launch Ackem → wait for initialization. Filenames and launch instructions depend on that release.
 
+<div align="center">
+
 ### Everyday conversation
 
-![Ackem everyday conversation demo](docs/images/02-daily-chat.gif)
+</div>
+
+<p align="center">
+<a href="docs/images/02-daily-chat.gif"><img src="docs/images/02-daily-chat.gif" alt="Ackem everyday conversation demo" width="800"></a>
+</p>
 
 Configure a model and converse naturally. Current work / AckemCode paths also support real task delegation, as shown in the routing diagram above.
 
 ---
 
+<div align="center">
+
 ## 📷 Reference screenshots
 
-The original README's six screenshots are retained as interface and feature references, not acceptance evidence for the current release. **Legacy computer-assistant controls shown here have been removed; execution now uses work / AckemCode.** Use the full-size links for details.
+</div>
 
-| 💬 Conversation | 🧠 Memory and associations |
-|---|---|
-| ![Conversation reference](docs/images/02-home.png) | ![Memory graph reference](docs/images/03-memory-graph.jpg) |
-| Chat and relationship state · [Full size](docs/images/02-home.png) | Memory, timelines and associations · [Full size](docs/images/03-memory-graph.jpg) |
+The original README's six screenshots are retained as interface and feature references, not acceptance evidence for the current release. **Legacy computer-assistant controls shown here have been removed; execution now uses work / AckemCode.** Click a screenshot to view the original.
 
-| ⚙️ Settings | 🔌 Models and API |
-|---|---|
-| ![Settings reference](docs/images/03-settings.png) | ![Model and API reference](docs/images/04-model-api.png) |
-| Personality and application configuration · [Full size](docs/images/03-settings.png) | Model connection configuration · [Full size](docs/images/04-model-api.png) |
-
-| ✨ Loading | 🔒 First-run confirmation |
-|---|---|
-| ![Loading reference](docs/images/01-loading.png) | ![First-run confirmation reference](docs/images/05-compliance.png) |
-| Startup and resource preparation · [Full size](docs/images/01-loading.png) | Content, privacy and data confirmation · [Full size](docs/images/05-compliance.png) |
+<table>
+<tr>
+<td width="50%" align="center" valign="top">
+<h3>💬 Conversation</h3>
+<a href="docs/images/02-home.png"><img src="docs/images/02-home.png" alt="Chat and relationship state" width="440"></a>
+<p><sub>Chat and relationship state · <a href="docs/images/02-home.png">Full size</a></sub></p>
+</td>
+<td width="50%" align="center" valign="top">
+<h3>🧠 Memory and associations</h3>
+<a href="docs/images/03-memory-graph.jpg"><img src="docs/images/03-memory-graph.jpg" alt="Memory, timelines and associations" width="440"></a>
+<p><sub>Memory, timelines and associations · <a href="docs/images/03-memory-graph.jpg">Full size</a></sub></p>
+</td>
+</tr>
+<tr>
+<td width="50%" align="center" valign="top">
+<h3>⚙️ Settings</h3>
+<a href="docs/images/03-settings.png"><img src="docs/images/03-settings.png" alt="Personality and application configuration" width="440"></a>
+<p><sub>Personality and application configuration · <a href="docs/images/03-settings.png">Full size</a></sub></p>
+</td>
+<td width="50%" align="center" valign="top">
+<h3>🔌 Models and API</h3>
+<a href="docs/images/04-model-api.png"><img src="docs/images/04-model-api.png" alt="Model connection configuration" width="440"></a>
+<p><sub>Model connection configuration · <a href="docs/images/04-model-api.png">Full size</a></sub></p>
+</td>
+</tr>
+<tr>
+<td width="50%" align="center" valign="top">
+<h3>✨ Loading</h3>
+<a href="docs/images/01-loading.png"><img src="docs/images/01-loading.png" alt="Startup and resource preparation" width="440"></a>
+<p><sub>Startup and resource preparation · <a href="docs/images/01-loading.png">Full size</a></sub></p>
+</td>
+<td width="50%" align="center" valign="top">
+<h3>🔒 First-run confirmation</h3>
+<a href="docs/images/05-compliance.png"><img src="docs/images/05-compliance.png" alt="Content, privacy and data confirmation" width="440"></a>
+<p><sub>Content, privacy and data confirmation · <a href="docs/images/05-compliance.png">Full size</a></sub></p>
+</td>
+</tr>
+</table>
 
 ---
 
+<div align="center">
+
 ## 💻 Quick start from source
+
+</div>
 
 Current CI uses Windows / Node.js 22. Install application and kernel dependencies separately:
 
@@ -105,7 +213,11 @@ Start through `npm run dev` because the application needs the Electron preload. 
 
 ---
 
+<div align="center">
+
 ## 📚 Documentation and contributing
+
+</div>
 
 | Guide | Scope |
 |---|---|
@@ -115,6 +227,10 @@ Start through `npm run dev` because the application needs the Electron preload. 
 | [Module reference](docs/modules.md) | Source entry points, kernel adapters, storage and interfaces |
 | [Memory, personality, emotion and time](docs/companion-engines.md) | How companion state interprets, remembers and shapes expression |
 
+<div align="center">
+
 [Contribute](CONTRIBUTING.md) · [Issues](https://github.com/JasonLiu0826/ackem/issues) · [Changelog](CHANGELOG.md) · [Archive](docs/旧文档/README.md)
 
 License: [AGPL-3.0](LICENSE); third-party details: [NOTICE](NOTICE.md). Configured cloud models, channels and network tools receive relevant content; read [data and privacy](docs/usage.md#data-and-privacy).
+
+</div>
