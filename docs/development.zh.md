@@ -4,7 +4,7 @@
 
 ## 环境与运行
 
-源码快速启动命令只在 [README](../README.md#从源码快速启动)维护。当前 CI 使用 Windows／Node.js 22；根构建脚本使用 Windows `set` 语法。macOS 有构建配置，但运行、签名和原生依赖需分别验证。
+源码快速启动命令只在 [README](../README.md#-从源码快速启动)维护。当前 CI 使用 Windows／Node.js 22；根构建脚本使用 Windows `set` 语法。macOS 有构建配置，但运行、签名和原生依赖需分别验证。
 
 根应用与 `parts/ackemcode` 各有依赖和构建。桌面内核适配需要源码与 tsx，渠道适配需要编译后的服务入口；不要只安装根依赖。渲染层依赖 `window.ackem`，直接打开 Vite 页面没有完整宿主接口。
 

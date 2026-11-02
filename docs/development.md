@@ -4,7 +4,7 @@
 
 ## Environment
 
-Source quick-start commands have one home in the [README](../README.en.md#quick-start-from-source). Current CI uses Windows / Node.js 22; root build scripts use Windows `set` syntax. macOS configuration does not establish validated runtime, signing or native dependencies.
+Source quick-start commands have one home in the [README](../README.en.md#-quick-start-from-source). Current CI uses Windows / Node.js 22; root build scripts use Windows `set` syntax. macOS configuration does not establish validated runtime, signing or native dependencies.
 
 The application and `parts/ackemcode` have separate dependencies and builds. Desktop adapters need kernel source and tsx; channel adapters need the compiled server. Do not install only root dependencies. The renderer needs `window.ackem`; opening Vite alone lacks full host interfaces.
 

@@ -4,7 +4,7 @@
 
 ## Installation
 
-See the [README](../README.en.md#installation) for installation and source quick start. Choose a matching platform release and fully extract portable Windows packages. Signing, dependencies and verification on macOS depend on the release notes.
+See the [README](../README.en.md#-download-and-installation) for installation and source quick start. Choose a matching platform release and fully extract portable Windows packages. Signing, dependencies and verification on macOS depend on the release notes.
 
 Configure a model on first launch. Some channels also wait for local semantic resources. For startup issues, check the actual model, kernel process and data directory using the [module reference](modules.md#ackemcode).
 
