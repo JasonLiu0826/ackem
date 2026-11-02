@@ -82,12 +82,12 @@ AckemCode is its general-purpose agent execution kernel.**
 </div>
 
 <p align="center">
-<a href="docs/diagrams/request-routing-en.light.svg"><img src="docs/diagrams/request-routing-en.light.svg" alt="Ackem request routing" width="900"></a>
+<a href="docs/diagrams/request-routing-en.dark.svg"><img src="docs/diagrams/request-routing-en.dark.svg" alt="Ackem request routing" width="900"></a>
 </p>
 
 <div align="center">
 
-[Full size](docs/diagrams/request-routing-en.light.svg) · [Dark](docs/diagrams/request-routing-en.dark.svg)
+[Full size](docs/diagrams/request-routing-en.dark.svg) · [Light](docs/diagrams/request-routing-en.light.svg)
 
 </div>
 

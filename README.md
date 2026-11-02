@@ -82,12 +82,12 @@ AckemCode 是通用智能体执行内核。**
 </div>
 
 <p align="center">
-<a href="docs/diagrams/request-routing-zh.light.svg"><img src="docs/diagrams/request-routing-zh.light.svg" alt="Ackem 请求处理总览" width="900"></a>
+<a href="docs/diagrams/request-routing-zh.dark.svg"><img src="docs/diagrams/request-routing-zh.dark.svg" alt="Ackem 请求处理总览" width="900"></a>
 </p>
 
 <div align="center">
 
-[放大查看](docs/diagrams/request-routing-zh.light.svg) · [深色版本](docs/diagrams/request-routing-zh.dark.svg)
+[放大查看](docs/diagrams/request-routing-zh.dark.svg) · [浅色版本](docs/diagrams/request-routing-zh.light.svg)
 
 </div>
 
