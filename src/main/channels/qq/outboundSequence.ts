@@ -110,8 +110,9 @@ export async function sendQqOutboundSequence(args: {
           ? { speak: true as const }
           : shouldSpeak({ text: sanitized, cfg: voiceCfg })
         if (decision.speak && (await isTtsHealthy(voiceCfg.ttsUrl))) {
-          // 语速变慢后 55 秒只够 ~200 字，长语音也必须按 maxChars 切，否则会超时被退回文字
-          const pieces = splitForVoice(sanitized, voiceCfg.maxChars)
+          // 长语音（[长语音] / forceLongVoice）按「整段合成一条」的契约处理，只受 maxSeconds 保护；
+          // 普通概率语音才按 maxChars 切（语速变慢后 55 秒只够 ~200 字，避免超时被退回文字）。
+          const pieces = args.forceLongVoice ? [sanitized] : splitForVoice(sanitized, voiceCfg.maxChars)
           let spoken = 0
           let aborted = false
           for (const piece of pieces) {

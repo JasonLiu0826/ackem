@@ -506,6 +506,7 @@ export async function appendConversationTurn(
       role: 'user',
       content: args.userText,
       at: new Date(atMs).toISOString(),
+      sentAt: new Date(atMs).toISOString(),
       channel: args.channel,
       ...(args.peerId ? { peerId: args.peerId } : {})
     },
@@ -514,6 +515,7 @@ export async function appendConversationTurn(
       role: 'assistant',
       content: args.assistantText,
       at: new Date(atMs + 1).toISOString(),
+      sentAt: new Date(atMs + 1).toISOString(),
       channel: args.channel,
       ...(args.peerId ? { peerId: args.peerId } : {})
     }

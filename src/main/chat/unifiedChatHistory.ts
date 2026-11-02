@@ -77,7 +77,7 @@ function normalizeRow(raw: unknown): UnifiedChatRow | null {
       ...(Array.isArray(r.images) ? {images:r.images.filter((i):i is import('../../shared/chatImages').ChatImage=>!!i&&typeof i==='object'&&typeof i.path==='string'&&typeof i.name==='string'&&typeof i.preview==='string'&&/^data:image\/(png|jpeg|gif|webp);base64,/.test(i.preview)).slice(0,4)} : {}),
     channel: ch,
     channelLabel: ch ? channelLabel(ch) : undefined,
-    sentAt: typeof r.sentAt === 'string' ? r.sentAt : undefined,
+    sentAt: typeof r.sentAt === 'string' ? r.sentAt : typeof r.at === 'string' ? r.at : undefined,
     turnId: typeof r.turnId === 'string' ? r.turnId : undefined,
     proactiveId: typeof r.proactiveId === 'string' ? r.proactiveId : undefined,
     ...(typeof r.createdAt === 'number' && Number.isFinite(r.createdAt) && r.createdAt > 0 ? { createdAt: r.createdAt } : {}),
