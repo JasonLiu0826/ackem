@@ -1,0 +1,34 @@
+flowchart TB
+    accTitle: Ackem 运行时与进程边界
+    accDescr: 桌面托管、独立工作和渠道桥接通过不同宿主入口连接同一内核，数据存储与执行分别管理。
+
+    desktop_ui["桌面界面<br/>Electron · React"]
+    channel_input["QQ / 微信"]
+    ackem_host["Ackem 主进程<br/>上下文与路由"]
+    managed_tasks["托管任务<br/>契约 · 监督 · 验收"]
+    extension_runtime["已启用扩展<br/>Skill · Plugin"]
+    independent_work["独立工作<br/>私有会话与队列"]
+    channel_bridge["渠道代码桥接<br/>机主与远程授权"]
+    kernel_service[["AckemCode 服务<br/>智能体循环与工具"]]
+    app_storage[("Ackem 数据<br/>记忆 · 历史 · 任务状态")]
+    real_resources["真实资源<br/>文件 · 终端 · 外部服务"]
+
+    desktop_ui -->|"IPC"| ackem_host
+    desktop_ui -->|"IPC"| independent_work
+    channel_input --> channel_bridge
+    ackem_host -->|"work"| managed_tasks
+    ackem_host -->|"plugin"| extension_runtime
+    ackem_host -.-> app_storage
+    managed_tasks <-->|"HTTP / SSE"| kernel_service
+    independent_work --> kernel_service
+    channel_bridge --> kernel_service
+    kernel_service --> real_resources
+
+    classDef neutral fill:#f3f4f6,stroke:#6b7280,stroke-width:1.4px,color:#1f2937
+    classDef primary fill:#dbeafe,stroke:#2563eb,stroke-width:1.6px,color:#1e3a5f
+    classDef accent fill:#ede9fe,stroke:#7c3aed,stroke-width:1.6px,color:#3b0764
+    classDef success fill:#dcfce7,stroke:#16a34a,stroke-width:1.6px,color:#14532d
+    class desktop_ui,channel_input,app_storage neutral
+    class ackem_host,managed_tasks,extension_runtime,independent_work,channel_bridge primary
+    class kernel_service accent
+    class real_resources success

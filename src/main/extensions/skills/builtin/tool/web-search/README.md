@@ -17,7 +17,7 @@
 | **Dispatch** | `mode=dispatched`；manifest `keywords` 辅助候选 |
 | **CTX/JP** | 与本 Skill **无直接** 门控关系 |
 
-详见 [`docs/mainDocs/对话认知分层_5_28更新.md`](../../../../docs/mainDocs/对话认知分层_5_28更新.md)。
+详见 [当前路由与任务架构](../../../../../../../docs/architecture.zh.md#任务生命周期)。
 
 ## 界面
 

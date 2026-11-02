@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1060" viewBox="0 0 1200 1060" role="img" aria-labelledby="title desc"><title id="title">chat / plugin / work routing</title><desc id="desc">Ackem selects how to handle a request; work delegates execution to AckemCode.</desc><metadata data-source="docs/diagrams/sources/request-routing-en.mmd" data-source-sha256="24470ac681a0f7f5dea86953f701d52d35e3cdac298ed121c2a74856857fe81b">flowchart TB
+    accTitle: Ackem chat plugin work routing
+    accDescr: Desktop chat selects among three handling modes using intent, recent conversation and enabled capabilities. Chat produces content, plugin invokes an actual extension, and work delegates to AckemCode with receipts, artifacts and acceptance. These are not sequential steps or proof of completion.
+
+    request(["Your request"])
+    router["Ackem semantic routing&lt;br/&gt;Current intent + recent conversation + enabled capabilities"]
+    chat["chat · Conversation&lt;br/&gt;Content and ordinary chat tools"]
+    plugin["plugin · Capability&lt;br/&gt;Validate and invoke an enabled extension"]
+    work["work · Execution&lt;br/&gt;Inspect, change and deliver real resources&lt;br/&gt;Including read-only checks and plugin creation or updates"]
+    chat_reply["Conversation reply&lt;br/&gt;Text · explanations · plans"]
+    extension_runtime["Extension runtime&lt;br/&gt;Actual capability call and receipt"]
+    kernel[["AckemCode general-purpose agent kernel&lt;br/&gt;Files · commands · web · documents"]]
+    delivery(["Ackem checks and delivers the result&lt;br/&gt;Reply claims must match actual execution state"])
+
+    request --&gt; router
+    router --&gt;|"Respond"| chat
+    router --&gt;|"Use a capability"| plugin
+    router --&gt;|"Act on resources"| work
+    chat --&gt; chat_reply
+    plugin --&gt; extension_runtime
+    work --&gt; kernel
+    chat_reply --&gt;|"Content"| delivery
+    extension_runtime --&gt;|"Extension receipt"| delivery
+    kernel --&gt;|"Receipts · artifacts · acceptance"| delivery
+
+    classDef neutral fill:#f3f4f6,stroke:#6b7280,stroke-width:1.4px,color:#1f2937
+    classDef primary fill:#dbeafe,stroke:#2563eb,stroke-width:1.6px,color:#1e3a5f
+    classDef accent fill:#ede9fe,stroke:#7c3aed,stroke-width:1.6px,color:#3b0764
+    classDef success fill:#dcfce7,stroke:#16a34a,stroke-width:1.6px,color:#14532d
+    class request neutral
+    class router,chat,plugin,work,chat_reply,extension_runtime primary
+    class kernel accent
+    class delivery success</metadata><defs><marker id="arrow" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#7488a2"/></marker></defs><g font-family="Segoe UI, Microsoft YaHei, PingFang SC, sans-serif"><rect x="1" y="1" width="1198" height="1058" rx="28" fill="#f8fafc" stroke="#dbe4ef"/>
+<text x="48" y="38" font-size="13" font-weight="600" fill="#52657e" text-anchor="start">ACKEM  /  ARCHITECTURE</text>
+<text x="48" y="85" font-size="32" font-weight="650" fill="#15243a" text-anchor="start">chat / plugin / work routing</text>
+<text x="48" y="119" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">Ackem selects how to handle a request; work delegates execution to AckemCode.</text>
+<path d="M600 202 V246" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M600 334 V360 H218 V400" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M600 334 V400" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M600 334 V360 H982 V400" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M218 608 V688" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M218 802 V890" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M600 608 V688" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M600 802 V890" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M982 608 V688" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M982 802 V890" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<rect x="440" y="150" width="320" height="52" rx="17" fill="#ffffff" stroke="#dbe4ef" stroke-width="1.2"/>
+<text x="600" y="183" font-size="22" font-weight="600" fill="#15243a" text-anchor="middle">Your request</text>
+<rect x="48" y="246" width="1104" height="88" rx="17" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+<text x="72" y="283" font-size="23" font-weight="600" fill="#15243a" text-anchor="start">Ackem semantic routing</text>
+<text x="72" y="314" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">Current intent + recent conversation + enabled capabilities</text>
+<rect x="176.25" y="363" width="83.5" height="27" rx="13.5" fill="#f8fafc"/>
+<text x="218" y="382" font-size="16" font-weight="500" fill="#52657e" text-anchor="middle">Respond</text>
+<rect x="520" y="363" width="160" height="27" rx="13.5" fill="#f8fafc"/>
+<text x="600" y="382" font-size="16" font-weight="500" fill="#52657e" text-anchor="middle">Use a capability</text>
+<rect x="902" y="363" width="160" height="27" rx="13.5" fill="#f8fafc"/>
+<text x="982" y="382" font-size="16" font-weight="500" fill="#52657e" text-anchor="middle">Act on resources</text>
+<rect x="48" y="400" width="340" height="208" rx="17" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+<text x="72" y="427" font-size="13" font-weight="650" fill="#2563eb" text-anchor="start">CHAT  /  CONVERSATION</text>
+<text x="72" y="461" font-size="25" font-weight="650" fill="#15243a" text-anchor="start">chat</text>
+<text x="72" y="495" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">Conversation and content</text>
+<text x="72" y="522" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">Example: suggest a plan</text>
+<text x="72" y="549" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">May use ordinary chat tools</text>
+<rect x="430" y="400" width="340" height="208" rx="17" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+<text x="454" y="427" font-size="13" font-weight="650" fill="#2563eb" text-anchor="start">PLUGIN  /  CAPABILITY</text>
+<text x="454" y="461" font-size="25" font-weight="650" fill="#15243a" text-anchor="start">plugin</text>
+<text x="454" y="495" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">Use an enabled extension</text>
+<text x="454" y="522" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">Validate target, then invoke</text>
+<text x="454" y="549" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">Example: run an existing plugin</text>
+<rect x="812" y="400" width="340" height="208" rx="17" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+<text x="836" y="427" font-size="13" font-weight="650" fill="#2563eb" text-anchor="start">WORK  /  EXECUTION</text>
+<text x="836" y="461" font-size="25" font-weight="650" fill="#15243a" text-anchor="start">work</text>
+<text x="836" y="495" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">Inspect · change · deliver</text>
+<text x="836" y="522" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">Read-only checks are work</text>
+<text x="836" y="549" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">Create or update plugins</text>
+<rect x="48" y="688" width="340" height="114" rx="17" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+<text x="72" y="725" font-size="23" font-weight="600" fill="#15243a" text-anchor="start">Conversation reply</text>
+<text x="72" y="756" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">Text · explanations · plans</text>
+<rect x="430" y="688" width="340" height="114" rx="17" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+<text x="454" y="725" font-size="23" font-weight="600" fill="#15243a" text-anchor="start">Extension runtime</text>
+<text x="454" y="756" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">Call the available capability</text>
+<rect x="812" y="688" width="340" height="114" rx="17" fill="#f4f0ff" stroke="#7c3aed" stroke-width="1.5"/>
+<text x="836" y="725" font-size="23" font-weight="600" fill="#15243a" text-anchor="start">AckemCode</text>
+<text x="836" y="756" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">General-purpose agent kernel</text>
+<text x="836" y="782" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">Files · commands · web · docs</text>
+<rect x="176.25" y="837" width="83.5" height="27" rx="13.5" fill="#f8fafc"/>
+<text x="218" y="856" font-size="16" font-weight="500" fill="#52657e" text-anchor="middle">Content</text>
+<rect x="515.75" y="837" width="168.5" height="27" rx="13.5" fill="#f8fafc"/>
+<text x="600" y="856" font-size="16" font-weight="500" fill="#52657e" text-anchor="middle">Extension receipt</text>
+<rect x="897.75" y="837" width="168.5" height="27" rx="13.5" fill="#f8fafc"/>
+<text x="982" y="856" font-size="16" font-weight="500" fill="#52657e" text-anchor="middle">Receipts + review</text>
+<rect x="48" y="890" width="1104" height="82" rx="17" fill="#edfbf4" stroke="#15815d" stroke-width="1.5"/>
+<text x="72" y="927" font-size="23" font-weight="600" fill="#15243a" text-anchor="start">Ackem checks and delivers the result</text>
+<text x="72" y="958" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">Claims in the reply must match actual results and execution state.</text>
+<text x="600" y="1009" font-size="16" font-weight="500" fill="#52657e" text-anchor="middle">Three handling modes, not sequential steps. Routing does not establish completion.</text>
+<text x="600" y="1040" font-size="14" font-weight="400" fill="#52657e" text-anchor="middle">Desktop chat view. Independent work and channel bridges have separate entry paths.</text>
+</g></svg>

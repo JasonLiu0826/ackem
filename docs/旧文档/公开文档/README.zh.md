@@ -1,0 +1,418 @@
+> 历史归档：保留旧版内容，仅供追溯；当前实现请阅读[新版文档导航](../../README.md)。
+
+# 💫 Ackem
+
+![Version](https://img.shields.io/badge/Version-2.0.0-orange?style=for-the-badge)
+![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS-0078D6?style=for-the-badge&logo=windows&logoColor=white)
+![License](https://img.shields.io/badge/License-AGPL--3.0-blue?style=for-the-badge)
+![Local First](https://img.shields.io/badge/Data-Local--First-2ea043?style=for-the-badge)
+![OpenAI Compatible](https://img.shields.io/badge/API-OpenAI--Compatible-412991?style=for-the-badge&logo=openai&logoColor=white)
+![Electron](https://img.shields.io/badge/Built_with-Electron-47848F?style=for-the-badge&logo=electron&logoColor=white)
+
+**Ackem** · **A**.C.K.E.M — 保持情感记忆的自主伙伴
+*Autonomous Companion Keeping Emotional Memory*
+
+**Ackem v2.0.0（社区桌面版）** — 运行在你 Windows / macOS 电脑上的 **本地优先** AI 伴侣。自备大模型（云端或本机），Ackem 负责对话、记忆、情绪与关系、桌宠陪伴 — **数据都在本机硬盘**。本仓库基于原作者 [JasonLiu0826/Ackem](https://github.com/JasonLiu0826/ackem) v1.0.0 继续开发。
+
+> **源码**：[本仓库](https://github.com/deufe/ackem) · 上游原作：[JasonLiu0826/Ackem](https://github.com/JasonLiu0826/ackem)
+> **下载**：[本仓库 Releases](https://github.com/deufe/ackem/releases)（macOS dmg，开箱即用） · 上游 [GitHub Releases](https://github.com/JasonLiu0826/Ackem/releases) · [Gitee Releases](https://gitee.com/jason_2005/ackem/releases)
+> **构建**：`npm run dist:green` → `dist/release/Ackem-1.0.0-win-x64/` · [路径说明](docs/CODEBASE-PATHS.zh.md) · [文档语言](../../development.zh.md#文档维护)
+> **状态：** Ackem 目前仍处于**测试与快速迭代**阶段。个人维护，测试覆盖面有限，使用中可能遇到预期之外的情况或细节瑕疵；一般不会出现频繁闪退或严重卡顿，但完善度仍在持续改进。欢迎 [提交 Issue](https://github.com/deufe/ackem/issues) 反馈。
+
+English: [README.md](README.md) · [Privacy & data](docs/privacy-and-data.md)
+
+---
+
+## 一句话了解
+
+Ackem **不是**网页聊天框，而是常驻桌面的 Windows 应用：系统托盘、可选桌宠、结构化记忆，以及能记住上下文的 AI 伴侣。
+
+| | |
+|---|---|
+| 💬 **对话** | 任意 OpenAI 兼容接口 — DeepSeek、OpenAI、Ollama、LM Studio 等 |
+| 🧠 **记忆** | 对话写入可检索记忆；可导入 `.txt` / `.md` 作为长期上下文 |
+| 💞 **陪伴** | 信任、情绪、关系阶段、人格预设、日记、可选主动消息 |
+| 🔒 **本地优先** | 个人数据在 exe 旁 `./data/` — **官方 zip 不含** `data/` |
+
+**你需要：** Windows 10/11 64 位或 macOS（Apple Silicon） · 大模型 API 或本机推理服务 · 首次启动约 10–30 秒（embedding 模型解压一次）。绿色版 **无需 Node.js**。
+
+---
+
+## 🆕 社区桌面版 v2.0.0 新增功能
+
+相对上游 v1.0.0，本版本新增 / 升级如下（简要但完整）：
+
+**🖥️ Ackem Code 三端接入（桌面 / QQ / 微信）**
+- 任何一端说出「动代码 / 文件 / 命令」的任务，自动交给本机编码智能体（`parts/ackemcode`：CLI + daemon + 文件/命令/搜索工具 + Web UI）
+- `/code` 显式前缀 + 意图判定双通道；权限三档可收紧（`ACKEMCODE_PERMISSION_MODE`）
+- 结果只回提问的那一端；模型配置从 Ackem 现有设置同步；会话映射与数据目录独立
+
+**🎤 语音消息（QQ 渠道）**
+- 她的话可直接合成语音发到 QQ：本机 TTS（IndexTTS，默认 `127.0.0.1:8770`）→ silk v3 语音；按概率 / `[长语音]` 触发，合成失败自动回退文字
+- 对方发来的语音：OneBot 转码 + 本机 ASR 转文字后再回复
+- 语音服务健康检查、按字数动态超时、单条 60 秒保护
+
+**🌐 QQ 渠道（OneBot / NapCat）**
+- NapCat WebUI 扫码登录、连接探测与状态提示、断线重连
+- 私聊收发、图片输入、表情包、语音；主动搭话（8:00–22:00、双向空闲 3h、冷却 3h）
+- 内置 70 张表情包（9 个情绪目录，用户目录可覆盖同名图）
+- 出站清洗：断句、称呼密度、emoji 密度、物理在场表述拦截
+
+**🌏 QQ 空间自主说说**
+- 按人格 / 心情 / 当天聊天流水生成说说；按活跃时段、每日上限、最小间隔、可见范围（公开 / 好友 / 仅自己）发布
+- 表情包配图、试运行（只生成不发表）、发完在 QQ 里提一句、定时逛空间回评论与按概率点赞（全部走 OneBot 扩展动作）
+
+**💬 三端统一会话 + 机主安全**
+- 桌面 / QQ / 微信共用一份聊天历史与记忆（来源标注、时间线合并去重、实时推回桌面）
+- 机主绑定：私聊者先进入待确认状态，桌面确认后才授权；陌生人消息不进入主流程，回复只回提问端
+
+**👧 Freya 人格**
+- 真人语料还原型人格（29 个预设之一）+ 激素池情绪引擎（按真实时间衰减、思念漂移）
+- 设置页可填「Freya 怎么称呼你」，`{{petname}}` 占位符全链路替换
+
+**🧩 多模态与稳定性**
+- 图片输入打通：OpenAI 多模态 content → Anthropic image blocks（base64 / 远程 URL）
+- 工具回合多模态内容压平（修复 base64 JSON 被模型复读）
+- 本机文件、代码和命令任务统一交给 work / AckemCode；旧电脑助手执行通道已删除
+- QQ / 微信机主的远程派工在「设置 → 工作执行」开启，支持 `/code` 指令
+- 出站文本人性化拆分（humanizeReply）、线上渠道在场边界约束（presence-boundary）
+
+**🍎 macOS 社区构建**
+- electron-builder mac target + dmg 产物；`sign-freya.sh` 分层 ad-hoc 签名脚本
+
+> 完整变更见 [CHANGELOG.md](CHANGELOG.md)。欢迎向本仓库提交 Issue / PR，上游更新会以 PR 方式并入。
+
+---
+
+## 界面与演示
+
+<details>
+<summary><strong>📷 界面截图</strong>（点击展开）</summary>
+
+<p align="center">
+  <img src="../../images/01-loading.png" alt="加载界面" width="640" />
+  <br /><em>加载界面 — 首次启动解压本地 embedding 模型，进度条完成后进入主界面</em>
+</p>
+
+<p align="center">
+  <img src="../../images/02-home.png" alt="主页面" width="640" />
+  <br /><em>主页面 — 对话、记忆、游戏、扩展与设置；右侧为关系状态与桌宠预览</em>
+</p>
+
+<p align="center">
+  <img src="../../images/03-memory-graph.jpg" alt="记忆可视化" width="640" />
+  <br /><em>记忆 — 对话沉淀为结构化回忆、时间线与知识关联</em>
+</p>
+
+<p align="center">
+  <img src="../../images/03-settings.png" alt="设置界面" width="640" />
+  <br /><em>设置 — 人格、语音、桌宠、微信通道、扩展与数据管理</em>
+</p>
+
+<p align="center">
+  <img src="../../images/04-model-api.png" alt="配置模型" width="640" />
+  <br /><em>模型与 API — Base URL、API Key、模型 ID</em>
+</p>
+
+<p align="center">
+  <img src="../../images/05-compliance.png" alt="合规勾选" width="640" />
+  <br /><em>合规 — 首次运行确认隐私、数据处理与成人模式条款</em>
+</p>
+
+</details>
+
+<details>
+<summary><strong>🎬 演示 GIF</strong>（点击展开）</summary>
+
+<p align="center">
+  <img src="../../images/01-download-open.gif" alt="下载并打开" width="640" />
+  <br /><em>下载 zip → 解压 → 启动 Ackem.exe → 等待加载 → 进入主界面</em>
+</p>
+
+<p align="center">
+  <img src="../../images/02-daily-chat.gif" alt="日常对话" width="640" />
+  <br /><em>配置模型后自然聊天；回复会结合记忆与关系状态</em>
+</p>
+
+</details>
+
+---
+
+## 详细介绍
+
+### Ackem 是什么？
+
+Ackem 是 **本地优先** 的 Windows 桌面程序：你配置大模型接口，Ackem 负责 **对话、记忆、情绪与关系状态、桌宠陪伴**，数据保存在 **你自己的电脑** 上。
+
+### 你可以用它做什么
+
+- **像和人聊天一样对话** — 云端或本机 Ollama / LM Studio；在 **设置 → 模型与 API** 填写即可。
+- **记住你们说过的事** — 结构化记忆、搜索、时间线、知识图谱；**导入** txt / md 作为长期记忆。
+- **有连续感的陪伴** — 信任、情绪、关系阶段、人格预设、伴侣 **日记**、可选主动找你聊几句。
+- **不只在主窗口** — 系统托盘；可选 **桌宠** 小窗（几何光球 + Live2D 预览）。
+- **可选能力** — 语音识别与播报、**微信** 通道（手机发消息、大脑在本机）、**扩展中心**、实验中的 **Plan · OpenForU**。
+- **游戏模式** — 实验中；可与伴侣一起玩支持的游戏（如 Minecraft，视扩展而定）。
+
+### 数据在哪里
+
+绿色版默认把全部个人数据放在 **exe 同级的 `data/`**：聊天记录、记忆、日记、设置里的 API Key 等。**官方 zip 不含 `data/`**，首次运行才在本机生成空目录。无默认上传到 Ackem 服务器的遥测。
+
+备份、迁移、删除：[docs/memory-format.zh.md](docs/memory-format.zh.md) · [docs/distribution-windows.zh.md](docs/distribution-windows.zh.md)
+
+### 给开发者
+
+请看下方 **[开发者](#开发者)**、[系统架构](#系统架构七系统) 与 [文档索引](#文档)。
+
+---
+
+## 🚀 下载与安装
+
+### macOS（Apple Silicon · M1~M5）— 本仓库推荐
+
+从 [本仓库 Releases](https://github.com/deufe/ackem/releases) 下载：
+
+| 文件 | 大小 | SHA256 |
+|---|---|---|
+| `Ackem-2.0.0-mac-arm64.dmg` | 702 MB | `5e766f77e1063f0cbeaec13beeb34caea4384cc7b0a453e7d854d7aaf52db0ca` |
+
+> ⚠️ 本构建为社区版，**未经 Apple 公证**。首次打开时 macOS 会提示「已损坏，无法打开」或「无法验证开发者」——**这是正常现象，文件没有损坏**。按下面两步操作即可。
+
+**步骤 1：移除隔离标记**
+
+打开「终端」（Terminal），执行：
+
+```bash
+xattr -cr /Applications/Ackem.app
+```
+
+（若还没有拖进「应用程序」，请把命令里的路径换成 Ackem.app 的实际位置）
+
+**步骤 2：右键打开**
+
+在「应用程序」里 **右键点击 Ackem → 选择「打开」→ 再点「打开」**。之后即可正常双击启动。
+
+首次启动约 10–30 秒（本地 embedding 模型解压一次），见上方加载界面截图。
+
+### Windows
+
+- 官方绿色版（v1.0.0）：见 [上游 Releases](https://github.com/JasonLiu0826/Ackem/releases)
+- 本仓库新版（v2.0.0）暂未提供 Windows 安装包，可在 Windows 机器上自行构建：
+
+```bash
+npm install
+npm run dist:green   # 产物在 dist/release/
+```
+
+### 隐私说明（必读）
+
+| 官方包 **不含** | 首次运行后 **仅在本机** |
+|----------------|------------------------|
+| 用户记忆、聊天记录、导入文件 | `data/`（便携模式，exe 旁） |
+| API Key、模型凭证 | 设置 → 本机 userData |
+| 维护者或他人的私人数据 | 由你自己配置与写入 |
+
+详见 [docs/distribution-windows.zh.md](docs/distribution-windows.zh.md)。
+
+---
+
+## ⚙️ 首次启动配置（3 分钟）
+
+1. **合规确认** — 首次运行勾选隐私与数据处理条款（成人内容模式需另行确认年龄）。
+2. **配置模型** — 打开 **设置 → 模型与 API**，填写三项：
+   - **Base URL**：模型接口地址（OpenAI 兼容）
+   - **API Key**：云端模型必填；本地模型可留空
+   - **模型 ID**：如 `deepseek-chat`、`gpt-4o-mini`
+
+   | 用什么模型 | Base URL | 模型 ID（示例） |
+   |---|---|---|
+   | DeepSeek | `https://api.deepseek.com/v1` | `deepseek-chat` |
+   | OpenAI | `https://api.openai.com/v1` | `gpt-4o-mini` |
+   | 本机 Ollama | `http://127.0.0.1:11434/v1` | `qwen2.5:7b` |
+   | 本机 LM Studio | `http://127.0.0.1:1234/v1` | 你加载的模型名 |
+
+3. **发一条消息** — 能收到回复即配置成功。
+4. **可选** — 导入 txt / md 记忆、开启语音播报、绑定 QQ / 微信。
+
+> 🔒 API Key 只保存在本机（加密存储），**不会上传到任何服务器，也不在发行包里**。
+
+---
+
+## 🎛️ 功能使用指南（v2.0.0）
+
+### 对话与人格
+**设置 → 伴侣与人格**：设置「称呼」、性别，挑选人格预设（29 种）。人格决定她的语气、癖好与边界。
+
+### Freya 人格与「她怎么称呼你」
+选中 **Freya** 后会出现输入框「**Freya 怎么称呼你**」：填你自己的小名即可，留空默认「亲爱的」。这个值会自动替换提示词里的 `{{petname}}` 占位符。
+
+### QQ 渠道（OneBot / NapCat）
+**设置 → 移动端 → QQ**：
+1. 本机先运行 **NapCat**（QQ 协议端，可用 Docker 部署）
+2. 填 **NapCat WebUI 地址**（默认 `http://127.0.0.1:6099`）和 **WebUI Token**
+3. 点「**扫码登录**」，用手机 QQ 扫码；登录后点「**连接监听**」
+4. 连接成功后，在 QQ 里发消息她就会回；支持语音、图片、表情包
+5. **首次私聊会请求绑定机主**：需在「设置 → 移动端 → QQ → 机主绑定」里确认（或拒绝），确认前消息不会进入对话
+
+完整步骤见 [docs/qq-onebot-setup.md](docs/qq-onebot-setup.md)。
+
+### QQ 空间自主说说
+**设置 → 移动端 → QQ → 空间说说**（默认**试运行**：只生成不发表）：
+- 可设定每天几条、最小间隔、活跃时段、可见范围（公开 / 好友 / 仅自己）
+- 可配图、发完在 QQ 里提一句、定时逛空间回评论与按概率点赞
+- 详情见 [docs/qq-space.zh.md](docs/qq-space.zh.md)
+
+### 微信渠道
+**设置 → 移动端 → 微信**：手机微信发消息，大脑、人格与记忆仍运行在本机。
+
+### 工作执行（AckemCode）
+桌面聊天中的本机任务交给工作页执行。QQ / 微信中可以使用 **`/code 你的任务`** 或代码、文件、命令类自然语言请求；需先在「设置 → 工作执行」开启远程派工，并确认渠道机主。移动端代码任务的权限可在此收紧，结果回到提问端；桌面任务在工作页选择权限。详见 [docs/ackem-code-bridge.zh.md](docs/ackem-code-bridge.zh.md)。
+
+### 语音
+- **TTS 朗读**：设置 → 语音；本机语音服务（需 Python 3.9+）随程序附带，首次使用时启动
+- **ASR 语音输入**：在聊天框点麦克风；QQ / 微信里的语音会先转文字再回复
+
+---
+
+## ❓ 常见问题（FAQ）
+
+| 问题 | 解决 |
+|---|---|
+| 打开提示「已损坏，无法打开」 | 正常现象。终端执行 `xattr -cr /Applications/Ackem.app`，再右键 → 打开 |
+| 首次启动很久没反应 | 在解压 embedding 模型，等 10–30 秒；长时间无响应请重启应用 |
+| 发消息没有回复 | 检查「设置 → 模型与 API」的 Base URL / API Key / 模型 ID 与网络连通性 |
+| QQ 显示未连接 | 确认 NapCat 在运行、端口一致，然后点「重新连接监听」 |
+| 数据存在哪、怎么备份？ | macOS：`~/Library/Application Support/Ackem`；Windows 绿色版：程序目录 `data/`。见 [docs/memory-format.zh.md](docs/memory-format.zh.md) |
+| 怎么卸载？ | 删除 App 即可；如需连数据一起删除，手动删除上一条中的数据目录 |
+| 怎么更新？ | 到本仓库 Releases 下载新版本覆盖安装，数据会保留 |
+
+### macOS（社区构建 · 非官方） {#macos-community-build-unofficial}
+
+> **官方支持范围：** 仅 Windows 绿色版。以下 Mac 包由社区贡献者 [@deufe](https://github.com/deufe) 构建，**非**核心团队维护或完整实机验证。详见 [Issue #4](https://github.com/JasonLiu0826/ackem/issues/4)。
+
+| 文件 | 架构 | 下载 |
+|------|------|------|
+| `Ackem-1.0.0-mac-arm64.dmg` | Apple Silicon（M 系列） | [v3 DMG](https://github.com/deufe/ackem/releases/download/v1.0.0-mac-community-v3/Ackem-1.0.0-mac-arm64.dmg) |
+| `Ackem-1.0.0-mac-x64.dmg` | Intel Mac | [v3 DMG](https://github.com/deufe/ackem/releases/download/v1.0.0-mac-community-v3/Ackem-1.0.0-mac-x64.dmg) |
+
+**请仅使用 v3**（v1/v2 已过时）。SHA256 与安装步骤：[v1.0.0 Release 说明](https://github.com/JasonLiu0826/ackem/releases/tag/v1.0.0) · [附录文档](docs/releases/v1.0.0-mac-community-appendix.md)
+
+**首次打开（Gatekeeper）：** 无 Apple 签名。拖入「应用程序」后执行 `xattr -cr /Applications/Ackem.app`，再 **右键 → 打开** 一次。应用内自动更新 **仅支持 Windows**。
+
+---
+
+## 开发者
+
+> Ackem 是 **Electron 应用**，渲染进程依赖 `window.ackem`（preload IPC）。
+> 请用 **`npm run dev`** 启动，不要在浏览器单独打开 Vite 地址。
+
+### 环境
+
+- Windows 10/11 · Node.js **20+** · `npm ci`
+
+### 日常开发
+
+```bash
+cd ackem
+npm ci
+cd parts/ackemcode
+npm ci
+cd ../..
+npm run dev
+```
+
+开发时 `data/` 在工作目录下，与绿色版 exe 旁的 `data/` 相互独立。
+聊天和工作任务使用前，请在设置中配置模型地址、密钥和模型名称。AckemCode 位于 `parts/ackemcode`，本地服务按需启动。
+
+### 构建与打包
+
+```bash
+npm run build          # 编译 → out/
+npm run dist:green     # 绿色版 → dist/release/
+npm run dist:setup     # 可选 NSIS 安装包
+```
+
+### 验证
+
+```bash
+npm run typecheck
+npm run build
+cd parts/ackemcode && npm run typecheck
+```
+
+公开源码不包含本地测试套件、开发记录、凭据和生成缓存。
+
+---
+
+## 系统架构（七系统）
+
+| # | 系统 | 说明 | 文档 |
+|---|------|------|------|
+| ① | 整体 | Electron、orchestrator、一轮对话链路 | [00-overall-system.md](docs/developer/architecture/00-overall-system.md) |
+| ② | 脑 | L0 理解 + L4 记忆检索与衰减 | [01-brain-system.md](docs/developer/architecture/01-brain-system.md) |
+| ③ | 心 | L1 关系 + L2 情绪 + L3 表达 | [02-heart-system.md](docs/developer/architecture/02-heart-system.md) |
+| ④ | 嘴 | Prompt 组装 + LLM 调用 | [03-mouth-system.md](docs/developer/architecture/03-mouth-system.md) |
+| ⑤ | 神经 | Embedding / 向量检索 | [04-neural-system.md](docs/developer/architecture/04-neural-system.md) |
+| ⑥ | 扩展 | Skill/Plugin/Dispatch/OpenForU | [05-extension-system.md](docs/developer/architecture/05-extension-system.md) |
+| ⑦ | 时间 | 时间感知、作息曲线、重逢、感慨 | [06-time-system.md](docs/developer/architecture/06-time-system.md) |
+| — | 数据层 | SQLite 模式、Repository、迁移 | [07-data-layer.md](docs/developer/architecture/07-data-layer.md) |
+| — | IPC 接口 | `window.ackem.*` preload 桥、推送事件 | [08-ipc-api.md](docs/developer/architecture/08-ipc-api.md) |
+
+索引：[docs/developer/architecture/README.md](docs/developer/architecture/README.md)
+
+---
+
+## 文档
+
+> **语言：** English（`*.md`）· 中文（`*.zh.md`）— 见 [I18N.zh.md](../../development.zh.md#文档维护)
+
+| 用途 | English | 中文 |
+|------|---------|------|
+| 代码库与产物路径 | [CODEBASE-PATHS.md](docs/CODEBASE-PATHS.md) | [CODEBASE-PATHS.zh.md](docs/CODEBASE-PATHS.zh.md) |
+| 开源文档地图（维护者） | [OPEN-SOURCE-DOC-MAP.md](docs/OPEN-SOURCE-DOC-MAP.md) | [OPEN-SOURCE-DOC-MAP.zh.md](docs/OPEN-SOURCE-DOC-MAP.zh.md) |
+| 扩展开发者协议 | [DEVELOPER-EXTENSION-PROTOCOL.md](docs/developer/DEVELOPER-EXTENSION-PROTOCOL.md) | [DEVELOPER-EXTENSION-PROTOCOL.zh.md](docs/developer/DEVELOPER-EXTENSION-PROTOCOL.zh.md) |
+| 开发者环境搭建 | [dev-setup.md](docs/developer/dev-setup.md) | [dev-setup.zh.md](docs/developer/dev-setup.zh.md) |
+| 架构索引 | [architecture/README.md](docs/developer/architecture/README.md) | [architecture/README.zh.md](docs/developer/architecture/README.zh.md) |
+| 数据目录格式 | [memory-format.md](docs/memory-format.md) | [memory-format.zh.md](docs/memory-format.zh.md) |
+| AI 上下文与检索 | [ai-context-and-retrieval-policy.md](docs/ai-context-and-retrieval-policy.md) | [ai-context-and-retrieval-policy.zh.md](docs/ai-context-and-retrieval-policy.zh.md) |
+| 隐私与数据处理 | [privacy-and-data.md](docs/privacy-and-data.md) | [privacy-and-data.zh.md](docs/privacy-and-data.zh.md) |
+| 本地模型配置 | [local-models-windows.md](docs/local-models-windows.md) | [local-models-windows.zh.md](docs/local-models-windows.zh.md) |
+| 成人模式与安全 | [adult-and-safety-policy.md](docs/adult-and-safety-policy.md) | [adult-and-safety-policy.zh.md](docs/adult-and-safety-policy.zh.md) |
+| 感知能力 | [perception-layer.md](docs/perception-layer.md) | [perception-layer.zh.md](docs/perception-layer.zh.md) |
+| 敏感能力 | [sensitive-capabilities.md](docs/sensitive-capabilities.md) | [sensitive-capabilities.zh.md](docs/sensitive-capabilities.zh.md) |
+| Windows 分发 | [distribution-windows.md](docs/distribution-windows.md) | [distribution-windows.zh.md](docs/distribution-windows.zh.md) |
+| 索引与规模 | [indexing-and-scale.md](docs/indexing-and-scale.md) | [indexing-and-scale.zh.md](docs/indexing-and-scale.zh.md) |
+| 安全策略 | [SECURITY.md](../../../SECURITY.md) | [SECURITY.zh.md](../../../SECURITY.zh.md) |
+| 贡献指南 | [CONTRIBUTING.md](CONTRIBUTING.md) | [CONTRIBUTING.zh.md](CONTRIBUTING.zh.md) |
+| 行为准则 | [CODE_OF_CONDUCT.md](../../../CODE_OF_CONDUCT.md) | [CODE_OF_CONDUCT.zh.md](../../../CODE_OF_CONDUCT.zh.md) |
+
+---
+
+## 许可证
+
+本项目以 [AGPL-3.0](../../../LICENSE) 协议开源。
+
+| 使用场景 | 是否允许 |
+|---------|---------|
+| 个人学习与研究 | ✅ 允许 |
+| 开源项目集成（需同样以 AGPL-3.0 开源） | ✅ 允许 |
+| 学术研究与论文引用 | ✅ 允许 |
+| 闭源商业产品 | ❌ 需商业授权 |
+| SaaS 服务（不向用户提供源码） | ❌ 需商业授权 |
+| 企业私有化部署（不开源） | ❌ 需商业授权 |
+| 闭源产品通过 API 调用（不修改源码） | ⚠️ 灰色地带，建议咨询 |
+
+### 商业授权
+
+如需商业授权，请联系：**jasonliu_lyf_2005@qq.com**
+
+### 贡献者协议
+
+向本项目提交贡献，即表示您同意 [贡献者许可协议（CLA）](../../../CLA.md)。
+
+已认可贡献者：[CONTRIBUTORS.zh.md](CONTRIBUTORS.zh.md)
+
+版权所有 (C) 2026 Jason Liu (JasonLiu0826)
+
+---
+
+*开源版侧重本地 txt/md 与可审计检索。闭源商业部署或 SaaS 场景见 [LICENSE](../../../LICENSE) 中的商业授权说明。*

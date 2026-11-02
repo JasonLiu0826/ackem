@@ -1,0 +1,859 @@
+{
+  "archivedAt": "2026-11-02",
+  "previousCommit": "eee23f439536a6d9d684115ae1f3a1a683f6316f",
+  "publicDocuments": [
+    {
+      "kind": "snapshot",
+      "source": ".github/PULL_REQUEST_TEMPLATE.md",
+      "dest": "docs/旧文档/公开文档/.github/PULL_REQUEST_TEMPLATE.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "CHANGELOG.md",
+      "dest": "docs/旧文档/公开文档/CHANGELOG.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "CONTRIBUTING.md",
+      "dest": "docs/旧文档/公开文档/CONTRIBUTING.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "CONTRIBUTING.zh.md",
+      "dest": "docs/旧文档/公开文档/CONTRIBUTING.zh.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "CONTRIBUTORS.md",
+      "dest": "docs/旧文档/公开文档/CONTRIBUTORS.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "CONTRIBUTORS.zh.md",
+      "dest": "docs/旧文档/公开文档/CONTRIBUTORS.zh.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "README.md",
+      "dest": "docs/旧文档/公开文档/README.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "README.zh.md",
+      "dest": "docs/旧文档/公开文档/README.zh.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/CODEBASE-PATHS.md",
+      "dest": "docs/旧文档/公开文档/docs/CODEBASE-PATHS.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/CODEBASE-PATHS.zh.md",
+      "dest": "docs/旧文档/公开文档/docs/CODEBASE-PATHS.zh.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/OPEN-SOURCE-DOC-MAP.md",
+      "dest": "docs/旧文档/公开文档/docs/OPEN-SOURCE-DOC-MAP.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/OPEN-SOURCE-DOC-MAP.zh.md",
+      "dest": "docs/旧文档/公开文档/docs/OPEN-SOURCE-DOC-MAP.zh.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/ackem-code-bridge.zh.md",
+      "dest": "docs/旧文档/公开文档/docs/ackem-code-bridge.zh.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/adult-and-safety-policy.md",
+      "dest": "docs/旧文档/公开文档/docs/adult-and-safety-policy.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/adult-and-safety-policy.zh.md",
+      "dest": "docs/旧文档/公开文档/docs/adult-and-safety-policy.zh.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/ai-context-and-retrieval-policy.md",
+      "dest": "docs/旧文档/公开文档/docs/ai-context-and-retrieval-policy.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/ai-context-and-retrieval-policy.zh.md",
+      "dest": "docs/旧文档/公开文档/docs/ai-context-and-retrieval-policy.zh.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/cross-channel-conversation.md",
+      "dest": "docs/旧文档/公开文档/docs/cross-channel-conversation.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/cross-channel-conversation.zh.md",
+      "dest": "docs/旧文档/公开文档/docs/cross-channel-conversation.zh.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/developer/DEVELOPER-EXTENSION-PROTOCOL.md",
+      "dest": "docs/旧文档/公开文档/docs/developer/DEVELOPER-EXTENSION-PROTOCOL.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/developer/DEVELOPER-EXTENSION-PROTOCOL.zh.md",
+      "dest": "docs/旧文档/公开文档/docs/developer/DEVELOPER-EXTENSION-PROTOCOL.zh.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/developer/architecture/00-overall-system.md",
+      "dest": "docs/旧文档/公开文档/docs/developer/architecture/00-overall-system.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/developer/architecture/00-overall-system.zh.md",
+      "dest": "docs/旧文档/公开文档/docs/developer/architecture/00-overall-system.zh.md"
+    },
+    {
+      "kind": "legacy",
+      "source": "docs/developer/architecture/01-brain-system.md",
+      "dest": "docs/旧文档/公开文档/docs/developer/architecture/01-brain-system.md"
+    },
+    {
+      "kind": "legacy",
+      "source": "docs/developer/architecture/01-brain-system.zh.md",
+      "dest": "docs/旧文档/公开文档/docs/developer/architecture/01-brain-system.zh.md"
+    },
+    {
+      "kind": "legacy",
+      "source": "docs/developer/architecture/02-heart-system.md",
+      "dest": "docs/旧文档/公开文档/docs/developer/architecture/02-heart-system.md"
+    },
+    {
+      "kind": "legacy",
+      "source": "docs/developer/architecture/02-heart-system.zh.md",
+      "dest": "docs/旧文档/公开文档/docs/developer/architecture/02-heart-system.zh.md"
+    },
+    {
+      "kind": "legacy",
+      "source": "docs/developer/architecture/03-mouth-system.md",
+      "dest": "docs/旧文档/公开文档/docs/developer/architecture/03-mouth-system.md"
+    },
+    {
+      "kind": "legacy",
+      "source": "docs/developer/architecture/03-mouth-system.zh.md",
+      "dest": "docs/旧文档/公开文档/docs/developer/architecture/03-mouth-system.zh.md"
+    },
+    {
+      "kind": "legacy",
+      "source": "docs/developer/architecture/04-neural-system.md",
+      "dest": "docs/旧文档/公开文档/docs/developer/architecture/04-neural-system.md"
+    },
+    {
+      "kind": "legacy",
+      "source": "docs/developer/architecture/04-neural-system.zh.md",
+      "dest": "docs/旧文档/公开文档/docs/developer/architecture/04-neural-system.zh.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/developer/architecture/05-extension-system.md",
+      "dest": "docs/旧文档/公开文档/docs/developer/architecture/05-extension-system.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/developer/architecture/05-extension-system.zh.md",
+      "dest": "docs/旧文档/公开文档/docs/developer/architecture/05-extension-system.zh.md"
+    },
+    {
+      "kind": "legacy",
+      "source": "docs/developer/architecture/06-time-system.md",
+      "dest": "docs/旧文档/公开文档/docs/developer/architecture/06-time-system.md"
+    },
+    {
+      "kind": "legacy",
+      "source": "docs/developer/architecture/06-time-system.zh.md",
+      "dest": "docs/旧文档/公开文档/docs/developer/architecture/06-time-system.zh.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/developer/architecture/07-data-layer.md",
+      "dest": "docs/旧文档/公开文档/docs/developer/architecture/07-data-layer.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/developer/architecture/07-data-layer.zh.md",
+      "dest": "docs/旧文档/公开文档/docs/developer/architecture/07-data-layer.zh.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/developer/architecture/08-ipc-api.md",
+      "dest": "docs/旧文档/公开文档/docs/developer/architecture/08-ipc-api.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/developer/architecture/08-ipc-api.zh.md",
+      "dest": "docs/旧文档/公开文档/docs/developer/architecture/08-ipc-api.zh.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/developer/architecture/README.md",
+      "dest": "docs/旧文档/公开文档/docs/developer/architecture/README.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/developer/architecture/README.zh.md",
+      "dest": "docs/旧文档/公开文档/docs/developer/architecture/README.zh.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/developer/dev-setup.md",
+      "dest": "docs/旧文档/公开文档/docs/developer/dev-setup.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/developer/dev-setup.zh.md",
+      "dest": "docs/旧文档/公开文档/docs/developer/dev-setup.zh.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/developer/release-checklist.md",
+      "dest": "docs/旧文档/公开文档/docs/developer/release-checklist.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/developer/release-checklist.zh.md",
+      "dest": "docs/旧文档/公开文档/docs/developer/release-checklist.zh.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/developer/testing.md",
+      "dest": "docs/旧文档/公开文档/docs/developer/testing.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/developer/testing.zh.md",
+      "dest": "docs/旧文档/公开文档/docs/developer/testing.zh.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/distribution-windows.md",
+      "dest": "docs/旧文档/公开文档/docs/distribution-windows.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/distribution-windows.zh.md",
+      "dest": "docs/旧文档/公开文档/docs/distribution-windows.zh.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/indexing-and-scale.md",
+      "dest": "docs/旧文档/公开文档/docs/indexing-and-scale.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/indexing-and-scale.zh.md",
+      "dest": "docs/旧文档/公开文档/docs/indexing-and-scale.zh.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/local-models-windows.md",
+      "dest": "docs/旧文档/公开文档/docs/local-models-windows.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/local-models-windows.zh.md",
+      "dest": "docs/旧文档/公开文档/docs/local-models-windows.zh.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/memory-format.md",
+      "dest": "docs/旧文档/公开文档/docs/memory-format.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/memory-format.zh.md",
+      "dest": "docs/旧文档/公开文档/docs/memory-format.zh.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/perception-layer.md",
+      "dest": "docs/旧文档/公开文档/docs/perception-layer.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/perception-layer.zh.md",
+      "dest": "docs/旧文档/公开文档/docs/perception-layer.zh.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/privacy-and-data.md",
+      "dest": "docs/旧文档/公开文档/docs/privacy-and-data.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/privacy-and-data.zh.md",
+      "dest": "docs/旧文档/公开文档/docs/privacy-and-data.zh.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/qq-onebot-setup.md",
+      "dest": "docs/旧文档/公开文档/docs/qq-onebot-setup.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/qq-space.md",
+      "dest": "docs/旧文档/公开文档/docs/qq-space.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/qq-space.zh.md",
+      "dest": "docs/旧文档/公开文档/docs/qq-space.zh.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/sensitive-capabilities.md",
+      "dest": "docs/旧文档/公开文档/docs/sensitive-capabilities.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "docs/sensitive-capabilities.zh.md",
+      "dest": "docs/旧文档/公开文档/docs/sensitive-capabilities.zh.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "src/main/extensions/EXTENSION_AVAILABILITY_POLICY.md",
+      "dest": "docs/旧文档/公开文档/src/main/extensions/EXTENSION_AVAILABILITY_POLICY.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "src/main/extensions/README.md",
+      "dest": "docs/旧文档/公开文档/src/main/extensions/README.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "src/main/extensions/openforu/PROTOCOL.md",
+      "dest": "docs/旧文档/公开文档/src/main/extensions/openforu/PROTOCOL.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "src/main/extensions/openforu/README.md",
+      "dest": "docs/旧文档/公开文档/src/main/extensions/openforu/README.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "src/main/extensions/openforu/uplugins/CATALOG.md",
+      "dest": "docs/旧文档/公开文档/src/main/extensions/openforu/uplugins/CATALOG.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "src/main/extensions/openforu/uskills/examples/hello-world/README.md",
+      "dest": "docs/旧文档/公开文档/src/main/extensions/openforu/uskills/examples/hello-world/README.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "src/main/extensions/plugins/builtin/CATALOG.md",
+      "dest": "docs/旧文档/公开文档/src/main/extensions/plugins/builtin/CATALOG.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "src/main/extensions/plugins/builtin/behavior/proactive-notify/NOTIFICATION_TAXONOMY.md",
+      "dest": "docs/旧文档/公开文档/src/main/extensions/plugins/builtin/behavior/proactive-notify/NOTIFICATION_TAXONOMY.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "src/main/extensions/plugins/builtin/skin/COMPANION_SKIN.md",
+      "dest": "docs/旧文档/公开文档/src/main/extensions/plugins/builtin/skin/COMPANION_SKIN.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "src/main/extensions/skills/builtin/tool/web-search/README.md",
+      "dest": "docs/旧文档/公开文档/src/main/extensions/skills/builtin/tool/web-search/README.md"
+    },
+    {
+      "kind": "snapshot",
+      "source": "src/main/taskFrame/README.md",
+      "dest": "docs/旧文档/公开文档/src/main/taskFrame/README.md"
+    },
+    {
+      "kind": "release",
+      "source": "docs/releases/issue-4-reply-published.md",
+      "dest": "docs/旧文档/公开文档/docs/releases/issue-4-reply-published.md"
+    },
+    {
+      "kind": "release",
+      "source": "docs/releases/v1.0.0-mac-community-appendix.md",
+      "dest": "docs/旧文档/公开文档/docs/releases/v1.0.0-mac-community-appendix.md"
+    },
+    {
+      "kind": "release",
+      "source": "docs/releases/v1.0.0-release-body-full.md",
+      "dest": "docs/旧文档/公开文档/docs/releases/v1.0.0-release-body-full.md"
+    },
+    {
+      "source": "docs/ackem-code-bridge.md",
+      "dest": "docs/旧文档/收敛前文档/docs/ackem-code-bridge.md",
+      "kind": "consolidation",
+      "page": "docs/usage.md",
+      "section": "channels"
+    },
+    {
+      "source": "docs/ackemcode-kernel.md",
+      "dest": "docs/旧文档/收敛前文档/docs/ackemcode-kernel.md",
+      "kind": "consolidation",
+      "page": "docs/modules.md",
+      "section": "ackemcode"
+    },
+    {
+      "source": "docs/ackemcode-kernel.zh.md",
+      "dest": "docs/旧文档/收敛前文档/docs/ackemcode-kernel.zh.md",
+      "kind": "consolidation",
+      "page": "docs/modules.zh.md",
+      "section": "ackemcode"
+    },
+    {
+      "source": "docs/developer/architecture/09-routing-and-tasks.md",
+      "dest": "docs/旧文档/收敛前文档/docs/developer/architecture/09-routing-and-tasks.md",
+      "kind": "consolidation",
+      "page": "docs/architecture.md",
+      "section": "tasks"
+    },
+    {
+      "source": "docs/developer/architecture/09-routing-and-tasks.zh.md",
+      "dest": "docs/旧文档/收敛前文档/docs/developer/architecture/09-routing-and-tasks.zh.md",
+      "kind": "consolidation",
+      "page": "docs/architecture.zh.md",
+      "section": "任务生命周期"
+    },
+    {
+      "source": "docs/CODEBASE-PATHS.md",
+      "dest": "docs/旧文档/收敛前文档/docs/CODEBASE-PATHS.md",
+      "kind": "consolidation",
+      "page": "docs/modules.md",
+      "section": "source-map"
+    },
+    {
+      "source": "docs/CODEBASE-PATHS.zh.md",
+      "dest": "docs/旧文档/收敛前文档/docs/CODEBASE-PATHS.zh.md",
+      "kind": "consolidation",
+      "page": "docs/modules.zh.md",
+      "section": "源码地图"
+    },
+    {
+      "source": "docs/I18N.md",
+      "dest": "docs/旧文档/收敛前文档/docs/I18N.md",
+      "kind": "consolidation",
+      "page": "docs/development.md",
+      "section": "documentation"
+    },
+    {
+      "source": "docs/I18N.zh.md",
+      "dest": "docs/旧文档/收敛前文档/docs/I18N.zh.md",
+      "kind": "consolidation",
+      "page": "docs/development.zh.md",
+      "section": "文档维护"
+    },
+    {
+      "source": "docs/OPEN-SOURCE-DOC-MAP.md",
+      "dest": "docs/旧文档/收敛前文档/docs/OPEN-SOURCE-DOC-MAP.md",
+      "kind": "consolidation",
+      "page": "docs/README.md",
+      "section": ""
+    },
+    {
+      "source": "docs/OPEN-SOURCE-DOC-MAP.zh.md",
+      "dest": "docs/旧文档/收敛前文档/docs/OPEN-SOURCE-DOC-MAP.zh.md",
+      "kind": "consolidation",
+      "page": "docs/README.zh.md",
+      "section": ""
+    },
+    {
+      "source": "docs/ackem-code-bridge.zh.md",
+      "dest": "docs/旧文档/收敛前文档/docs/ackem-code-bridge.zh.md",
+      "kind": "consolidation",
+      "page": "docs/usage.zh.md",
+      "section": "渠道"
+    },
+    {
+      "source": "docs/adult-and-safety-policy.md",
+      "dest": "docs/旧文档/收敛前文档/docs/adult-and-safety-policy.md",
+      "kind": "consolidation",
+      "page": "docs/usage.md",
+      "section": "content-settings"
+    },
+    {
+      "source": "docs/adult-and-safety-policy.zh.md",
+      "dest": "docs/旧文档/收敛前文档/docs/adult-and-safety-policy.zh.md",
+      "kind": "consolidation",
+      "page": "docs/usage.zh.md",
+      "section": "内容设置"
+    },
+    {
+      "source": "docs/ai-context-and-retrieval-policy.md",
+      "dest": "docs/旧文档/收敛前文档/docs/ai-context-and-retrieval-policy.md",
+      "kind": "consolidation",
+      "page": "docs/companion-engines.md",
+      "section": "memory"
+    },
+    {
+      "source": "docs/ai-context-and-retrieval-policy.zh.md",
+      "dest": "docs/旧文档/收敛前文档/docs/ai-context-and-retrieval-policy.zh.md",
+      "kind": "consolidation",
+      "page": "docs/companion-engines.zh.md",
+      "section": "记忆引擎"
+    },
+    {
+      "source": "docs/cross-channel-conversation.md",
+      "dest": "docs/旧文档/收敛前文档/docs/cross-channel-conversation.md",
+      "kind": "consolidation",
+      "page": "docs/usage.md",
+      "section": "channels"
+    },
+    {
+      "source": "docs/cross-channel-conversation.zh.md",
+      "dest": "docs/旧文档/收敛前文档/docs/cross-channel-conversation.zh.md",
+      "kind": "consolidation",
+      "page": "docs/usage.zh.md",
+      "section": "渠道"
+    },
+    {
+      "source": "docs/developer/DEVELOPER-EXTENSION-PROTOCOL.md",
+      "dest": "docs/旧文档/收敛前文档/docs/developer/DEVELOPER-EXTENSION-PROTOCOL.md",
+      "kind": "consolidation",
+      "page": "docs/development.md",
+      "section": "extensions"
+    },
+    {
+      "source": "docs/developer/DEVELOPER-EXTENSION-PROTOCOL.zh.md",
+      "dest": "docs/旧文档/收敛前文档/docs/developer/DEVELOPER-EXTENSION-PROTOCOL.zh.md",
+      "kind": "consolidation",
+      "page": "docs/development.zh.md",
+      "section": "扩展开发"
+    },
+    {
+      "source": "docs/developer/architecture/00-overall-system.md",
+      "dest": "docs/旧文档/收敛前文档/docs/developer/architecture/00-overall-system.md",
+      "kind": "consolidation",
+      "page": "docs/architecture.md",
+      "section": ""
+    },
+    {
+      "source": "docs/developer/architecture/00-overall-system.zh.md",
+      "dest": "docs/旧文档/收敛前文档/docs/developer/architecture/00-overall-system.zh.md",
+      "kind": "consolidation",
+      "page": "docs/architecture.zh.md",
+      "section": ""
+    },
+    {
+      "source": "docs/developer/architecture/01-brain-system.md",
+      "dest": "docs/旧文档/收敛前文档/docs/developer/architecture/01-brain-system.md",
+      "kind": "consolidation",
+      "page": "docs/companion-engines.md",
+      "section": "memory"
+    },
+    {
+      "source": "docs/developer/architecture/01-brain-system.zh.md",
+      "dest": "docs/旧文档/收敛前文档/docs/developer/architecture/01-brain-system.zh.md",
+      "kind": "consolidation",
+      "page": "docs/companion-engines.zh.md",
+      "section": "记忆引擎"
+    },
+    {
+      "source": "docs/developer/architecture/02-heart-system.md",
+      "dest": "docs/旧文档/收敛前文档/docs/developer/architecture/02-heart-system.md",
+      "kind": "consolidation",
+      "page": "docs/companion-engines.md",
+      "section": "personality-and-emotion"
+    },
+    {
+      "source": "docs/developer/architecture/02-heart-system.zh.md",
+      "dest": "docs/旧文档/收敛前文档/docs/developer/architecture/02-heart-system.zh.md",
+      "kind": "consolidation",
+      "page": "docs/companion-engines.zh.md",
+      "section": "性格与情绪引擎"
+    },
+    {
+      "source": "docs/developer/architecture/03-mouth-system.md",
+      "dest": "docs/旧文档/收敛前文档/docs/developer/architecture/03-mouth-system.md",
+      "kind": "consolidation",
+      "page": "docs/modules.md",
+      "section": "prompt-and-models"
+    },
+    {
+      "source": "docs/developer/architecture/03-mouth-system.zh.md",
+      "dest": "docs/旧文档/收敛前文档/docs/developer/architecture/03-mouth-system.zh.md",
+      "kind": "consolidation",
+      "page": "docs/modules.zh.md",
+      "section": "prompt-与模型"
+    },
+    {
+      "source": "docs/developer/architecture/04-neural-system.md",
+      "dest": "docs/旧文档/收敛前文档/docs/developer/architecture/04-neural-system.md",
+      "kind": "consolidation",
+      "page": "docs/modules.md",
+      "section": "embedding"
+    },
+    {
+      "source": "docs/developer/architecture/04-neural-system.zh.md",
+      "dest": "docs/旧文档/收敛前文档/docs/developer/architecture/04-neural-system.zh.md",
+      "kind": "consolidation",
+      "page": "docs/modules.zh.md",
+      "section": "embedding"
+    },
+    {
+      "source": "docs/developer/architecture/05-extension-system.md",
+      "dest": "docs/旧文档/收敛前文档/docs/developer/architecture/05-extension-system.md",
+      "kind": "consolidation",
+      "page": "docs/development.md",
+      "section": "extensions"
+    },
+    {
+      "source": "docs/developer/architecture/05-extension-system.zh.md",
+      "dest": "docs/旧文档/收敛前文档/docs/developer/architecture/05-extension-system.zh.md",
+      "kind": "consolidation",
+      "page": "docs/development.zh.md",
+      "section": "扩展开发"
+    },
+    {
+      "source": "docs/developer/architecture/06-time-system.md",
+      "dest": "docs/旧文档/收敛前文档/docs/developer/architecture/06-time-system.md",
+      "kind": "consolidation",
+      "page": "docs/companion-engines.md",
+      "section": "time"
+    },
+    {
+      "source": "docs/developer/architecture/06-time-system.zh.md",
+      "dest": "docs/旧文档/收敛前文档/docs/developer/architecture/06-time-system.zh.md",
+      "kind": "consolidation",
+      "page": "docs/companion-engines.zh.md",
+      "section": "时间维度"
+    },
+    {
+      "source": "docs/developer/architecture/07-data-layer.md",
+      "dest": "docs/旧文档/收敛前文档/docs/developer/architecture/07-data-layer.md",
+      "kind": "consolidation",
+      "page": "docs/modules.md",
+      "section": "storage"
+    },
+    {
+      "source": "docs/developer/architecture/07-data-layer.zh.md",
+      "dest": "docs/旧文档/收敛前文档/docs/developer/architecture/07-data-layer.zh.md",
+      "kind": "consolidation",
+      "page": "docs/modules.zh.md",
+      "section": "存储"
+    },
+    {
+      "source": "docs/developer/architecture/08-ipc-api.md",
+      "dest": "docs/旧文档/收敛前文档/docs/developer/architecture/08-ipc-api.md",
+      "kind": "consolidation",
+      "page": "docs/modules.md",
+      "section": "interfaces"
+    },
+    {
+      "source": "docs/developer/architecture/08-ipc-api.zh.md",
+      "dest": "docs/旧文档/收敛前文档/docs/developer/architecture/08-ipc-api.zh.md",
+      "kind": "consolidation",
+      "page": "docs/modules.zh.md",
+      "section": "接口"
+    },
+    {
+      "source": "docs/developer/architecture/README.md",
+      "dest": "docs/旧文档/收敛前文档/docs/developer/architecture/README.md",
+      "kind": "consolidation",
+      "page": "docs/architecture.md",
+      "section": ""
+    },
+    {
+      "source": "docs/developer/architecture/README.zh.md",
+      "dest": "docs/旧文档/收敛前文档/docs/developer/architecture/README.zh.md",
+      "kind": "consolidation",
+      "page": "docs/architecture.zh.md",
+      "section": ""
+    },
+    {
+      "source": "docs/developer/dev-setup.md",
+      "dest": "docs/旧文档/收敛前文档/docs/developer/dev-setup.md",
+      "kind": "consolidation",
+      "page": "docs/development.md",
+      "section": "environment"
+    },
+    {
+      "source": "docs/developer/dev-setup.zh.md",
+      "dest": "docs/旧文档/收敛前文档/docs/developer/dev-setup.zh.md",
+      "kind": "consolidation",
+      "page": "docs/development.zh.md",
+      "section": "环境与运行"
+    },
+    {
+      "source": "docs/developer/release-checklist.md",
+      "dest": "docs/旧文档/收敛前文档/docs/developer/release-checklist.md",
+      "kind": "consolidation",
+      "page": "docs/development.md",
+      "section": "release"
+    },
+    {
+      "source": "docs/developer/release-checklist.zh.md",
+      "dest": "docs/旧文档/收敛前文档/docs/developer/release-checklist.zh.md",
+      "kind": "consolidation",
+      "page": "docs/development.zh.md",
+      "section": "构建与发布"
+    },
+    {
+      "source": "docs/developer/testing.md",
+      "dest": "docs/旧文档/收敛前文档/docs/developer/testing.md",
+      "kind": "consolidation",
+      "page": "docs/development.md",
+      "section": "verification"
+    },
+    {
+      "source": "docs/developer/testing.zh.md",
+      "dest": "docs/旧文档/收敛前文档/docs/developer/testing.zh.md",
+      "kind": "consolidation",
+      "page": "docs/development.zh.md",
+      "section": "验证"
+    },
+    {
+      "source": "docs/distribution-windows.md",
+      "dest": "docs/旧文档/收敛前文档/docs/distribution-windows.md",
+      "kind": "consolidation",
+      "page": "docs/usage.md",
+      "section": "installation"
+    },
+    {
+      "source": "docs/distribution-windows.zh.md",
+      "dest": "docs/旧文档/收敛前文档/docs/distribution-windows.zh.md",
+      "kind": "consolidation",
+      "page": "docs/usage.zh.md",
+      "section": "安装与启动"
+    },
+    {
+      "source": "docs/indexing-and-scale.md",
+      "dest": "docs/旧文档/收敛前文档/docs/indexing-and-scale.md",
+      "kind": "consolidation",
+      "page": "docs/companion-engines.md",
+      "section": "memory"
+    },
+    {
+      "source": "docs/indexing-and-scale.zh.md",
+      "dest": "docs/旧文档/收敛前文档/docs/indexing-and-scale.zh.md",
+      "kind": "consolidation",
+      "page": "docs/companion-engines.zh.md",
+      "section": "记忆引擎"
+    },
+    {
+      "source": "docs/local-models-windows.md",
+      "dest": "docs/旧文档/收敛前文档/docs/local-models-windows.md",
+      "kind": "consolidation",
+      "page": "docs/usage.md",
+      "section": "settings-and-models"
+    },
+    {
+      "source": "docs/local-models-windows.zh.md",
+      "dest": "docs/旧文档/收敛前文档/docs/local-models-windows.zh.md",
+      "kind": "consolidation",
+      "page": "docs/usage.zh.md",
+      "section": "设置与模型"
+    },
+    {
+      "source": "docs/memory-format.md",
+      "dest": "docs/旧文档/收敛前文档/docs/memory-format.md",
+      "kind": "consolidation",
+      "page": "docs/usage.md",
+      "section": "data-and-privacy"
+    },
+    {
+      "source": "docs/memory-format.zh.md",
+      "dest": "docs/旧文档/收敛前文档/docs/memory-format.zh.md",
+      "kind": "consolidation",
+      "page": "docs/usage.zh.md",
+      "section": "数据与隐私"
+    },
+    {
+      "source": "docs/perception-layer.md",
+      "dest": "docs/旧文档/收敛前文档/docs/perception-layer.md",
+      "kind": "consolidation",
+      "page": "docs/usage.md",
+      "section": "settings-and-models"
+    },
+    {
+      "source": "docs/perception-layer.zh.md",
+      "dest": "docs/旧文档/收敛前文档/docs/perception-layer.zh.md",
+      "kind": "consolidation",
+      "page": "docs/usage.zh.md",
+      "section": "设置与模型"
+    },
+    {
+      "source": "docs/privacy-and-data.md",
+      "dest": "docs/旧文档/收敛前文档/docs/privacy-and-data.md",
+      "kind": "consolidation",
+      "page": "docs/usage.md",
+      "section": "data-and-privacy"
+    },
+    {
+      "source": "docs/privacy-and-data.zh.md",
+      "dest": "docs/旧文档/收敛前文档/docs/privacy-and-data.zh.md",
+      "kind": "consolidation",
+      "page": "docs/usage.zh.md",
+      "section": "数据与隐私"
+    },
+    {
+      "source": "docs/qq-onebot-setup.md",
+      "dest": "docs/旧文档/收敛前文档/docs/qq-onebot-setup.md",
+      "kind": "consolidation",
+      "page": "docs/usage.zh.md",
+      "section": "渠道"
+    },
+    {
+      "source": "docs/qq-space.md",
+      "dest": "docs/旧文档/收敛前文档/docs/qq-space.md",
+      "kind": "consolidation",
+      "page": "docs/usage.md",
+      "section": "channels"
+    },
+    {
+      "source": "docs/qq-space.zh.md",
+      "dest": "docs/旧文档/收敛前文档/docs/qq-space.zh.md",
+      "kind": "consolidation",
+      "page": "docs/usage.zh.md",
+      "section": "渠道"
+    },
+    {
+      "source": "docs/sensitive-capabilities.md",
+      "dest": "docs/旧文档/收敛前文档/docs/sensitive-capabilities.md",
+      "kind": "consolidation",
+      "page": "docs/usage.md",
+      "section": "work-and-permissions"
+    },
+    {
+      "source": "docs/sensitive-capabilities.zh.md",
+      "dest": "docs/旧文档/收敛前文档/docs/sensitive-capabilities.zh.md",
+      "kind": "consolidation",
+      "page": "docs/usage.zh.md",
+      "section": "工作执行与权限"
+    },
+    {
+      "source": "README.md",
+      "dest": "docs/旧文档/收敛前文档/README.md",
+      "kind": "readme-snapshot",
+      "page": "README.md",
+      "section": ""
+    },
+    {
+      "source": "README.zh.md",
+      "dest": "docs/旧文档/收敛前文档/README.zh.md",
+      "kind": "readme-snapshot",
+      "page": "README.zh.md",
+      "section": ""
+    }
+  ],
+  "localRecordCount": 48,
+  "consolidation": {
+    "categories": 6,
+    "mainFiles": 12,
+    "movedGuides": 63,
+    "readmeSnapshots": 2,
+    "completedAt": "2026-11-03"
+  }
+}

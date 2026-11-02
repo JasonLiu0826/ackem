@@ -69,4 +69,4 @@
 
 重新生成占位骨架：`node scripts/scaffold-extension-placeholders.mjs`（已存在目录会跳过）
 
-**stub.ts 说明（FIX-033）**：见 [`../STUB_FILES.md`](../STUB_FILES.md) — 非运行时，禁止 import。
+**stub.ts 说明（FIX-033）**：见 [`../../STUB_FILES.md`](../../STUB_FILES.md) — 非运行时，禁止 import。

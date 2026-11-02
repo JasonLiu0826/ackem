@@ -4,6 +4,7 @@
 
 | Version   | Supported |
 |-----------|-----------|
+| Current main source (app version 2.0.0) | Prioritized for investigation |
 | v1.0.0    | ✅        |
 | v1.0-rc   | ✅        |
 | earlier   | ❌        |
@@ -35,7 +36,7 @@ They **do not** include:
 - Developer `.env` files
 - Any maintainer machine state
 
-Credentials are entered **after install** in **Settings** and stored locally on your PC (see [distribution guide](./docs/distribution-windows.md)).
+Credentials are entered **after install** in **Settings** and stored locally on your PC (see [distribution guide](docs/usage.md#installation)).
 
 ## Data on your machine
 
@@ -44,14 +45,18 @@ Credentials are entered **after install** in **Settings** and stored locally on 
 | Memory / imports (portable mode) | Next to `Ackem.exe` → `data/` |
 | Memory (user directory mode) | `%LOCALAPPDATA%\Ackem\` |
 | App settings & API keys | Electron userData → `ackem-app-settings.json` |
+| AckemCode sessions and model settings | Actual kernel data directory; see [module reference](docs/modules.md#ackemcode) |
+| Work artifacts | User-selected directories, potentially outside the app data root |
 
-Back up these paths yourself before uninstall or disk migration. Uninstalling the app does **not** upload your data anywhere.
+Kernel model settings may contain plaintext credentials; application settings encryption does not establish identical protection for kernel configuration. See [data and privacy](docs/usage.md#data-and-privacy) for cloud-model, channel and network-tool data flow.
+
+Back up these locations before uninstall or migration. Uninstalling does not itself upload data, but does not establish removal of kernel data, external artifacts or platform messages.
 
 ## Codebase locations
 
 | Role | Path |
 |------|------|
-| GitHub source | Repository root (`Ackem-v0.0.0/`) |
-| Windows green build | `dist/release/Ackem-1.0.0-win-x64/` |
+| GitHub source | Repository checkout root |
+| Windows green build | `dist/release/Ackem-<version>-win-x64/` |
 
-See [docs/CODEBASE-PATHS.md](./docs/CODEBASE-PATHS.md).
+See [module reference](docs/modules.md#source-map). Include the actual Release tag or commit in reports; source capabilities do not describe every historical binary.

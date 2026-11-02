@@ -1,0 +1,33 @@
+flowchart TB
+    accTitle: Ackem chat plugin work routing
+    accDescr: Desktop chat selects among three handling modes using intent, recent conversation and enabled capabilities. Chat produces content, plugin invokes an actual extension, and work delegates to AckemCode with receipts, artifacts and acceptance. These are not sequential steps or proof of completion.
+
+    request(["Your request"])
+    router["Ackem semantic routing<br/>Current intent + recent conversation + enabled capabilities"]
+    chat["chat · Conversation<br/>Content and ordinary chat tools"]
+    plugin["plugin · Capability<br/>Validate and invoke an enabled extension"]
+    work["work · Execution<br/>Inspect, change and deliver real resources<br/>Including read-only checks and plugin creation or updates"]
+    chat_reply["Conversation reply<br/>Text · explanations · plans"]
+    extension_runtime["Extension runtime<br/>Actual capability call and receipt"]
+    kernel[["AckemCode general-purpose agent kernel<br/>Files · commands · web · documents"]]
+    delivery(["Ackem checks and delivers the result<br/>Reply claims must match actual execution state"])
+
+    request --> router
+    router -->|"Respond"| chat
+    router -->|"Use a capability"| plugin
+    router -->|"Act on resources"| work
+    chat --> chat_reply
+    plugin --> extension_runtime
+    work --> kernel
+    chat_reply -->|"Content"| delivery
+    extension_runtime -->|"Extension receipt"| delivery
+    kernel -->|"Receipts · artifacts · acceptance"| delivery
+
+    classDef neutral fill:#f3f4f6,stroke:#6b7280,stroke-width:1.4px,color:#1f2937
+    classDef primary fill:#dbeafe,stroke:#2563eb,stroke-width:1.6px,color:#1e3a5f
+    classDef accent fill:#ede9fe,stroke:#7c3aed,stroke-width:1.6px,color:#3b0764
+    classDef success fill:#dcfce7,stroke:#16a34a,stroke-width:1.6px,color:#14532d
+    class request neutral
+    class router,chat,plugin,work,chat_reply,extension_runtime primary
+    class kernel accent
+    class delivery success

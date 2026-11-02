@@ -1,0 +1,33 @@
+flowchart TB
+    accTitle: Ackem chat plugin work 三级路由
+    accDescr: 桌面主聊天按意图、最近对话和已启用能力选择三种处理方式。chat 生成内容，plugin 调用实际扩展，work 由 AckemCode 执行并核对回执、产物和验收。这不是串行步骤，分类不代表完成。
+
+    request(["用户请求"])
+    router["Ackem 语义路由<br/>本轮意图 ＋ 最近对话 ＋ 已启用能力"]
+    chat["chat · 对话<br/>解释与内容回应，可用普通聊天工具"]
+    plugin["plugin · 能力调用<br/>核验并使用已启用扩展"]
+    work["work · 任务执行<br/>真实资源调查、修改与交付<br/>只读检查、创建或修改插件也走这里"]
+    chat_reply["内容回应<br/>正文 · 解释 · 方案"]
+    extension_runtime["扩展运行时<br/>实际调用，取得回执"]
+    kernel[["AckemCode 通用智能体内核<br/>文件 · 命令 · 网络 · 文档"]]
+    delivery(["Ackem 核对结果并交付<br/>回复结论应与真实执行状态一致"])
+
+    request --> router
+    router -->|"直接回应"| chat
+    router -->|"现有能力"| plugin
+    router -->|"真实资源"| work
+    chat --> chat_reply
+    plugin --> extension_runtime
+    work --> kernel
+    chat_reply -->|"正文结果"| delivery
+    extension_runtime -->|"扩展回执"| delivery
+    kernel -->|"回执 · 产物 · 验收"| delivery
+
+    classDef neutral fill:#f3f4f6,stroke:#6b7280,stroke-width:1.4px,color:#1f2937
+    classDef primary fill:#dbeafe,stroke:#2563eb,stroke-width:1.6px,color:#1e3a5f
+    classDef accent fill:#ede9fe,stroke:#7c3aed,stroke-width:1.6px,color:#3b0764
+    classDef success fill:#dcfce7,stroke:#16a34a,stroke-width:1.6px,color:#14532d
+    class request neutral
+    class router,chat,plugin,work,chat_reply,extension_runtime primary
+    class kernel accent
+    class delivery success

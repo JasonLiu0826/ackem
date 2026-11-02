@@ -70,11 +70,12 @@ extraResources:
     to: assets/qq-memes
     filter:
       - "**/*"
-  # 开发者扩展接口协议（绿色版 docs/developer/）
-  - from: docs/developer
-    to: docs/developer
+  # 当前六类文档及图表；历史归档与本地记录不进入应用包。
+  - from: docs
+    to: docs
     filter:
       - "**/*"
+      - "!旧文档/**"
 
 afterPack: scripts/after-pack.cjs
 

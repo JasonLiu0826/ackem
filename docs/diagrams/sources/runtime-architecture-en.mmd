@@ -1,0 +1,34 @@
+flowchart TB
+    accTitle: Ackem Runtime Process Boundaries
+    accDescr: Desktop, independent work and channel adapters connect to the same kernel through different host paths. Storage is separate from execution.
+
+    desktop_ui["Desktop UI<br/>Electron · React"]
+    channel_input["QQ / WeChat"]
+    ackem_host["Ackem main process<br/>Context and routing"]
+    managed_tasks["Managed tasks<br/>Contracts · supervision · acceptance"]
+    extension_runtime["Enabled extensions<br/>Skill · Plugin"]
+    independent_work["Independent work<br/>Private session and queue"]
+    channel_bridge["Channel code bridge<br/>Owner and remote permission"]
+    kernel_service[["AckemCode service<br/>Agent loop and tools"]]
+    app_storage[("Ackem storage<br/>Memory · history · task state")]
+    real_resources["Real resources<br/>Files · terminal · external services"]
+
+    desktop_ui -->|"IPC"| ackem_host
+    desktop_ui -->|"IPC"| independent_work
+    channel_input --> channel_bridge
+    ackem_host -->|"work"| managed_tasks
+    ackem_host -->|"plugin"| extension_runtime
+    ackem_host -.-> app_storage
+    managed_tasks <-->|"HTTP / SSE"| kernel_service
+    independent_work --> kernel_service
+    channel_bridge --> kernel_service
+    kernel_service --> real_resources
+
+    classDef neutral fill:#f3f4f6,stroke:#6b7280,stroke-width:1.4px,color:#1f2937
+    classDef primary fill:#dbeafe,stroke:#2563eb,stroke-width:1.6px,color:#1e3a5f
+    classDef accent fill:#ede9fe,stroke:#7c3aed,stroke-width:1.6px,color:#3b0764
+    classDef success fill:#dcfce7,stroke:#16a34a,stroke-width:1.6px,color:#14532d
+    class desktop_ui,channel_input,app_storage neutral
+    class ackem_host,managed_tasks,extension_runtime,independent_work,channel_bridge primary
+    class kernel_service accent
+    class real_resources success

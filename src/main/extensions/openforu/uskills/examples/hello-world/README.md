@@ -32,4 +32,4 @@
 ## 下一步
 
 - 用 Plan 创建更复杂 Skill（见 `data/openforu/uskills/pomodoro/`）
-- 阅读 [`../../PROTOCOL.md`](../../PROTOCOL.md)
+- 阅读 [`../../../PROTOCOL.md`](../../../PROTOCOL.md)

@@ -22,34 +22,32 @@
 
 ```mermaid
 flowchart TB
-  subgraph chat [对话页 ChatPage]
-    Busy[busy / 流式长度 / 输入框]
-    Map[resolveAvatarState]
-    Store[appStore.companionAvatarState]
-  end
+    accTitle: 伴侣皮肤状态与渲染入口
+    accDescr: 聊天活动产生头像状态，宿主解析当前皮肤；CompanionAvatar 根据实现类型渲染。
 
-  subgraph main [主进程]
-    Settings["settings.activeCompanionSkinPluginId"]
-    Registry[PluginRegistry]
-    Resolve[resolveActiveCompanionSkin]
-    IPC["IPC ext:companionSkin:*"]
-  end
+    chat_activity["聊天活动<br/>忙碌 · 流式 · 输入"]
+    avatar_state["resolveAvatarState<br/>写入 appStore"]
+    skin_selection["当前皮肤设置与 Registry"]
+    host_resolver["resolveActiveCompanionSkin<br/>经 IPC 返回"]
+    avatar_slot["CompanionAvatar"]
+    builtin_canvas["AIVatar Canvas"]
+    html_skin["HTML iframe"]
+    react_skin["React builtin renderer"]
 
-  subgraph renderer [渲染进程]
-    Slot[CompanionAvatar]
-    Builtin[AIVatar Canvas]
-    Html[HtmlCompanionSkin iframe]
-    ReactReg[registerCompanionSkinRenderer]
-  end
+    chat_activity --> avatar_state
+    avatar_state --> avatar_slot
+    skin_selection --> host_resolver
+    host_resolver --> avatar_slot
+    avatar_slot -->|"builtin-canvas"| builtin_canvas
+    avatar_slot -->|"html"| html_skin
+    avatar_slot -->|"react-builtin"| react_skin
 
-  Busy --> Map --> Store
-  Store --> Slot
-  Settings --> Resolve
-  Registry --> Resolve
-  Resolve --> IPC --> Slot
-  Slot -->|builtin-canvas| Builtin
-  Slot -->|html| Html
-  Slot -->|react-builtin| ReactReg
+    classDef neutral fill:#f3f4f6,stroke:#6b7280,stroke-width:1.4px,color:#1f2937
+    classDef primary fill:#dbeafe,stroke:#2563eb,stroke-width:1.6px,color:#1e3a5f
+    classDef accent fill:#ede9fe,stroke:#7c3aed,stroke-width:1.6px,color:#3b0764
+    class chat_activity,skin_selection neutral
+    class avatar_state,host_resolver,builtin_canvas,html_skin,react_skin primary
+    class avatar_slot accent
 ```
 
 ### 2.1 状态从哪里来
@@ -345,19 +343,21 @@ NavBar 在外层单独显示状态文字，故 `showStatus={false}`。
 
 ```mermaid
 sequenceDiagram
-  participant User
-  participant UI as 插件管理 UI
-  participant Main as 主进程 Registry
-  participant R as CompanionAvatar
-
-  User->>UI: 安装 skin 插件包
-  UI->>Main: ext:plugins:install
-  User->>UI: 激活插件
-  UI->>Main: ext:plugins:activate
-  Main->>Main: syncCompanionSkinOnPluginActivate
-  Main->>R: companionSkin:changed
-  R->>Main: companionSkinActive
-  R->>R: 渲染 html / react-builtin / 回退
+    accTitle: 伴侣皮肤插件激活流程
+    accDescr: 用户安装并激活皮肤后，宿主同步选择并通知头像组件，渲染层再读取实际可用皮肤。
+    participant user as 用户
+    participant ui as 插件管理界面
+    participant registry as 主进程 Registry
+    participant avatar as CompanionAvatar
+    user->>ui: 安装皮肤插件
+    ui->>registry: ext:plugins:install
+    user->>ui: 激活插件
+    ui->>registry: ext:plugins:activate
+    registry->>registry: 同步当前皮肤选择
+    registry-->>avatar: companionSkin:changed
+    avatar->>registry: 请求 active skin
+    registry-->>avatar: 可用皮肤与状态
+    avatar->>avatar: 渲染或回退
 ```
 
 **建议：**

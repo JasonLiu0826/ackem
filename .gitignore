@@ -49,6 +49,7 @@ __fixtures__/
 # Local implementation notes and audit snapshots
 /docs/developer/*-20??-??-??.md
 /docs/developer/AckemGUI接入AckemCode内核设计.md
+/docs/旧文档/本地记录/
 
 # Python 运行时缓存
 __pycache__/

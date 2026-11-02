@@ -18,7 +18,7 @@
 ## Testing
 
 - [ ] `npm run typecheck` passes
-- [ ] `npm test` passes
+- [ ] Relevant main-process / kernel checks completed; commands and limitations noted
 - [ ] Manual testing performed (describe below)
 
 ### Manual Test Notes
@@ -28,8 +28,7 @@
 ## Checklist
 
 - [ ] My code follows the project's coding style
-- [ ] I have added tests that prove my fix/feature works
-- [ ] New and existing tests pass locally
+- [ ] Verification is appropriate to the change, including runtime checks when needed
 - [ ] If this changes the extension protocol, I have updated `DEVELOPER-EXTENSION-PROTOCOL.md`
 - [ ] If this changes architecture, I have updated the relevant architecture doc
 

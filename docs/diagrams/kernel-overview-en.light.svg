@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="960" viewBox="0 0 1200 960" role="img" aria-labelledby="title desc"><title id="title">AckemCode general-purpose agent kernel</title><desc id="desc">Shared sessions, agent loops and tools support multiple entry paths.</desc><metadata data-source="docs/diagrams/sources/kernel-overview-en.mmd" data-source-sha256="253acada6feec456524e87ec5d338563e9d6252291f80ce71e3ed88d077f8571">flowchart TB
+    accTitle: AckemCode General Purpose Agent Kernel
+    accDescr: Host-managed work, independent sessions and CLI use the same agent kernel. Permission and receipt boundaries surround actual tool execution.
+
+    host_entry["Ackem managed work"]
+    standalone_entry["Independent work / CLI / Web"]
+    kernel_session["Session and context&lt;br/&gt;Goal · history · model"]
+    agent_loop[["Agent loop&lt;br/&gt;Plan · act · inspect"]]
+    permissions["Permissions and interaction"]
+    local_tools["Local tools&lt;br/&gt;Files · commands · documents"]
+    external_tools["Integrations&lt;br/&gt;Web · MCP · LSP · skills"]
+    kernel_receipts["Events · receipts · artifacts"]
+    host_acceptance["Host review and delivery"]
+
+    host_entry --&gt; kernel_session
+    standalone_entry --&gt; kernel_session
+    kernel_session --&gt; agent_loop
+    agent_loop --&gt; permissions
+    permissions --&gt; local_tools
+    permissions --&gt; external_tools
+    local_tools --&gt; kernel_receipts
+    external_tools --&gt; kernel_receipts
+    kernel_receipts -.-&gt;|"Continue when needed"| agent_loop
+    kernel_receipts --&gt; host_acceptance
+
+    classDef primary fill:#dbeafe,stroke:#2563eb,stroke-width:1.6px,color:#1e3a5f
+    classDef neutral fill:#f3f4f6,stroke:#6b7280,stroke-width:1.4px,color:#1f2937
+    classDef accent fill:#ede9fe,stroke:#7c3aed,stroke-width:1.6px,color:#3b0764
+    classDef success fill:#dcfce7,stroke:#16a34a,stroke-width:1.6px,color:#14532d
+    class host_entry,local_tools,external_tools primary
+    class standalone_entry neutral
+    class kernel_session,agent_loop,permissions accent
+    class kernel_receipts,host_acceptance success</metadata><defs><marker id="arrow" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#7488a2"/></marker></defs><g font-family="Segoe UI, Microsoft YaHei, PingFang SC, sans-serif"><rect x="1" y="1" width="1198" height="958" rx="28" fill="#f8fafc" stroke="#dbe4ef"/>
+<text x="48" y="38" font-size="13" font-weight="600" fill="#52657e" text-anchor="start">ACKEM  /  ARCHITECTURE</text>
+<text x="48" y="85" font-size="32" font-weight="650" fill="#15243a" text-anchor="start">AckemCode general-purpose agent kernel</text>
+<text x="48" y="119" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">Shared sessions, agent loops and tools support multiple entry paths.</text>
+<path d="M314 222 V253 H600 V280" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M886 222 V253 H600 V280" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M600 358 V382 H490 V405" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M740 460 H800" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M976 515 V550 H314 V590" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M976 515 V550 H886 V590" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M314 690 V720 H600 V750" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M886 690 V720 H600 V750" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M600 828 V870" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M240 789 H24 V460 H240" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)" stroke-dasharray="6 6"/>
+<rect x="48" y="154" width="532" height="68" rx="17" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+<text x="314" y="195" font-size="22" font-weight="600" fill="#15243a" text-anchor="middle">Ackem managed work</text>
+<rect x="620" y="154" width="532" height="68" rx="17" fill="#ffffff" stroke="#dbe4ef" stroke-width="1.2"/>
+<text x="886" y="195" font-size="22" font-weight="600" fill="#15243a" text-anchor="middle">Independent work / CLI / Web</text>
+<rect x="240" y="280" width="720" height="78" rx="17" fill="#f4f0ff" stroke="#7c3aed" stroke-width="1.5"/>
+<text x="264" y="317" font-size="23" font-weight="600" fill="#15243a" text-anchor="start">Session and context</text>
+<text x="264" y="348" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">Goal · history · model</text>
+<rect x="240" y="405" width="500" height="110" rx="17" fill="#f4f0ff" stroke="#7c3aed" stroke-width="1.5"/>
+<text x="264" y="442" font-size="23" font-weight="600" fill="#15243a" text-anchor="start">Agent loop</text>
+<text x="264" y="473" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">Plan · act · inspect</text>
+<rect x="800" y="405" width="352" height="110" rx="17" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+<text x="824" y="442" font-size="23" font-weight="600" fill="#15243a" text-anchor="start">Permissions</text>
+<text x="824" y="473" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">Approval and user input</text>
+<rect x="48" y="590" width="532" height="100" rx="17" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+<text x="72" y="627" font-size="23" font-weight="600" fill="#15243a" text-anchor="start">Local tools</text>
+<text x="72" y="658" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">Files · commands · documents</text>
+<rect x="620" y="590" width="532" height="100" rx="17" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+<text x="644" y="627" font-size="23" font-weight="600" fill="#15243a" text-anchor="start">External integrations</text>
+<text x="644" y="658" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">Web · MCP · LSP · skills</text>
+<rect x="240" y="750" width="720" height="78" rx="17" fill="#edfbf4" stroke="#15815d" stroke-width="1.5"/>
+<text x="264" y="787" font-size="23" font-weight="600" fill="#15243a" text-anchor="start">Events, receipts and artifacts</text>
+<text x="264" y="818" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">Actual execution evidence</text>
+<rect x="86" y="771" width="92" height="27" rx="13.5" fill="#f8fafc"/>
+<text x="132" y="790" font-size="16" font-weight="500" fill="#52657e" text-anchor="middle">Continue</text>
+<rect x="48" y="870" width="1104" height="58" rx="17" fill="#edfbf4" stroke="#15815d" stroke-width="1.5"/>
+<text x="600" y="906" font-size="22" font-weight="600" fill="#15243a" text-anchor="middle">Host review and delivery</text>
+</g></svg>

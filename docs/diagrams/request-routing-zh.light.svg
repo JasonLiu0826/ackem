@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1060" viewBox="0 0 1200 1060" role="img" aria-labelledby="title desc"><title id="title">chat / plugin / work 三级路由</title><desc id="desc">Ackem 理解请求，选择内容回应、扩展调用或真实任务执行。</desc><metadata data-source="docs/diagrams/sources/request-routing-zh.mmd" data-source-sha256="18a8f9034270f7c0267cac27e333333b4829e93e37ca9970d07154b2e5c37587">flowchart TB
+    accTitle: Ackem chat plugin work 三级路由
+    accDescr: 桌面主聊天按意图、最近对话和已启用能力选择三种处理方式。chat 生成内容，plugin 调用实际扩展，work 由 AckemCode 执行并核对回执、产物和验收。这不是串行步骤，分类不代表完成。
+
+    request(["用户请求"])
+    router["Ackem 语义路由&lt;br/&gt;本轮意图 ＋ 最近对话 ＋ 已启用能力"]
+    chat["chat · 对话&lt;br/&gt;解释与内容回应，可用普通聊天工具"]
+    plugin["plugin · 能力调用&lt;br/&gt;核验并使用已启用扩展"]
+    work["work · 任务执行&lt;br/&gt;真实资源调查、修改与交付&lt;br/&gt;只读检查、创建或修改插件也走这里"]
+    chat_reply["内容回应&lt;br/&gt;正文 · 解释 · 方案"]
+    extension_runtime["扩展运行时&lt;br/&gt;实际调用，取得回执"]
+    kernel[["AckemCode 通用智能体内核&lt;br/&gt;文件 · 命令 · 网络 · 文档"]]
+    delivery(["Ackem 核对结果并交付&lt;br/&gt;回复结论应与真实执行状态一致"])
+
+    request --&gt; router
+    router --&gt;|"直接回应"| chat
+    router --&gt;|"现有能力"| plugin
+    router --&gt;|"真实资源"| work
+    chat --&gt; chat_reply
+    plugin --&gt; extension_runtime
+    work --&gt; kernel
+    chat_reply --&gt;|"正文结果"| delivery
+    extension_runtime --&gt;|"扩展回执"| delivery
+    kernel --&gt;|"回执 · 产物 · 验收"| delivery
+
+    classDef neutral fill:#f3f4f6,stroke:#6b7280,stroke-width:1.4px,color:#1f2937
+    classDef primary fill:#dbeafe,stroke:#2563eb,stroke-width:1.6px,color:#1e3a5f
+    classDef accent fill:#ede9fe,stroke:#7c3aed,stroke-width:1.6px,color:#3b0764
+    classDef success fill:#dcfce7,stroke:#16a34a,stroke-width:1.6px,color:#14532d
+    class request neutral
+    class router,chat,plugin,work,chat_reply,extension_runtime primary
+    class kernel accent
+    class delivery success</metadata><defs><marker id="arrow" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#7488a2"/></marker></defs><g font-family="Segoe UI, Microsoft YaHei, PingFang SC, sans-serif"><rect x="1" y="1" width="1198" height="1058" rx="28" fill="#f8fafc" stroke="#dbe4ef"/>
+<text x="48" y="38" font-size="13" font-weight="600" fill="#52657e" text-anchor="start">ACKEM  /  ARCHITECTURE</text>
+<text x="48" y="85" font-size="32" font-weight="650" fill="#15243a" text-anchor="start">chat / plugin / work 三级路由</text>
+<text x="48" y="119" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">Ackem 理解请求，选择内容回应、扩展调用或真实任务执行。</text>
+<path d="M600 202 V246" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M600 334 V360 H218 V400" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M600 334 V400" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M600 334 V360 H982 V400" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M218 608 V688" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M218 802 V890" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M600 608 V688" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M600 802 V890" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M982 608 V688" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M982 802 V890" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<rect x="440" y="150" width="320" height="52" rx="17" fill="#ffffff" stroke="#dbe4ef" stroke-width="1.2"/>
+<text x="600" y="183" font-size="22" font-weight="600" fill="#15243a" text-anchor="middle">用户请求</text>
+<rect x="48" y="246" width="1104" height="88" rx="17" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+<text x="72" y="283" font-size="23" font-weight="600" fill="#15243a" text-anchor="start">Ackem 语义路由</text>
+<text x="72" y="314" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">本轮意图 ＋ 最近对话 ＋ 已启用能力</text>
+<rect x="172" y="363" width="92" height="27" rx="13.5" fill="#f8fafc"/>
+<text x="218" y="382" font-size="16" font-weight="500" fill="#52657e" text-anchor="middle">直接回应</text>
+<rect x="554" y="363" width="92" height="27" rx="13.5" fill="#f8fafc"/>
+<text x="600" y="382" font-size="16" font-weight="500" fill="#52657e" text-anchor="middle">现有能力</text>
+<rect x="936" y="363" width="92" height="27" rx="13.5" fill="#f8fafc"/>
+<text x="982" y="382" font-size="16" font-weight="500" fill="#52657e" text-anchor="middle">真实资源</text>
+<rect x="48" y="400" width="340" height="208" rx="17" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+<text x="72" y="427" font-size="13" font-weight="650" fill="#2563eb" text-anchor="start">CHAT  /  对话</text>
+<text x="72" y="461" font-size="25" font-weight="650" fill="#15243a" text-anchor="start">chat</text>
+<text x="72" y="495" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">对话 · 解释 · 内容回应</text>
+<text x="72" y="522" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">例：给我一份整理方案</text>
+<text x="72" y="549" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">可使用普通聊天工具</text>
+<rect x="430" y="400" width="340" height="208" rx="17" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+<text x="454" y="427" font-size="13" font-weight="650" fill="#2563eb" text-anchor="start">PLUGIN  /  能力调用</text>
+<text x="454" y="461" font-size="25" font-weight="650" fill="#15243a" text-anchor="start">plugin</text>
+<text x="454" y="495" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">调用已启用扩展</text>
+<text x="454" y="522" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">先核验目标，再实际调用</text>
+<text x="454" y="549" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">例：使用现有插件处理内容</text>
+<rect x="812" y="400" width="340" height="208" rx="17" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+<text x="836" y="427" font-size="13" font-weight="650" fill="#2563eb" text-anchor="start">WORK  /  任务执行</text>
+<text x="836" y="461" font-size="25" font-weight="650" fill="#15243a" text-anchor="start">work</text>
+<text x="836" y="495" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">调查 · 修改 · 产物交付</text>
+<text x="836" y="522" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">只读检查也属于工作</text>
+<text x="836" y="549" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">创建／修改插件也走这里</text>
+<rect x="48" y="688" width="340" height="114" rx="17" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+<text x="72" y="725" font-size="23" font-weight="600" fill="#15243a" text-anchor="start">内容回应</text>
+<text x="72" y="756" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">正文 · 解释 · 方案</text>
+<rect x="430" y="688" width="340" height="114" rx="17" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+<text x="454" y="725" font-size="23" font-weight="600" fill="#15243a" text-anchor="start">扩展运行时</text>
+<text x="454" y="756" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">调用可用能力，取得回执</text>
+<rect x="812" y="688" width="340" height="114" rx="17" fill="#f4f0ff" stroke="#7c3aed" stroke-width="1.5"/>
+<text x="836" y="725" font-size="23" font-weight="600" fill="#15243a" text-anchor="start">AckemCode</text>
+<text x="836" y="756" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">通用智能体执行内核</text>
+<text x="836" y="782" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">文件 · 命令 · 网络 · 文档</text>
+<rect x="172" y="837" width="92" height="27" rx="13.5" fill="#f8fafc"/>
+<text x="218" y="856" font-size="16" font-weight="500" fill="#52657e" text-anchor="middle">正文结果</text>
+<rect x="554" y="837" width="92" height="27" rx="13.5" fill="#f8fafc"/>
+<text x="600" y="856" font-size="16" font-weight="500" fill="#52657e" text-anchor="middle">扩展回执</text>
+<rect x="893.5" y="837" width="177" height="27" rx="13.5" fill="#f8fafc"/>
+<text x="982" y="856" font-size="16" font-weight="500" fill="#52657e" text-anchor="middle">回执 · 产物 · 验收</text>
+<rect x="48" y="890" width="1104" height="82" rx="17" fill="#edfbf4" stroke="#15815d" stroke-width="1.5"/>
+<text x="72" y="927" font-size="23" font-weight="600" fill="#15243a" text-anchor="start">Ackem 核对结果并交付</text>
+<text x="72" y="958" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">回复中的结论应与真实结果、执行状态一致。</text>
+<text x="600" y="1009" font-size="16" font-weight="500" fill="#52657e" text-anchor="middle">三种处理方式，不是串行步骤；路由选择 ≠ 执行完成。</text>
+<text x="600" y="1040" font-size="14" font-weight="400" fill="#52657e" text-anchor="middle">桌面主聊天视角；独立工作与 QQ／微信桥接另有入口。</text>
+</g></svg>

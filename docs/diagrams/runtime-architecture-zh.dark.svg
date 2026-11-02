@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="970" viewBox="0 0 1200 970" role="img" aria-labelledby="title desc"><title id="title">三个执行入口，一个共享内核</title><desc id="desc">桌面托管、独立工作与渠道桥接，各自保留生命周期。</desc><metadata data-source="docs/diagrams/sources/runtime-architecture-zh.mmd" data-source-sha256="ef2f40d87c80123e40a9d6c04fbe437fa20850ea07140cd4d33b6d0518bbbda9">flowchart TB
+    accTitle: Ackem 运行时与进程边界
+    accDescr: 桌面托管、独立工作和渠道桥接通过不同宿主入口连接同一内核，数据存储与执行分别管理。
+
+    desktop_ui["桌面界面&lt;br/&gt;Electron · React"]
+    channel_input["QQ / 微信"]
+    ackem_host["Ackem 主进程&lt;br/&gt;上下文与路由"]
+    managed_tasks["托管任务&lt;br/&gt;契约 · 监督 · 验收"]
+    extension_runtime["已启用扩展&lt;br/&gt;Skill · Plugin"]
+    independent_work["独立工作&lt;br/&gt;私有会话与队列"]
+    channel_bridge["渠道代码桥接&lt;br/&gt;机主与远程授权"]
+    kernel_service[["AckemCode 服务&lt;br/&gt;智能体循环与工具"]]
+    app_storage[("Ackem 数据&lt;br/&gt;记忆 · 历史 · 任务状态")]
+    real_resources["真实资源&lt;br/&gt;文件 · 终端 · 外部服务"]
+
+    desktop_ui --&gt;|"IPC"| ackem_host
+    desktop_ui --&gt;|"IPC"| independent_work
+    channel_input --&gt; channel_bridge
+    ackem_host --&gt;|"work"| managed_tasks
+    ackem_host --&gt;|"plugin"| extension_runtime
+    ackem_host -.-&gt; app_storage
+    managed_tasks &lt;--&gt;|"HTTP / SSE"| kernel_service
+    independent_work --&gt; kernel_service
+    channel_bridge --&gt; kernel_service
+    kernel_service --&gt; real_resources
+
+    classDef neutral fill:#f3f4f6,stroke:#6b7280,stroke-width:1.4px,color:#1f2937
+    classDef primary fill:#dbeafe,stroke:#2563eb,stroke-width:1.6px,color:#1e3a5f
+    classDef accent fill:#ede9fe,stroke:#7c3aed,stroke-width:1.6px,color:#3b0764
+    classDef success fill:#dcfce7,stroke:#16a34a,stroke-width:1.6px,color:#14532d
+    class desktop_ui,channel_input,app_storage neutral
+    class ackem_host,managed_tasks,extension_runtime,independent_work,channel_bridge primary
+    class kernel_service accent
+    class real_resources success</metadata><defs><marker id="arrow" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#8299b6"/></marker></defs><g font-family="Segoe UI, Microsoft YaHei, PingFang SC, sans-serif"><rect x="1" y="1" width="1198" height="968" rx="28" fill="#0b1220" stroke="#30425c"/>
+<text x="48" y="38" font-size="13" font-weight="600" fill="#b6c6da" text-anchor="start">ACKEM  /  ARCHITECTURE</text>
+<text x="48" y="85" font-size="32" font-weight="650" fill="#edf4ff" text-anchor="start">三个执行入口，一个共享内核</text>
+<text x="48" y="119" font-size="18" font-weight="400" fill="#b6c6da" text-anchor="start">桌面托管、独立工作与渠道桥接，各自保留生命周期。</text>
+<rect x="28" y="253" width="1144" height="305" rx="22" fill="none" stroke="#30425c" stroke-dasharray="6 6"/>
+<path d="M218 225 V310" fill="none" stroke="#8299b6" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M600 225 V310" fill="none" stroke="#8299b6" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M982 225 V310" fill="none" stroke="#8299b6" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M218 410 V460" fill="none" stroke="#8299b6" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M600 410 V460" fill="none" stroke="#8299b6" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M982 410 V460" fill="none" stroke="#8299b6" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M218 550 V620" fill="none" stroke="#8299b6" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M600 550 V620" fill="none" stroke="#8299b6" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M982 550 V620" fill="none" stroke="#8299b6" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M600 708 V758" fill="none" stroke="#8299b6" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<rect x="40" y="264" width="345" height="27" rx="8" fill="#0b1220"/>
+<text x="48" y="282" font-size="13" font-weight="650" fill="#b6c6da" text-anchor="start">ACKEM 宿主层  /  ELECTRON 主进程</text>
+<rect x="48" y="165" width="340" height="60" rx="17" fill="#111d30" stroke="#30425c" stroke-width="1.2"/>
+<text x="218" y="202" font-size="22" font-weight="600" fill="#edf4ff" text-anchor="middle">桌面主聊天</text>
+<rect x="430" y="165" width="340" height="60" rx="17" fill="#111d30" stroke="#30425c" stroke-width="1.2"/>
+<text x="600" y="202" font-size="22" font-weight="600" fill="#edf4ff" text-anchor="middle">独立工作</text>
+<rect x="812" y="165" width="340" height="60" rx="17" fill="#111d30" stroke="#30425c" stroke-width="1.2"/>
+<text x="982" y="202" font-size="22" font-weight="600" fill="#edf4ff" text-anchor="middle">QQ / 微信</text>
+<rect x="48" y="310" width="340" height="100" rx="17" fill="#142c4b" stroke="#83b0ff" stroke-width="1.5"/>
+<text x="72" y="347" font-size="23" font-weight="600" fill="#edf4ff" text-anchor="start">Ackem 理解与路由</text>
+<text x="72" y="378" font-size="18" font-weight="400" fill="#b6c6da" text-anchor="start">chat / plugin / work</text>
+<rect x="430" y="310" width="340" height="100" rx="17" fill="#142c4b" stroke="#83b0ff" stroke-width="1.5"/>
+<text x="454" y="347" font-size="23" font-weight="600" fill="#edf4ff" text-anchor="start">私有会话与输入队列</text>
+<text x="454" y="378" font-size="18" font-weight="400" fill="#b6c6da" text-anchor="start">由用户直接控制</text>
+<rect x="812" y="310" width="340" height="100" rx="17" fill="#142c4b" stroke="#83b0ff" stroke-width="1.5"/>
+<text x="836" y="347" font-size="23" font-weight="600" fill="#edf4ff" text-anchor="start">机主确认与远程开关</text>
+<text x="836" y="378" font-size="18" font-weight="400" fill="#b6c6da" text-anchor="start">核对渠道授权</text>
+<rect x="48" y="460" width="340" height="90" rx="17" fill="#142c4b" stroke="#83b0ff" stroke-width="1.5"/>
+<text x="72" y="497" font-size="23" font-weight="600" fill="#edf4ff" text-anchor="start">TaskCoordinator</text>
+<text x="72" y="528" font-size="18" font-weight="400" fill="#b6c6da" text-anchor="start">契约 · 监督 · 验收</text>
+<rect x="430" y="460" width="340" height="90" rx="17" fill="#142c4b" stroke="#83b0ff" stroke-width="1.5"/>
+<text x="454" y="497" font-size="23" font-weight="600" fill="#edf4ff" text-anchor="start">独立执行适配</text>
+<text x="454" y="528" font-size="18" font-weight="400" fill="#b6c6da" text-anchor="start">独立于托管监督链</text>
+<rect x="812" y="460" width="340" height="90" rx="17" fill="#142c4b" stroke="#83b0ff" stroke-width="1.5"/>
+<text x="836" y="497" font-size="23" font-weight="600" fill="#edf4ff" text-anchor="start">渠道代码适配</text>
+<text x="836" y="528" font-size="18" font-weight="400" fill="#b6c6da" text-anchor="start">命中代码请求后派工</text>
+<rect x="189" y="424" width="58" height="27" rx="13.5" fill="#0b1220"/>
+<text x="218" y="443" font-size="16" font-weight="500" fill="#b6c6da" text-anchor="middle">work</text>
+<rect x="545.5" y="573" width="109" height="27" rx="13.5" fill="#0b1220"/>
+<text x="600" y="592" font-size="16" font-weight="500" fill="#b6c6da" text-anchor="middle">HTTP / SSE</text>
+<rect x="48" y="620" width="1104" height="88" rx="17" fill="#2b2247" stroke="#baa4ff" stroke-width="1.5"/>
+<text x="72" y="657" font-size="23" font-weight="600" fill="#edf4ff" text-anchor="start">共享 AckemCode 服务</text>
+<text x="72" y="688" font-size="18" font-weight="400" fill="#b6c6da" text-anchor="start">智能体循环 · 会话 · 权限 · 工具</text>
+<rect x="48" y="758" width="1104" height="64" rx="17" fill="#12382e" stroke="#79d9b2" stroke-width="1.5"/>
+<text x="600" y="797" font-size="22" font-weight="600" fill="#edf4ff" text-anchor="middle">真实资源  /  文件 · 命令 · 外部服务</text>
+<text x="48" y="853" font-size="13" font-weight="650" fill="#b6c6da" text-anchor="start">存储边界分别管理</text>
+<rect x="48" y="874" width="532" height="58" rx="17" fill="#111d30" stroke="#30425c" stroke-width="1.2"/>
+<text x="314" y="910" font-size="22" font-weight="600" fill="#edf4ff" text-anchor="middle">Ackem：记忆 · 历史 · 任务状态</text>
+<rect x="620" y="874" width="532" height="58" rx="17" fill="#111d30" stroke="#30425c" stroke-width="1.2"/>
+<text x="886" y="910" font-size="22" font-weight="600" fill="#edf4ff" text-anchor="middle">内核数据与选定工作目录</text>
+</g></svg>

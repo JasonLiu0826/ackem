@@ -1,0 +1,173 @@
+> 历史归档（六类收敛前）：保留当时说明，仅供追溯；当前入口见[文档导航](../../../README.md)。
+
+# 成人模式与安全策略
+
+> **语言：** 中文 · [English](adult-and-safety-policy.md)
+
+> **读者**：用户、平台审核、贡献者  
+> **对应代码**：`engine/interpreter.ts`、`engine/types.ts`、`prompt/adult-mode.ts`、schema V10 `privacy_level`
+
+## 与任务执行的边界
+
+本页描述陪伴内容与成人模式，不授予文件、终端、外部服务或持续执行权限。执行授权见[任务生命周期](developer/architecture/09-routing-and-tasks.zh.md)与[敏感能力](sensitive-capabilities.zh.md)。
+
+
+---
+
+## 1. 概述
+
+Ackem 提供可选的 **成人模式（Adult Mode）**，默认关闭。开启后，伴侣可以在对话中涉及成人话题。该模式旨在为 **成年人**（18 岁以上）提供自然的亲密关系体验，同时包含多重安全机制。
+
+---
+
+## 2. 成人模式开关
+
+| 项目 | 说明 |
+|------|------|
+| 默认状态 | **关闭** |
+| 开启方式 | **设置 → 成人模式**，需用户主动确认 |
+| 关闭方式 | 随时在设置中关闭，或通过对话指令拒绝 |
+| 未成年用户 | Ackem **不适用于** 未成年人，成人模式不应被未成年人开启 |
+
+### 开启确认
+
+首次开启成人模式时，应用会显示确认对话框，提示用户：
+- 确认已年满 18 岁
+- 理解开启后对话可能包含成人内容
+- 知晓可随时关闭
+
+---
+
+## 3. 成人内容分类
+
+L0 解释器（`interpreter.ts`）将用户输入中的成人内容分为四级：
+
+| 分类 | 标签 | 示例 |
+|------|------|------|
+| 调情 | `adult_flirt` | 轻度性暗示、挑逗语气 |
+| 支配 | `adult_dominant` | 性语境下的指令/掌控 |
+| 臣服 | `adult_submissive` | 性语境下的服从/请求 |
+| 露骨 | `adult_explicit` | 明确的性行为表达 |
+
+这些分类影响伴侣的回应策略和情绪模型更新。
+
+---
+
+## 4. 安全机制
+
+### 4.1 信任门槛
+
+成人内容检测仅在 **信任度（trust）达标** 后才会触发。低信任度下即使开启成人模式，露骨内容也会被忽略或温和拒绝。
+
+### 4.2 强度预算
+
+```
+adultIntensityBudget: 0-60
+```
+
+每轮成人互动会消耗预算，预算耗尽后需自然恢复。防止单次对话中成人内容过度密集。
+
+### 4.3 状态机
+
+```mermaid
+stateDiagram-v2
+    accTitle: 陪伴内容状态循环
+    accDescr: 内容策略状态从日常到调情、亲密和事后关怀后回到日常，不代表工具权限。
+    direction LR
+    state "NORMAL" as Normal
+    state "FLIRTING" as Flirting
+    state "INTIMATE" as Intimate
+    state "AFTERCARE" as Aftercare
+    Normal --> Flirting
+    Flirting --> Intimate
+    Intimate --> Aftercare
+    Aftercare --> Normal
+    classDef neutral fill:#f3f4f6,stroke:#6b7280,stroke-width:1.4px,color:#1f2937
+    classDef primary fill:#dbeafe,stroke:#2563eb,stroke-width:1.6px,color:#1e3a5f
+    classDef accent fill:#ede9fe,stroke:#7c3aed,stroke-width:1.6px,color:#3b0764
+    class Normal neutral
+    class Flirting,Aftercare primary
+    class Intimate accent
+```
+
+状态跃迁受信任度、历史互动和用户情绪共同约束。不可跳跃阶段。
+
+### 4.4 负面事件锁
+
+```
+adultNegativeLockTurns
+```
+
+若用户对成人互动表现出抗拒（拒绝、无视、负面情绪），系统进入冷却期，期间不再发起或响应成人内容。
+
+### 4.5 拒绝尊重
+
+```
+adultLastRejectedTurn
+```
+
+用户在对话中明确拒绝亲密推进后，系统记录该轮次，后续不会重复尝试。
+
+---
+
+## 5. 隐私级别（privacy_level）
+
+**引入版本**：V10  
+**对应字段**：`memory_facts.privacy_level`
+
+| 级别 | 默认注入 | 备注 |
+|------|----------|------|
+| `normal` | ✅ | 常规记忆，始终可注入 |
+| `intimate` | ⚠️ 仅成人模式 | 亲密内容，成人模式关闭时跳过 |
+| `explicit` | ❌ 需显式确认 | 露骨内容，始终不自动注入（保留用于检索） |
+
+这是 **代码强制** 的安全边界 —— 即使记忆被检索到，若隐私级别不满足条件，也不会进入 tierB 上下文。
+
+---
+
+## 6. 硬禁区（Hard Restrictions）
+
+以下内容在任何模式下均 **零容忍**，检测到即触发熔断：
+
+| 类别 | 行为 |
+|------|------|
+| CSAM（儿童性虐待素材） | 任何涉及未成年人的性暗示/性内容立即熔断 |
+| 非自愿暴力 | 鼓吹、美化或指导暴力行为 |
+| 非法活动指导 | 详细的违法操作指引 |
+
+Ackem 不假装能完美检测所有违规内容。用户有责任合法使用本软件。
+
+---
+
+## 7. 模型侧政策
+
+Ackem 不控制 LLM 自身的内容安全策略：
+
+| 情况 | 结果 |
+|------|------|
+| LLM 拒绝成人内容 | Ackem 尊重模型回复，不重试/改写 |
+| LLM 返回空/拒绝 | 显示模型返回的原始拒绝信息 |
+| 用户配置的模型无安全限制 | Ackem 信任用户自选的 LLM 端点 |
+
+用户自备 LLM 意味着内容安全最终取决于用户选择的模型。
+
+---
+
+## 8. 未成年人声明
+
+Ackem **不面向未成年人**，也不设计为未成年人使用的产品：
+
+- 默认关闭成人模式
+- 不收集年龄信息（隐私优先）
+- 家长应自行判断是否允许未成年人使用
+
+---
+
+## 9. 相关文档
+
+| 文档 | 内容 |
+|------|------|
+| [sensitive-capabilities.zh.md](sensitive-capabilities.zh.md) | 敏感能力清单 |
+| [privacy-and-data.zh.md](privacy-and-data.zh.md) | 数据处理说明 |
+| [ai-context-and-retrieval-policy.zh.md](ai-context-and-retrieval-policy.zh.md) | 记忆注入策略 |
+| [architecture/07-data-layer.zh.md](developer/architecture/07-data-layer.zh.md) | V10 字段定义 |

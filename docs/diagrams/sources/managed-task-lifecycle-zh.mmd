@@ -1,0 +1,30 @@
+flowchart TB
+    accTitle: 托管任务执行与验收
+    accDescr: 持久契约约束执行，回执进入验收；需要返工时返回内核，验收后的结果进入交付。
+
+    task_request(["用户目标或补充"])
+    task_contract["TaskCoordinator<br/>目标与契约"]
+    task_repository[("TaskRepository<br/>修订 · 授权 · 队列")]
+    kernel_execution[["AckemCode<br/>按当前授权执行"]]
+    execution_receipt["工具结果与回执"]
+    acceptance_review{"满足当前目标？"}
+    delivery_outbox["通知 Outbox<br/>去重与发布"]
+    final_delivery(["结果交付"])
+
+    task_request --> task_contract
+    task_contract --> task_repository
+    task_repository --> kernel_execution
+    kernel_execution --> execution_receipt
+    execution_receipt --> acceptance_review
+    acceptance_review -->|"返工"| kernel_execution
+    acceptance_review -->|"通过"| delivery_outbox
+    delivery_outbox --> final_delivery
+
+    classDef neutral fill:#f3f4f6,stroke:#6b7280,stroke-width:1.4px,color:#1f2937
+    classDef primary fill:#dbeafe,stroke:#2563eb,stroke-width:1.6px,color:#1e3a5f
+    classDef accent fill:#ede9fe,stroke:#7c3aed,stroke-width:1.6px,color:#3b0764
+    classDef success fill:#dcfce7,stroke:#16a34a,stroke-width:1.6px,color:#14532d
+    class task_request neutral
+    class task_contract,task_repository,acceptance_review primary
+    class kernel_execution,execution_receipt accent
+    class delivery_outbox,final_delivery success

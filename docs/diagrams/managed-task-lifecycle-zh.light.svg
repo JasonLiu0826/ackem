@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="790" viewBox="0 0 1200 790" role="img" aria-labelledby="title desc"><title id="title">从目标到结果的任务闭环</title><desc id="desc">执行、验收与交付分别记录，返工始终围绕当前目标。</desc><metadata data-source="docs/diagrams/sources/managed-task-lifecycle-zh.mmd" data-source-sha256="d109fb447a92f9f7e95f33abe299cd5084feba96fd3556f991fdcc19ac00f0e4">flowchart TB
+    accTitle: 托管任务执行与验收
+    accDescr: 持久契约约束执行，回执进入验收；需要返工时返回内核，验收后的结果进入交付。
+
+    task_request(["用户目标或补充"])
+    task_contract["TaskCoordinator&lt;br/&gt;目标与契约"]
+    task_repository[("TaskRepository&lt;br/&gt;修订 · 授权 · 队列")]
+    kernel_execution[["AckemCode&lt;br/&gt;按当前授权执行"]]
+    execution_receipt["工具结果与回执"]
+    acceptance_review{"满足当前目标？"}
+    delivery_outbox["通知 Outbox&lt;br/&gt;去重与发布"]
+    final_delivery(["结果交付"])
+
+    task_request --&gt; task_contract
+    task_contract --&gt; task_repository
+    task_repository --&gt; kernel_execution
+    kernel_execution --&gt; execution_receipt
+    execution_receipt --&gt; acceptance_review
+    acceptance_review --&gt;|"返工"| kernel_execution
+    acceptance_review --&gt;|"通过"| delivery_outbox
+    delivery_outbox --&gt; final_delivery
+
+    classDef neutral fill:#f3f4f6,stroke:#6b7280,stroke-width:1.4px,color:#1f2937
+    classDef primary fill:#dbeafe,stroke:#2563eb,stroke-width:1.6px,color:#1e3a5f
+    classDef accent fill:#ede9fe,stroke:#7c3aed,stroke-width:1.6px,color:#3b0764
+    classDef success fill:#dcfce7,stroke:#16a34a,stroke-width:1.6px,color:#14532d
+    class task_request neutral
+    class task_contract,task_repository,acceptance_review primary
+    class kernel_execution,execution_receipt accent
+    class delivery_outbox,final_delivery success</metadata><defs><marker id="arrow" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#7488a2"/></marker></defs><g font-family="Segoe UI, Microsoft YaHei, PingFang SC, sans-serif"><rect x="1" y="1" width="1198" height="788" rx="28" fill="#f8fafc" stroke="#dbe4ef"/>
+<text x="48" y="38" font-size="13" font-weight="600" fill="#52657e" text-anchor="start">ACKEM  /  ARCHITECTURE</text>
+<text x="48" y="85" font-size="32" font-weight="650" fill="#15243a" text-anchor="start">从目标到结果的任务闭环</text>
+<text x="48" y="119" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">执行、验收与交付分别记录，返工始终围绕当前目标。</text>
+<path d="M600 206 V237 H218 V280" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M388 330 H430" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M770 330 H812" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M982 380 V470" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M812 520 H770" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M430 520 H388" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M218 570 V656" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M600 470 V426 H795 V355 H812" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)" stroke-dasharray="6 6"/>
+<rect x="48" y="154" width="1104" height="52" rx="17" fill="#ffffff" stroke="#dbe4ef" stroke-width="1.2"/>
+<text x="600" y="187" font-size="22" font-weight="600" fill="#15243a" text-anchor="middle">用户目标或目标补充</text>
+<text x="48" y="264" font-size="13" font-weight="650" fill="#52657e" text-anchor="start">01  接收、持久化与执行</text>
+<rect x="48" y="280" width="340" height="100" rx="17" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+<text x="72" y="317" font-size="23" font-weight="600" fill="#15243a" text-anchor="start">TaskCoordinator</text>
+<text x="72" y="348" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">目标与工作契约</text>
+<rect x="430" y="280" width="340" height="100" rx="17" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+<text x="454" y="317" font-size="23" font-weight="600" fill="#15243a" text-anchor="start">TaskRepository</text>
+<text x="454" y="348" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">修订 · 授权 · 队列</text>
+<rect x="812" y="280" width="340" height="100" rx="17" fill="#f4f0ff" stroke="#7c3aed" stroke-width="1.5"/>
+<text x="836" y="317" font-size="23" font-weight="600" fill="#15243a" text-anchor="start">AckemCode</text>
+<text x="836" y="348" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">按当前授权执行</text>
+<text x="48" y="453" font-size="13" font-weight="650" fill="#52657e" text-anchor="start">02  核对与交付</text>
+<rect x="812" y="470" width="340" height="100" rx="17" fill="#f4f0ff" stroke="#7c3aed" stroke-width="1.5"/>
+<text x="836" y="507" font-size="23" font-weight="600" fill="#15243a" text-anchor="start">执行回执</text>
+<text x="836" y="538" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">工具结果与产物</text>
+<rect x="430" y="470" width="340" height="100" rx="17" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+<text x="454" y="507" font-size="23" font-weight="600" fill="#15243a" text-anchor="start">监督与验收</text>
+<text x="454" y="538" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">核对当前目标与证据</text>
+<rect x="48" y="470" width="340" height="100" rx="17" fill="#edfbf4" stroke="#15815d" stroke-width="1.5"/>
+<text x="72" y="507" font-size="23" font-weight="600" fill="#15243a" text-anchor="start">通知 Outbox</text>
+<text x="72" y="538" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">去重与发布</text>
+<rect x="644.5" y="408" width="109" height="27" rx="13.5" fill="#f8fafc"/>
+<text x="699" y="427" font-size="16" font-weight="500" fill="#52657e" text-anchor="middle">需要时返工</text>
+<text x="409" y="507" font-size="13" font-weight="500" fill="#52657e" text-anchor="middle">通过</text>
+<rect x="48" y="656" width="1104" height="64" rx="17" fill="#edfbf4" stroke="#15815d" stroke-width="1.5"/>
+<text x="600" y="695" font-size="22" font-weight="600" fill="#15243a" text-anchor="middle">验收后的结果交付给用户</text>
+<text x="600" y="758" font-size="16" font-weight="400" fill="#52657e" text-anchor="middle">执行 · 验收 · 交付 —— 分别记录的三个阶段</text>
+</g></svg>

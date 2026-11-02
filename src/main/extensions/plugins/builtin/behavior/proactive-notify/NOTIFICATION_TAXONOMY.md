@@ -33,23 +33,34 @@
 
 ## 决策树：确定时序层级
 
-```
-这条通知需要用户怎么样？
-  │
-  ├─ 必须现在就知道（安全/危机/情绪崩溃）？
-  │   └─→ T0 即刻（Immediate）
-  │
-  ├─ 到了特定时间必须发（用户设定/系统约定）？
-  │   └─→ T1 时机（Timely）
-  │
-  ├─ 用户应该知道但不急（身体提醒/重要变化）？
-  │   └─→ T2 信号（Signal）
-  │
-  ├─ 她想跟用户说话（闲聊/回忆/关心）？
-  │   └─→ T3 社交（Social）
-  │
-  └─ 后台做完了，用户回来再看？
-      └─→ T4 后台（Background）
+```mermaid
+flowchart TB
+    accTitle: 通知时序层级的判断
+    accDescr: 按紧急性、指定时机和社交目的分类，避免把后台完成消息当成紧急通知。
+
+    notification(["需要发送什么通知？"])
+    timing{"时序与目的判断"}
+    immediate["T0 · 即刻<br/>必须现在知道"]
+    timely["T1 · 时机<br/>到指定时间发送"]
+    signal["T2 · 信号<br/>重要但不紧急"]
+    social["T3 · 社交<br/>闲聊 · 回忆 · 关心"]
+    background["T4 · 后台<br/>回来后查看"]
+
+    notification --> timing
+    timing -->|"紧急"| immediate
+    timing -->|"定时"| timely
+    timing -->|"提醒"| signal
+    timing -->|"交流"| social
+    timing -->|"后台"| background
+
+    classDef neutral fill:#f3f4f6,stroke:#6b7280,stroke-width:1.4px,color:#1f2937
+    classDef primary fill:#dbeafe,stroke:#2563eb,stroke-width:1.6px,color:#1e3a5f
+    classDef warning fill:#fef9c3,stroke:#ca8a04,stroke-width:1.6px,color:#713f12
+    classDef accent fill:#ede9fe,stroke:#7c3aed,stroke-width:1.6px,color:#3b0764
+    class notification,background neutral
+    class timing,timely,signal primary
+    class immediate warning
+    class social accent
 ```
 
 ---

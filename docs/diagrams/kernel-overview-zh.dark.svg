@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="960" viewBox="0 0 1200 960" role="img" aria-labelledby="title desc"><title id="title">AckemCode 通用智能体内核</title><desc id="desc">同一套会话、循环与工具，承接不同任务入口。</desc><metadata data-source="docs/diagrams/sources/kernel-overview-zh.mmd" data-source-sha256="e41b391acb953a104bb52be62acc24bfabd7d42a51d0bb7460ff498d9ed39701">flowchart TB
+    accTitle: AckemCode 通用智能体内核
+    accDescr: 托管工作、独立会话和 CLI 使用同一智能体内核；实际工具执行由权限、会话与回执边界管理。
+
+    host_entry["Ackem 托管工作"]
+    standalone_entry["独立工作 / CLI / Web"]
+    kernel_session["会话与上下文&lt;br/&gt;目标 · 历史 · 模型"]
+    agent_loop[["智能体循环&lt;br/&gt;计划 · 行动 · 核对"]]
+    permissions["权限与交互"]
+    local_tools["本机工具&lt;br/&gt;文件 · 命令 · 文档"]
+    external_tools["外部集成&lt;br/&gt;网页 · MCP · LSP · 技能"]
+    kernel_receipts["事件 · 回执 · 产物"]
+    host_acceptance["宿主验收与交付"]
+
+    host_entry --&gt; kernel_session
+    standalone_entry --&gt; kernel_session
+    kernel_session --&gt; agent_loop
+    agent_loop --&gt; permissions
+    permissions --&gt; local_tools
+    permissions --&gt; external_tools
+    local_tools --&gt; kernel_receipts
+    external_tools --&gt; kernel_receipts
+    kernel_receipts -.-&gt;|"按需继续"| agent_loop
+    kernel_receipts --&gt; host_acceptance
+
+    classDef primary fill:#dbeafe,stroke:#2563eb,stroke-width:1.6px,color:#1e3a5f
+    classDef neutral fill:#f3f4f6,stroke:#6b7280,stroke-width:1.4px,color:#1f2937
+    classDef accent fill:#ede9fe,stroke:#7c3aed,stroke-width:1.6px,color:#3b0764
+    classDef success fill:#dcfce7,stroke:#16a34a,stroke-width:1.6px,color:#14532d
+    class host_entry,local_tools,external_tools primary
+    class standalone_entry neutral
+    class kernel_session,agent_loop,permissions accent
+    class kernel_receipts,host_acceptance success</metadata><defs><marker id="arrow" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#8299b6"/></marker></defs><g font-family="Segoe UI, Microsoft YaHei, PingFang SC, sans-serif"><rect x="1" y="1" width="1198" height="958" rx="28" fill="#0b1220" stroke="#30425c"/>
+<text x="48" y="38" font-size="13" font-weight="600" fill="#b6c6da" text-anchor="start">ACKEM  /  ARCHITECTURE</text>
+<text x="48" y="85" font-size="32" font-weight="650" fill="#edf4ff" text-anchor="start">AckemCode 通用智能体内核</text>
+<text x="48" y="119" font-size="18" font-weight="400" fill="#b6c6da" text-anchor="start">同一套会话、循环与工具，承接不同任务入口。</text>
+<path d="M314 222 V253 H600 V280" fill="none" stroke="#8299b6" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M886 222 V253 H600 V280" fill="none" stroke="#8299b6" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M600 358 V382 H490 V405" fill="none" stroke="#8299b6" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M740 460 H800" fill="none" stroke="#8299b6" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M976 515 V550 H314 V590" fill="none" stroke="#8299b6" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M976 515 V550 H886 V590" fill="none" stroke="#8299b6" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M314 690 V720 H600 V750" fill="none" stroke="#8299b6" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M886 690 V720 H600 V750" fill="none" stroke="#8299b6" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M600 828 V870" fill="none" stroke="#8299b6" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M240 789 H24 V460 H240" fill="none" stroke="#8299b6" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)" stroke-dasharray="6 6"/>
+<rect x="48" y="154" width="532" height="68" rx="17" fill="#142c4b" stroke="#83b0ff" stroke-width="1.5"/>
+<text x="314" y="195" font-size="22" font-weight="600" fill="#edf4ff" text-anchor="middle">Ackem 托管工作</text>
+<rect x="620" y="154" width="532" height="68" rx="17" fill="#111d30" stroke="#30425c" stroke-width="1.2"/>
+<text x="886" y="195" font-size="22" font-weight="600" fill="#edf4ff" text-anchor="middle">独立工作 / CLI / Web</text>
+<rect x="240" y="280" width="720" height="78" rx="17" fill="#2b2247" stroke="#baa4ff" stroke-width="1.5"/>
+<text x="264" y="317" font-size="23" font-weight="600" fill="#edf4ff" text-anchor="start">会话与上下文</text>
+<text x="264" y="348" font-size="18" font-weight="400" fill="#b6c6da" text-anchor="start">目标 · 历史 · 模型</text>
+<rect x="240" y="405" width="500" height="110" rx="17" fill="#2b2247" stroke="#baa4ff" stroke-width="1.5"/>
+<text x="264" y="442" font-size="23" font-weight="600" fill="#edf4ff" text-anchor="start">智能体循环</text>
+<text x="264" y="473" font-size="18" font-weight="400" fill="#b6c6da" text-anchor="start">计划 · 行动 · 核对</text>
+<rect x="800" y="405" width="352" height="110" rx="17" fill="#142c4b" stroke="#83b0ff" stroke-width="1.5"/>
+<text x="824" y="442" font-size="23" font-weight="600" fill="#edf4ff" text-anchor="start">权限与交互</text>
+<text x="824" y="473" font-size="18" font-weight="400" fill="#b6c6da" text-anchor="start">审批与用户输入</text>
+<rect x="48" y="590" width="532" height="100" rx="17" fill="#142c4b" stroke="#83b0ff" stroke-width="1.5"/>
+<text x="72" y="627" font-size="23" font-weight="600" fill="#edf4ff" text-anchor="start">本机工具</text>
+<text x="72" y="658" font-size="18" font-weight="400" fill="#b6c6da" text-anchor="start">文件 · 命令 · 文档</text>
+<rect x="620" y="590" width="532" height="100" rx="17" fill="#142c4b" stroke="#83b0ff" stroke-width="1.5"/>
+<text x="644" y="627" font-size="23" font-weight="600" fill="#edf4ff" text-anchor="start">外部集成</text>
+<text x="644" y="658" font-size="18" font-weight="400" fill="#b6c6da" text-anchor="start">网页 · MCP · LSP · 技能</text>
+<rect x="240" y="750" width="720" height="78" rx="17" fill="#12382e" stroke="#79d9b2" stroke-width="1.5"/>
+<text x="264" y="787" font-size="23" font-weight="600" fill="#edf4ff" text-anchor="start">事件、回执与产物</text>
+<text x="264" y="818" font-size="18" font-weight="400" fill="#b6c6da" text-anchor="start">真实执行证据</text>
+<rect x="86" y="771" width="92" height="27" rx="13.5" fill="#0b1220"/>
+<text x="132" y="790" font-size="16" font-weight="500" fill="#b6c6da" text-anchor="middle">按需继续</text>
+<rect x="48" y="870" width="1104" height="58" rx="17" fill="#12382e" stroke="#79d9b2" stroke-width="1.5"/>
+<text x="600" y="906" font-size="22" font-weight="600" fill="#edf4ff" text-anchor="middle">宿主验收与交付</text>
+</g></svg>

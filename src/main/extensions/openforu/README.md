@@ -1,5 +1,10 @@
 # openforu — 用户自创扩展
 
+## 当前主线与兼容流程
+
+主聊天使用 chat / plugin / work；创建或修改插件走 work / AckemCode。下文 Plan 部署、Worker 与 Surface 属于 OpenForU 自身和兼容流程，不代表所有请求都走 Plan。生成产物仍需安装、授权和验证。
+
+
 > **让每个用户都能创造属于自己的 Skill 和 Plugin**
 
 ## 这是什么？
@@ -70,4 +75,4 @@ openforu **100% 沿用**现有 plugins 和 skills 的接口协议：
 5. 确认部署 → 扩展到 `data/openforu/uskills/<id>/` 或 `uplugins/<id>/`
 6. 启用后立即生效
 
-详见 [OpenForU 用户扩展协议](./PROTOCOL.md)（§4.4 权限 · §4.5 Surface invoke · §4.6 Verify smoke）· [Jarvis 演进 JE-1b](../../../../docs/mainDocs/openforu-jarvis演进路线_5_30开发接续.md) · [L1 进度](../../../../docs/mainDocs/实现现状与路线图_5_30更新.md) §阶段十三。
+详见 [OpenForU 用户扩展协议](PROTOCOL.md)（§4.4 权限 · §4.5 Surface invoke · §4.6 Verify smoke）· [当前路由与任务](../../../../docs/architecture.zh.md#任务生命周期) · [扩展接口](../../../../docs/development.zh.md#扩展开发)。

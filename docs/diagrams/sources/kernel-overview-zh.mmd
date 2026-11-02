@@ -1,0 +1,33 @@
+flowchart TB
+    accTitle: AckemCode 通用智能体内核
+    accDescr: 托管工作、独立会话和 CLI 使用同一智能体内核；实际工具执行由权限、会话与回执边界管理。
+
+    host_entry["Ackem 托管工作"]
+    standalone_entry["独立工作 / CLI / Web"]
+    kernel_session["会话与上下文<br/>目标 · 历史 · 模型"]
+    agent_loop[["智能体循环<br/>计划 · 行动 · 核对"]]
+    permissions["权限与交互"]
+    local_tools["本机工具<br/>文件 · 命令 · 文档"]
+    external_tools["外部集成<br/>网页 · MCP · LSP · 技能"]
+    kernel_receipts["事件 · 回执 · 产物"]
+    host_acceptance["宿主验收与交付"]
+
+    host_entry --> kernel_session
+    standalone_entry --> kernel_session
+    kernel_session --> agent_loop
+    agent_loop --> permissions
+    permissions --> local_tools
+    permissions --> external_tools
+    local_tools --> kernel_receipts
+    external_tools --> kernel_receipts
+    kernel_receipts -.->|"按需继续"| agent_loop
+    kernel_receipts --> host_acceptance
+
+    classDef primary fill:#dbeafe,stroke:#2563eb,stroke-width:1.6px,color:#1e3a5f
+    classDef neutral fill:#f3f4f6,stroke:#6b7280,stroke-width:1.4px,color:#1f2937
+    classDef accent fill:#ede9fe,stroke:#7c3aed,stroke-width:1.6px,color:#3b0764
+    classDef success fill:#dcfce7,stroke:#16a34a,stroke-width:1.6px,color:#14532d
+    class host_entry,local_tools,external_tools primary
+    class standalone_entry neutral
+    class kernel_session,agent_loop,permissions accent
+    class kernel_receipts,host_acceptance success

@@ -1,6 +1,6 @@
 # Changelog
 
-本文件记录 **Ackem v1.0.0** 及后续用户可见变更。v2.0.0 起为**社区桌面客户端版本**（本仓库，在原作 v1.0.0 基础上继续开发），上游官方 Release 见 [JasonLiu0826/Ackem Releases](https://github.com/JasonLiu0826/Ackem/releases)。
+本文件记录 Ackem 的版本历史与待发布变更。当前主仓库为 [JasonLiu0826/ackem](https://github.com/JasonLiu0826/ackem)，发行包见 [Releases](https://github.com/JasonLiu0826/ackem/releases)。历史条目保留对应版本的功能和分支背景，当前架构请读 [README](README.md)。
 
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
@@ -10,6 +10,8 @@
 
 ### Changed
 
+- 统一文档图表的层次、配色、连线与无障碍说明；重绘字符流程图，核心总览提供中英文、深浅色 SVG，并保留可编辑 Mermaid 源图及生成校验脚本。
+- 更新中英文 README、架构导航、渠道、数据、权限和开发文档，说明 chat / plugin / work 三级路由、托管任务生命周期，以及 AckemCode 通用智能体内核；区分桌面、独立工作与渠道桥接的实际入口。
 - 删除旧电脑助手：移除聊天模式、设置页、IPC、`use_computer` 工具、平台执行器、本机地图、调查和旧任务计划。桌面本机任务统一走 work / AckemCode。
 - 将普通聊天工具执行和聊天忙碌状态迁出旧助手目录，保留记忆、搜索、扩展和任务交付能力。
 - 设置 → 工作执行保留 QQ / 微信机主的远程派工开关与权限选择；兼容已有远程授权，后续保存自动清除旧助手设置。
@@ -126,7 +128,7 @@
 ### Security
 
 - 发行包不含用户 `data/`、API Key、`.env`
-- 见 [SECURITY.md](./SECURITY.md)
+- 见 [SECURITY.md](SECURITY.md)
 
 ---
 

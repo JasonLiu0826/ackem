@@ -73,11 +73,32 @@ Surface 窗口内另有窄 API：`ackem.extension.getContext()` · `close()`（`
 
 ## 调度接入
 
-```
-routeDispatch
-  → auto_invoke（无 Surface）→ executeDispatchedExtension → injectTemplate / hooks
-  → invoke_surface（有 Surface）→ executeSurfaceInvoke → BrowserWindow + 可选 inject
-  → open_surface（「打开 XX」）→ executeOpenExtensionSurface
+```mermaid
+flowchart TB
+    accTitle: 用户插件的三种执行形式
+    accDescr: 自动调用、Surface 调用与仅打开窗口使用不同适配，按实际结果反馈。
+
+    route_dispatch["routeDispatch"]
+    injection["auto_invoke<br/>模板注入或 Hooks"]
+    surface["invoke_surface<br/>窗口与可选注入"]
+    worker["open_surface<br/>仅打开窗口"]
+    feedback["结果与状态反馈"]
+
+    route_dispatch --> injection
+    route_dispatch --> surface
+    route_dispatch --> worker
+    injection --> feedback
+    surface --> feedback
+    worker --> feedback
+
+    classDef neutral fill:#f3f4f6,stroke:#6b7280,stroke-width:1.4px,color:#1f2937
+    classDef primary fill:#dbeafe,stroke:#2563eb,stroke-width:1.6px,color:#1e3a5f
+    classDef accent fill:#ede9fe,stroke:#7c3aed,stroke-width:1.6px,color:#3b0764
+    classDef success fill:#dcfce7,stroke:#16a34a,stroke-width:1.6px,color:#14532d
+    class route_dispatch neutral
+    class injection,surface primary
+    class worker accent
+    class feedback success
 ```
 
 扩展中心：`openforu:surface:open` 手动开 Surface 窗口。

@@ -1,10 +1,10 @@
 # Contributors
 
-> **中文：** [CONTRIBUTORS.zh.md](./CONTRIBUTORS.zh.md)
+> **中文：** [CONTRIBUTORS.zh.md](CONTRIBUTORS.zh.md)
 
 Ackem is maintained by [Jason Liu (JasonLiu0826)](https://github.com/JasonLiu0826).  
 Everyone listed below has contributed in ways recognized by the maintainer (code, docs, community builds, or significant Issue/PR work).  
-Submitting a merged PR or an accepted community release implies agreement with [CLA.md](./CLA.md) unless noted otherwise.
+Submitting a merged PR or an accepted community release implies agreement with [CLA.md](CLA.md) unless noted otherwise.
 
 ---
 
@@ -19,8 +19,8 @@ Submitting a merged PR or an accepted community release implies agreement with [
 ## How to be listed
 
 1. **Code / docs** — open a PR; your Git log attribution is permanent after merge.  
-2. **Platform builds (macOS / Android, etc.)** — follow [contributor-templates.zh.md](./docs/contributor-templates.zh.md); after maintainer verification, you may be added here and linked from [Releases](https://github.com/JasonLiu0826/ackem/releases).  
-3. **Security** — see [SECURITY.md](./SECURITY.md) for responsible disclosure (hall of fame TBD).
+2. **Platform builds (macOS / Android, etc.)** — follow [contribution guide](CONTRIBUTING.md); after maintainer verification, you may be added here and linked from [Releases](https://github.com/JasonLiu0826/ackem/releases).
+3. **Security** — see [SECURITY.md](SECURITY.md) for responsible disclosure (hall of fame TBD).
 
 ---
 

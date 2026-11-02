@@ -13,12 +13,13 @@ import {
   statSync,
   writeFileSync,
 } from 'node:fs'
-import { join, dirname, relative } from 'node:path'
+import { join, dirname, relative, resolve, sep } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const releaseRoot = join(root, 'dist', 'release')
 const legacyDocArchive = join(releaseRoot, 'doc')
+const appVersion = JSON.parse(readFileSync(join(root, 'package.json'), 'utf-8')).version
 
 const ROOT_FILES = [
   'LICENSE',
@@ -29,16 +30,10 @@ const ROOT_FILES = [
   'SECURITY.zh.md',
   'CONTRIBUTING.md',
   'CONTRIBUTING.zh.md',
+  'CONTRIBUTORS.md',
+  'CONTRIBUTORS.zh.md',
   'CODE_OF_CONDUCT.md',
   'CODE_OF_CONDUCT.zh.md',
-]
-
-const DIST_MAINTAINER = [
-  '开源文档索引.md',
-  'GitHub仓库信息.md',
-  '应用内合规文本.md',
-  'README-许可证区块.md',
-  '协议修订说明.md',
 ]
 
 const SOURCE_PROTOCOLS = [
@@ -56,19 +51,19 @@ const GITHUB_FILES = [
 
 const GREEN_README_ZH_HEADER = `# Ackem
 
-**Ackem v1.0.0** — 运行在你 Windows 电脑上的 AI 伴侣应用（本文件夹为便携绿色版）。
+**Ackem v${appVersion}** — 本地优先的 AI 伙伴与任务协调应用，使用 AckemCode 通用智能体内核（本文件夹为便携绿色版）。
 
 > **用法**：双击 \`Ackem.exe\` 或 \`启动 Ackem.bat\`；详见 [START.txt](./START.txt)  
 > **个人数据**：首次运行后在 **exe 同级的 \`data/\`** 生成（勿随 zip 分享你的 data 文件夹）  
 > **文档索引**：[docs/INDEX.md](./docs/INDEX.md) · 源码仓库：[JasonLiu0826/Ackem](https://github.com/JasonLiu0826/Ackem)
 
-English: [README.en.md](./README.en.md) · 用户文档：[docs/privacy-and-data.zh.md](./docs/privacy-and-data.zh.md)
+English: [README.en.md](./README.en.md) · 用户文档：[使用指南](./docs/usage.zh.md)
 
 `
 
 const GREEN_README_EN_HEADER = `# Ackem
 
-**Ackem v1.0.0** — A local-first AI companion for Windows (portable green build in this folder).
+**Ackem v${appVersion}** — A local-first AI companion and task coordinator using the AckemCode general-purpose agent kernel (portable build).
 
 > **Run**: double-click \`Ackem.exe\` or \`启动 Ackem.bat\`; see [START.txt](./START.txt)  
 > **Your data**: created on first run in \`data/\` next to the exe (never share your \`data/\` folder in a zip)  
@@ -141,46 +136,48 @@ function adaptReadmeForGreen(srcPath, header, dropUntilSection = '## 项目介�
       /English README: \[README\.md\]\(\.\/README\.md\)[^\n]*\n/,
       ''
     )
-    .replace(/\.\/README\.md/g, './README.en.md')
+    .replace(/^# [^\n]*\r?\n+/, '')
   return header + body
 }
 
 function fixMarkdownLinksInTree(baseDir) {
-  const docsDir = join(baseDir, 'docs')
+  const copies = new Map([
+    ...SOURCE_PROTOCOLS.map(([source, destination]) => ['docs/' + destination, source]),
+    ...GITHUB_FILES.map(([source, destination]) => ['docs/' + destination, source]),
+    ['README.md', 'README.md'],
+    ['README.en.md', 'README.en.md'],
+  ])
+  const destinations = new Map([...copies].map(([destination, source]) => [resolve(root, source), destination]))
   for (const rel of listMdFiles(baseDir)) {
     const abs = join(baseDir, rel)
     let text = readFileSync(abs, 'utf-8')
-    const inDocs = rel.startsWith('docs/') || rel.startsWith('docs\\')
-
-    if (inDocs) {
-      text = text.replace(/\]\(\.\/docs\/([^)]+)\)/g, '](./$1)')
-      text = text.replace(
-        /\[\.\.\/dist\/开源文档索引\.md\]\(\.\/maintainer\/开源文档索引\.md\)/g,
-        '[./maintainer/开源文档索引.md](./maintainer/开源文档索引.md)'
-      )
-      text = text.replace(
-        /\*\*绿色版\*\*：`dist\/release\/Ackem-[^`]+`/g,
-        '**绿色版**：本文件夹（便携版根目录）'
-      )
-      text = text.replace(
-        /\*\*源码仓库根\*\*：`Ackem-v0\.0\.0\/`（GitHub: JasonLiu0826\/Ackem）/g,
-        '**源码仓库**：[JasonLiu0826/Ackem](https://github.com/JasonLiu0826/Ackem)'
-      )
+    // These files are generated for the release rather than copied from source.
+    if (rel === 'START.txt' || rel === 'docs/INDEX.md' || rel.startsWith('docs/maintainer/')) continue
+    const source = resolve(root, copies.get(rel) ?? rel)
+    const rewrite = (href) => {
+      if (/^(?:[a-z][a-z0-9+.-]*:|#|\/\/)/i.test(href)) return href
+      const [, pathname, suffix] = href.match(/^([^#?]*)(.*)$/)
+      if (!pathname) return href
+      const target = resolve(dirname(source), decodeURIComponent(pathname))
+      const fromRoot = relative(root, target).replace(/\\/g, '/')
+      if (fromRoot.startsWith('../')) return href
+      const destination = destinations.get(target) ?? fromRoot
+      const packaged = resolve(baseDir, destination)
+      if (existsSync(packaged)) return relative(dirname(abs), packaged).replace(/\\/g, '/') + suffix
+      return 'https://github.com/JasonLiu0826/ackem/' + (existsSync(target) && statSync(target).isDirectory() ? 'tree/' : 'blob/') + 'main/' + fromRoot.split('/').map(encodeURIComponent).join('/') + suffix
     }
-
-    if (rel === 'docs/developer/extensions-README.md') {
-      text = text.replace(
-        /\]\(\.\.\/\.\.\/docs\/developer\//g,
-        '](./'
-      )
-    }
-
+    // Do not rewrite illustrative paths inside fenced code blocks.
+    text = text.split(/(^```[^\n]*\r?\n[\s\S]*?^```[^\n]*(?:\r?\n|$))/gm)
+      .map((part, index) => index % 2 ? part : part
+        .replace(/(!?\[[^\]\n]*\]\()([^)]*)(\))/g, (_, before, href, after) => before + rewrite(href) + after)
+        .replace(/(<img\b[^>]*\bsrc=")([^"]+)(")/g, (_, before, href, after) => before + rewrite(href) + after))
+      .join('')
     writeFileSync(abs, text, 'utf-8')
   }
 }
 
 function writeStartTxt(greenDir) {
-  const txt = `Ackem 1.0.0 — 便携绿色版
+  const txt = `Ackem ${appVersion} — 便携绿色版
 
 用法：
   1. 将整个文件夹放在任意位置（建议 SSD，勿放同步盘根目录）
@@ -211,57 +208,24 @@ function writeDocsIndex(greenDir, fileCount) {
   const today = new Date().toISOString().slice(0, 10)
   const index = `# Ackem 文档索引
 
-> **版本**：Ackem v1.0.0 · **更新**：${today}  
-> 本目录随绿色版分发；修改请至 [GitHub 源码仓库](https://github.com/JasonLiu0826/Ackem) 后重新打包。
+> **版本**：Ackem v${appVersion} · **更新**：${today}
 
----
+当前文档按六类阅读；模块旁的说明与角色语料按需查阅。
 
-## 快速入口（用户）
+| 类别 | 文档 |
+|---|---|
+| README | [项目与快速开始](../README.md) · [English](../README.en.md) |
+| 使用指南 | [中文](./usage.zh.md) · [English](./usage.md) |
+| 架构说明 | [中文](./architecture.zh.md) · [English](./architecture.md) |
+| 开发指南 | [中文](./development.zh.md) · [English](./development.md) |
+| 模块参考 | [中文](./modules.zh.md) · [English](./modules.md) |
+| 记忆、性格情绪与时间引擎 | [中文](./companion-engines.zh.md) · [English](./companion-engines.md) |
 
-| 文档 | 说明 |
-|------|------|
-| [privacy-and-data.zh.md](./privacy-and-data.zh.md) | 隐私与数据落盘 |
-| [distribution-windows.zh.md](./distribution-windows.zh.md) | Windows 绿色版说明 |
-| [memory-format.zh.md](./memory-format.zh.md) | \`data/\` 目录结构 |
-| [local-models-windows.zh.md](./local-models-windows.zh.md) | 本地 embedding 模型 |
-| [adult-and-safety-policy.zh.md](./adult-and-safety-policy.zh.md) | 安全与 18+ 策略 |
-| [sensitive-capabilities.zh.md](./sensitive-capabilities.zh.md) | 高敏能力说明 |
-| [perception-layer.zh.md](./perception-layer.zh.md) | 感知层权限 |
+[文档导航](./README.md) · [图表](./diagrams/README.md) · [贡献](../CONTRIBUTING.zh.md)
 
-English: [privacy-and-data.md](./privacy-and-data.md) · [distribution-windows.md](./distribution-windows.md)
+历史文档与本地设计、审计记录不随包分发。需要追溯时查看[仓库归档](https://github.com/JasonLiu0826/ackem/tree/main/docs/%E6%97%A7%E6%96%87%E6%A1%A3)。
 
----
-
-## 开发者 / 贡献者
-
-| 文档 | 说明 |
-|------|------|
-| [OPEN-SOURCE-DOC-MAP.md](./OPEN-SOURCE-DOC-MAP.md) | 文档总地图（维护者） |
-| [developer/dev-setup.md](./developer/dev-setup.md) | 开发环境 |
-| [developer/DEVELOPER-EXTENSION-PROTOCOL.md](./developer/DEVELOPER-EXTENSION-PROTOCOL.md) | 扩展协议 |
-| [developer/extensions-README.md](./developer/extensions-README.md) | 扩展系统指南 |
-| [developer/openforu-PROTOCOL.md](./developer/openforu-PROTOCOL.md) | OpenForU 协议 |
-| [developer/architecture/](./developer/architecture/) | 六系统架构（10 篇） |
-| [github/](./github/) | Issue/PR 模板与 CI 参考 |
-
-仓库根目录还有 CONTRIBUTING、SECURITY、CLA — 见绿色版文件夹根目录。
-
----
-
-## 维护者参考（随包附带）
-
-| 文档 | 说明 |
-|------|------|
-| [maintainer/开源文档索引.md](./maintainer/开源文档索引.md) | dist 层协议索引 |
-| [maintainer/GitHub仓库信息.md](./maintainer/GitHub仓库信息.md) | 推送 GitHub 清单 |
-| [maintainer/应用内合规文本.md](./maintainer/应用内合规文本.md) | 应用内展示文案 |
-| [maintainer/协议修订说明.md](./maintainer/协议修订说明.md) | 协议修订记录 |
-
----
-
-## 全部文件（${fileCount}）
-
-运行 \`npm run sync:release-doc\` 可从此仓库重新生成本目录。
+本次同步 ${fileCount} 份文档和协议文件；用户无需逐份阅读。
 `
   writeFileSync(join(greenDir, 'docs', 'INDEX.md'), index, 'utf-8')
 }
@@ -289,18 +253,17 @@ export function syncGreenReleaseDocs(greenDir) {
 
   const docsDest = join(target, 'docs')
   if (existsSync(docsDest)) rmSync(docsDest, { recursive: true, force: true })
-  cpSync(join(root, 'docs'), docsDest, { recursive: true })
+  const sourceDocs = join(root, 'docs')
+  cpSync(sourceDocs, docsDest, {
+    recursive: true,
+    filter: (source) => {
+      const rel = relative(sourceDocs, source).split(sep).join('/')
+      return rel !== '旧文档' && !rel.startsWith('旧文档/')
+    },
+  })
 
   for (const [src, dest] of SOURCE_PROTOCOLS) {
     copyFile(src, join(docsDest, dest))
-  }
-
-  const maintainerDir = join(docsDest, 'maintainer')
-  mkdirSync(maintainerDir, { recursive: true })
-  for (const f of DIST_MAINTAINER) {
-    const src = join(root, 'dist', f)
-    if (existsSync(src)) cpSync(src, join(maintainerDir, f))
-    else console.warn('skip maintainer (missing):', f)
   }
 
   const githubDir = join(docsDest, 'github')
@@ -322,17 +285,17 @@ export function syncGreenReleaseDocs(greenDir) {
   const agpl = ensureAgplFile()
   cpSync(agpl, join(target, 'LICENSE-AGPL-3.0.txt'))
 
-  if (existsSync(join(root, 'README.zh.md'))) {
+  if (existsSync(join(root, 'README.md'))) {
     writeFileSync(
       join(target, 'README.md'),
-      adaptReadmeForGreen(join(root, 'README.zh.md'), GREEN_README_ZH_HEADER),
+      adaptReadmeForGreen(join(root, 'README.md'), GREEN_README_ZH_HEADER),
       'utf-8'
     )
   }
-  if (existsSync(join(root, 'README.md'))) {
+  if (existsSync(join(root, 'README.en.md'))) {
     writeFileSync(
       join(target, 'README.en.md'),
-      adaptReadmeForGreen(join(root, 'README.md'), GREEN_README_EN_HEADER, '## What is Ackem?'),
+      adaptReadmeForGreen(join(root, 'README.en.md'), GREEN_README_EN_HEADER, '## What is Ackem?'),
       'utf-8'
     )
   }
@@ -341,8 +304,8 @@ export function syncGreenReleaseDocs(greenDir) {
   fixMarkdownLinksInTree(target)
 
   const files = listMdFiles(target).filter((f) => !f.includes('resources/'))
-  writeDocsIndex(target, files.length)
-  console.log('Synced', files.length, 'doc files into green folder')
+  writeDocsIndex(target, files.length + 1)
+  console.log('Synced', files.length + 1, 'doc files into green folder')
   return target
 }
 

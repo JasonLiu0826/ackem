@@ -22,6 +22,6 @@ OpenForU uskill 空白模板。**复制到 `data/openforu/uskills/<slug>/` 使�
 
 ## 例题
 
-[`../examples/hello-world/`](../examples/hello-world/) — 问候语 Skill，含完整 dispatch。
+[`../examples/hello-world/`](../examples/hello-world) — 问候语 Skill，含完整 dispatch。
 
 Plan 部署实样：`data/openforu/uskills/pomodoro/`。

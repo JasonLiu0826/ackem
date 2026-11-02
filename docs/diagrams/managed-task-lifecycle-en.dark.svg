@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="790" viewBox="0 0 1200 790" role="img" aria-labelledby="title desc"><title id="title">From a goal to an accepted result</title><desc id="desc">Execution, acceptance and delivery are recorded separately.</desc><metadata data-source="docs/diagrams/sources/managed-task-lifecycle-en.mmd" data-source-sha256="f6c6a4cece5946ae1f3290514bff9ebe2fc7cb1c9678bbd4c0ea808f4daf84b8">flowchart TB
+    accTitle: Managed Task Execution And Acceptance
+    accDescr: A durable contract governs execution. Receipts feed acceptance; rework returns to the kernel and accepted results enter delivery.
+
+    task_request(["User goal or amendment"])
+    task_contract["TaskCoordinator&lt;br/&gt;Goal and contract"]
+    task_repository[("TaskRepository&lt;br/&gt;Revisions · authority · queue")]
+    kernel_execution[["AckemCode&lt;br/&gt;Execute under current authority"]]
+    execution_receipt["Tool results and receipts"]
+    acceptance_review{"Meets the current goal?"}
+    delivery_outbox["Notification outbox&lt;br/&gt;Deduplicate and publish"]
+    final_delivery(["Result delivered"])
+
+    task_request --&gt; task_contract
+    task_contract --&gt; task_repository
+    task_repository --&gt; kernel_execution
+    kernel_execution --&gt; execution_receipt
+    execution_receipt --&gt; acceptance_review
+    acceptance_review --&gt;|"Rework"| kernel_execution
+    acceptance_review --&gt;|"Accepted"| delivery_outbox
+    delivery_outbox --&gt; final_delivery
+
+    classDef neutral fill:#f3f4f6,stroke:#6b7280,stroke-width:1.4px,color:#1f2937
+    classDef primary fill:#dbeafe,stroke:#2563eb,stroke-width:1.6px,color:#1e3a5f
+    classDef accent fill:#ede9fe,stroke:#7c3aed,stroke-width:1.6px,color:#3b0764
+    classDef success fill:#dcfce7,stroke:#16a34a,stroke-width:1.6px,color:#14532d
+    class task_request neutral
+    class task_contract,task_repository,acceptance_review primary
+    class kernel_execution,execution_receipt accent
+    class delivery_outbox,final_delivery success</metadata><defs><marker id="arrow" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#8299b6"/></marker></defs><g font-family="Segoe UI, Microsoft YaHei, PingFang SC, sans-serif"><rect x="1" y="1" width="1198" height="788" rx="28" fill="#0b1220" stroke="#30425c"/>
+<text x="48" y="38" font-size="13" font-weight="600" fill="#b6c6da" text-anchor="start">ACKEM  /  ARCHITECTURE</text>
+<text x="48" y="85" font-size="32" font-weight="650" fill="#edf4ff" text-anchor="start">From a goal to an accepted result</text>
+<text x="48" y="119" font-size="18" font-weight="400" fill="#b6c6da" text-anchor="start">Execution, acceptance and delivery are recorded separately.</text>
+<path d="M600 206 V237 H218 V280" fill="none" stroke="#8299b6" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M388 330 H430" fill="none" stroke="#8299b6" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M770 330 H812" fill="none" stroke="#8299b6" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M982 380 V470" fill="none" stroke="#8299b6" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M812 520 H770" fill="none" stroke="#8299b6" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M430 520 H388" fill="none" stroke="#8299b6" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M218 570 V656" fill="none" stroke="#8299b6" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M600 470 V426 H795 V355 H812" fill="none" stroke="#8299b6" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)" stroke-dasharray="6 6"/>
+<rect x="48" y="154" width="1104" height="52" rx="17" fill="#111d30" stroke="#30425c" stroke-width="1.2"/>
+<text x="600" y="187" font-size="22" font-weight="600" fill="#edf4ff" text-anchor="middle">User goal or goal amendment</text>
+<text x="48" y="264" font-size="13" font-weight="650" fill="#b6c6da" text-anchor="start">01  RECEIVE, PERSIST AND EXECUTE</text>
+<rect x="48" y="280" width="340" height="100" rx="17" fill="#142c4b" stroke="#83b0ff" stroke-width="1.5"/>
+<text x="72" y="317" font-size="23" font-weight="600" fill="#edf4ff" text-anchor="start">TaskCoordinator</text>
+<text x="72" y="348" font-size="18" font-weight="400" fill="#b6c6da" text-anchor="start">Goal and work contract</text>
+<rect x="430" y="280" width="340" height="100" rx="17" fill="#142c4b" stroke="#83b0ff" stroke-width="1.5"/>
+<text x="454" y="317" font-size="23" font-weight="600" fill="#edf4ff" text-anchor="start">TaskRepository</text>
+<text x="454" y="348" font-size="18" font-weight="400" fill="#b6c6da" text-anchor="start">Revisions · authority · queue</text>
+<rect x="812" y="280" width="340" height="100" rx="17" fill="#2b2247" stroke="#baa4ff" stroke-width="1.5"/>
+<text x="836" y="317" font-size="23" font-weight="600" fill="#edf4ff" text-anchor="start">AckemCode</text>
+<text x="836" y="348" font-size="18" font-weight="400" fill="#b6c6da" text-anchor="start">Execute under current authority</text>
+<text x="48" y="453" font-size="13" font-weight="650" fill="#b6c6da" text-anchor="start">02  REVIEW AND DELIVER</text>
+<rect x="812" y="470" width="340" height="100" rx="17" fill="#2b2247" stroke="#baa4ff" stroke-width="1.5"/>
+<text x="836" y="507" font-size="23" font-weight="600" fill="#edf4ff" text-anchor="start">Execution receipts</text>
+<text x="836" y="538" font-size="18" font-weight="400" fill="#b6c6da" text-anchor="start">Tool results and artifacts</text>
+<rect x="430" y="470" width="340" height="100" rx="17" fill="#142c4b" stroke="#83b0ff" stroke-width="1.5"/>
+<text x="454" y="507" font-size="23" font-weight="600" fill="#edf4ff" text-anchor="start">Supervision and acceptance</text>
+<text x="454" y="538" font-size="18" font-weight="400" fill="#b6c6da" text-anchor="start">Check the current goal and evidence</text>
+<rect x="48" y="470" width="340" height="100" rx="17" fill="#12382e" stroke="#79d9b2" stroke-width="1.5"/>
+<text x="72" y="507" font-size="23" font-weight="600" fill="#edf4ff" text-anchor="start">Notification outbox</text>
+<text x="72" y="538" font-size="18" font-weight="400" fill="#b6c6da" text-anchor="start">Deduplicate and publish</text>
+<rect x="619" y="408" width="160" height="27" rx="13.5" fill="#0b1220"/>
+<text x="699" y="427" font-size="16" font-weight="500" fill="#b6c6da" text-anchor="middle">Rework if needed</text>
+<text x="409" y="507" font-size="13" font-weight="500" fill="#b6c6da" text-anchor="middle">Accept</text>
+<rect x="48" y="656" width="1104" height="64" rx="17" fill="#12382e" stroke="#79d9b2" stroke-width="1.5"/>
+<text x="600" y="695" font-size="22" font-weight="600" fill="#edf4ff" text-anchor="middle">Accepted result delivered to the user</text>
+<text x="600" y="758" font-size="16" font-weight="400" fill="#b6c6da" text-anchor="middle">Execution  ·  Acceptance  ·  Delivery — distinct recorded stages</text>
+</g></svg>

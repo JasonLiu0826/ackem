@@ -15,7 +15,7 @@ OpenForU uplugin 空白模板。**复制到 `data/openforu/uplugins/<slug>/` 使
 
 ## 例题
 
-[`../examples/hello-world/`](../examples/hello-world/) — 情绪日志 + `emitEvent` 注入。
+[`../examples/hello-world/`](../examples/hello-world) — 情绪日志 + `emitEvent` 注入。
 
 ## 安全约束
 

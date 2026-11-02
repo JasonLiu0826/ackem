@@ -1,4 +1,4 @@
-# Upload macOS community v3 DMG assets to official Ackem v1.0.0 Release.
+﻿# Upload macOS community v3 DMG assets to official Ackem v1.0.0 Release.
 # Requires: gh auth login (run once: gh auth login -h github.com -p https -w)
 
 $ErrorActionPreference = 'Stop'
@@ -41,11 +41,12 @@ foreach ($a in $Assets) {
   Write-Host "OK $($a.Name) ($([math]::Round((Get-Item $dest).Length/1MB)) MB)"
 }
 
-$BodyFile = Join-Path $PSScriptRoot '..\docs\releases\v1.0.0-release-body-full.md'
+$BodyFile = Join-Path $PSScriptRoot '..\docs\旧文档\公开文档\docs\releases\v1.0.0-release-body-full.md'
 $BodyFile = (Resolve-Path $BodyFile).Path
 
 # Point macOS links at official release after upload
 $body = Get-Content $BodyFile -Raw -Encoding UTF8
+$body = $body -replace '\A> 历史归档[^\r\n]*\r?\n\r?\n', ''
 $body = $body -replace 'https://github.com/deufe/ackem/releases/download/v1.0.0-mac-community-v3/Ackem-1.0.0-mac-arm64.dmg', "https://github.com/JasonLiu0826/ackem/releases/download/$Tag/Ackem-1.0.0-mac-arm64.dmg"
 $body = $body -replace 'https://github.com/deufe/ackem/releases/download/v1.0.0-mac-community-v3/Ackem-1.0.0-mac-x64.dmg', "https://github.com/JasonLiu0826/ackem/releases/download/$Tag/Ackem-1.0.0-mac-x64.dmg"
 $tmpBody = Join-Path $Staging 'release-body.md'

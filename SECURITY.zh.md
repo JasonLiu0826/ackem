@@ -6,6 +6,7 @@
 
 | 版本 | 支持状态 |
 |------|----------|
+| 当前 main 源码（应用版本 2.0.0） | 优先核验 |
 | v1.0.0 | ✅ |
 | v1.0-rc | ✅ |
 | 更早版本 | ❌ |
@@ -43,16 +44,18 @@
 | 记忆/导入（便携模式） | `Ackem.exe` 旁 → `data/` |
 | 记忆（用户目录模式） | `%LOCALAPPDATA%\Ackem\` |
 | 应用设置与 API Key | Electron userData → `ackem-app-settings.json` |
+| AckemCode 会话与模型配置 | 实际内核数据目录，见[模块参考](docs/modules.zh.md#ackemcode) |
+| 工作产物 | 用户选定的工作目录，可能位于应用数据根之外 |
 
-卸载应用 **不会** 将数据上传到任何地方。
+内核模型配置可能保存明文凭据；应用设置的加密不等于内核配置也采用同一机制。云模型、渠道和联网工具的数据出站见[使用指南](docs/usage.zh.md#数据与隐私)。
+
+卸载应用本身不会上传数据，但也不代表内核数据、外部产物和平台消息已被删除。
 
 ## 代码库位置
 
 | 角色 | 路径 |
 |------|------|
-| GitHub 源码 | 仓库根（`Ackem-v0.0.0/`） |
-| Windows 绿色版 | `dist/release/Ackem-1.0.0-win-x64/` |
+| GitHub 源码 | 仓库检出根目录 |
+| Windows 绿色版 | `dist/release/Ackem-<version>-win-x64/` |
 
-详见 [CODEBASE-PATHS.zh.md](./docs/CODEBASE-PATHS.zh.md)。
-
-*Ackem v1.0.0 · 安全策略*
+详见[模块参考](docs/modules.zh.md#源码地图)。报告时提供实际 Release tag 或 commit；源码能力不等同于所有历史安装包。

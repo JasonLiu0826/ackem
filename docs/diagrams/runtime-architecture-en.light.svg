@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="970" viewBox="0 0 1200 970" role="img" aria-labelledby="title desc"><title id="title">Three entry paths, one shared kernel</title><desc id="desc">Managed work, independent sessions and channel dispatch retain distinct lifecycles.</desc><metadata data-source="docs/diagrams/sources/runtime-architecture-en.mmd" data-source-sha256="f372a2b15abfa955dbbd50d4a5122e454dc37d1d674bfd86f1058b76839928ae">flowchart TB
+    accTitle: Ackem Runtime Process Boundaries
+    accDescr: Desktop, independent work and channel adapters connect to the same kernel through different host paths. Storage is separate from execution.
+
+    desktop_ui["Desktop UI&lt;br/&gt;Electron · React"]
+    channel_input["QQ / WeChat"]
+    ackem_host["Ackem main process&lt;br/&gt;Context and routing"]
+    managed_tasks["Managed tasks&lt;br/&gt;Contracts · supervision · acceptance"]
+    extension_runtime["Enabled extensions&lt;br/&gt;Skill · Plugin"]
+    independent_work["Independent work&lt;br/&gt;Private session and queue"]
+    channel_bridge["Channel code bridge&lt;br/&gt;Owner and remote permission"]
+    kernel_service[["AckemCode service&lt;br/&gt;Agent loop and tools"]]
+    app_storage[("Ackem storage&lt;br/&gt;Memory · history · task state")]
+    real_resources["Real resources&lt;br/&gt;Files · terminal · external services"]
+
+    desktop_ui --&gt;|"IPC"| ackem_host
+    desktop_ui --&gt;|"IPC"| independent_work
+    channel_input --&gt; channel_bridge
+    ackem_host --&gt;|"work"| managed_tasks
+    ackem_host --&gt;|"plugin"| extension_runtime
+    ackem_host -.-&gt; app_storage
+    managed_tasks &lt;--&gt;|"HTTP / SSE"| kernel_service
+    independent_work --&gt; kernel_service
+    channel_bridge --&gt; kernel_service
+    kernel_service --&gt; real_resources
+
+    classDef neutral fill:#f3f4f6,stroke:#6b7280,stroke-width:1.4px,color:#1f2937
+    classDef primary fill:#dbeafe,stroke:#2563eb,stroke-width:1.6px,color:#1e3a5f
+    classDef accent fill:#ede9fe,stroke:#7c3aed,stroke-width:1.6px,color:#3b0764
+    classDef success fill:#dcfce7,stroke:#16a34a,stroke-width:1.6px,color:#14532d
+    class desktop_ui,channel_input,app_storage neutral
+    class ackem_host,managed_tasks,extension_runtime,independent_work,channel_bridge primary
+    class kernel_service accent
+    class real_resources success</metadata><defs><marker id="arrow" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#7488a2"/></marker></defs><g font-family="Segoe UI, Microsoft YaHei, PingFang SC, sans-serif"><rect x="1" y="1" width="1198" height="968" rx="28" fill="#f8fafc" stroke="#dbe4ef"/>
+<text x="48" y="38" font-size="13" font-weight="600" fill="#52657e" text-anchor="start">ACKEM  /  ARCHITECTURE</text>
+<text x="48" y="85" font-size="32" font-weight="650" fill="#15243a" text-anchor="start">Three entry paths, one shared kernel</text>
+<text x="48" y="119" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">Managed work, independent sessions and channel dispatch retain distinct lifecycles.</text>
+<rect x="28" y="253" width="1144" height="305" rx="22" fill="none" stroke="#dbe4ef" stroke-dasharray="6 6"/>
+<path d="M218 225 V310" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M600 225 V310" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M982 225 V310" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M218 410 V460" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M600 410 V460" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M982 410 V460" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M218 550 V620" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M600 550 V620" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M982 550 V620" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M600 708 V758" fill="none" stroke="#7488a2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<rect x="40" y="264" width="345" height="27" rx="8" fill="#f8fafc"/>
+<text x="48" y="282" font-size="13" font-weight="650" fill="#52657e" text-anchor="start">ACKEM HOST  /  ELECTRON MAIN PROCESS</text>
+<rect x="48" y="165" width="340" height="60" rx="17" fill="#ffffff" stroke="#dbe4ef" stroke-width="1.2"/>
+<text x="218" y="202" font-size="22" font-weight="600" fill="#15243a" text-anchor="middle">Desktop chat</text>
+<rect x="430" y="165" width="340" height="60" rx="17" fill="#ffffff" stroke="#dbe4ef" stroke-width="1.2"/>
+<text x="600" y="202" font-size="22" font-weight="600" fill="#15243a" text-anchor="middle">Independent work</text>
+<rect x="812" y="165" width="340" height="60" rx="17" fill="#ffffff" stroke="#dbe4ef" stroke-width="1.2"/>
+<text x="982" y="202" font-size="22" font-weight="600" fill="#15243a" text-anchor="middle">QQ / WeChat</text>
+<rect x="48" y="310" width="340" height="100" rx="17" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+<text x="72" y="347" font-size="23" font-weight="600" fill="#15243a" text-anchor="start">Ackem routing</text>
+<text x="72" y="378" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">chat / plugin / work</text>
+<rect x="430" y="310" width="340" height="100" rx="17" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+<text x="454" y="347" font-size="23" font-weight="600" fill="#15243a" text-anchor="start">Private session and queue</text>
+<text x="454" y="378" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">Direct user control</text>
+<rect x="812" y="310" width="340" height="100" rx="17" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+<text x="836" y="347" font-size="23" font-weight="600" fill="#15243a" text-anchor="start">Owner and remote grant</text>
+<text x="836" y="378" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">Check channel authorization</text>
+<rect x="48" y="460" width="340" height="90" rx="17" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+<text x="72" y="497" font-size="23" font-weight="600" fill="#15243a" text-anchor="start">TaskCoordinator</text>
+<text x="72" y="528" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">Contracts · supervision · acceptance</text>
+<rect x="430" y="460" width="340" height="90" rx="17" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+<text x="454" y="497" font-size="23" font-weight="600" fill="#15243a" text-anchor="start">Independent adapter</text>
+<text x="454" y="528" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">Separate from managed supervision</text>
+<rect x="812" y="460" width="340" height="90" rx="17" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+<text x="836" y="497" font-size="23" font-weight="600" fill="#15243a" text-anchor="start">Channel code adapter</text>
+<text x="836" y="528" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">Dispatch matching code requests</text>
+<rect x="189" y="424" width="58" height="27" rx="13.5" fill="#f8fafc"/>
+<text x="218" y="443" font-size="16" font-weight="500" fill="#52657e" text-anchor="middle">work</text>
+<rect x="545.5" y="573" width="109" height="27" rx="13.5" fill="#f8fafc"/>
+<text x="600" y="592" font-size="16" font-weight="500" fill="#52657e" text-anchor="middle">HTTP / SSE</text>
+<rect x="48" y="620" width="1104" height="88" rx="17" fill="#f4f0ff" stroke="#7c3aed" stroke-width="1.5"/>
+<text x="72" y="657" font-size="23" font-weight="600" fill="#15243a" text-anchor="start">Shared AckemCode service</text>
+<text x="72" y="688" font-size="18" font-weight="400" fill="#52657e" text-anchor="start">Agent loop · sessions · permissions · tools</text>
+<rect x="48" y="758" width="1104" height="64" rx="17" fill="#edfbf4" stroke="#15815d" stroke-width="1.5"/>
+<text x="600" y="797" font-size="22" font-weight="600" fill="#15243a" text-anchor="middle">Real resources  /  Files · commands · external services</text>
+<text x="48" y="853" font-size="13" font-weight="650" fill="#52657e" text-anchor="start">SEPARATE STORAGE BOUNDARIES</text>
+<rect x="48" y="874" width="532" height="58" rx="17" fill="#ffffff" stroke="#dbe4ef" stroke-width="1.2"/>
+<text x="314" y="910" font-size="22" font-weight="600" fill="#15243a" text-anchor="middle">Ackem: memory · history · task state</text>
+<rect x="620" y="874" width="532" height="58" rx="17" fill="#ffffff" stroke="#dbe4ef" stroke-width="1.2"/>
+<text x="886" y="910" font-size="22" font-weight="600" fill="#15243a" text-anchor="middle">Kernel data and selected work directories</text>
+</g></svg>

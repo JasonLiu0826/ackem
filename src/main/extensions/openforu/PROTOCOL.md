@@ -3,44 +3,43 @@
 > **读者**：通过 Plan 部署、或手改 `data/openforu/` 下 JSON/代码的用户与贡献者。  
 > **原则**：用户扩展 **100% 复用** 官方 Skill/Plugin manifest + **Dispatch 调度协议**，额外约束 `u/` 前缀与权限上限。
 
+## 当前架构适用范围
+
+本协议描述用户扩展 manifest、加载、权限、部署和 Surface。主聊天为 chat / plugin / work；创建或修改扩展由 work / AckemCode 执行。下文旧 Create → Plan 仅解释内部或兼容入口，不作为主聊天全局路由规范。见[扩展接口](../../../../docs/development.zh.md#扩展开发)。
+
+
 ---
 
-## 一、和「眼睛 + 管家 + 手脚」怎么配合？
+## 一、OpenForU 内部调度与兼容流程
 
 Ackem 扩展调度对标 Jarvis 三层（详见 `docs/mainDocs/对话认知分层_5_28更新.md`）：
 
-```
-用户发消息
-    │
-    ▼
-┌─────────────────────────────────────┐
-│  CTX 状态层（眼睛）                    │  context/runtimeContext.ts
-│  时段、活跃度、生活场景（工作/出游…）      │
-└─────────────────────────────────────┘
-    │
-    ▼
-┌─────────────────────────────────────┐
-│  Dispatch 调度层（手脚入口）            │  dispatchRouter + contextPipeline
-│  从 catalog 里选：要不要调某个扩展？       │
-│  · Create 轨 → OpenForU Plan          │
-│  · Use 轨   → auto_invoke / invoke_surface / open_surface / ask_invoke │
-└─────────────────────────────────────┘
-    │  filterDispatchedCatalogByProfile
-    ▼
-┌─────────────────────────────────────┐
-│  JP 管家层（分寸）                      │  extensions/policy/
-│  用户「记住选择/勿扰」、扩展偏好过滤       │
-└─────────────────────────────────────┘
-    │
-    ▼
-┌─────────────────────────────────────┐
-│  Skill / Plugin 执行（手脚）            │  dispatchExecutor → Skill.execute
-│  uskill：contextInjection 注入 LLM     │  uplugin：beforeUserMessage hooks
-│  uplugin Surface：BrowserWindow + HTML │  （见 §4.5 invoke 协议）
-└─────────────────────────────────────┘
-    │
-    ▼
-  伴侣 LLM 回复（L1–L4 情绪/关系/表达）
+```mermaid
+flowchart TB
+    accTitle: OpenForU 内部调度与执行
+    accDescr: 本图描述 OpenForU 内部及兼容调度；当前主聊天由 chat / plugin / work 决定执行职责。
+
+    user_input["用户请求或事件"]
+    runtime_context["CTX 运行上下文<br/>时段 · 活跃度 · 场景"]
+    dispatch_catalog["扩展调度与目录<br/>现有目标与兼容入口"]
+    preference_policy["偏好与勿扰策略"]
+    skill_plugin["Skill / Plugin 实现<br/>Handler · Hooks · Surface"]
+    extension_feedback["ExtensionEvent<br/>结果与上下文反馈"]
+
+    user_input --> runtime_context
+    runtime_context --> dispatch_catalog
+    dispatch_catalog --> preference_policy
+    preference_policy --> skill_plugin
+    skill_plugin --> extension_feedback
+
+    classDef neutral fill:#f3f4f6,stroke:#6b7280,stroke-width:1.4px,color:#1f2937
+    classDef primary fill:#dbeafe,stroke:#2563eb,stroke-width:1.6px,color:#1e3a5f
+    classDef accent fill:#ede9fe,stroke:#7c3aed,stroke-width:1.6px,color:#3b0764
+    classDef success fill:#dcfce7,stroke:#16a34a,stroke-width:1.6px,color:#14532d
+    class user_input neutral
+    class runtime_context,dispatch_catalog,preference_policy primary
+    class skill_plugin accent
+    class extension_feedback success
 ```
 
 **用户自创扩展要能被这套流程调用，必须满足：**
@@ -56,7 +55,7 @@ Ackem 扩展调度对标 Jarvis 三层（详见 `docs/mainDocs/对话认知分�
 > **v1 现实（2026-06）**：Plan 部署的 **uskill / uplugin 均已走完整 Dispatch 链**；带 UI 的 uplugin 通过 **Extension Surface + invoke_surface** 自动开独立窗口。  
 > **对标文档**：`docs/review/贾维斯对标_5_28.md`（执行层随 Surface 持续补齐）。
 
-### 1.1 主聊天如何进入 Plan（Create 轨）
+### 1.1 兼容 Dispatch 的 Plan 入口（非主聊天总入口）
 
 模块：`dispatch/explicitDispatch.ts` → `routeDispatch` Step 0（**不经** L0 解释层 LLM）。
 
@@ -296,13 +295,32 @@ Surface 配置写在 **`plugin.meta.json`**（与 `injectTemplate` 同级）：
 
 **执行链路**：
 
-```
-/slash 或关键词
-  → dispatchRouter: decision = invoke_surface, surfaceInvoke = { mode, skipMainChatLlm }
-  → contextPipeline: executeSurfaceInvoke()
-      → executeOpenExtensionSurface()   // 读 meta，创建窗口
-      → （open_and_inject 时）beforeUserMessage / injectTemplate
-  → chat.ts: skipMainChatLlm ? 系统确认 : LLM + SURFACE_OPENED_LLM_HINT
+```mermaid
+flowchart TB
+    accTitle: OpenForU Surface 调用流程
+    accDescr: 经 Surface 窗口与可选注入后，返回系统确认或聊天回应。
+
+    invocation["Slash 或关键词请求"]
+    surface_dispatch["invoke_surface 调度"]
+    surface_window["打开或复用 Surface 窗口"]
+    surface_invoke["open_and_inject 时注入"]
+    surface_result["核对窗口与调用状态"]
+    delivery["系统确认或聊天回应"]
+
+    invocation --> surface_dispatch
+    surface_dispatch --> surface_window
+    surface_window --> surface_invoke
+    surface_invoke --> surface_result
+    surface_result --> delivery
+
+    classDef neutral fill:#f3f4f6,stroke:#6b7280,stroke-width:1.4px,color:#1f2937
+    classDef primary fill:#dbeafe,stroke:#2563eb,stroke-width:1.6px,color:#1e3a5f
+    classDef accent fill:#ede9fe,stroke:#7c3aed,stroke-width:1.6px,color:#3b0764
+    classDef success fill:#dcfce7,stroke:#16a34a,stroke-width:1.6px,color:#14532d
+    class invocation neutral
+    class surface_dispatch,surface_window primary
+    class surface_invoke,surface_result accent
+    class delivery success
 ```
 
 **Surface 窗口内 API**（`preload/surfacePreload.ts`，窄 API）：

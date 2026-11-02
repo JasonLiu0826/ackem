@@ -1,0 +1,33 @@
+flowchart TB
+    accTitle: AckemCode General Purpose Agent Kernel
+    accDescr: Host-managed work, independent sessions and CLI use the same agent kernel. Permission and receipt boundaries surround actual tool execution.
+
+    host_entry["Ackem managed work"]
+    standalone_entry["Independent work / CLI / Web"]
+    kernel_session["Session and context<br/>Goal · history · model"]
+    agent_loop[["Agent loop<br/>Plan · act · inspect"]]
+    permissions["Permissions and interaction"]
+    local_tools["Local tools<br/>Files · commands · documents"]
+    external_tools["Integrations<br/>Web · MCP · LSP · skills"]
+    kernel_receipts["Events · receipts · artifacts"]
+    host_acceptance["Host review and delivery"]
+
+    host_entry --> kernel_session
+    standalone_entry --> kernel_session
+    kernel_session --> agent_loop
+    agent_loop --> permissions
+    permissions --> local_tools
+    permissions --> external_tools
+    local_tools --> kernel_receipts
+    external_tools --> kernel_receipts
+    kernel_receipts -.->|"Continue when needed"| agent_loop
+    kernel_receipts --> host_acceptance
+
+    classDef primary fill:#dbeafe,stroke:#2563eb,stroke-width:1.6px,color:#1e3a5f
+    classDef neutral fill:#f3f4f6,stroke:#6b7280,stroke-width:1.4px,color:#1f2937
+    classDef accent fill:#ede9fe,stroke:#7c3aed,stroke-width:1.6px,color:#3b0764
+    classDef success fill:#dcfce7,stroke:#16a34a,stroke-width:1.6px,color:#14532d
+    class host_entry,local_tools,external_tools primary
+    class standalone_entry neutral
+    class kernel_session,agent_loop,permissions accent
+    class kernel_receipts,host_acceptance success
