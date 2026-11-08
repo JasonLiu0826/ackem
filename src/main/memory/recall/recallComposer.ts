@@ -1,6 +1,7 @@
 import { getDatabase } from '../../db/database.js'
 import type { RecallBundle, RecallItem, RecallQuery } from '../contracts.js'
 import {
+  canRecallFact,
   loadActionCandidates,
   loadEpisodeCandidates,
   loadFactCandidates,
@@ -175,9 +176,15 @@ export async function composeRecall(
 
   await attachFactSemanticScores(dataRoot, db, query.text, candidates)
 
-  const currentCandidates = candidates.filter(c => c.source === 'action'
-    ? canReadMemorySources(db, c.evidenceEventIds, query.accessContextRef)
-    : canReadMemoryObject(db, c.source, c.id.slice(c.source.length + 1), c.factSessionId ?? c.episodeSessionId ?? '', query.accessContextRef))
+  const currentCandidates = candidates.filter(candidate => {
+    if (candidate.source === 'action') {
+      return canReadMemorySources(db, candidate.evidenceEventIds, query.accessContextRef)
+    }
+    if (candidate.source === 'fact') {
+      return canRecallFact(db, candidate.id.slice('fact:'.length), query)
+    }
+    return canReadMemoryObject(db, 'episode', candidate.id.slice('episode:'.length), candidate.episodeSessionId ?? '', query.accessContextRef)
+  })
   const tRank = Date.now()
   const { items, filtered } = rankCandidates(currentCandidates, intents, policy, query.sessionId, query)
   const rankMs = Date.now() - tRank

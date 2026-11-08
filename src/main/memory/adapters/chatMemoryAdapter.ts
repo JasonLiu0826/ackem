@@ -590,9 +590,11 @@ function writeFinalized(
   if (deriveContext) {
     writeDeriveContext(db, events, ctx, turnId, deriveContext, observedAt, localDate)
   }
+  // A dispatch acknowledgement or confirmation card can finalize without starting memory extraction.
+  const shouldDerive = Boolean(deriveContext?.l0Event?.type)
   const text = assistantText.trim()
   if (!text) {
-    enqueueDerive(db, jobs, started.meta.eventId, ctx.sessionId, observedAt)
+    if (shouldDerive) enqueueDerive(db, jobs, started.meta.eventId, ctx.sessionId, observedAt)
     return { ok: true, eventIds: [] }
   }
   const eventId = randomUUID()
@@ -628,7 +630,7 @@ function writeFinalized(
   )
   const sourceId = inserted === 'inserted' ? eventId : started.meta.eventId
   const assistant = events.findByIdempotencyKey(`turn.finalized:${turnId}`)
-  enqueueDerive(db, jobs, assistant?.meta.eventId ?? sourceId, ctx.sessionId, observedAt)
+  if (shouldDerive) enqueueDerive(db, jobs, assistant?.meta.eventId ?? sourceId, ctx.sessionId, observedAt)
   if (inserted === 'duplicate') return { ok: true, eventIds: [], duplicate: true }
   return { ok: true, eventIds: [eventId] }
 }

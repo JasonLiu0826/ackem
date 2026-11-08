@@ -41,6 +41,7 @@ import { isPrimaryCompanion, isSocialMember } from '../social/agents/guards'
 import { withAgentContext } from '../social/agents/withAgentContext'
 import { getRegisteredAgent } from '../social/agents/agentRegistry'
 import { channelToInteractionSurface } from '../memory/provenance'
+import { beginChatTurn } from '../chat/turnCoordinator'
 
 const log = createLogger('companion-turn')
 
@@ -131,9 +132,17 @@ async function runCompanionTurnInner(
 ): Promise<CompanionTurnResult> {
   const userText = input.userText
   const sessionId = input.sessionId
+  const surface = input.channel === 'weixin' ? 'weixin' : 'desktop'
+  const { turnId } = beginChatTurn({
+    dataRoot: root,
+    sessionId,
+    userText,
+    surface,
+    timezoneOverride: settings.timezone
+  })
   const social = isSocialMember(targetAgentId, root)
   const interactionSurface = channelToInteractionSurface(
-    input.channel === 'weixin' ? 'weixin' : 'desktop',
+    surface,
     undefined,
     targetAgentId
   )
@@ -184,7 +193,6 @@ async function runCompanionTurnInner(
     lite: input.channel === 'weixin'
   })
 
-  const turnId = randomUUID()
   const prevState = structuredClone(state)
   // 进程刚启动时缓冲区是空的：先用持久化的对话历史把它填回来，
   // 否则重启后前几轮没有素材可抽情节摘要，她会显得"断片"。
@@ -207,7 +215,7 @@ async function runCompanionTurnInner(
         event: pre.event,
         settings,
         skipIngest: shouldSkipTierBIngestForOrigin(pre.trace),
-        surface: input.channel === 'weixin' ? 'weixin' : 'desktop',
+        surface,
         interactionSurface,
         ownerAgentId: targetAgentId
       })
@@ -233,6 +241,7 @@ async function runCompanionTurnInner(
   setPendingTurn(turnId, {
     dataRoot: root,
     sessionId,
+    turnId,
     turnIndex,
     userMsg: userText,
     newState: pre.newState,
@@ -240,7 +249,7 @@ async function runCompanionTurnInner(
     skipIngest: shouldSkipTierBIngestForOrigin(pre.trace),
     trace: pre.trace,
     event: pre.event,
-    surface: input.channel === 'weixin' ? 'weixin' : 'desktop',
+    surface,
     interactionSurface,
     ownerAgentId: targetAgentId,
     activatedAssociationIds: getLastActivatedAssociationIds()

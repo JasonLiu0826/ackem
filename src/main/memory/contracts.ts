@@ -482,6 +482,8 @@ export interface MemoryJobRunner {
 export interface RecallQuery {
   /** Opaque host-issued consumer reference; domain/principal supplied by a model is not authority. */
   accessContextRef?: string
+  /** Host setting for the current reply. Defaults to ordinary-mode visibility. */
+  adultMode?: boolean
   sessionId: string
   text: string
   observedAt: string

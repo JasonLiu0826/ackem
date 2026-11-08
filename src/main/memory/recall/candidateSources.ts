@@ -17,6 +17,8 @@ import { recallTextRelevance } from './recallLexical.js'
 import { resolveActionStatusEvidenceEventIds } from './actionStatusEvidence.js'
 import { loadTombstoneIndex } from '../governance/tombstoneIndex.js'
 import { canReadMemoryObject, canReadMemorySources } from '../accessScope.js'
+import { matchesFactVisibility } from '../retrievalScope.js'
+import { getCurrentAgentId } from '../../social/agents/withAgentContext.js'
 
 export type RecallCandidate = {
   id: string
@@ -194,6 +196,23 @@ function mapFactRow(
   }
 }
 
+function canReadFactRow(db: Database.Database, row: Record<string, unknown>, query: RecallQuery): boolean {
+  return matchesFactVisibility({
+    ownerAgentId: row.owner_agent_id == null ? undefined : String(row.owner_agent_id),
+    interactionSurface: row.interaction_surface == null ? undefined : String(row.interaction_surface),
+    privacyLevel: row.privacy_level == null ? undefined : String(row.privacy_level)
+  }, getCurrentAgentId(), query.adultMode === true) &&
+    canReadMemoryObject(db, 'fact', String(row.id), String(row.source_session_id), query.accessContextRef)
+}
+
+export function canRecallFact(db: Database.Database, factId: string, query: RecallQuery): boolean {
+  const row = db.prepare(`
+    SELECT id, owner_agent_id, interaction_surface, privacy_level, source_session_id
+    FROM memory_facts WHERE id = ?
+  `).get(factId) as Record<string, unknown> | undefined
+  return row != null && canReadFactRow(db, row, query)
+}
+
 export function loadFactCandidates(
   dataRoot: string,
   query: RecallQuery,
@@ -208,7 +227,7 @@ export function loadFactCandidates(
   const rows = database.prepare(`SELECT * FROM memory_facts`).all() as Record<string, unknown>[]
   return rows
     .filter((row) => !tombstones.facts.has(String(row.id)))
-    .filter((row) => canReadMemoryObject(database, 'fact', String(row.id), String(row.source_session_id), query.accessContextRef))
+    .filter((row) => canReadFactRow(database, row, query))
     .map((row) => mapFactRow(row, query, intents, evidenceIndex.get(String(row.id))))
 }
 
