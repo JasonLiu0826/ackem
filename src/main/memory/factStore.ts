@@ -68,6 +68,18 @@ import { getClock } from './temporal/clock.js'
 
 type FactsFile = { version: string; facts: MemoryFact[] }
 
+/**
+ * 巩固后的有效衰减 λ。
+ *
+ * 巩固的语义是「沉淀下来、更耐久」，所以它只应让记忆衰减得更慢，绝不能更快。
+ * 旧实现无条件取 CONSOLIDATED_DECAY_LAMBDA(0.003)，于是 λ=0 的 COMMITMENTS
+ * （承诺永不遗忘）一旦被巩固，反而开始以约 231 天半衰期衰减，语义被反转。
+ * 取 min 后：原本更慢的（0 / 0.001 / 0.003）保持不变，原本更快的（0.05 / 0.1）被减速。
+ */
+export function effectiveDecayLambda(factLayer: FactLayer | undefined, baseLambda: number): number {
+  return factLayer === 'consolidated' ? Math.min(baseLambda, CONSOLIDATED_DECAY_LAMBDA) : baseLambda
+}
+
 function mostRestrictivePrivacy(
   a?: MemoryFact['privacyLevel'],
   b?: MemoryFact['privacyLevel']
@@ -309,8 +321,8 @@ export class FactStore {
   scoreRelevance(f: MemoryFact, now: number, currentValence?: number, currentAff?: number, queryEmbed?: number[]): number {
     const meta = isValidSubcategory(f.subcategory) ? CATEGORY_META[f.subcategory] : CATEGORY_META.MOOD
     const days = Math.max(0, (now - new Date(f.createdAt).getTime()) / 86400000)
-    // consolidated 洞察用专用 λ（0.003），比原始事实衰减慢
-    const lambda = f.factLayer === 'consolidated' ? CONSOLIDATED_DECAY_LAMBDA : meta.decayLambda
+    // consolidated 洞察用更慢的 λ；巩固只减速、不加速
+    const lambda = effectiveDecayLambda(f.factLayer, meta.decayLambda)
     const decay = Math.exp(-lambda * days)
     const ei = f.emotionalContext.intensity
     let score =
@@ -474,7 +486,7 @@ export class FactStore {
     const now = Date.now()
     const days = Math.max(0, (now - new Date(f.createdAt).getTime()) / 86400000)
     const meta = isValidSubcategory(f.subcategory) ? CATEGORY_META[f.subcategory as Subcategory] : null
-    const lambda = f.factLayer === 'consolidated' ? CONSOLIDATED_DECAY_LAMBDA : (meta?.decayLambda ?? 0.005)
+    const lambda = effectiveDecayLambda(f.factLayer, meta?.decayLambda ?? 0.005)
     return f.weight * Math.exp(-lambda * days) * f.selfRelevance
   }
 
