@@ -8,7 +8,9 @@ function hash(text: string): string { return createHash('sha256').update(text).d
 function pathInRoot(root: string, rel: string): string | undefined {
   if (isAbsolute(rel)) return undefined
   try {
-    const realRoot = realpathSync(root), path = realpathSync(join(root, rel)), local = relative(realRoot, path)
+    const realRoot = realpathSync.native(root)
+    const path = realpathSync.native(join(root, rel))
+    const local = relative(realRoot, path)
     return local && !local.startsWith('..') && !isAbsolute(local) ? path : undefined
   } catch { return undefined }
 }

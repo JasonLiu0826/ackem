@@ -20,16 +20,17 @@ export type RetrievalScope = {
 /** 任意 Agent 同权：同 owner 下主聊 / 微信 / 导入 / 社会场景均可检出 */
 const OWNER_VISIBLE_SURFACES = new Set<string>(ALL_INTERACTION_SURFACES)
 
+export function matchesFactVisibility(
+  fact: { ownerAgentId?: string; interactionSurface?: string; privacyLevel?: string },
+  ownerAgentId: string,
+  adultMode: boolean
+): boolean {
+  return (fact.ownerAgentId ?? 'default') === ownerAgentId &&
+    OWNER_VISIBLE_SURFACES.has(fact.interactionSurface ?? 'desktop_main') &&
+    (adultMode || (fact.privacyLevel ?? 'normal') === 'normal')
+}
+
 export function filterFactsForRetrieval(facts: MemoryFact[], scope: RetrievalScope): MemoryFact[] {
-  return facts.filter((f) => {
-    if (scope.database && !canReadMemoryObject(scope.database, 'fact', f.id, f.sourceSessionId, scope.accessContextRef)) return false
-    const owner = f.ownerAgentId ?? 'default'
-    if (owner !== scope.ownerAgentId) return false
-    const surface = f.interactionSurface ?? 'desktop_main'
-    if (!OWNER_VISIBLE_SURFACES.has(surface)) return false
-    if (!scope.adultMode) {
-      if (f.privacyLevel === 'intimate' || f.privacyLevel === 'explicit') return false
-    }
-    return true
-  })
+  return facts.filter((fact) => matchesFactVisibility(fact, scope.ownerAgentId, scope.adultMode) &&
+    (!scope.database || canReadMemoryObject(scope.database, 'fact', fact.id, fact.sourceSessionId, scope.accessContextRef)))
 }

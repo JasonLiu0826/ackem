@@ -148,6 +148,7 @@ export async function prepareTurnContext(args: {
       text: msg,
       observedAt: temporalCtx.observedAt,
       timezone: temporalCtx.timeZone,
+      adultMode,
       budgetChars: recallBudget,
       deadlineMs: 50
     })

@@ -3,6 +3,8 @@ import type { FactStore } from './factStore'
 import type { MemoryFact } from './semantic/types'
 import { canReadMemoryObject, createMemoryAccess } from './accessScope'
 import type { EpisodicStore } from './episodicStore'
+import { getCurrentAgentId } from '../social/agents/withAgentContext'
+import { matchesFactVisibility } from './retrievalScope'
 
 const personalContexts = new WeakMap<object, { ref: string; refreshAt: number }>()
 
@@ -13,7 +15,8 @@ export function readableMemoryEpisodes(store: EpisodicStore, dataRoot: string) {
 
 /** Profile generation/name/age consume personal evidence only, never work-document extraction. */
 export function personalFacts(store: FactStore): MemoryFact[] {
-  const facts = store.listActive()
+  const ownerAgentId = getCurrentAgentId()
+  const facts = store.listActive().filter(fact => matchesFactVisibility(fact, ownerAgentId, false))
   // Pure in-memory stores used by consumers have no persisted work provenance.
   if (typeof store.getDataRoot !== 'function') return facts.filter(f => f.contextJson?.nature !== 'work')
   const db = getDatabase(store.getDataRoot())
